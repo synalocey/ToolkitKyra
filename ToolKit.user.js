@@ -7,8 +7,8 @@
 // @icon64       https://a.favicon.im/lamresearch.com
 // @downloadURL  https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/ToolKit.user.js
 // @updateURL    https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/ToolKit.user.js
-// @require      https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/chosen.jquery.js
 // @require      https://gcore.jsdelivr.net/npm/jquery@4.0.0/dist/jquery.min.js
+// @require      https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/chosen.jquery.js
 // @require      https://gcore.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
 // @require      https://gcore.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
 // @match        https://fep.lamresearch.com/*
