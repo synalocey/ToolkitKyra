@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.9.10
+// @version      26.9.12
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Kyra
 // @icon64       https://a.favicon.im/lamresearch.com
-// @downloadURL  https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/ToolKit.user.js
-// @updateURL    https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/ToolKit.user.js
-// @require      https://gcore.jsdelivr.net/npm/jquery@4.0.0/dist/jquery.min.js
-// @require      https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/chosen.jquery.js
-// @require      https://gcore.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
-// @require      https://gcore.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
+// @downloadURL  https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/ToolKit.user.js
+// @updateURL    https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/ToolKit.user.js
+// @require      https://cdn.jsdelivr.net/npm/jquery@4.0.0/dist/jquery.min.js
+// @require      https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/chosen.jquery.js
+// @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
+// @require      https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
 // @match        https://fep.lamresearch.com/*
 // @match        https://www.lamresearch.com/*
 // @run-at       document-start
@@ -25,7 +25,7 @@
 
 (function(){
 'use strict';
-const date_v = new Date('202' + GM_info.script.version);
+const date_v = new Date('20' + GM_info.script.version);
 const APP_PATH='/k1.png';
 const BRIDGE_PATH='/k2.png';
 const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
