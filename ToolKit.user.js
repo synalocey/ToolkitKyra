@@ -30,7 +30,7 @@ const APP_PATH='/k1.png';
 const BRIDGE_PATH='/k2.png';
 const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
 const BRIDGE_URL='http://127.0.0.1:8765';
-const BRIDGE_DOWNLOAD_URL='https://gcore.jsdelivr.net/gh/synalocey/ToolkitKyra/SAPGUIcontrol.exe';
+const BRIDGE_DOWNLOAD_URL='https://github.com/synalocey/ToolkitKyra/raw/main/SAPGUIcontrol.exe';
 const APP_CSS=`
 .chosen-container{position:relative;display:inline-block;vertical-align:middle;font-size:13px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.chosen-container *{
 -webkit-box-sizing:border-box;box-sizing:border-box}.chosen-container .chosen-drop{position:absolute;top:100%;z-index:1010;width:100%;border:1px solid #aaa;border-top:0;background:#fff;
