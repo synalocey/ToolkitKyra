@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.9.12
+// @version      26.9.20
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
-// @author       Kyra
+// @author       Syna
+// @license      GPL-3.0
 // @icon64       https://a.favicon.im/lamresearch.com
 // @downloadURL  https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/ToolKit.user.js
 // @updateURL    https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/ToolKit.user.js
@@ -13,6 +14,7 @@
 // @require      https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
 // @match        https://fep.lamresearch.com/*
 // @match        https://www.lamresearch.com/*
+// @match        https://techinfo.mylam.com/portal/group/mylam/contenttyperesults*
 // @run-at       document-start
 // @noframes
 // @grant        GM_registerMenuCommand
@@ -22,6 +24,7 @@
 // @connect      127.0.0.1
 // ==/UserScript==
 /* globals jQuery, XLSX, ExcelJS */
+let chosenBaseCss='';
 
 (function(){
 'use strict';
@@ -176,6 +179,7 @@ calc(100vh - 120px)}#wfTable{width:1120px;min-width:1120px;table-layout:fixed}#w
 #wfTable th:nth-child(7){width:435px}#wfTable td:nth-child(6){white-space:normal}#wfTable td:nth-child(7){white-space:pre-wrap}.wf-box.sap-range-box{width:min(460px,calc(100vw - 40px))}
 .sap-range-form{display:grid;gap:14px;padding:17px}.sap-range-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.sap-range-field{display:grid;gap:6px}.sap-range-field label{color:#475569;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}.sap-range-field input{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);padding:10px;font-size:12px}.sap-range-field input:focus{outline:3px solid rgba(14,165,233,.2);border-color:#38bdf8}.sap-range-note,.sap-range-default{color:var(--muted);font-size:10px;line-height:1.45}.sap-range-default{margin-top:7px}.sap-range-error{min-height:16px;color:#b91c1c;font-size:11px}.sap-range-form .wf-actions{justify-content:flex-end}.btn:disabled{cursor:not-allowed;filter:none;transform:none;opacity:.48}
 @media(max-width:980px){.tabs{min-width:1030px}.cycle-shell{min-width:1030px}}`;
+chosenBaseCss=APP_CSS.slice(0,APP_CSS.indexOf(':root{'));
 const APP_HTML=`<div id="loadingLine" class="loading-line"></div>
 <header class="hero">
   <div class="hero-inner">
@@ -657,6 +661,7 @@ const ZBOM_COMPARE_HEADER_FILL='FF0070C0';
 const ZBOM_COMPARE_BORDER_COLOR='FFD6E0EA';
 const ZBOM_COMPARE_FILE_COLORS=['FFFFC7CE','FFC6EFCE','FFFFEB9C','FFBDD7EE','FFE4DFEC','FFFCE4D6','FFDDEBF7','FFE2F0D9','FFF4B183','FFD9E1F2'];
 const ZBOM_COMPARE_STORAGE_KEYS={input:'nsrSapToolbox.zbomCompareInput.v1',template:'nsrSapToolbox.zbomCompareTemplate.v1',separator:'nsrSapToolbox.zbomCompareSeparator.v1',folder:'nsrSapToolbox.zbomCompareFolder.v1',groups:'nsrSapToolbox.zbomCompareGroups.v1',history:'nsrSapToolbox.zbomCompareHistory.v1'};
+const SAP_ACTION_TIMEOUT=600000,SAP_BUSY_TIMEOUT=120000,SAP_FILE_WAIT_TIMEOUT=120000,SAP_FILE_SETTLE_MS=5000,SAP_BATCH_SETTLE_MS=15000,SAP_FILE_POLL_MS=400,BRIDGE_FILE_TIMEOUT=600000;
 const CREATE_QUOTE_DEFAULT_VALID_TO_DAYS='30';
 const CREATE_QUOTE_DEFAULT_FID_SUFFIX='-01';
 const CREATE_QUOTE_HISTORY_LIMIT=50;
@@ -668,8 +673,10 @@ let createQuoteRows=[],createQuoteStats={duplicates:0,ignored:0},createQuoteCrdO
 let bridgeDebugUnlocked=false;
 let bobjStatus=null,bobjRefreshing=false,bobjOpening=false,bobjPollTimer=0,bobjStatusRun=0,bobjDataRows=new Map(),bobjDataHeaderIndexes=new Map(),bobjDataMissing=new Set(),bobjDataPath='',bobjDataModified=0,bobjDataCount=0,bobjDataReady=false,bobjDataLoadRun=0,bobjConsumersPending=false,bobjSourcePath='',bobjSourceModified=0,bobjDataLoading=false,bobjDataPromise=null,bobjWorker=null,bobjWorkerRequest=0,bobjWorkerPending=new Map();
 
-GM_registerMenuCommand('Open NSR Control Tower',()=>openToolTab(APP_PATH+'?nsrct=1'));
-GM_registerMenuCommand('Open SAP Toolbox',()=>openToolTab(BRIDGE_PATH+'?nsrbridge=1'));
+GM_registerMenuCommand('Open NSR Control Tower',()=>unsafeWindow.open(APP_PATH+'?nsrct=1','_blank','noopener'));
+GM_registerMenuCommand('Open SAP Toolbox',()=>unsafeWindow.open(BRIDGE_PATH+'?nsrbridge=1','_blank','noopener'));
+
+if(Number.isFinite(date_v.getTime())&&(Date.now()-date_v.getTime())/86400000>270){unsafeWindow.alert('The data format has changed. Please update to the latest version.');return}
 
 const currentPath=unsafeWindow.location.pathname.toLowerCase();
 if(currentPath===APP_PATH){
@@ -688,15 +695,11 @@ async function addNsrHeaderButton(){
     if(target&&String(title&&title.textContent||'').trim().toUpperCase()==='NSR'&&!document.getElementById(NSR_HEADER_BUTTON_ID)){
       const button=document.createElement('button');button.id=NSR_HEADER_BUTTON_ID;button.type='button';button.title='Open NSR Control Tower';button.textContent='▦ Control Tower';
       button.style.cssText='margin-left:8px;padding:4px 8px;cursor:pointer';
-      button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();openToolTab(APP_PATH+'?nsrct=1')});
+      button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();unsafeWindow.open(APP_PATH+'?nsrct=1','_blank','noopener')});
       target.insertAdjacentElement('afterend',button);
     }
     await new Promise(resolve=>setTimeout(resolve,500));
   }
-}
-
-function openToolTab(path){
-  unsafeWindow.open(path,'_blank','noopener');
 }
 
 function persistentStore(){
@@ -733,14 +736,6 @@ function saveZbomInput(){
 
 function saveZbomTemplate(){
   const input=bridgeId('zbomTemplate');if(input)writePersistent(ZBOM_STORAGE_KEYS.template,input.value);
-}
-
-function resetZbomInput(){
-  const input=bridgeId('zbomInput');input.value='';saveZbomInput();previewZbomInput();input.focus();
-}
-
-function resetZbomTemplate(){
-  const input=bridgeId('zbomTemplate');input.value=ZBOM_DEFAULT_TEMPLATE;saveZbomTemplate();zbomHasRun=false;zbomResults=new Map();bridgeId('zbomResultSummary').replaceChildren();renderZbomPreview();input.focus();
 }
 
 function loadZbomComparePreferences(){
@@ -781,13 +776,9 @@ function saveZbomCompareFolder(){
   const input=bridgeId('zbomCompareOutputFolder');if(input)writePersistent(ZBOM_COMPARE_STORAGE_KEYS.folder,input.value);
 }
 
-function normalizeCreateQuoteQuotation(value){
-  return String(value||'').replace(/\D/g,'').slice(0,10);
-}
-
 function sanitizeCreateQuoteQuotation(){
   const input=bridgeId('createQuoteQuotation');if(!input)return '';
-  const value=normalizeCreateQuoteQuotation(input.value);if(input.value!==value)input.value=value;return value;
+  const value=String(input.value||'').replace(/\D/g,'').slice(0,10);if(input.value!==value)input.value=value;return value;
 }
 
 function normalizeCreateQuoteDays(value){
@@ -846,19 +837,7 @@ function saveCreateQuoteCrdOverrides(){
   const values={};createQuoteCrdOverrides.forEach((value,fid)=>{values[fid]=value});writePersistent(CREATE_QUOTE_STORAGE_KEYS.crdOverrides,JSON.stringify(values));
 }
 
-function resetCreateQuoteInput(){
-  const input=bridgeId('createQuoteInput');input.value='';createQuoteCrdOverrides=new Map();createQuoteManualCrd=new Set();saveCreateQuoteInput();saveCreateQuoteCrdOverrides();previewCreateQuoteInput();setCreateQuoteStatus('Ready.');input.focus();
-}
-
-function resetCreateQuoteSettings(){
-  const validToDays=bridgeId('createQuoteDefaultValidTo'),fidSuffix=bridgeId('createQuoteFidSuffix');validToDays.value=CREATE_QUOTE_DEFAULT_VALID_TO_DAYS;fidSuffix.value=CREATE_QUOTE_DEFAULT_FID_SUFFIX;saveCreateQuoteValidToDays();saveCreateQuoteFidSuffix();renderCreateQuotePreview();validToDays.focus();
-}
-
 function keepZbomCompareTemp(){return bridgeId('zbomCompareKeepTemp').getAttribute('aria-pressed')==='true'}
-
-function toggleZbomCompareKeepTemp(){
-  const button=bridgeId('zbomCompareKeepTemp'),keep=!keepZbomCompareTemp();button.setAttribute('aria-pressed',keep?'true':'false');button.title=keep?'The temp folder will be kept.':'The temp folder will be deleted after Compare finishes.';
-}
 
 function saveZbomCompareGroups(){
   const values={};zbomCompareSavedGroups=new Map();
@@ -937,14 +916,6 @@ function showZbomCompareResultPreview(groupPreviews,fidPreviews){
   groups.forEach(item=>{if(item.options)tabs.push({key:'group:'+item.group,label:item.group,sheet:item.options});if(item.gas)tabs.push({key:'group-gas:'+item.group,label:item.group+'_Gas',sheet:item.gas})});
   Array.from((fidPreviews||new Map()).values()).sort((left,right)=>left.order-right.order).forEach(item=>{if(item.sheet)tabs.push({key:'fid:'+item.fid,label:item.fid,sheet:item.sheet})});
   zbomCompareResultTabs=tabs;zbomCompareActiveResultTab='';renderZbomCompareResultTabs('G01');
-}
-
-function resetZbomCompareInput(){
-  const input=bridgeId('zbomCompareInput');input.value='';saveZbomCompareInput();previewZbomCompareInput();input.focus();
-}
-
-function resetZbomCompareTemplate(){
-  const input=bridgeId('zbomCompareTemplate'),separator=bridgeId('zbomCompareSeparator'),folder=bridgeId('zbomCompareOutputFolder');input.value=ZBOM_COMPARE_DEFAULT_TEMPLATE;separator.value=ZBOM_COMPARE_DEFAULT_SEPARATOR;folder.value=ZBOM_COMPARE_DEFAULT_FOLDER;saveZbomCompareTemplate();saveZbomCompareSeparator();saveZbomCompareFolder();invalidateZbomCompareResults();renderZbomComparePreview();updateZbomCompareStart();input.focus();
 }
 
 function historyDisplayTime(value){
@@ -1042,10 +1013,6 @@ function closeCreateQuoteHistory(){
   const returnFocus=createQuoteHistoryReturnFocus;createQuoteHistoryReturnFocus=null;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus();
 }
 
-function createQuoteHistoryText(entry){
-  return 'Reference Quotation: '+(String(entry&&entry.quotation||'').trim()||'(empty)')+'\nFID:\n'+historyDisplayText(entry&&entry.input);
-}
-
 function renderCreateQuoteHistory(){
   const list=bridgeId('createQuoteHistoryList'),count=bridgeId('createQuoteHistoryCount'),buttonCount=bridgeId('createQuoteHistoryButtonCount');
   if(buttonCount)buttonCount.textContent=String(createQuoteHistory.length);if(!list||!count)return;
@@ -1054,7 +1021,7 @@ function renderCreateQuoteHistory(){
   createQuoteHistory.forEach((entry,index)=>{
     const displayTime=historyDisplayTime(entry.runAt),button=document.createElement('button');button.type='button';button.className='history-entry';button.setAttribute('aria-label','Restore Quote Create data from '+displayTime);
     const time=document.createElement('span');time.className='history-entry-time';time.textContent=displayTime;
-    const text=document.createElement('span');text.className='history-entry-text';text.textContent=createQuoteHistoryText(entry);button.append(time,text);button.addEventListener('click',()=>{
+    const text=document.createElement('span');text.className='history-entry-text';text.textContent='Reference Quotation: '+(String(entry&&entry.quotation||'').trim()||'(empty)')+'\nFID:\n'+historyDisplayText(entry&&entry.input);button.append(time,text);button.addEventListener('click',()=>{
       const current=createQuoteHistory[index];if(!current)return;
       const quotation=bridgeId('createQuoteQuotation'),input=bridgeId('createQuoteInput');quotation.value=current.quotation;input.value=current.input;sanitizeCreateQuoteQuotation();saveCreateQuoteQuotation();saveCreateQuoteInput();previewCreateQuoteInput();setCreateQuoteStatus('Ready.');ensureBobjForCurrentInput();closeCreateQuoteHistory();input.focus();
     });list.appendChild(button);
@@ -1068,7 +1035,6 @@ function recordCreateQuoteHistory(quotation,input){
 
 function mountApp(){
   if(document.documentElement.dataset.nsrCtMounted)return;
-  if(Number.isFinite(date_v.getTime())&&(Date.now()-date_v.getTime())/86400000>270){unsafeWindow.alert('The data format has changed. Please update to the latest version.');return}
   document.documentElement.dataset.nsrCtMounted='1';document.documentElement.lang='en';
   const charset=document.createElement('meta');charset.charset='utf-8';
   const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1';
@@ -1161,11 +1127,6 @@ function renderBobjTemplate(template,row,omit){
   return String(template||'').replace(/\{([^{}]+)\}/g,(_token,header)=>bobjTemplateValue(row,header,omit));
 }
 
-function enrichZbomRowFromBobj(row){
-  if(row&&row.fid&&!row.systemDescription)row.systemDescription=bobjValue(row.fid,'System Description');
-  return row;
-}
-
 function enrichZbomCompareRowFromBobj(row){
   if(!row||!row.fid)return row;
   if(!row.customer)row.customer=bobjValue(row.fid,'Customer');
@@ -1244,7 +1205,7 @@ function refreshBobjConsumers(){
 async function loadBobjDataSource(path,lastModified){
   const modified=Number(lastModified)||0;
   if(path===bobjDataPath&&modified===bobjDataModified&&bobjDataReady)return {count:bobjDataCount,changed:false};
-  const run=++bobjDataLoadRun,data=await bridgeFileRequest('read',{path:path},120000);if(!data||!data.contentBase64)throw new Error('The Bridge returned no BOBJ workbook content.');
+  const run=++bobjDataLoadRun,data=await bridgeFileRequest('read',{path:path},BRIDGE_FILE_TIMEOUT);if(!data||!data.contentBase64)throw new Error('The Bridge returned no BOBJ workbook content.');
   const loading=callBobjWorker('load',{contentBase64:data.contentBase64});data.contentBase64='';const loaded=await loading;
   if(run!==bobjDataLoadRun)return {count:bobjDataCount,changed:false};
   bobjDataRows=new Map();bobjDataHeaderIndexes=new Map(loaded.headerIndexes||[]);bobjDataMissing=new Set();bobjDataPath=path;bobjDataModified=modified;bobjDataCount=Number(loaded.count)||0;bobjDataReady=true;return {count:bobjDataCount,changed:true};
@@ -1416,10 +1377,6 @@ function setToolTab(name){
   document.querySelectorAll('[data-tool-panel]').forEach(panel=>{panel.hidden=panel.dataset.toolPanel!==name});
 }
 
-function toggleBridgeDebug(){
-  bridgeDebugUnlocked=!bridgeDebugUnlocked;writePersistent(BRIDGE_DEBUG_STORAGE_KEY,bridgeDebugUnlocked?'1':'0');bridgeId('tabDebug').hidden=!bridgeDebugUnlocked;setToolTab(bridgeDebugUnlocked?'debug':'zbom');
-}
-
 function splitZbomLine(line){
   if(line.indexOf('\t')>=0)return line.split('\t').map(value=>value.trim());
   if(line.indexOf(',')>=0){
@@ -1481,12 +1438,10 @@ function createQuoteDateValue(value){
   const parsed=Date.parse(text);return Number.isFinite(parsed)?parsed:null;
 }
 
-function splitCreateQuoteLine(line){
-  const values=splitZbomLine(line);return values.length===1&&/\s/.test(line.trim())?line.trim().split(/\s+/).map(value=>value.trim()):values;
-}
-
 function parseCreateQuoteInput(text){
-  const source=String(text||'').replace(/\r/g,'').split('\n').map((line,index)=>({line:index+1,values:splitCreateQuoteLine(line)})).filter(item=>item.values.some(Boolean));
+  const source=String(text||'').replace(/\r/g,'').split('\n').map((line,index)=>{
+    const values=splitZbomLine(line);return {line:index+1,values:values.length===1&&/\s/.test(line.trim())?line.trim().split(/\s+/).map(value=>value.trim()):values};
+  }).filter(item=>item.values.some(Boolean));
   if(!source.length)return {rows:[],duplicates:0,ignored:0};
   const hasHeader=source[0].values.some(value=>Boolean(createQuoteHeaderRole(value))),data=hasHeader?source.slice(1):source,rows=[],seen=new Map();let duplicates=0,ignored=0;
   data.forEach(item=>{
@@ -1846,11 +1801,9 @@ function normalizedZbomCompareFolder(){
   return raw.length>3?raw.replace(/\\+$/,''):raw;
 }
 
-function zbomCompareTempFolder(folder){return folder+'\\temp'}
-
 async function cleanupZbomCompareTemp(tempFolder){
   if(keepZbomCompareTemp()){addZbomCompareLog('Temp folder kept: '+tempFolder);return ''}
-  try{await bridgeFileRequest('deleteDirectory',{path:tempFolder,recursive:true},120000);addZbomCompareLog('Temp folder deleted.');return ''}
+  try{await bridgeFileRequest('deleteDirectory',{path:tempFolder,recursive:true},BRIDGE_FILE_TIMEOUT);addZbomCompareLog('Temp folder deleted.');return ''}
   catch(error){const message=bridgeError(error);addZbomCompareLog('TEMP CLEANUP FAILED: '+message);return message}
 }
 
@@ -1911,13 +1864,17 @@ async function setZbomCompareSaveTarget(tempFolder,fileName){
 }
 
 async function waitForZbomCompareFile(path,timeout){
-  const started=Date.now(),limit=timeout||30000;
-  while(Date.now()-started<limit){
+  const started=Date.now(),limit=timeout||SAP_FILE_WAIT_TIMEOUT;let deadline=started+limit,signature='',stableSince=0;
+  while(Date.now()<deadline){
     try{
-      const result=await bridgeFileRequest('stat',{path:path},10000);
-      if(result&&result.exists)return result;
-    }catch(_){/* the file may not exist until SAP finishes writing it */}
-    await waitMs(250);
+      const result=await bridgeFileRequest('stat',{path:path},10000),file=result&&result.exists&&Array.isArray(result.entries)?result.entries[0]:null;
+      if(file){
+        const next=String(file.size)+':'+String(file.lastModified);
+        if(next!==signature){signature=next;stableSince=Date.now();deadline=Math.max(deadline,stableSince+SAP_FILE_SETTLE_MS+SAP_FILE_POLL_MS)}
+        else if(Date.now()-stableSince>=SAP_FILE_SETTLE_MS)return result;
+      }else{signature='';stableSince=0}
+    }catch(_){signature='';stableSince=0}
+    await waitMs(SAP_FILE_POLL_MS);
   }
   throw new Error('SAP did not create '+path+' within '+Math.round(limit/1000)+' seconds.');
 }
@@ -1949,7 +1906,7 @@ async function exportOneZbomCompareQuotation(row,tempFolder){
   }
   if(bridgeMock)return {path:fullPath,simulated:true};
   addZbomCompareLog(quote+' — save requested; waiting for '+fullPath+'.');
-  await waitForZbomCompareFile(fullPath,30000);return {path:fullPath,simulated:false};
+  await waitForZbomCompareFile(fullPath);return {path:fullPath,simulated:false};
 }
 
 function decodeZbomCompareBase64(contentBase64){
@@ -2087,7 +2044,7 @@ function parseZbomCompareTsv(text,path){
 }
 
 async function readZbomCompareTsv(path){
-  const data=await bridgeFileRequest('read',{path:path},120000);
+  const data=await bridgeFileRequest('read',{path:path},BRIDGE_FILE_TIMEOUT);
   if(!data||!data.contentBase64)throw new Error('The Bridge returned no file content for '+path+'.');
   return parseZbomCompareTsv(decodeZbomCompareBase64(data.contentBase64),path);
 }
@@ -2448,7 +2405,7 @@ function zbomCompareBufferBase64(buffer){
 
 async function writeZbomCompareWorkbook(models,grouped,path){
   const built=buildZbomCompareWorkbook(models,grouped),buffer=await built.workbook.xlsx.writeBuffer();
-  await bridgeFileRequest('write',{path:path,contentBase64:zbomCompareBufferBase64(buffer),overwrite:true,createParents:true},120000);
+  await bridgeFileRequest('write',{path:path,contentBase64:zbomCompareBufferBase64(buffer),overwrite:true,createParents:true},BRIDGE_FILE_TIMEOUT);
   return {path:path,preview:built.preview};
 }
 
@@ -2466,7 +2423,7 @@ function renderZbomCompareResultSummary(exported,outputs,failed,mock){
 async function startZbomCompare(){
   await ensureBobjDataSource();previewZbomCompareInput();
   const rows=zbomCompareRows.slice(),folderInput=bridgeId('zbomCompareOutputFolder');let folder,tempFolder;
-  try{folder=normalizedZbomCompareFolder();tempFolder=zbomCompareTempFolder(folder)}catch(error){setZbomCompareProgress(0,bridgeError(error));if(folderInput)folderInput.focus();return}
+  try{folder=normalizedZbomCompareFolder();tempFolder=folder+'\\temp'}catch(error){setZbomCompareProgress(0,bridgeError(error));if(folderInput)folderInput.focus();return}
   if(!rows.length){setZbomCompareProgress(0,'Paste at least one valid Quotation first.');return}
   if(!selectedBridgeSession()){setZbomCompareProgress(0,'Select an available SAP GUI session first.');return}
   if(rows.length>100&&!unsafeWindow.confirm('You are about to export '+rows.length+' quotations through SAP. Continue?'))return;
@@ -2660,10 +2617,6 @@ function appendQuoteToName(name,quote){
   return stem+'_'+quote+'.PDF';
 }
 
-function previewZbomRow(row){
-  return Object.assign({},row,{fid:row.fid||'[SAP FID]'});
-}
-
 function plannedZbomNames(rows,template){
   const owners=new Map(),names=new Map();
   rows.filter(row=>!row._error).forEach(row=>{
@@ -2676,7 +2629,7 @@ function plannedZbomNames(rows,template){
 
 function renderZbomPreview(){
   const body=bridgeId('zbomPreviewBody');body.replaceChildren();
-  const templateInfo=zbomTemplateInfo(),planned=plannedZbomNames(zbomRows.map(previewZbomRow),templateInfo.template);
+  const templateInfo=zbomTemplateInfo(),planned=plannedZbomNames(zbomRows.map(row=>Object.assign({},row,{fid:row.fid||'[SAP FID]'})),templateInfo.template);
   if(!zbomRows.length){
     const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.className='missing';cell.textContent='No preview yet.';row.appendChild(cell);body.appendChild(row);
   }else{
@@ -2700,7 +2653,7 @@ function renderZbomPreview(){
 
 function previewZbomInput(){
   const parsed=parseZbomInput(bridgeId('zbomInput').value);
-  zbomRows=parsed.rows;zbomRows.forEach(enrichZbomRowFromBobj);zbomErrors=parsed.errors;zbomHasRun=false;zbomResults=new Map();
+  zbomRows=parsed.rows;zbomRows.forEach(row=>{if(row&&row.fid&&!row.systemDescription)row.systemDescription=bobjValue(row.fid,'System Description')});zbomErrors=parsed.errors;zbomHasRun=false;zbomResults=new Map();
   bridgeId('zbomResultSummary').replaceChildren();renderZbomPreview();
 }
 
@@ -2718,7 +2671,7 @@ function updateZbomStart(){
 }
 
 function bridgeFileRequest(operation,options,timeout){
-  return bridgeRequest('POST','/files',Object.assign({operation:operation},options||{}),timeout||120000);
+  return bridgeRequest('POST','/files',Object.assign({operation:operation},options||{}),timeout||BRIDGE_FILE_TIMEOUT);
 }
 
 async function openZbomFolder(){
@@ -2752,19 +2705,18 @@ function changedZbomFiles(before,current){
 function waitMs(milliseconds){return new Promise(resolve=>setTimeout(resolve,milliseconds))}
 
 async function waitForZbomFiles(before){
-  const started=Date.now();let lastSignature='',stableSince=0,latest=[];
-  while(Date.now()-started<60000){
+  let deadline=Date.now()+SAP_FILE_WAIT_TIMEOUT,lastSignature='',stableSince=0,latest=[];
+  while(Date.now()<deadline){
     const current=await listZbomRawPdfs();latest=changedZbomFiles(before,current);
     if(!latest.length){
-      if(Date.now()-started>=5000)return [];
-      await waitMs(400);continue;
+      lastSignature='';stableSince=0;
+      await waitMs(SAP_FILE_POLL_MS);continue;
     }
     const signature=latest.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(file=>file.name+':'+file.size+':'+file.lastModified).join('|');
     if(signature===lastSignature){
-      if(!stableSince)stableSince=Date.now();
-      if(Date.now()-stableSince>=2000)return latest;
-    }else{lastSignature=signature;stableSince=0}
-    await waitMs(400);
+      if(Date.now()-stableSince>=SAP_BATCH_SETTLE_MS)return latest;
+    }else{lastSignature=signature;stableSince=Date.now();deadline=Math.max(deadline,stableSince+SAP_BATCH_SETTLE_MS+SAP_FILE_POLL_MS)}
+    await waitMs(SAP_FILE_POLL_MS);
   }
   return latest;
 }
@@ -2782,16 +2734,14 @@ function setZbomProgress(percent,message){
 }
 
 async function sendZbomAction(operation,options){
-  const payload=Object.assign(requireBridgeSession(),{operation:operation},options||{});
-  let lastError;
-  for(let attempt=0;attempt<100;attempt++){
-    try{return await bridgeRequest('POST','/action',payload,120000)}catch(error){
-      lastError=error;
+  const payload=Object.assign(requireBridgeSession(),{operation:operation},options||{}),started=Date.now();
+  while(Date.now()-started<SAP_BUSY_TIMEOUT){
+    try{return await bridgeRequest('POST','/action',payload,SAP_ACTION_TIMEOUT)}catch(error){
       if(!error||error.status!==409||!/SAP is busy/i.test(bridgeError(error)))throw error;
-      await waitMs(150);
+      await waitMs(1000);
     }
   }
-  throw lastError||new Error('SAP remained busy for 15 seconds.');
+  throw new Error('SAP remained busy for 2 minutes.');
 }
 
 function sapStatusSummary(data){
@@ -2839,7 +2789,9 @@ function claimZbomOutputName(baseName,quote){
 function zbomFilePath(name){return ZBOM_PDF_FOLDER+'\\'+name}
 
 async function moveZbomFile(descriptor,name){
-  return bridgeFileRequest('move',{sourcePath:descriptor.path||zbomFilePath(descriptor.name),destinationPath:zbomFilePath(name),overwrite:true},120000);
+  const options={sourcePath:descriptor.path||zbomFilePath(descriptor.name),destinationPath:zbomFilePath(name),overwrite:true};let error;
+  for(let attempt=0;attempt<60;attempt++)try{return await bridgeFileRequest('move',options,BRIDGE_FILE_TIMEOUT)}catch(current){error=current;if(attempt<59)await waitMs(500)}
+  throw error;
 }
 
 async function collectZbomFiles(files,version){
@@ -2951,7 +2903,7 @@ async function runBridgeAction(operation){
     if(operation==='transaction')payload.code=bridgeId('sapTransaction').value.trim();
     else if(operation==='sendVKey'){payload.controlId=bridgeId('sapVKeyTarget').value.trim()||'wnd[0]';payload.key=Number(bridgeId('sapVKey').value)}
     else{payload.controlId=bridgeId('sapControlId').value.trim();payload.value=bridgeId('sapControlValue').value}
-    const data=await bridgeRequest('POST','/action',payload,30000);
+    const data=await bridgeRequest('POST','/action',payload,SAP_ACTION_TIMEOUT);
     if(operation==='readText'&&Object.prototype.hasOwnProperty.call(data,'value'))bridgeId('sapControlValue').value=data.value==null?'':String(data.value);
     showBridgeResult(data,'SAP action completed.');setBridgeBadge('Ready','ok');
   }catch(error){showBridgeResult(bridgeError(error),'SAP action failed.');setBridgeBadge('Action failed','error')}
@@ -2983,7 +2935,9 @@ function bindBridgeEvents(){
   bridgeId('zbomCompareTemplate').addEventListener('input',()=>{saveZbomCompareTemplate();invalidateZbomCompareResults();renderZbomComparePreview();ensureBobjForCurrentInput()});
   bridgeId('zbomCompareSeparator').addEventListener('input',()=>{saveZbomCompareSeparator();invalidateZbomCompareResults();renderZbomComparePreview()});
   bridgeId('zbomCompareOutputFolder').addEventListener('input',()=>{saveZbomCompareFolder();invalidateZbomCompareResults();renderZbomComparePreview();updateZbomCompareStart()});
-  bridgeId('zbomCompareKeepTemp').addEventListener('click',trusted(toggleZbomCompareKeepTemp));
+  bridgeId('zbomCompareKeepTemp').addEventListener('click',trusted(()=>{
+    const button=bridgeId('zbomCompareKeepTemp'),keep=!keepZbomCompareTemp();button.setAttribute('aria-pressed',keep?'true':'false');button.title=keep?'The temp folder will be kept.':'The temp folder will be deleted after Compare finishes.';
+  }));
   document.querySelectorAll('[data-zbom-compare-token]').forEach(button=>button.addEventListener('click',()=>insertZbomCompareToken(button.dataset.zbomCompareToken)));
   bridgeId('zbomCompareOpenFolder').addEventListener('click',trusted(openZbomCompareOutputFolder));
   bridgeId('zbomCompareOpenHistory').addEventListener('click',trusted(openZbomCompareHistory));
@@ -2996,13 +2950,25 @@ function bindBridgeEvents(){
   bridgeId('zbomCloseHistory').addEventListener('click',trusted(closeZbomHistory));
   document.querySelector('[data-zbom-history-close]').addEventListener('click',trusted(closeZbomHistory));
   document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(!bridgeId('zbomHistoryDialog').hidden)closeZbomHistory();if(!bridgeId('zbomCompareHistoryDialog').hidden)closeZbomCompareHistory();if(!bridgeId('createQuoteHistoryDialog').hidden)closeCreateQuoteHistory()});
-  document.addEventListener('keydown',event=>{if(event.ctrlKey&&event.altKey&&event.shiftKey&&event.code==='KeyD'){event.preventDefault();toggleBridgeDebug()}});
-  bridgeId('zbomResetInput').addEventListener('click',trusted(resetZbomInput));
-  bridgeId('zbomResetTemplate').addEventListener('click',trusted(resetZbomTemplate));
-  bridgeId('zbomCompareResetInput').addEventListener('click',trusted(resetZbomCompareInput));
-  bridgeId('zbomCompareResetTemplate').addEventListener('click',trusted(resetZbomCompareTemplate));
-  bridgeId('createQuoteResetInput').addEventListener('click',trusted(resetCreateQuoteInput));
-  bridgeId('createQuoteResetSettings').addEventListener('click',trusted(resetCreateQuoteSettings));
+  document.addEventListener('keydown',event=>{if(event.ctrlKey&&event.altKey&&event.shiftKey&&event.code==='KeyD'){event.preventDefault();bridgeDebugUnlocked=!bridgeDebugUnlocked;writePersistent(BRIDGE_DEBUG_STORAGE_KEY,bridgeDebugUnlocked?'1':'0');bridgeId('tabDebug').hidden=!bridgeDebugUnlocked;setToolTab(bridgeDebugUnlocked?'debug':'zbom');}});
+  bridgeId('zbomResetInput').addEventListener('click',trusted(()=>{
+    const input=bridgeId('zbomInput');input.value='';saveZbomInput();previewZbomInput();input.focus();
+  }));
+  bridgeId('zbomResetTemplate').addEventListener('click',trusted(()=>{
+    const input=bridgeId('zbomTemplate');input.value=ZBOM_DEFAULT_TEMPLATE;saveZbomTemplate();zbomHasRun=false;zbomResults=new Map();bridgeId('zbomResultSummary').replaceChildren();renderZbomPreview();input.focus();
+  }));
+  bridgeId('zbomCompareResetInput').addEventListener('click',trusted(()=>{
+    const input=bridgeId('zbomCompareInput');input.value='';saveZbomCompareInput();previewZbomCompareInput();input.focus();
+  }));
+  bridgeId('zbomCompareResetTemplate').addEventListener('click',trusted(()=>{
+    const input=bridgeId('zbomCompareTemplate'),separator=bridgeId('zbomCompareSeparator'),folder=bridgeId('zbomCompareOutputFolder');input.value=ZBOM_COMPARE_DEFAULT_TEMPLATE;separator.value=ZBOM_COMPARE_DEFAULT_SEPARATOR;folder.value=ZBOM_COMPARE_DEFAULT_FOLDER;saveZbomCompareTemplate();saveZbomCompareSeparator();saveZbomCompareFolder();invalidateZbomCompareResults();renderZbomComparePreview();updateZbomCompareStart();input.focus();
+  }));
+  bridgeId('createQuoteResetInput').addEventListener('click',trusted(()=>{
+    const input=bridgeId('createQuoteInput');input.value='';createQuoteCrdOverrides=new Map();createQuoteManualCrd=new Set();saveCreateQuoteInput();saveCreateQuoteCrdOverrides();previewCreateQuoteInput();setCreateQuoteStatus('Ready.');input.focus();
+  }));
+  bridgeId('createQuoteResetSettings').addEventListener('click',trusted(()=>{
+    const validToDays=bridgeId('createQuoteDefaultValidTo'),fidSuffix=bridgeId('createQuoteFidSuffix');validToDays.value=CREATE_QUOTE_DEFAULT_VALID_TO_DAYS;fidSuffix.value=CREATE_QUOTE_DEFAULT_FID_SUFFIX;saveCreateQuoteValidToDays();saveCreateQuoteFidSuffix();renderCreateQuotePreview();validToDays.focus();
+  }));
   bridgeId('zbomStart').addEventListener('click',trusted(startZbomExport));
   bridgeId('zbomOpenFolder').addEventListener('click',trusted(openZbomFolder));
   bridgeId('zbomCompareStart').addEventListener('click',trusted(startZbomCompare));
@@ -3317,13 +3283,9 @@ function validSapDate(value){
   return date.getUTCFullYear()===year&&date.getUTCMonth()===month-1&&date.getUTCDate()===day;
 }
 
-function sapRangeForDialog(){
-  if(state.source&&state.source.isSap&&validSapDate(state.source.from)&&validSapDate(state.source.to))return {from:state.source.from,to:state.source.to};
-  return sapRange();
-}
-
 function openSapRange(){
-  const range=sapRangeForDialog(),today=localDate(new Date()),from=$id('sapRangeFrom'),to=$id('sapRangeTo');
+  const range=state.source&&state.source.isSap&&validSapDate(state.source.from)&&validSapDate(state.source.to)?{from:state.source.from,to:state.source.to}:sapRange();
+  const today=localDate(new Date()),from=$id('sapRangeFrom'),to=$id('sapRangeTo');
   from.value=range.from;to.value=range.to;from.max=today;to.max=today;$id('sapRangeError').textContent='';
   sapRangeTrigger=document.activeElement;$id('sapRangeModal').hidden=false;document.body.classList.add('sap-range-open');from.focus();
 }
@@ -3341,11 +3303,6 @@ function selectedSapRange(){
   $id('sapRangeError').textContent=error;return error?null:{from,to};
 }
 
-function submitSapRange(event){
-  event.preventDefault();const range=selectedSapRange();if(!range)return;
-  closeSapRange();loadSapData(range);
-}
-
 function sapFilter(from,to){
   return `(Nsrnum eq '' and Screen eq 'S' and Customer eq '' and Description eq '' and ImpSubSys eq '' and NsrRequest eq '' and NsrTitle eq '' and RefFcid eq '' and NsrType eq '' and SalesOpsFn eq '' and EnggTitle eq '' and NsrWorkflowStatus eq '' and NsrStatus eq '' and InitiatedByFn eq '' and HostFidUpgrade eq '' and (ResEngGroup eq '') and PrimaryProd eq '' and TechSpec eq '' and (SubmitDate ge datetime'${from}T00:00:00' and SubmitDate le datetime'${to}T23:59:59') and (NsrOrg eq ''))`;
 }
@@ -3354,24 +3311,13 @@ function sapUrl(range){
   return `${SAP_SEARCH}?$filter=${encodeURIComponent(sapFilter(range.from,range.to))}`;
 }
 
-function atomValue(node,names){
-  for(const name of names){
-    const item=node&&node.getElementsByTagNameNS('*',name)[0],value=clean(item&&item.textContent);if(value)return value;
-  }
-  return '';
-}
-
-function atomDate(value){
-  const match=clean(value).match(/^(\d{4}-\d{2}-\d{2})/);return match?match[1]:'';
-}
-
 function parseSearchXml(text){
   const doc=new DOMParser().parseFromString(text,'application/xml');
   if(doc.getElementsByTagName('parsererror').length)throw new Error('SAP returned invalid XML.');
   const rows=[...doc.getElementsByTagNameNS('*','entry')].map(entry=>{
     const props=entry.getElementsByTagNameNS('*','properties')[0]||entry,row={};
-    SOURCE_FIELDS.forEach(field=>row[field]=atomValue(props,SAP_FIELDS[field]||[field]));
-    row['Submit Date']=atomDate(row['Submit Date']);return row;
+    SOURCE_FIELDS.forEach(field=>row[field]=xmlFirst(props,SAP_FIELDS[field]||[field]));
+    row['Submit Date']=workflowDate(row['Submit Date']);return row;
   }).filter(row=>row['NSR#']);
   const next=[...doc.getElementsByTagNameNS('*','link')].find(link=>clean(link.getAttribute('rel')).toLowerCase()==='next');
   return {rows,next:next?clean(next.getAttribute('href')):''};
@@ -3526,10 +3472,9 @@ function paintYears(){
   });
 }
 
-function isFlow(value){const n=statusRank(value)[0];return n>=1&&n<=14}
 function statusSet(group){
   const single={done:'15-Completed',rejected:'0-Rejected',cancelled:'0-Cancelled'}[group];
-  return [...$id('fStatus').options].filter(o=>group==='flow'?isFlow(o.value):o.value===single).map(o=>o.value);
+  return [...$id('fStatus').options].filter(o=>{if(group!=='flow')return o.value===single;const n=statusRank(o.value)[0];return n>=1&&n<=14}).map(o=>o.value);
 }
 
 function toggleStatus(group){
@@ -3550,11 +3495,6 @@ function syncSelect(id){if(state.chosenReady)jQuery(`#${id}`).trigger('chosen:up
 
 function clearFilter(id,render=true){
   [...$id(id).options].forEach(o=>o.selected=false);syncSelect(id);if(render)applyFilters();
-}
-
-function resetFilters(){
-  FILTERS.forEach(f=>clearFilter(f.id,false));
-  $id('globalSearch').value='';$id('tableSearch').value='';applyFilters();toast('All filters cleared.');
 }
 
 function drillFilter(id,value,additive=false){
@@ -3890,10 +3830,6 @@ async function runCycleLookup(nsrs){
   else{setCycleProgress(done,total,`${done.toLocaleString()} live lookup${done===1?'':'s'} completed${failed?` · ${failed.toLocaleString()} unavailable`:''}.`);toast(`${done.toLocaleString()} cycle time row${done===1?'':'s'} loaded${failed?` · ${failed.toLocaleString()} unavailable`:''}.`,failed>0)}
 }
 
-function cancelCycleLookup(){
-  if(!state.cycleAbort)return;state.cycleAbort.abort();$id('cycleStatus').textContent='Cancelling active requests…';
-}
-
 function compareCycle(a,b,field){
   if(['Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'].includes(field))return (Number(a[field])||0)-(Number(b[field])||0);
   if(field==='ECD'||field.includes('Date'))return dateNumber(a[field])-dateNumber(b[field]);
@@ -3999,15 +3935,23 @@ function bindEvents(){
   const defaultRange=sapRange();$id('sapRangeDefault').textContent=`Default SAP range: ${defaultRange.from} to ${defaultRange.to}`;
   $id('rawFile').addEventListener('change',handleUpload);
   $id('sapRangeOpen').addEventListener('click',openSapRange);
-  $id('sapRangeForm').addEventListener('submit',submitSapRange);
+  $id('sapRangeForm').addEventListener('submit',(event)=>{
+    event.preventDefault();const range=selectedSapRange();if(!range)return;
+    closeSapRange();loadSapData(range);
+  });
   $id('sapRangeModal').addEventListener('click',e=>{if(e.target.closest('[data-sap-range-close]'))closeSapRange()});
-  $id('resetBtn').addEventListener('click',resetFilters);
+  $id('resetBtn').addEventListener('click',()=>{
+    FILTERS.forEach(f=>clearFilter(f.id,false));
+    $id('globalSearch').value='';$id('tableSearch').value='';applyFilters();toast('All filters cleared.');
+  });
   $id('globalSearch').addEventListener('input',applyFilters);
   $id('tableSearch').addEventListener('input',renderTable);
   $id('copyBtn').addEventListener('click',copyRows);
   $id('sendCycleBtn').addEventListener('click',sendDetailToCycle);
   $id('runCycleBtn').addEventListener('click',()=>runCycleLookup());
-  $id('cancelCycleBtn').addEventListener('click',cancelCycleLookup);
+  $id('cancelCycleBtn').addEventListener('click',()=>{
+    if(!state.cycleAbort)return;state.cycleAbort.abort();$id('cycleStatus').textContent='Cancelling active requests…';
+  });
   $id('copyCycleBtn').addEventListener('click',copyCycleRows);
   $id('exportCycleBtn').addEventListener('click',exportCycleRows);
   $id('cycleSearch').addEventListener('input',renderCycleTable);
@@ -4031,4 +3975,469 @@ function bindEvents(){
 bindEvents();renderCycleTable();loadInitialNsrData();
 
 }
+})();
+
+// ==================== MyLam · Filtered Document Summary ====================
+(function(){
+'use strict';
+if(location.hostname!=='techinfo.mylam.com'||!location.pathname.startsWith('/portal/group/mylam/contenttyperesults'))return;
+const BUTTON_ID='kyra-mylam-summary',BUTTON_LABEL='BOM - Part Number Analysis',SEARCH_LABEL='Find Tech Articles for BOM',DIALOG_ID='kyra-mylam-summary-dialog',SUMMARY_CONCURRENCY=10,SUMMARY_REQUEST_TIMEOUT=30000;
+const PREVIEW_URL=location.origin+'/portal/group/mylam/tech-article-preview?source=PE&articleId=';
+let cancelSummary=()=>{};
+
+function parseDocument(row){
+  const cells=row.cells,action=row.querySelector('img.hourIcon[onclick]')?.getAttribute('onclick')||'';
+  const match=action.match(/emailURL\(\s*'((?:\\.|[^'\\])*)'\s*,\s*'((?:\\.|[^'\\])*)'\s*,\s*'((?:\\.|[^'\\])*)'\s*,\s*'([^']*)'\s*,\s*'([^']*)'(?:\s*,\s*'([^']*)')?\s*\)/);
+  if(!match)return null;
+  const [originalUrl,type,documentNo,phase2,articleId,spinCleanFlag]=match.slice(1).map(value=>(value||'').replace(/\\(['"\\])/g,'$1'));
+  const hasId=articleId&&articleId!=='null',preview=[phase2,spinCleanFlag].some(value=>value.toLowerCase()==='true');
+  const target=preview?(hasId?PREVIEW_URL+encodeURIComponent(articleId):''):originalUrl&&originalUrl!=='null'?originalUrl:hasId?PREVIEW_URL+encodeURIComponent(articleId):'';
+  if(!target)return null;
+  const url=new URL(target,location.origin+'/');if(!/^https?:$/.test(url.protocol))return null;
+  return {type:type||cells[0]?.textContent.trim()||'',documentNo:documentNo||cells[1]?.textContent.trim()||'',
+    title:cells[3]?.textContent.trim()||'',releaseDate:cells[4]?.textContent.trim()||'',articleId:hasId?articleId:'',url:url.href};
+}
+
+function drawPage(jq,table,length,page){
+  return new Promise((resolve,reject)=>{
+    const node=jq(table.table().node()),events='draw.dt.kyraSummary error.dt.kyraSummary dt-error.dt.kyraSummary';
+    const finish=error=>{clearTimeout(timer);node.off(events,onEvent);error?reject(error):resolve()};
+    const onEvent=(event,settings,code,message)=>finish(event.type==='draw'?null:new Error(message||'Could not load MyLam results.'));
+    const timer=setTimeout(()=>finish(new Error('Loading MyLam results timed out. Please retry.')),30000);
+    node.on(events,onEvent);
+    try{table.page.len(length).page(page).draw('page')}catch(error){finish(error)}
+  });
+}
+
+async function collectDocuments(){
+  // DataTables belongs to the page's jQuery, not the userscript's bundled jQuery.
+  const jq=[unsafeWindow.jQuery,unsafeWindow.$].find(value=>value?.fn?.dataTable?.isDataTable('#searchResults'));
+  if(!jq)throw new Error('MyLam search results are not ready. Please wait and retry.');
+  const table=jq('#searchResults').DataTable(),original=table.page.info(),items=new Map();let read=0,missing=0;
+  try{
+    if(original.length!==500||original.page!==0)await drawPage(jq,table,500,0);
+    const first=table.page.info();
+    for(let page=0;page<first.pages;page++){
+      if(page)await drawPage(jq,table,500,page);
+      const current=table.page.info();
+      if(current.page!==page||current.recordsDisplay!==first.recordsDisplay)throw new Error('Search results changed. Please retry Summary.');
+      for(const row of table.rows({page:'current',search:'applied'}).nodes().toArray()){
+        read++;const item=parseDocument(row);if(item)items.set(item.articleId||item.url,item);else missing++;
+      }
+    }
+    if(read!==first.recordsDisplay||missing)throw new Error(`Could not read all filtered documents (${read-missing}/${first.recordsDisplay}). Please retry.`);
+    return [...items.values()];
+  }finally{
+    const current=table.page.info();
+    if(current.length!==original.length||current.page!==original.page)await drawPage(jq,table,original.length,original.page);
+  }
+}
+
+function extractPartNumbers(html){
+  const parse=text=>{const template=document.createElement('template');template.innerHTML=text;return template.content};
+  const root=parse(html).querySelector('.tech-document-article__container');
+  if(!root?.querySelector('.tech-document-article__fields,.tech-document-article__main-info'))throw new Error('Article content not found (login, access restriction or unsupported page).');
+  const fragments=[root],occurrences=[],numbers=new Set(),normalize=text=>text.replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\u00ad/g,'').replace(/\u00a0/g,' ');
+  // Rich-text tables are serialized as raw*Data strings; decode literals without executing scripts.
+  for(const script of root.querySelectorAll('script')){
+    const declarations=[...script.textContent.matchAll(/\b(?:const|let|var)\s+(raw\w*Data)\s*=/g)];
+    for(const declaration of declarations){
+      const rest=script.textContent.slice(declaration.index+declaration[0].length),literal=rest.match(/^\s*("(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*')\s*;/);
+      if(!literal)throw new Error(`Could not read embedded article content: ${declaration[1]}.`);
+      const decoded=literal[1].slice(1,-1).replace(/\\(u[\da-f]{4}|x[\da-f]{2}|\r?\n|[\s\S])/gi,(_,escape)=>{
+        if(/^[ux][\da-f]+$/i.test(escape))return String.fromCharCode(parseInt(escape.slice(1),16));
+        return ({n:'\n',r:'\r',t:'\t',b:'\b',f:'\f',v:'\v','0':'\0','\n':'','\r\n':''})[escape]??escape;
+      });
+      const fragment=parse(decoded);fragments.push(!fragment.querySelector('table')&&/&lt;table\b/i.test(decoded)?parse(fragment.textContent):fragment);
+    }
+  }
+  const header=text=>text.length<100&&!/\d/.test(text)&&/\bpart\s*(?:numbers?\b|nos?\b\.?|#)|\bp\s*\/\s*n\b|\bp\.?n\.?s?\b/i.test(text);
+  let tableIndex=0;
+  for(const fragment of fragments)for(const table of fragment.querySelectorAll('table')){
+    tableIndex++;const grid=[],columns=new Set();
+    for(const [r,row] of [...table.rows].entries()){
+      grid[r]??=[];let column=0;
+      for(const cell of row.cells){
+        while(grid[r][column])column++;
+        const rowSpan=cell.rowSpan||table.rows.length-r;
+        for(let y=r;y<Math.min(table.rows.length,r+rowSpan);y++)for(let x=column;x<column+cell.colSpan;x++){grid[y]??=[];grid[y][x]=cell}
+        column+=cell.colSpan;
+      }
+    }
+    for(const [r,row] of grid.entries()){
+      const seen=new Set();
+      for(const [c,cell] of row.entries()){
+        if(!cell||seen.has(cell))continue;seen.add(cell);
+        const clone=cell.cloneNode(true);clone.querySelectorAll('table,script,style').forEach(node=>node.remove());
+        clone.querySelectorAll('br').forEach(node=>node.replaceWith('\n'));clone.querySelectorAll('p,div,li').forEach(node=>node.append('\n'));
+        const text=normalize(clone.textContent).trim();
+        if(header(text)){
+          for(let x=c;x<c+cell.colSpan;x++)columns.add(x);
+          // Also support key/value rows such as "Part Number | 123-456789-00".
+          if(row[c+cell.colSpan]&&!header(row[c+cell.colSpan].textContent)&&/\d/.test(row[c+cell.colSpan].textContent))columns.add(c+cell.colSpan);
+          continue;
+        }
+        const candidates=new Set(text.match(/(?<![A-Z0-9._-])\d{2,4}-[A-Z0-9]{4,8}(?:-[A-Z0-9]{2,4})?(?![A-Z0-9._-])/gi)||[]);
+        if(columns.has(c)&&cell.colSpan===1)for(const token of text.match(/\b[A-Z0-9]+(?:[-._][A-Z0-9]+)*\b/gi)||[]){
+          if(token.length>=5&&/\d/.test(token)&&!/^\d{1,3}(?:\.\d+)?$/.test(token))candidates.add(token);
+        }
+        for(const value of candidates){const partNumber=value.toUpperCase();numbers.add(partNumber);occurrences.push({partNumber,table:tableIndex,row:r+1,column:c+1})}
+      }
+    }
+  }
+  return {partNumbers:[...numbers].sort(),occurrences};
+}
+
+async function readArticle(item,signal){
+  const url=new URL(item.url);if(url.origin!==location.origin)throw new Error('This document is outside MyLam; open its link to inspect it.');
+  const response=await unsafeWindow.fetch(url.href,{credentials:'include',signal});
+  if(!response.ok){const error=new Error(`HTTP ${response.status}`);error.pause=[401,403,429,503].includes(response.status);throw error}
+  const type=response.headers.get('content-type')||'';if(!/html/i.test(type))throw new Error('This link is not an HTML article (it may be a PDF).');
+  if(response.redirected&&/login|sign[-_]?in|saml|oauth/i.test(response.url)){const error=new Error('Session expired. Sign in to MyLam and retry.');error.pause=true;throw error}
+  const html=await response.text();
+  if(!html.includes('tech-document-article__container')&&/<input\b[^>]*\btype\s*=\s*["']?password\b/i.test(html)){const error=new Error('Session expired. Sign in to MyLam and retry.');error.pause=true;throw error}
+  return extractPartNumbers(html);
+}
+
+async function runSummaryQueue(queue,read,stopped){
+  let next=0;const worker=async()=>{while(!stopped()&&next<queue.length)await read(queue[next++])};
+  await Promise.all(Array.from({length:Math.min(SUMMARY_CONCURRENCY,queue.length)},worker));
+}
+
+function normalizedBomPartNumber(value){
+  return String(value??'').normalize('NFKC').replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\u00ad/g,'').replace(/\s+/g,'').toUpperCase();
+}
+
+function bomFileStem(fileName){
+  let stem=String(fileName||'BOM').replace(/\.[^.]+$/,'').trim(),system=stem.search(/\s*-\s*SYSTEM\b/i);
+  if(system>=0)stem=stem.slice(0,system).trim();
+  return (stem||'BOM').replace(/[<>:"/\\|?*]/g,'_').replace(/[. ]+$/g,'').slice(0,100)||'BOM';
+}
+
+function recoverMalformedBomRows(buffer){
+  // Some BOM exports use numeric column positions in cell references (for example " 42" instead of D2).
+  const workbook=XLSX.read(buffer,{type:'array',bookFiles:true}),content=workbook.files?.['xl/worksheets/sheet1.xml']?.content;
+  if(!content)return null;
+  const xml=new TextDecoder().decode(content),firstCell=xml.match(/<c\b[^>]*\br="([^"]*)"/);
+  if(!firstCell||/^[A-Z]+\d+$/i.test(firstCell[1]))return null;
+  const rows=[];
+  for(const match of xml.matchAll(/<row\b([^>]*)>([\s\S]*?)<\/row>/g)){
+    const rowNumber=Number(match[1].match(/\br="(\d+)"/)?.[1]);if(!rowNumber)continue;
+    const values=[];let nextColumn=0;
+    for(const cell of match[2].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+      const reference=cell[1].match(/\br="([^"]*)"/)?.[1]||'',prefix=reference.endsWith(String(rowNumber))?reference.slice(0,-String(rowNumber).length).trim():'',oneBased=Number(prefix);
+      const column=/^\d+$/.test(prefix)&&oneBased>0?oneBased-1:nextColumn;nextColumn=column+1;
+      const raw=cell[2]?.match(/<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/)?.[1];if(raw===undefined||raw==='')continue;
+      const type=cell[1].match(/\bt="([^"]+)"/)?.[1];
+      values[column]=type==='s'?workbook.Strings?.[Number(raw)]?.t??'':type==='n'||!type?(/^\d{16,}$/.test(raw)?raw:Number(raw)):type==='b'?raw==='1':raw;
+    }
+    rows[rowNumber-1]=values;
+  }
+  return rows.length?rows:null;
+}
+
+async function readBomFile(file){
+  if(typeof XLSX==='undefined'||!XLSX.read)throw new Error('Excel reader is unavailable. Refresh the page and try again.');
+  let workbook,buffer;
+  try{buffer=await file.arrayBuffer();workbook=XLSX.read(buffer,{type:'array',cellDates:true,cellStyles:true})}
+  catch(error){throw new Error(`${file.name}: could not read the workbook (${error.message}).`)}
+  const sourceSheetName=workbook.SheetNames[0],source=workbook.Sheets[sourceSheetName];
+  if(!source)throw new Error(`${file.name}: the workbook has no worksheet.`);
+  const decoded=XLSX.utils.decode_range(source['!ref']||'A1'),range={s:{r:0,c:0},e:decoded.e};
+  let rows=XLSX.utils.sheet_to_json(source,{header:1,range,raw:true,defval:'',blankrows:true}),display=(row,column)=>{const cell=source[XLSX.utils.encode_cell({r:row,c:column})];return !cell?'':typeof cell.v==='number'&&Number.isInteger(cell.v)&&Math.abs(cell.v)>=1e15?String(cell.v):XLSX.utils.format_cell(cell)};
+  let lastRow=decoded.e.r,lastColumn=decoded.e.c,headerRow=-1,materialColumn=-1;
+  function findHeader(){
+    findMaterial:for(let row=0;row<=Math.min(lastRow,199);row++)for(let column=0;column<=lastColumn;column++){
+      if(String(display(row,column)).replace(/\s+/g,' ').trim().toUpperCase()==='MATERIAL'){headerRow=row;materialColumn=column;break findMaterial}
+    }
+  }
+  findHeader();
+  if(headerRow<0){
+    const recovered=recoverMalformedBomRows(buffer);
+    if(recovered){rows=recovered;lastRow=rows.length-1;lastColumn=Math.max(0,...rows.slice(0,200).map(row=>row?.length||0))-1;display=(row,column)=>rows[row]?.[column]??'';findHeader()}
+  }
+  if(headerRow<0)throw new Error(`${file.name}: no MATERIAL column was found in the first worksheet.`);
+  const materials=new Map();
+  for(let row=headerRow+1;row<=lastRow;row++){
+    const shown=String(display(row,materialColumn)).replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\u00ad/g,'').trim(),key=normalizedBomPartNumber(shown);
+    if(key&&!materials.has(key))materials.set(key,shown);
+  }
+  return {file,fileName:file.name,sourceSheetName,rows,headerRow,materialColumn,materials,
+    merges:(source['!merges']||[]).map(rangeItem=>XLSX.utils.encode_range(rangeItem)),
+    columnWidths:(source['!cols']||[]).map(column=>Number(column.wch)||(Number(column.wpx)?Number(column.wpx)/7:0)),
+    rowHeights:(source['!rows']||[]).map(row=>Number(row.hpt)||(Number(row.hpx)?Number(row.hpx)*0.75:0))};
+}
+
+function analyzeBomMatches(boms,summaryRows){
+  const first=boms[0],second=boms[1]||null,firstOnly=new Set(),secondOnly=new Set(),scope=new Set();
+  if(second){
+    first.materials.forEach((_value,key)=>{if(!second.materials.has(key)){firstOnly.add(key);scope.add(key)}});
+    second.materials.forEach((_value,key)=>{if(!first.materials.has(key)){secondOnly.add(key);scope.add(key)}});
+  }else first.materials.forEach((_value,key)=>scope.add(key));
+  const documents=new Map(),matched=new Set();
+  summaryRows.forEach(row=>{
+    const partNumber=normalizedBomPartNumber(row.partNumber),inFirst=second?firstOnly.has(partNumber):scope.has(partNumber),inSecond=Boolean(second&&secondOnly.has(partNumber));
+    if(!partNumber||(!inFirst&&!inSecond))return;
+    matched.add(partNumber);const key=row.articleId||row.url||`${row.documentNo}\n${row.title}`;
+    let document=documents.get(key);
+    if(!document){document={order:Number(row.documentIndex)||0,title:row.title||'',url:row.url||'',documentNo:row.documentNo||'',releaseDate:row.releaseDate||'',first:new Set(),second:new Set()};documents.set(key,document)}
+    if(inFirst)document.first.add(first.materials.get(partNumber)||row.partNumber);
+    if(inSecond)document.second.add(second.materials.get(partNumber)||row.partNumber);
+  });
+  return {second,firstOnly,secondOnly,matched,documents:[...documents.values()].sort((left,right)=>left.order-right.order||left.title.localeCompare(right.title))};
+}
+
+function addBomSourceSheet(workbook,bom,name){
+  const worksheet=workbook.addWorksheet(name),clean=value=>value===undefined||value===null||value===''?null:value instanceof Date?value:typeof value==='number'&&Number.isInteger(value)&&Math.abs(value)>=1e15?String(value):['string','number','boolean'].includes(typeof value)?value:String(value);
+  for(let offset=0;offset<bom.rows.length;offset+=3000)worksheet.addRows(bom.rows.slice(offset,offset+3000).map(row=>Array.from(row,clean)));
+  bom.merges.forEach(range=>{try{worksheet.mergeCells(range)}catch(_){/* keep the remaining source table when a legacy merge is invalid */}});
+  const columnCount=Math.max(bom.materialColumn+1,...bom.rows.slice(0,500).map(row=>row.length));
+  for(let column=0;column<columnCount;column++){
+    const measured=Math.max(8,...bom.rows.slice(0,500).map(row=>String(row[column]??'').split(/\r?\n/).reduce((max,line)=>Math.max(max,line.length),0)+2));
+    worksheet.getColumn(column+1).width=Math.min(60,bom.columnWidths[column]||measured);
+  }
+  bom.rowHeights.forEach((height,index)=>{if(height)worksheet.getRow(index+1).height=height});
+  return worksheet;
+}
+
+function addTechArticlesSheet(workbook,summaryRows){
+  const columns=[['Title',50],['URL',46],['Document No.',18],['Release Date',16],['Part Number',28]],worksheet=workbook.addWorksheet('Tech Articles',{views:[{state:'frozen',ySplit:4,showGridLines:false}]});worksheet.properties.defaultRowHeight=18;
+  worksheet.getCell(1,1).value='Tech Articles';worksheet.getCell(1,1).font={name:'Arial',size:15,bold:true,color:{argb:'FF1F2937'}};worksheet.getCell(1,1).alignment={vertical:'middle'};worksheet.getRow(1).height=25;
+  for(let column=1;column<=columns.length;column++)worksheet.getCell(1,column).border={bottom:{style:'thin',color:{argb:'FF94A3B8'}}};
+  const documentCount=new Set(summaryRows.map(row=>row.articleId||row.url||`${row.documentNo}\n${row.title}`)).size,partNumberCount=new Set(summaryRows.map(row=>normalizedBomPartNumber(row.partNumber)).filter(Boolean)).size;
+  [['Documents',documentCount],['Unique Part Numbers',partNumberCount]].forEach((item,index)=>{const start=index*2+1,label=worksheet.getCell(2,start),value=worksheet.getCell(2,start+1);label.value=item[0];label.font={name:'Arial',size:10,bold:true,color:{argb:'FF475569'}};value.value=item[1];value.font={name:'Arial',size:10,color:{argb:'FF475569'}}});worksheet.getCell(2,5).value=`Links: ${summaryRows.length}`;worksheet.getCell(2,5).font={name:'Arial',size:10,color:{argb:'FF475569'}};
+  columns.forEach((column,index)=>{worksheet.getColumn(index+1).width=column[1];const cell=worksheet.getCell(4,index+1);cell.value=column[0];cell.font={name:'Arial',size:10,bold:true,color:{argb:'FFFFFFFF'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF526B78'}};cell.alignment={vertical:'middle',horizontal:'center',wrapText:true};cell.border={right:{style:'thin',color:{argb:'FFFFFFFF'}}}});worksheet.getRow(4).height=28;
+  const edge={style:'thin',color:{argb:'FFD6E0EA'}};
+  [...summaryRows].sort((left,right)=>(Number(left.documentIndex)||0)-(Number(right.documentIndex)||0)||String(left.partNumber).localeCompare(String(right.partNumber))).forEach(document=>{
+    const values=[document.title,document.url,document.documentNo,document.releaseDate,document.partNumber],row=worksheet.addRow(values);
+    row.eachCell({includeEmpty:true},cell=>{cell.font={name:'Arial',size:10,color:{argb:'FF1F2937'}};cell.alignment={vertical:'top',horizontal:'left',wrapText:true};cell.border={bottom:edge}});
+    if(document.url){const linkCell=row.getCell(2);linkCell.value={text:document.url,hyperlink:document.url};linkCell.font={name:'Arial',size:10,color:{argb:'FF0369A1'},underline:true}}
+    row.height=Math.min(75,Math.max(32,15*Math.max(2,...values.map(value=>String(value||'').split('\n').length))));
+  });
+  worksheet.autoFilter={from:{row:4,column:1},to:{row:Math.max(4,worksheet.rowCount),column:columns.length}};return worksheet;
+}
+
+async function createDownloadWorkbook(boms,analysis,summaryRows){
+  if(typeof ExcelJS==='undefined'||!ExcelJS.Workbook)throw new Error('Excel workbook writer is unavailable. Refresh the page and try again.');
+  const workbook=new ExcelJS.Workbook();workbook.creator='Toolkit Kyra';workbook.company='Lam Research';workbook.created=new Date();
+  if(analysis){
+    const two=Boolean(analysis.second),columns=[['Title',60],['URL',46],['Document No.',18],['Release Date',16],...boms.map(bom=>[bomFileStem(bom.fileName),30])];
+    const worksheet=workbook.addWorksheet('Part Number Analysis',{views:[{state:'frozen',ySplit:1,showGridLines:false}]});
+    columns.forEach(([header,width],index)=>{worksheet.getColumn(index+1).width=width;const cell=worksheet.getCell(1,index+1);cell.value=header;cell.font={name:'Arial',size:10,bold:true,color:{argb:'FFFFFFFF'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF526B78'}};cell.alignment={vertical:'middle',horizontal:'center'};cell.border={right:{style:'thin',color:{argb:'FFFFFFFF'}}}});
+    const edge={style:'thin',color:{argb:'FFD6E0EA'}};
+    analysis.documents.forEach(memo=>{
+      const parts=[[...memo.first].sort(),[...memo.second].sort()],count=Math.max(1,parts[0].length,parts[1].length),start=worksheet.rowCount+1;
+      for(let index=0;index<count;index++){
+        const metadata=index===0?[memo.title,memo.url,memo.documentNo,memo.releaseDate]:[null,null,null,null],values=[...metadata,parts[0][index]||null];if(two)values.push(parts[1][index]||null);
+        const row=worksheet.addRow(values);
+        row.eachCell({includeEmpty:true},(cell,column)=>{cell.font={name:'Arial',size:10,color:{argb:'FF1F2937'}};cell.alignment={vertical:'middle',horizontal:'left',wrapText:column<=2};cell.border={bottom:edge}});
+        row.getCell(5).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEFF6FF'}};
+        if(two)row.getCell(6).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFECFDF5'}};
+      }
+      if(count>1)for(let column=1;column<=4;column++)worksheet.mergeCells(start,column,start+count-1,column);
+      if(memo.url){const cell=worksheet.getCell(start,2);cell.value={text:memo.url,hyperlink:memo.url};cell.font={name:'Arial',size:10,color:{argb:'FF0369A1'},underline:true}}
+      parts.slice(0,boms.length).forEach((values,index)=>{for(const value of values)worksheet.getColumn(index+5).width=Math.max(worksheet.getColumn(index+5).width,value.length+2)});
+    });
+    worksheet.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,worksheet.rowCount),column:columns.length}};
+  }
+  boms.forEach(bom=>{
+    const base=bomFileStem(bom.fileName).replace(/[\[\]:*?/\\]/g,'_').replace(/^'+|'+$/g,'').slice(0,31)||'BOM';let name=base,index=2;
+    while(name.toLowerCase()==='tech articles'||workbook.worksheets.some(sheet=>sheet.name.toLowerCase()===name.toLowerCase())){const suffix=` (${index++})`;name=base.slice(0,31-suffix.length)+suffix}
+    addBomSourceSheet(workbook,bom,name);
+  });
+  addTechArticlesSheet(workbook,summaryRows||[]);
+  return workbook.xlsx.writeBuffer();
+}
+
+function downloadBomWorkbook(buffer,fileName){
+  const url=URL.createObjectURL(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})),anchor=document.createElement('a');
+  anchor.href=url;anchor.download=fileName;document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function showSummary(items){
+  cancelSummary();document.getElementById(DIALOG_ID)?.remove();
+  const dialog=document.createElement('dialog'),rows=[],controllers=new Set();let running=false,scanComplete=false,stopped=false,message='',comparisonQueued=false,comparisonRunning=false,downloadRunning=false,latestBomResult=null;
+  items.forEach((item,index)=>Object.assign(item,{status:'pending',partNumbers:[],occurrences:[],error:'',documentIndex:index}));
+  unsafeWindow.myLamSummary=items;unsafeWindow.myLamPartNumbers=rows;
+  dialog.id=DIALOG_ID;dialog.style.cssText='width:96vw;max-width:1500px;height:88vh;padding:20px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#222;box-shadow:0 4px 24px #0005';
+  dialog.innerHTML=`<style>
+    #${DIALOG_ID}{box-sizing:border-box;overflow:hidden}#${DIALOG_ID}::backdrop{background:#0006}#${DIALOG_ID} [hidden]{display:none!important}#${DIALOG_ID} button{cursor:pointer}#${DIALOG_ID} button:disabled{cursor:not-allowed;opacity:.55}
+    #${DIALOG_ID} table{width:100%;border-collapse:collapse;font:13px Arial,sans-serif}#${DIALOG_ID} th,#${DIALOG_ID} td{padding:8px;text-align:left;border-bottom:1px solid #dce3e8;overflow-wrap:anywhere}#${DIALOG_ID} th{position:sticky;top:0;background:#eef5f7}#${DIALOG_ID} a{color:#007a95}
+    #${DIALOG_ID} .kyra-bom-panel{flex:none;padding:11px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc}#${DIALOG_ID} .kyra-bom-panel>summary{cursor:pointer;color:#334155;font:600 13px Arial,sans-serif}#${DIALOG_ID} .kyra-bom-inputs{display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr) auto;gap:10px;align-items:end;margin-top:12px}
+    #${DIALOG_ID} .kyra-bom-file{display:grid;gap:5px;color:#334155;font:600 12px Arial,sans-serif}#${DIALOG_ID} .kyra-bom-file input{min-width:0;font:12px Arial,sans-serif}
+    #${DIALOG_ID} [data-action="compare"],#${DIALOG_ID} [data-action="download"]{min-height:32px;border:1px solid #526b78;border-radius:6px;background:#526b78;color:#fff;font-weight:700;padding:6px 12px;white-space:nowrap}#${DIALOG_ID} [data-action="download"]{border-color:#0f766e;background:#0f766e}#${DIALOG_ID} [data-bom-error]{color:#b91c1c;font:12px Arial,sans-serif}#${DIALOG_ID} [data-bom-error]:empty{display:none}
+    #${DIALOG_ID} .kyra-comparison{display:flex;flex-direction:column;flex:2;min-height:0;border:1px solid #cbd5e1;border-radius:8px;background:#fff;overflow:hidden}#${DIALOG_ID} .kyra-comparison-heading{padding:10px 12px;background:#f1f5f9;color:#334155;font:700 14px Arial,sans-serif}#${DIALOG_ID} .kyra-comparison-content{display:flex;flex-direction:column;flex:1;min-height:0;gap:8px;padding:9px}#${DIALOG_ID} .kyra-comparison-metrics{display:flex;gap:7px;flex-wrap:wrap}#${DIALOG_ID} .kyra-comparison-metrics span{border-radius:999px;background:#e2e8f0;color:#334155;padding:4px 8px;font:11px Arial,sans-serif}#${DIALOG_ID} .kyra-comparison-table{flex:1;min-height:0;overflow:auto;border:1px solid #dce3e8;border-radius:6px}#${DIALOG_ID} .kyra-comparison-table table{min-width:1050px}#${DIALOG_ID} .kyra-comparison-table th{white-space:nowrap}#${DIALOG_ID} .kyra-comparison-table th:first-child{width:50%;min-width:350px}#${DIALOG_ID} .kyra-comparison-table th:nth-child(2){min-width:105px}#${DIALOG_ID} .kyra-comparison-table th:nth-child(3){min-width:120px}#${DIALOG_ID} .kyra-comparison-table th:nth-child(n+4){min-width:210px}#${DIALOG_ID} .kyra-comparison-table td{vertical-align:top}#${DIALOG_ID} .kyra-comparison-table td:not(:first-child){white-space:pre;overflow-wrap:normal;word-break:normal}#${DIALOG_ID} .kyra-bom-first{background:#eff6ff}#${DIALOG_ID} .kyra-bom-second{background:#ecfdf5}#${DIALOG_ID} [data-comparison-empty]{padding:10px;color:#64748b;font:12px Arial,sans-serif}
+    #${DIALOG_ID} .kyra-documents{flex:none;border:1px solid #dce3e8;border-radius:6px;overflow:auto}#${DIALOG_ID} .kyra-documents[open]{flex:1;min-height:150px}#${DIALOG_ID} .kyra-documents>summary{position:sticky;top:0;z-index:1;padding:10px;background:#f8fafc;color:#334155;cursor:pointer;font:600 13px Arial,sans-serif}
+    @media(max-width:1050px){#${DIALOG_ID} .kyra-bom-inputs{grid-template-columns:1fr 1fr}#${DIALOG_ID} [data-action="compare"],#${DIALOG_ID} [data-action="download"]{justify-self:start}}@media(max-width:700px){#${DIALOG_ID} .kyra-bom-inputs{grid-template-columns:1fr}}
+    </style>
+    <div style="display:flex;flex-direction:column;gap:12px;height:100%"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="flex:1;font-size:20px">BOM - Part Number Analysis</strong><button type="button" data-action="download" disabled>Download Excel</button><button type="button" data-action="close">Close</button></div>
+    <details data-bom-panel class="kyra-bom-panel" open><summary>BOM files <span data-bom-names></span></summary><div class="kyra-bom-inputs"><label class="kyra-bom-file"><span data-bom-label>BOM1 - SYSTEM</span><input data-bom="1" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv"></label><label class="kyra-bom-file"><span data-bom-label>BOM2 - SYSTEM</span><input data-bom="2" type="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv"></label><button type="button" data-action="compare">${SEARCH_LABEL}</button></div></details><div data-bom-error role="alert"></div>
+    <section data-comparison class="kyra-comparison" hidden><div class="kyra-comparison-heading">Comparison result <span data-comparison-summary></span></div><div class="kyra-comparison-content"><div data-comparison-metrics class="kyra-comparison-metrics"></div><div data-comparison-empty hidden></div><div data-comparison-table class="kyra-comparison-table" hidden><table><thead data-comparison-head></thead><tbody data-comparison-body></tbody></table></div></div></section>
+    <details data-summary-list class="kyra-documents" open><summary>Tech Articles</summary><div data-progress role="status" style="padding:8px 10px;font-size:13px"></div><table><thead><tr><th>Part Number</th><th>Document No.</th><th>Title</th><th>Release Date</th></tr></thead><tbody data-summary-body></tbody></table></details></div>`;
+  const button=name=>dialog.querySelector(`[data-action="${name}"]`),progress=dialog.querySelector('[data-progress]'),body=dialog.querySelector('[data-summary-body]'),bomInputs=[...dialog.querySelectorAll('[data-bom]')],bomPanel=dialog.querySelector('[data-bom-panel]'),summaryList=dialog.querySelector('[data-summary-list]'),bomError=dialog.querySelector('[data-bom-error]'),comparisonPanel=dialog.querySelector('[data-comparison]'),comparisonSummary=dialog.querySelector('[data-comparison-summary]'),comparisonMetrics=dialog.querySelector('[data-comparison-metrics]'),comparisonEmpty=dialog.querySelector('[data-comparison-empty]'),comparisonTable=dialog.querySelector('[data-comparison-table]'),comparisonHead=dialog.querySelector('[data-comparison-head]'),comparisonBody=dialog.querySelector('[data-comparison-body]');
+  const link=(item,label)=>{const a=document.createElement('a');a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent=label||item.url;return a};
+  const selectedBomFiles=()=>bomInputs.map(input=>input.files?.[0]).filter(Boolean);
+  const setBomError=text=>{bomError.textContent=text};
+  function clearBomComparison(){
+    latestBomResult=null;setBomError('');comparisonPanel.hidden=true;comparisonSummary.textContent='';comparisonMetrics.replaceChildren();comparisonHead.replaceChildren();comparisonBody.replaceChildren();comparisonEmpty.hidden=true;comparisonTable.hidden=true;bomPanel.open=true;summaryList.open=true;
+  }
+  function renderBomComparison(result){
+    const {boms,analysis}=result,two=boms.length===2,names=boms.map(bom=>bomFileStem(bom.fileName)),headers=['Title','Document No.','Release Date',...names];
+    comparisonPanel.hidden=false;bomPanel.open=false;summaryList.open=false;comparisonSummary.textContent=`— ${analysis.documents.length} Tech Article${analysis.documents.length===1?'':'s'}`;comparisonMetrics.replaceChildren();
+    const metrics=two?[`${names[0]} differences: ${analysis.firstOnly.size}`,`${names[1]} differences: ${analysis.secondOnly.size}`,`Matching Part Numbers: ${analysis.matched.size}`]:[`${names[0]} materials: ${boms[0].materials.size}`,`Matching Part Numbers: ${analysis.matched.size}`];
+    metrics.forEach(text=>{const span=document.createElement('span');span.textContent=text;comparisonMetrics.append(span)});
+    const headerRow=document.createElement('tr');headers.forEach(text=>{const th=document.createElement('th');th.textContent=text;headerRow.append(th)});comparisonHead.replaceChildren(headerRow);comparisonBody.replaceChildren();
+    analysis.documents.forEach(memo=>{
+      const values=[memo.title,memo.documentNo,memo.releaseDate,[...memo.first].sort().join('\n')];if(two)values.push([...memo.second].sort().join('\n'));const tr=document.createElement('tr');
+      values.forEach((value,index)=>{const td=document.createElement('td');if(index===0)td.append(link(memo,memo.title));else td.textContent=value;if(index===3)td.className='kyra-bom-first';if(index===4)td.className='kyra-bom-second';tr.append(td)});comparisonBody.append(tr);
+    });
+    comparisonEmpty.textContent=analysis.documents.length?'':'No Tech Articles matched the relevant BOM Part Numbers.';comparisonEmpty.hidden=Boolean(analysis.documents.length);comparisonTable.hidden=!analysis.documents.length;
+  }
+  function update(){
+    const done=items.filter(item=>['done','empty','error'].includes(item.status)).length,failed=items.filter(item=>item.status==='error').length;
+    progress.textContent=`${done}/${items.length} documents · ${new Set(rows.map(row=>row.partNumber)).size} unique part numbers · ${failed} failed${message?' — '+message:''}`;
+    const files=selectedBomFiles(),compareButton=button('compare'),downloadButton=button('download');compareButton.disabled=comparisonRunning||comparisonQueued||downloadRunning||!files.length||(!running&&!scanComplete);compareButton.textContent=SEARCH_LABEL;downloadButton.disabled=downloadRunning||comparisonRunning||running||!scanComplete||Boolean(files.length&&!latestBomResult);downloadButton.textContent=downloadRunning?'Creating Excel...':'Download Excel';bomInputs.forEach(input=>input.disabled=comparisonRunning||downloadRunning);
+  }
+  function appendResults(item){
+    const fragment=document.createDocumentFragment();
+    for(const partNumber of item.partNumbers){
+      const result={partNumber,documentNo:item.documentNo,title:item.title,url:item.url,releaseDate:item.releaseDate,articleId:item.articleId,documentIndex:item.documentIndex};rows.push(result);
+      const tr=document.createElement('tr');for(const value of [partNumber,item.documentNo]){const td=document.createElement('td');td.textContent=value;tr.append(td)}
+      const td=document.createElement('td');td.append(link(item,item.title));tr.append(td);const date=document.createElement('td');date.textContent=item.releaseDate;tr.append(date);fragment.append(tr);
+    }
+    body.append(fragment);
+  }
+  const stop=()=>{stopped=true;controllers.forEach(controller=>controller.abort())};cancelSummary=stop;
+  async function startBomComparison(){
+    const files=selectedBomFiles();if(!files.length)return;
+    if(running){comparisonQueued=true;update();return}
+    if(!scanComplete){setBomError('Document loading was interrupted. Close this window and open the analysis again to refresh the current filtered results.');update();return}
+    comparisonQueued=false;comparisonRunning=true;clearBomComparison();update();
+    try{
+      const boms=[];for(const file of files)boms.push(await readBomFile(file));
+      const analysis=analyzeBomMatches(boms,rows),outputName=boms.map(bom=>bomFileStem(bom.fileName)).join(' vs ')+'.xlsx';latestBomResult={boms,analysis,outputName};renderBomComparison(latestBomResult);
+    }catch(error){clearBomComparison();console.error('[MyLam BOM Analysis]',error);setBomError(error.message||String(error))}
+    finally{comparisonRunning=false;update()}
+  }
+  async function downloadBomResult(){
+    const files=selectedBomFiles(),result=files.length?latestBomResult:null;if(!scanComplete||(files.length&&!result))return;const outputName=result?result.outputName:'MyLam_Tech_Articles.xlsx';downloadRunning=true;setBomError('');update();
+    try{downloadBomWorkbook(await createDownloadWorkbook(result?result.boms:[],result?result.analysis:null,rows),outputName)}
+    catch(error){console.error('[MyLam BOM Analysis]',error);setBomError(error.message||String(error))}
+    finally{downloadRunning=false;update()}
+  }
+  async function readOne(item){
+    if(stopped)return;item.status='reading';item.error='';const controller=new unsafeWindow.AbortController();controllers.add(controller);let timedOut=false;
+    const timer=setTimeout(()=>{timedOut=true;controller.abort()},SUMMARY_REQUEST_TIMEOUT);update();
+    try{Object.assign(item,await readArticle(item,controller.signal));item.status=item.partNumbers.length?'done':'empty';appendResults(item)}
+    catch(error){
+      const paused=Boolean(error.pause);item.status=stopped&&!paused?'pending':'error';item.error=item.status==='error'?(timedOut?'Request timed out.':error.message):'';
+      if(paused){stopped=true;message='Restore the MyLam session, close this window, and open the analysis again.';controllers.forEach(active=>active.abort())}
+    }finally{clearTimeout(timer);controllers.delete(controller);update()}
+  }
+  async function run(){
+    if(running)return;scanComplete=false;running=true;stopped=false;message='';update();
+    try{
+      await runSummaryQueue(items.filter(item=>['pending','error'].includes(item.status)),readOne,()=>stopped);
+    }finally{
+      running=false;scanComplete=!stopped&&!items.some(item=>['pending','reading'].includes(item.status));
+      if(!scanComplete&&comparisonQueued){comparisonQueued=false;setBomError('Document loading was interrupted. Close this window and open the analysis again to refresh the current filtered results.')}
+      update();if(scanComplete&&comparisonQueued)await startBomComparison();
+    }
+  }
+  button('compare').onclick=startBomComparison;button('download').onclick=downloadBomResult;bomInputs.forEach(input=>input.addEventListener('change',()=>{
+    clearBomComparison();const files=selectedBomFiles();if(!files.length)comparisonQueued=false;
+    bomInputs.forEach((field,index)=>{field.previousElementSibling.textContent=field.files?.[0]?bomFileStem(field.files[0].name):`BOM${index+1} - SYSTEM`});dialog.querySelector('[data-bom-names]').textContent=files.map(file=>bomFileStem(file.name)).join(' vs ');
+    update();
+  }));
+  button('close').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{stop();dialog.remove()});
+  document.body.append(dialog);dialog.showModal();update();run();
+}
+
+function addSummaryButton(){
+  if(document.getElementById(BUTTON_ID))return;
+  const clear=document.querySelector('button.clearFilter[onclick="clearFilter()"]');if(!clear)return;
+  const button=document.createElement('button');button.id=BUTTON_ID;button.type='button';button.className='primary-button';
+  button.textContent=BUTTON_LABEL;button.style.cssText='margin-left:8px;white-space:nowrap;box-sizing:border-box;color:#fff;vertical-align:middle';button.style.setProperty('background','#5b6f7a','important');button.style.setProperty('border-color','#5b6f7a','important');
+  button.addEventListener('click',async()=>{
+    button.disabled=true;button.textContent='Loading...';
+    try{showSummary(await collectDocuments())}catch(error){console.error('[MyLam BOM Analysis]',error);alert(`BOM - Part Number Analysis failed:\n${error.message}`)}
+    finally{button.disabled=false;button.textContent=BUTTON_LABEL}
+  });
+  clear.insertAdjacentElement('afterend',button);
+  requestAnimationFrame(()=>{
+    const apply=[...document.querySelectorAll('button,input[type="button"],input[type="submit"]')].find(control=>control!==button&&String(control.textContent||control.value||'').trim().toLowerCase()==='apply filter'),height=apply?.getBoundingClientRect().height;
+    if(height){button.style.setProperty('height',`${height}px`,'important');button.style.setProperty('min-height',`${height}px`,'important')}
+  });
+}
+function init(){
+  let dateInitialized=false;
+  function updatePage(){
+    if(!dateInitialized){const input=document.querySelector('#startDate.textInput.excludeXLS');if(input){dateInitialized=true;if(!input.value)input.value=`01/01/${new Date().getFullYear()-3}`}}
+    addSummaryButton();
+  }
+  updatePage();new MutationObserver(updatePage).observe(document.body,{childList:true,subtree:true});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+// ==================== MyLam · Chosen Filters ====================
+(function(){
+'use strict';
+if(location.hostname!=='techinfo.mylam.com'||!location.pathname.startsWith('/portal/group/mylam/contenttyperesults'))return;
+const jq=jQuery,filters=new Map();
+if(!jq.fn.chosen)return;if(!jq.trim)jq.trim=value=>value==null?'':String(value).trim();
+const selector='.filterContainerClass ul.multiSelect,.filterContainerClass select:not(.kyra-chosen-input),select[id="contentList"],select[id="savedFilters"]';
+const css=`
+.kyra-chosen-source,.kyra-chosen-source~.select2{display:none!important}.kyra-mylam-chosen{min-width:0;width:100%;margin-top:9px}.searchbox .kyra-mylam-chosen{width:220px;flex:0 1 220px;margin-top:0}
+.kyra-mylam-chosen>select.kyra-chosen-input,.kyra-mylam-chosen>.select2-container{display:none!important}.kyra-mylam-chosen .chosen-container{width:100%!important}.kyra-mylam-chosen .chosen-with-drop{z-index:1100}
+.kyra-mylam-chosen .chosen-container-single .chosen-single div b,.kyra-mylam-chosen .search-choice-close{background:none!important}.kyra-mylam-chosen .chosen-container-single .chosen-single div b:after{content:'▾';display:block;text-align:center;line-height:24px}.kyra-mylam-chosen .search-choice-close:after{content:'×';display:block;color:#666;font-size:15px;line-height:11px;text-align:center}
+`;
+
+function readFilter(source){
+  if(source.tagName==='SELECT')return {multiple:source.multiple,disabled:source.disabled,options:[...source.options].map(option=>({value:option.value,text:option.text,selected:option.selected,disabled:option.disabled}))};
+  const wrapper=source.parentElement,label=wrapper.querySelector('.docLabels')?.textContent.trim()||'',selected=new Set(label.split(',').filter(Boolean));
+  const all=label==='Select All'||!label,disabled=wrapper.classList.contains('select-disabled')||!!wrapper.querySelector('a.multi.disabled');
+  return {multiple:true,disabled,options:[...source.querySelectorAll('input.inner')].map(input=>({value:input.value,text:input.name||input.nextElementSibling?.textContent.trim()||input.value,selected:!all&&selected.has(input.id),disabled:input.disabled}))};
+}
+
+function applySelection(source,select){
+  if(source.tagName==='SELECT'){
+    const values=new Set([...select.selectedOptions].map(option=>option.value));for(const option of source.options)option.selected=values.has(option.value);
+    source.dispatchEvent(new unsafeWindow.Event('change',{bubbles:true}));return;
+  }
+  const values=new Set([...select.selectedOptions].map(option=>option.value)),inputs=[...source.querySelectorAll('input.inner')],all=source.querySelector('input.checkAll');
+  if(!values.size){if(all&&!all.disabled){all.checked=false;all.click()}return}
+  if(all?.checked)all.click();
+  for(const input of inputs)if(!input.disabled&&input.checked!==values.has(input.value))input.click();
+}
+
+function syncFilters(){
+  for(const [source,entry] of filters)if(!source.isConnected){jq(entry.select).chosen('destroy');entry.host.remove();filters.delete(source)}
+  for(const source of document.querySelectorAll(selector)){
+    const state=readFilter(source),signature=JSON.stringify(state);let entry=filters.get(source);
+    if(!entry){
+      const host=document.createElement('div'),select=document.createElement('select'),wrapper=source.tagName==='SELECT'?source.closest('.select-dropdown')||source:source.parentElement;
+      host.className='kyra-mylam-chosen';select.className='kyra-chosen-input';select.multiple=state.multiple;
+      const label=source.closest('.filterContainerClass');select.setAttribute('aria-label',label?[...label.childNodes].filter(node=>node.nodeType===3).map(node=>node.textContent.trim()).join(' ').trim():source.id==='contentList'?'Content Type':'Saved Filters');
+      host.append(select);wrapper.insertAdjacentElement('afterend',host);entry={host,select,wrapper,signature:null};filters.set(source,entry);
+      jq(select).on('change.kyraFilters',()=>{entry.signature=null;applySelection(source,select)});
+    }
+    if(entry.signature===signature)continue;
+    const {select,wrapper}=entry;select.multiple=state.multiple;select.disabled=state.disabled;
+    select.replaceChildren(...state.options.map(item=>{const option=new Option(item.text,item.value,false,item.selected);option.disabled=item.disabled;return option}));
+    if(jq(select).data('chosen'))jq(select).trigger('chosen:updated');
+    else jq(select).chosen({width:'100%',search_contains:true});
+    if(jq(select).data('chosen')){
+      wrapper.classList.add('kyra-chosen-source');
+      if(source.tagName==='SELECT'&&wrapper===source){const old=source.previousElementSibling;if(old?.classList.contains('select-dropdown-handle'))old.classList.add('kyra-chosen-source')}
+    }
+    entry.signature=signature;
+  }
+}
+function init(){
+  const style=document.createElement('style');style.textContent=chosenBaseCss+css;document.head.append(style);syncFilters();
+  // MyLam also changes checked/selected properties without DOM events (saved filters and resets).
+  setInterval(()=>{if(!document.hidden)syncFilters()},500);
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
