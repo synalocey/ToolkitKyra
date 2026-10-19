@@ -1,17 +1,18 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.9.20
+// @version      26.10.19
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
 // @license      GPL-3.0
 // @icon64       https://a.favicon.im/lamresearch.com
-// @downloadURL  https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/ToolKit.user.js
-// @updateURL    https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/ToolKit.user.js
+// @downloadURL  https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/ToolKit.user.js
+// @updateURL    https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/ToolKit.user.js
 // @require      https://cdn.jsdelivr.net/npm/jquery@4.0.0/dist/jquery.min.js
-// @require      https://cdn.jsdelivr.net/gh/synalocey/ToolkitKyra@main/chosen.jquery.js
+// @require      https://cdn.jsdelivr.net/gh/JJJ/chosen@4.0.0/dist/js/chosen.jquery.min.js
 // @require      https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js
 // @require      https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
+// @resource     chosenCss https://cdn.jsdelivr.net/gh/JJJ/chosen@4.0.0/dist/css/chosen.min.css
 // @match        https://fep.lamresearch.com/*
 // @match        https://www.lamresearch.com/*
 // @match        https://techinfo.mylam.com/portal/group/mylam/contenttyperesults*
@@ -20,11 +21,13 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_setClipboard
 // @grant        GM_xmlhttpRequest
+// @grant        GM_getResourceText
 // @grant        unsafeWindow
 // @connect      127.0.0.1
+// @connect      raw.githubusercontent.com
 // ==/UserScript==
 /* globals jQuery, XLSX, ExcelJS */
-let chosenBaseCss='';
+const chosenBaseCss=GM_getResourceText('chosenCss');
 
 (function(){
 'use strict';
@@ -33,65 +36,9 @@ const APP_PATH='/k1.png';
 const BRIDGE_PATH='/k2.png';
 const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
 const BRIDGE_URL='http://127.0.0.1:8765';
-const BRIDGE_DOWNLOAD_URL='https://github.com/synalocey/ToolkitKyra/raw/main/SAPGUIcontrol.exe';
-const APP_CSS=`
-.chosen-container{position:relative;display:inline-block;vertical-align:middle;font-size:13px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.chosen-container *{
--webkit-box-sizing:border-box;box-sizing:border-box}.chosen-container .chosen-drop{position:absolute;top:100%;z-index:1010;width:100%;border:1px solid #aaa;border-top:0;background:#fff;
--webkit-box-shadow:0 4px 5px rgb(0 0 0 / .15);box-shadow:0 4px 5px rgb(0 0 0 / .15);clip:rect(0,0,0,0);-webkit-clip-path:inset(100% 100%);clip-path:inset(100% 100%)}
-.chosen-container.chosen-with-drop .chosen-drop{clip:auto;-webkit-clip-path:none;clip-path:none}.chosen-container a{cursor:pointer}.chosen-container .chosen-single .group-name,
-.chosen-container .search-choice .group-name{margin-right:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:400;color:#999}.chosen-container .chosen-single .group-name:after,
-.chosen-container .search-choice .group-name:after{content:":";padding-left:2px;vertical-align:top}.chosen-container-single .chosen-single{position:relative;display:block;overflow:hidden;padding:0 0 0
- 8px;height:25px;border:1px solid #aaa;border-radius:5px;background-color:#fff;background:
--webkit-gradient(linear,left top,left bottom,color-stop(20%,#fff),color-stop(50%,#f6f6f6),color-stop(52%,#eee),to(#f4f4f4));background:linear-gradient(#fff 20%,#f6f6f6 50%,#eee 52%,#f4f4f4 100%);
-background-clip:padding-box;-webkit-box-shadow:0 0 3px #fff inset,0 1px 1px rgb(0 0 0 / .1);box-shadow:0 0 3px #fff inset,0 1px 1px rgb(0 0 0 / .1);color:#444;text-decoration:none;white-space:nowrap;
-line-height:24px}.chosen-container-single .chosen-default{color:#999}.chosen-container-single .chosen-single span{display:block;overflow:hidden;margin-right:26px;text-overflow:ellipsis;white-space:
-nowrap}.chosen-container-single .chosen-single-with-deselect span{margin-right:38px}.chosen-container-single .chosen-single abbr{position:absolute;top:6px;right:26px;display:block;width:12px;height:
-12px;background:url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==) -42px 1px no-repeat;font-size:1px}.chosen-container-single .chosen-single abbr:hover{background-position:
--42px -10px}.chosen-container-single.chosen-disabled .chosen-single abbr:hover{background-position:-42px -10px}.chosen-container-single .chosen-single div{position:absolute;top:0;right:0;display:block
-;width:18px;height:100%}.chosen-container-single .chosen-single div b{display:block;width:100%;height:100%;background:url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==) 
-no-repeat 0 2px}.chosen-container-single .chosen-search{position:relative;z-index:1010;margin:0;padding:3px 4px;white-space:nowrap}.chosen-container-single .chosen-search input[type=text]{margin:1px 0
-;padding:4px 20px 4px 5px;width:100%;height:auto;outline:0;border:1px solid #aaa;background:url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==) no-repeat 100% -20px;font-size:
-1em;font-family:sans-serif;line-height:normal;border-radius:0}.chosen-container-single .chosen-drop{margin-top:-1px;border-radius:0 0 4px 4px;background-clip:padding-box}
-.chosen-container-single.chosen-container-single-nosearch .chosen-search{position:absolute;clip:rect(0,0,0,0);-webkit-clip-path:inset(100% 100%);clip-path:inset(100% 100%)}
-.chosen-container .chosen-results{color:#444;position:relative;overflow-x:hidden;overflow-y:auto;margin:0 4px 4px 0;padding:0 0 0 4px;max-height:600px;-webkit-overflow-scrolling:touch}
-.chosen-container .chosen-results li{display:none;margin:0;padding:5px 6px;list-style:none;line-height:15px;word-wrap:break-word;-webkit-touch-callout:none}
-.chosen-container .chosen-results li.active-result{display:list-item;cursor:pointer}.chosen-container .chosen-results li.disabled-result{display:list-item;color:#ccc;cursor:default}
-.chosen-container .chosen-results li.highlighted{background-color:#3875d7;background-image:-webkit-gradient(linear,left top,left bottom,color-stop(20%,#3875d7),color-stop(90%,#2a62bc));
-background-image:linear-gradient(#3875d7 20%,#2a62bc 90%);color:#fff}.chosen-container .chosen-results li.no-results{color:#777;display:list-item;background:#f4f4f4}
-.chosen-container .chosen-results li.group-result{display:list-item;font-weight:700;cursor:default}.chosen-container .chosen-results li.group-option{padding-left:15px}
-.chosen-container .chosen-results li em{font-style:normal;text-decoration:underline}.chosen-container-multi .chosen-choices{position:relative;overflow:hidden;margin:0;padding:0 5px;width:100%;height:
-auto;border:1px solid #aaa;background-color:#fff;background-image:-webkit-gradient(linear,left top,left bottom,color-stop(1%,#eee),color-stop(15%,#fff));background-image:
-linear-gradient(#eee 1%,#fff 15%);cursor:text}.chosen-container-multi .chosen-choices li{float:left;list-style:none}.chosen-container-multi .chosen-choices li.search-field{margin:0;padding:0;
-white-space:nowrap}.chosen-container-multi .chosen-choices li.search-field input[type=text]{margin:1px 0;padding:0;height:25px;outline:0;border:0!important;background:0 0!important;-webkit-box-shadow:
-none;box-shadow:none;color:#999;font-size:100%;font-family:sans-serif;line-height:normal;border-radius:0;width:25px}.chosen-container-multi .chosen-choices li.search-choice{position:relative;margin:
-3px 5px 3px 0;padding:3px 20px 3px 5px;border:1px solid #aaa;max-width:100%;border-radius:3px;background-color:#eee;background-image:
--webkit-gradient(linear,left top,left bottom,color-stop(20%,#f4f4f4),color-stop(50%,#f0f0f0),color-stop(52%,#e8e8e8),to(#eee));background-image:
-linear-gradient(#f4f4f4 20%,#f0f0f0 50%,#e8e8e8 52%,#eee 100%);background-size:100% 19px;background-repeat:repeat-x;background-clip:padding-box;-webkit-box-shadow:0 0 2px #fff inset,0 1px 0 
-rgb(0 0 0 / .05);box-shadow:0 0 2px #fff inset,0 1px 0 rgb(0 0 0 / .05);color:#333;line-height:13px;cursor:default}.chosen-container-multi .chosen-choices li.search-choice span{word-wrap:break-word}
-.chosen-container-multi .chosen-choices li.search-choice .search-choice-close{position:absolute;top:4px;right:3px;display:block;width:12px;height:12px;background:
-url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==) -42px 1px no-repeat;font-size:1px}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close:hover{
-background-position:-42px -10px}.chosen-container-multi .chosen-choices li.search-choice-disabled{padding-right:5px;border:1px solid #ccc;background-color:#e4e4e4;background-image:
--webkit-gradient(linear,left top,left bottom,color-stop(20%,#f4f4f4),color-stop(50%,#f0f0f0),color-stop(52%,#e8e8e8),to(#eee));background-image:
-linear-gradient(#f4f4f4 20%,#f0f0f0 50%,#e8e8e8 52%,#eee 100%);color:#666}.chosen-container-multi .chosen-choices li.search-choice-focus{background:#d4d4d4}
-.chosen-container-multi .chosen-choices li.search-choice-focus .search-choice-close{background-position:-42px -10px}.chosen-container-multi .chosen-results{margin:0;padding:0}
-.chosen-container-multi .chosen-drop .result-selected{display:list-item;color:#ccc;cursor:default}.chosen-container-active .chosen-single{border:1px solid #5897fb;-webkit-box-shadow:0 0 5px 
-rgb(0 0 0 / .3);box-shadow:0 0 5px rgb(0 0 0 / .3)}.chosen-container-active.chosen-with-drop .chosen-single{border:1px solid #aaa;border-bottom-right-radius:0;border-bottom-left-radius:0;
-background-image:-webkit-gradient(linear,left top,left bottom,color-stop(20%,#eee),color-stop(80%,#fff));background-image:linear-gradient(#eee 20%,#fff 80%);-webkit-box-shadow:0 1px 0 #fff inset;
-box-shadow:0 1px 0 #fff inset}.chosen-container-active.chosen-with-drop .chosen-single div{border-left:none;background:#fff0}.chosen-container-active.chosen-with-drop .chosen-single div b{
-background-position:-18px 2px}.chosen-container-active .chosen-choices{border:1px solid #5897fb;-webkit-box-shadow:0 0 5px rgb(0 0 0 / .3);box-shadow:0 0 5px rgb(0 0 0 / .3)}
-.chosen-container-active .chosen-choices li.search-field input[type=text]{color:#222!important}.chosen-disabled{opacity:.5!important;cursor:default}.chosen-disabled .chosen-single{cursor:default}
-.chosen-disabled .chosen-choices .search-choice .search-choice-close{cursor:default}.chosen-rtl{text-align:right}.chosen-rtl .chosen-single{overflow:visible;padding:0 8px 0 0}
-.chosen-rtl .chosen-single span{margin-right:0;margin-left:26px;direction:rtl}.chosen-rtl .chosen-single-with-deselect span{margin-left:38px}.chosen-rtl .chosen-single div{right:auto;left:3px}
-.chosen-rtl .chosen-single abbr{right:auto;left:26px}.chosen-rtl .chosen-choices li{float:right}.chosen-rtl .chosen-choices li.search-field input[type=text]{direction:rtl}
-.chosen-rtl .chosen-choices li.search-choice{margin:3px 5px 3px 0;padding:3px 5px 3px 19px}.chosen-rtl .chosen-choices li.search-choice .search-choice-close{right:auto;left:4px}
-.chosen-rtl.chosen-container-single .chosen-results{margin:0 0 4px 4px;padding:0 4px 0 0}.chosen-rtl .chosen-results li.group-option{padding-right:15px;padding-left:0}
-.chosen-rtl.chosen-container-active.chosen-with-drop .chosen-single div{border-right:none}.chosen-rtl .chosen-search input[type=text]{padding:4px 5px 4px 20px;background:
-url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==) no-repeat -30px -20px;direction:rtl}.chosen-rtl.chosen-container-single .chosen-single div b{background-position:6px 2px}
-.chosen-rtl.chosen-container-single.chosen-with-drop .chosen-single div b{background-position:-12px 2px}@media only screen and (-webkit-min-device-pixel-ratio:1.5),
-only screen and (min-resolution:144dpi),only screen and (min-resolution:1.5dppx){.chosen-container .chosen-results-scroll-down span,.chosen-container .chosen-results-scroll-up span,
-.chosen-container-multi .chosen-choices .search-choice .search-choice-close,.chosen-container-single .chosen-search input[type=text],.chosen-container-single .chosen-single abbr,
-.chosen-container-single .chosen-single div b,.chosen-rtl .chosen-search input[type=text]{background-image:url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==)!important;
-background-size:52px 37px!important;background-repeat:no-repeat!important}}
+const SAPGUICONTROL_DOWNLOAD_URL='https://github.com/synalocey/ToolkitKyra/raw/main/SAPGUIcontrol.zip';
+const SAPGUICONTROL_VERSION_URL='https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/SAPGUIcontrol.version.json';
+const APP_CSS=chosenBaseCss+`
 :root{--bg:#f3f7fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--line:#d8e3ee;--navy:#052e44;--blue:#2563eb;--teal:#0f766e;--cyan:#0891b2;--green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;
 --shadow:0 14px 34px rgba(15,23,42,.08);--radius:18px;--side:350px}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,
 "Microsoft YaHei",sans-serif}button,input,select{font:inherit}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(14,165,233,.32);outline-offset:2px}.hero{background:
@@ -179,18 +126,17 @@ calc(100vh - 120px)}#wfTable{width:1120px;min-width:1120px;table-layout:fixed}#w
 #wfTable th:nth-child(7){width:435px}#wfTable td:nth-child(6){white-space:normal}#wfTable td:nth-child(7){white-space:pre-wrap}.wf-box.sap-range-box{width:min(460px,calc(100vw - 40px))}
 .sap-range-form{display:grid;gap:14px;padding:17px}.sap-range-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.sap-range-field{display:grid;gap:6px}.sap-range-field label{color:#475569;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}.sap-range-field input{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);padding:10px;font-size:12px}.sap-range-field input:focus{outline:3px solid rgba(14,165,233,.2);border-color:#38bdf8}.sap-range-note,.sap-range-default{color:var(--muted);font-size:10px;line-height:1.45}.sap-range-default{margin-top:7px}.sap-range-error{min-height:16px;color:#b91c1c;font-size:11px}.sap-range-form .wf-actions{justify-content:flex-end}.btn:disabled{cursor:not-allowed;filter:none;transform:none;opacity:.48}
 @media(max-width:980px){.tabs{min-width:1030px}.cycle-shell{min-width:1030px}}`;
-chosenBaseCss=APP_CSS.slice(0,APP_CSS.indexOf(':root{'));
 const APP_HTML=`<div id="loadingLine" class="loading-line"></div>
 <header class="hero">
   <div class="hero-inner">
     <div>
-      <h1>NSR Control Tower</h1>
+      <h1>NSR Tracking Dashboard</h1>
       <p>One-page NSR workflow view. Every pivot uses the same filtered NSR population; click any count to drill into that value and update the filter panel.</p>
     </div>
     <div class="hero-source"><small>Current data source</small><strong id="heroSource">Checking local cache…</strong></div>
   </div>
 </header>
-<nav class="tabs" aria-label="Control Tower pages">
+<nav class="tabs" aria-label="NSR Tracking Dashboard pages">
   <div class="tab-list" role="tablist">
     <button id="overviewBtn" class="tab-btn active" type="button" role="tab" aria-selected="true" data-tab="overview">NSR Overview</button>
     <button id="cycleBtn" class="tab-btn" type="button" role="tab" aria-selected="false" data-tab="cycle">NSR Cycle Time</button>
@@ -368,7 +314,7 @@ border-right:0}.zbom-table tr:last-child td{border-bottom:0}.zbom-table .missing
 overflow-wrap:anywhere}.compare-template-control{display:grid;grid-template-columns:minmax(0,1fr) 64px;gap:8px;align-items:center}.compare-template-separator{text-align:center;font-weight:700}.compare-table td,.compare-table th{padding:4px 7px;vertical-align:middle}
 .compare-fid{min-width:78px}.compare-customer{width:110px;min-width:100px;max-width:145px;overflow-wrap:anywhere}.compare-system-description{width:155px;min-width:140px;max-width:230px;overflow-wrap:anywhere}
 .compare-group-cell{width:92px;min-width:92px}.compare-group-select{display:block;width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:var(--ink);padding:3px 6px;font-size:11px}.compare-file-name{min-width:460px;max-width:900px;
-overflow-wrap:anywhere}.compare-file-link{border:0;background:0 0;color:#0369a1;padding:0;text-align:left;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;overflow-wrap:anywhere}.compare-file-link:hover{color:#0f766e}.compare-file-link:disabled{color:#94a3b8;cursor:wait}.compare-output-control{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.compare-keep-temp{white-space:nowrap}.compare-keep-temp[aria-pressed=true]{background:var(--teal);color:#fff}.create-quote-reference-title{white-space:nowrap}.create-quote-number{max-width:112px;font-variant-numeric:tabular-nums}.create-quote-setting-row{grid-template-columns:max-content minmax(0,1fr);align-items:center;column-gap:10px}.create-quote-days-control{display:grid;grid-template-columns:auto 62px auto;align-items:center;justify-content:start;gap:7px}.create-quote-days-control input{text-align:center;font-variant-numeric:tabular-nums}.create-quote-unit{color:#475569;font-size:11px;font-weight:600}.create-quote-suffix{max-width:76px}.create-quote-crd-input{display:block;width:150px;max-width:100%;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:var(--ink);padding:5px 7px;font-size:11px}.create-quote-crd-input.invalid{border-color:var(--red);background:#fff1f2}.create-quote-status{margin-top:10px}.create-quote-version-note{font-weight:400;white-space:nowrap}.create-quote-table{table-layout:fixed}.create-quote-table th:first-child,.create-quote-table td:first-child{width:58px}.create-quote-table th:not(:first-child),.create-quote-table td:not(:first-child){width:calc((100% - 58px)/3)}.compare-status{width:74px;min-width:74px;white-space:nowrap}.compare-result-preview{margin-top:14px;border:1px solid #dbe5ee;border-radius:12px;background:#fff;overflow:hidden}.compare-result-tabs{display:flex;gap:5px;overflow-x:auto;padding:8px;border-bottom:1px solid #dbe5ee;background:#f8fafc}.compare-result-tab{flex:0 0 auto;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#475569;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer}.compare-result-tab[aria-selected=true]{border-color:#0f766e;background:#0f766e;color:#fff}.compare-result-sheet-wrap{max-height:520px;overflow:auto}.compare-result-sheet{border-collapse:separate;border-spacing:0;min-width:100%;width:max-content;font-size:10px}.compare-result-sheet td{min-width:86px;max-width:340px;padding:4px 7px;border-right:1px solid #d6e0ea;border-bottom:1px solid #d6e0ea;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere}.compare-result-sheet tr:first-child td,.compare-result-sheet tr:nth-child(2) td{position:sticky;z-index:2}.compare-result-sheet tr:first-child td{top:0}.compare-result-sheet tr:nth-child(2) td{top:25px}.compare-result-empty{padding:24px;color:#94a3b8;font-size:11px}.progress-track{height:9px;margin-top:12px;border-radius:999px;background:#e2e8f0;overflow:hidden}.progress-bar{height:100%;width:0;background:
+overflow-wrap:anywhere}.compare-file-link{border:0;background:0 0;color:#0369a1;padding:0;text-align:left;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;overflow-wrap:anywhere}.compare-file-link:hover{color:#0f766e}.compare-file-link:disabled{color:#94a3b8;cursor:wait}.compare-output-control{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.compare-keep-temp{white-space:nowrap}.compare-keep-temp[aria-pressed=true]{background:var(--teal);color:#fff}.create-quote-reference-title{white-space:nowrap}.create-quote-number{max-width:112px;font-variant-numeric:tabular-nums}.create-quote-setting-row{grid-template-columns:max-content minmax(0,1fr);align-items:center;column-gap:10px}.create-quote-days-control{display:grid;grid-template-columns:auto 62px auto;align-items:center;justify-content:start;gap:7px}.create-quote-days-control input{text-align:center;font-variant-numeric:tabular-nums}.create-quote-unit{color:#475569;font-size:11px;font-weight:600}.create-quote-suffix{max-width:76px}.create-quote-crd-input{display:block;width:150px;max-width:100%;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:var(--ink);padding:5px 7px;font-size:11px}.create-quote-crd-input.invalid{border-color:var(--red);background:#fff1f2}.create-quote-status{margin-top:10px}.create-quote-version-note{font-weight:400;white-space:nowrap}.create-quote-table{table-layout:fixed}.create-quote-table th:first-child,.create-quote-table td:first-child{width:58px}.create-quote-table th:not(:first-child),.create-quote-table td:not(:first-child){width:calc((100% - 58px)/3)}.compare-status{width:74px;min-width:74px;white-space:nowrap}.compare-result-preview{margin-top:14px;border:1px solid #dbe5ee;border-radius:12px;background:#fff;overflow:hidden}.compare-result-tabs{display:flex;gap:5px;overflow-x:auto;padding:8px;border-bottom:1px solid #dbe5ee;background:#f8fafc}.compare-result-tab{flex:0 0 auto;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#475569;padding:6px 10px;font-size:10px;font-weight:700;cursor:pointer}.compare-result-tab[aria-selected=true]{border-color:#0f766e;background:#0f766e;color:#fff}.compare-result-sheet-wrap{max-height:520px;overflow:auto}.compare-result-sheet{border-collapse:separate;border-spacing:0;min-width:100%;table-layout:fixed;font-size:10px}.compare-result-sheet td{padding:4px 5px;border-right:1px solid #d6e0ea;border-bottom:1px solid #d6e0ea;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere}.compare-result-sheet tr:first-child td,.compare-result-sheet tr:nth-child(2) td{position:sticky;z-index:2}.compare-result-sheet tr:first-child td{top:0}.compare-result-sheet tr:nth-child(2) td{top:25px}.compare-result-empty{padding:24px;color:#94a3b8;font-size:11px}.progress-track{height:9px;margin-top:12px;border-radius:999px;background:#e2e8f0;overflow:hidden}.progress-bar{height:100%;width:0;background:
 linear-gradient(90deg,var(--blue),var(--teal));transition:width .2s ease}.progress-line{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:8px;color:#475569;font-size:11px}
 .result-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.result-pill{border-radius:999px;background:#e2e8f0;color:#334155;padding:5px 9px;font-size:10px}.result-pill.ok{background:#dcfce7;
 color:#166534}.result-pill.warn{background:#fef3c7;color:#92400e}@media(max-width:800px){.bridge-hero-inner{align-items:flex-start;flex-direction:column}.bridge-inline,.bridge-shell,.bridge-status,
@@ -388,7 +334,8 @@ const BRIDGE_HTML=`
       <div class="bridge-status-item">
         <small>Local service</small>
         <strong id="bridgeService">Checking 127.0.0.1:8765…</strong>
-        <a id="bridgeDownload" class="bridge-btn light small bridge-download" href="${BRIDGE_DOWNLOAD_URL}" download="SAPGUIcontrol.exe" target="_blank" rel="noopener noreferrer" title="Download SAPGUIcontrol if the local Bridge is not installed." hidden>Download Bridge</a>
+        <div id="bridgeUpdateStatus" class="bridge-note" style="margin-top:6px" aria-live="polite">Checking for updates…</div>
+        <a id="bridgeDownload" class="bridge-btn light small bridge-download" href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer" title="Download SAPGUIcontrol.zip, then extract it and run SAPGUIcontrol.exe." hidden>Download SAPGUIcontrol</a>
       </div>
       <div class="bridge-status-item"><small>SAP GUI</small><strong id="bridgeSap">Not checked</strong></div>
       <div class="bridge-status-item">
@@ -397,7 +344,7 @@ const BRIDGE_HTML=`
         <span id="bobjRefreshState" class="bridge-note bobj-refresh-state">Checking refresh status…</span>
       </div>
     </div>
-    <div class="bridge-field"><label for="sapSession">SAP session</label><select id="sapSession" disabled><option value="">Connecting to the local bridge…</option></select></div>
+    <div class="bridge-field"><label id="sapSessionLabel" for="sapSession">SAP session · ZBOM PDF</label><select id="sapSession" disabled><option value="">Connecting to SAPGUIcontrol…</option></select><div class="bridge-actions"><span id="sapSessionState" class="bridge-note">Choose a window for this function.</span><button id="sapReleaseSession" class="bridge-btn light small" type="button" hidden>Release Retained Sessions</button></div></div>
   </section>
 
   <nav class="tool-tabs" role="tablist" aria-label="SAP Toolbox functions">
@@ -449,7 +396,7 @@ const BRIDGE_HTML=`
         <div class="bridge-card-head"><div><h2>4. Export PDF Files</h2></div></div>
         <div class="bridge-actions">
           <button id="zbomStart" class="bridge-btn blue" type="button" disabled>Start PDF Export</button>
-          <button id="zbomOpenFolder" class="bridge-btn light" type="button" disabled>Open Folder</button>
+          <button id="zbomOpenFolder" class="bridge-btn light" type="button">Open Folder</button>
         </div>
         <div class="progress-track" aria-hidden="true"><div id="zbomProgressBar" class="progress-bar"></div></div>
         <div class="progress-line"><span id="zbomProgressNumber">0%</span></div>
@@ -513,7 +460,7 @@ const BRIDGE_HTML=`
         <div class="bridge-card-head"><div><h2>4. Compare</h2></div></div>
         <div class="bridge-actions">
           <button id="zbomCompareStart" class="bridge-btn blue" type="button" data-bridge-action disabled>Start Compare</button>
-          <button id="zbomCompareOpenFolder" class="bridge-btn light" type="button" data-bridge-action disabled>Open Folder</button>
+          <button id="zbomCompareOpenFolder" class="bridge-btn light" type="button">Open Folder</button>
         </div>
         <div class="progress-track" aria-hidden="true"><div id="zbomCompareProgressBar" class="progress-bar"></div></div>
         <div class="progress-line"><span id="zbomCompareProgressText">Ready.</span><span id="zbomCompareProgressNumber">0%</span></div>
@@ -587,14 +534,14 @@ const BRIDGE_HTML=`
     <div class="bridge-shell">
       <section class="bridge-card">
         <div class="bridge-card-head"><div><h2>Open Transaction</h2></div></div>
-        <div class="bridge-field"><label for="sapTransaction">Transaction code</label><input id="sapTransaction" type="text" maxlength="40" placeholder="For example: VA03 or /SCWM/MON" autocomplete="off"></div>
+        <div class="bridge-field"><label for="sapTransaction">Transaction code</label><input id="sapTransaction" type="text" placeholder="For example: VA03 or /SCWM/MON" autocomplete="off"></div>
         <div class="bridge-actions"><button id="sapRunTransaction" class="bridge-btn blue" type="button" data-bridge-action disabled>Open transaction</button></div>
       </section>
 
       <section class="bridge-card">
         <div class="bridge-card-head"><div><h2>Control Inspector</h2></div></div>
-        <div class="bridge-field"><label for="sapControlId">SAP control ID</label><input id="sapControlId" type="text" maxlength="300" placeholder="wnd[0]/usr/ctxt…" autocomplete="off"></div>
-        <div class="bridge-field"><label for="sapControlValue">Value</label><input id="sapControlValue" type="text" maxlength="4000" placeholder="Text or key to write" autocomplete="off"></div>
+        <div class="bridge-field"><label for="sapControlId">SAP control ID</label><input id="sapControlId" type="text" placeholder="wnd[0]/usr/ctxt…" autocomplete="off"></div>
+        <div class="bridge-field"><label for="sapControlValue">Value</label><input id="sapControlValue" type="text" placeholder="Text or key to write" autocomplete="off"></div>
         <div class="bridge-actions">
           <button id="sapReadText" class="bridge-btn light" type="button" data-bridge-action disabled>Read text</button>
           <button id="sapSetText" class="bridge-btn blue" type="button" data-bridge-action disabled>Set text</button>
@@ -604,15 +551,25 @@ const BRIDGE_HTML=`
         </div>
         <div class="bridge-divider"></div>
         <div class="bridge-inline">
-          <div class="bridge-field"><label for="sapVKeyTarget">Window ID</label><input id="sapVKeyTarget" type="text" maxlength="300" value="wnd[0]" autocomplete="off"></div>
-          <div class="bridge-field"><label for="sapVKey">VKey</label><input id="sapVKey" type="number" min="0" max="99" value="0"></div>
+          <div class="bridge-field"><label for="sapVKeyTarget">Window ID</label><input id="sapVKeyTarget" type="text" value="wnd[0]" autocomplete="off"></div>
+          <div class="bridge-field"><label for="sapVKey">VKey</label><input id="sapVKey" type="number" value="0"></div>
         </div>
         <div class="bridge-actions"><button id="sapSendVKey" class="bridge-btn light" type="button" data-bridge-action disabled>Send VKey</button></div>
       </section>
 
       <section class="bridge-card wide">
+        <div class="bridge-card-head"><div><h2>Run Script</h2></div></div>
+        <div class="bridge-inline">
+          <div class="bridge-field"><label for="nativeLanguage">Language</label><select id="nativeLanguage"><option value="powershell">PowerShell</option><option value="vba">VBA (Excel)</option></select></div>
+          <div id="nativeEntryPointField" class="bridge-field" hidden><label for="nativeEntryPoint">VBA entry point</label><input id="nativeEntryPoint" value="Main" autocomplete="off"></div>
+        </div>
+        <div class="bridge-field"><label for="nativeScript">Script</label><textarea id="nativeScript" class="zbom-input" rows="9" spellcheck="false" placeholder="PowerShell script or VBA module"></textarea></div>
+        <div class="bridge-actions"><button id="nativeRun" class="bridge-btn blue" type="button">Run Script</button></div>
+      </section>
+
+      <section class="bridge-card wide">
         <div class="bridge-card-head"><div><h2>Result</h2></div></div>
-        <pre id="sapResult" class="bridge-result" aria-live="polite">Waiting for the local bridge…</pre>
+        <pre id="sapResult" class="bridge-result" aria-live="polite">Waiting for SAPGUIcontrol…</pre>
       </section>
     </div>
   </section>
@@ -661,19 +618,25 @@ const ZBOM_COMPARE_HEADER_FILL='FF0070C0';
 const ZBOM_COMPARE_BORDER_COLOR='FFD6E0EA';
 const ZBOM_COMPARE_FILE_COLORS=['FFFFC7CE','FFC6EFCE','FFFFEB9C','FFBDD7EE','FFE4DFEC','FFFCE4D6','FFDDEBF7','FFE2F0D9','FFF4B183','FFD9E1F2'];
 const ZBOM_COMPARE_STORAGE_KEYS={input:'nsrSapToolbox.zbomCompareInput.v1',template:'nsrSapToolbox.zbomCompareTemplate.v1',separator:'nsrSapToolbox.zbomCompareSeparator.v1',folder:'nsrSapToolbox.zbomCompareFolder.v1',groups:'nsrSapToolbox.zbomCompareGroups.v1',history:'nsrSapToolbox.zbomCompareHistory.v1'};
-const SAP_ACTION_TIMEOUT=600000,SAP_BUSY_TIMEOUT=120000,SAP_FILE_WAIT_TIMEOUT=120000,SAP_FILE_SETTLE_MS=5000,SAP_BATCH_SETTLE_MS=15000,SAP_FILE_POLL_MS=400,BRIDGE_FILE_TIMEOUT=600000;
+const SAP_ACTION_TIMEOUT=600000,SAP_BUSY_TIMEOUT=120000,SAP_FILE_WAIT_TIMEOUT=120000,SAP_PDF_FIRST_FILE_WAIT_MS=15000,SAP_FILE_SETTLE_MS=5000,SAP_BATCH_SETTLE_MS=15000,SAP_FILE_POLL_MS=400,BRIDGE_FILE_TIMEOUT=600000;
 const CREATE_QUOTE_DEFAULT_VALID_TO_DAYS='30';
 const CREATE_QUOTE_DEFAULT_FID_SUFFIX='-01';
 const CREATE_QUOTE_HISTORY_LIMIT=50;
 const CREATE_QUOTE_STORAGE_KEYS={quotation:'nsrSapToolbox.createQuoteQuotation.v1',input:'nsrSapToolbox.createQuoteInput.v1',validToDays:'nsrSapToolbox.createQuoteValidToDays.v1',fidSuffix:'nsrSapToolbox.createQuoteFidSuffix.v1',crdOverrides:'nsrSapToolbox.createQuoteCrdOverrides.v1',history:'nsrSapToolbox.createQuoteHistory.v1'};
 const BRIDGE_DEBUG_STORAGE_KEY='nsrSapToolbox.debugUnlocked.v1';
+const SAP_TOOL_LABELS={zbom:'ZBOM PDF',zbomCompare:'ZBOM Compare',createQuote:'Quote Create',debug:'Debug'};
+const sapGuiControlUpdate={online:null,current:'',release:null,checking:true};
+const bridgePageId=crypto.randomUUID();
+const sapTools=Object.fromEntries(Object.keys(SAP_TOOL_LABELS).map(name=>[name,{selection:'',starting:false,job:null}]));
+let bobjTaskRefreshPromise=null;
+let activeSapTool='zbom',sharedSapTasks=[],bridgeSupportsTasks=false,bridgeTaskOnline=false,bridgeTaskPollTimer=0,bridgeTaskPolling=false,bridgeSessionRefreshPromise=null,bridgeDebugLog='';
 let bridgeBusy=false,bridgeSessions=[],bridgeMock=false,zbomRows=[],zbomErrors=[],zbomRunning=false,zbomHasRun=false,zbomLogLines=[],zbomOutputClaims=new Map(),zbomResults=new Map(),zbomHistory=[],zbomHistoryReturnFocus=null;
 let zbomCompareRows=[],zbomCompareStats={duplicates:0,ignored:0},zbomCompareSavedGroups=new Map(),zbomCompareRunning=false,zbomCompareHasRun=false,zbomCompareResults=new Map(),zbomCompareLogLines=[],zbomCompareOutputRowHint=4,zbomCompareHistory=[],zbomCompareHistoryReturnFocus=null,zbomCompareResultTabs=[],zbomCompareActiveResultTab='';
 let createQuoteRows=[],createQuoteStats={duplicates:0,ignored:0},createQuoteCrdOverrides=new Map(),createQuoteManualCrd=new Set(),createQuoteHistory=[],createQuoteHistoryReturnFocus=null;
 let bridgeDebugUnlocked=false;
 let bobjStatus=null,bobjRefreshing=false,bobjOpening=false,bobjPollTimer=0,bobjStatusRun=0,bobjDataRows=new Map(),bobjDataHeaderIndexes=new Map(),bobjDataMissing=new Set(),bobjDataPath='',bobjDataModified=0,bobjDataCount=0,bobjDataReady=false,bobjDataLoadRun=0,bobjConsumersPending=false,bobjSourcePath='',bobjSourceModified=0,bobjDataLoading=false,bobjDataPromise=null,bobjWorker=null,bobjWorkerRequest=0,bobjWorkerPending=new Map();
 
-GM_registerMenuCommand('Open NSR Control Tower',()=>unsafeWindow.open(APP_PATH+'?nsrct=1','_blank','noopener'));
+GM_registerMenuCommand('Open NSR Tracking Dashboard',()=>unsafeWindow.open(APP_PATH+'?nsrct=1','_blank','noopener'));
 GM_registerMenuCommand('Open SAP Toolbox',()=>unsafeWindow.open(BRIDGE_PATH+'?nsrbridge=1','_blank','noopener'));
 
 if(Number.isFinite(date_v.getTime())&&(Date.now()-date_v.getTime())/86400000>270){unsafeWindow.alert('The data format has changed. Please update to the latest version.');return}
@@ -693,7 +656,7 @@ async function addNsrHeaderButton(){
   while(true){
     const target=document.getElementById('shellAppTitle-button'),title=target&&target.querySelector('.sapUshellAppTitleText');
     if(target&&String(title&&title.textContent||'').trim().toUpperCase()==='NSR'&&!document.getElementById(NSR_HEADER_BUTTON_ID)){
-      const button=document.createElement('button');button.id=NSR_HEADER_BUTTON_ID;button.type='button';button.title='Open NSR Control Tower';button.textContent='▦ Control Tower';
+      const button=document.createElement('button');button.id=NSR_HEADER_BUTTON_ID;button.type='button';button.title='Open NSR Tracking Dashboard';button.textContent='▦ NSR Tracking';
       button.style.cssText='margin-left:8px;padding:4px 8px;cursor:pointer';
       button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();unsafeWindow.open(APP_PATH+'?nsrct=1','_blank','noopener')});
       target.insertAdjacentElement('afterend',button);
@@ -846,14 +809,12 @@ function saveZbomCompareGroups(){
 }
 
 async function openZbomCompareOutputFolder(){
-  const input=bridgeId('zbomCompareOutputFolder'),button=bridgeId('zbomCompareOpenFolder');let path;
+  const input=bridgeId('zbomCompareOutputFolder');let path;
   try{path=normalizedZbomCompareFolder()}catch(error){showBridgeResult(bridgeError(error),'Unable to open the ZBOM Compare output folder.');input.focus();return}
   input.value=path;saveZbomCompareFolder();
-  button.disabled=true;setBridgeBusy(true);
   try{
-    await bridgeFileRequest('createDirectory',{path:path},30000);const data=await bridgeFileRequest('openDirectory',{path:path},20000);showBridgeResult(data,'ZBOM Compare output folder opened.');
+    await bridgeFileRequest('createDirectory',{path:path},30000);const data=await openBridgeFolder(path);showBridgeResult(data,'ZBOM Compare output folder opened.');
   }catch(error){showBridgeResult(bridgeError(error),'Unable to open the ZBOM Compare output folder.')}
-  finally{setBridgeBusy(false);updateZbomCompareStart()}
 }
 
 async function openZbomCompareWorkbook(path,button){
@@ -880,7 +841,9 @@ function renderZbomCompareResultSheet(){
   container.replaceChildren();
   if(!tab||!tab.sheet||!tab.sheet.rows.length){const empty=document.createElement('div');empty.className='compare-result-empty';empty.textContent='No table content.';container.appendChild(empty);return}
   const table=document.createElement('table'),colgroup=document.createElement('colgroup'),body=document.createElement('tbody');table.className='compare-result-sheet';
-  tab.sheet.widths.forEach(width=>{const column=document.createElement('col');column.style.width=Math.max(55,Math.min(360,(Number(width)||12)*7))+'px';colgroup.appendChild(column)});
+  const widths=tab.sheet.widths.map(width=>{const size=Number(width)||12;return size<=5?20:Math.max(56,Math.min(140,Math.round(size*3.8)))});
+  widths.forEach(width=>{const column=document.createElement('col');column.style.width=width+'px';colgroup.appendChild(column)});
+  table.style.width=widths.reduce((total,width)=>total+width,0)+'px';
   tab.sheet.rows.forEach(row=>{
     const tr=document.createElement('tr');row.forEach(item=>{
       const cell=document.createElement('td');cell.textContent=item.text;
@@ -1038,10 +1001,9 @@ function mountApp(){
   document.documentElement.dataset.nsrCtMounted='1';document.documentElement.lang='en';
   const charset=document.createElement('meta');charset.charset='utf-8';
   const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1';
-  const title=document.createElement('title');title.textContent='NSR Control Tower';
+  const title=document.createElement('title');title.textContent='NSR Tracking Dashboard';
   const style=document.createElement('style');style.textContent=APP_CSS;
   document.head.replaceChildren(charset,viewport,title,style);document.body.innerHTML=APP_HTML;
-  if(window.jQuery&&!jQuery.trim)jQuery.trim=value=>value==null?'':String(value).trim();
   runDashboard();
 }
 
@@ -1058,28 +1020,71 @@ function mountBridgeApp(){
 
 function bridgeId(id){return document.getElementById(id)}
 
+function runBridgePowerShell(script,data,options={}){
+  return bridgeRequest('POST','/execute',{script:script,data:data,workingDirectory:options.workingDirectory},options.timeout??0);
+}
+
+function runBridgeVba(code,options={}){
+  return runBridgePowerShell(String.raw`$ErrorActionPreference = 'Stop'
+$app = $null; $document = $null
+try {
+  $app = New-Object -ComObject $data.application
+  $app.Visible = [bool]$data.visible
+  $app.DisplayAlerts = 0
+  $document = $app.($data.collection).Add()
+  $module = $document.VBProject.VBComponents.Add(1)
+  $module.CodeModule.AddFromString([string]$data.code)
+  $arguments = [object[]]@($data.entryPoint)
+  if ($null -ne $data.arguments) { $arguments += [object[]]@($data.arguments) }
+  $app.GetType().InvokeMember('Run', [Reflection.BindingFlags]::InvokeMethod, $null, $app, $arguments)
+} finally {
+  if (-not $data.keepOpen) {
+    if ($document) { $document.Close($false) }
+    if ($app) { $app.Quit() }
+  }
+}`,{code:code,entryPoint:options.entryPoint||'Main',arguments:options.arguments,application:options.application||'Excel.Application',collection:options.collection||'Workbooks',visible:options.visible??Boolean(options.keepOpen),keepOpen:Boolean(options.keepOpen)},options);
+}
+
+async function openBridgeFolder(path){
+  try{
+    const result=await bridgeFileRequest('openDirectory',{path:path,activate:true},30000);
+    if(result.foreground!==true)alert('The folder has been opened in File Explorer.\nPlease switch to it manually.\n\n'+path);
+    return result;
+  }catch(error){alert('Could not open the folder.\n\n'+bridgeError(error));throw error}
+}
+
+async function runNativeScriptFromEditor(){
+  const button=bridgeId('nativeRun');button.disabled=true;
+  try{
+    const code=bridgeId('nativeScript').value,result=bridgeId('nativeLanguage').value==='vba'?await runBridgeVba(code,{entryPoint:bridgeId('nativeEntryPoint').value}):await runBridgePowerShell(code);
+    showBridgeResult(result,result.ok?'Script completed.':'Script failed.');setBridgeBadge(result.ok?'Ready':'Action failed',result.ok?'ok':'error');
+  }catch(error){showBridgeResult(bridgeError(error),'Script failed.');setBridgeBadge('Action failed','error')}
+  finally{button.disabled=false}
+}
+
 function bridgeRequest(method,path,payload,timeout){
   return new Promise((resolve,reject)=>{
-    if(typeof GM_xmlhttpRequest!=='function'){reject(new Error('Tampermonkey bridge permission is unavailable. Reinstall or update this userscript.'));return}
-    const headers={Accept:'application/json','X-NSR-Page-Origin':unsafeWindow.location.origin};
+    if(typeof GM_xmlhttpRequest!=='function'){reject(new Error('Tampermonkey permission for SAPGUIcontrol is unavailable. Reinstall or update this userscript.'));return}
+    const headers={Accept:'application/json'};
     if(payload!==undefined)headers['Content-Type']='application/json';
     const transportError=detail=>{
-      const suffix=detail?' ('+String(detail)+')':'',error=new Error('Cannot reach SAPGUIcontrol.exe at 127.0.0.1:8765. Start the EXE and keep its window open. If /health opens in a browser, allow Tampermonkey access to fep.lamresearch.com and 127.0.0.1.'+suffix);
+      const suffix=detail?' ('+String(detail)+')':'',error=new Error('Cannot reach SAPGUIcontrol.exe at 127.0.0.1:8765. Start the EXE and keep its window open. If /health opens in a browser, allow Tampermonkey access to 127.0.0.1.'+suffix);
       error.transport=true;return error;
     };
-    const options={method:method,url:BRIDGE_URL+path,headers:headers,timeout:timeout||20000,nocache:true,fetch:false,
+    const options={method:method,url:new URL(path,BRIDGE_URL).href,headers:headers,timeout:timeout??20000,nocache:true,fetch:false,
       onload:response=>{
         if(!response||!Number(response.status)){reject(transportError(response&&response.statusText));return}
         let data={};
-        try{data=response.responseText?JSON.parse(response.responseText):{}}catch(_){data={message:response.responseText||'Invalid bridge response.'}}
+        try{data=response.responseText?JSON.parse(response.responseText):{}}catch(_){data={message:response.responseText||'Invalid SAPGUIcontrol response.'}}
         if(response.status>=200&&response.status<300){resolve(data);return}
-        const error=new Error(data.message||('Local bridge returned HTTP '+response.status+'.'));error.status=response.status;error.data=data;
+        const error=new Error(data.message||('SAPGUIcontrol returned HTTP '+response.status+'.'));error.status=response.status;error.data=data;
         reject(error);
       },
       onerror:response=>reject(transportError(response&&(response.error||response.statusText))),
       ontimeout:()=>reject(transportError('request timed out')),
       onabort:()=>reject(transportError('request was aborted'))
     };
+    if(options.timeout===0)delete options.timeout;
     if(payload!==undefined)options.data=JSON.stringify(payload);
     try{GM_xmlhttpRequest(options)}catch(error){options.onerror(error&&error.message)}
   });
@@ -1091,11 +1096,11 @@ function setBridgeBadge(text,kind){
 
 function showBridgeResult(value,label){
   const prefix=label?label+'\n':'';
-  bridgeId('sapResult').textContent=prefix+(typeof value==='string'?value:JSON.stringify(value,null,2));
+  bridgeDebugLog=prefix+(typeof value==='string'?value:JSON.stringify(value,null,2));renderSapLog();
 }
 
 function bridgeError(error){
-  return error&&error.message?error.message:String(error||'Unknown bridge error.');
+  return error&&error.message?error.message:String(error||'Unknown SAPGUIcontrol error.');
 }
 
 function normalizeBobjHeader(value){
@@ -1107,7 +1112,7 @@ function bobjFidKey(value){
 }
 
 function bobjValue(fid,header){
-  const row=bobjDataRows.get(bobjFidKey(fid)),index=bobjDataHeaderIndexes.get(normalizeBobjHeader(header));return row&&index!==undefined?String(row[index]??'').trim():'';
+  const row=bobjDataRows.get(bobjFidKey(fid)),index=bobjDataHeaderIndexes.get(normalizeBobjHeader(header)),value=row&&index!==undefined?String(row[index]??'').trim():'';return value==='#'?'':value;
 }
 
 function bobjTemplateValue(row,header,omit){
@@ -1125,6 +1130,59 @@ function bobjTemplateValue(row,header,omit){
 
 function renderBobjTemplate(template,row,omit){
   return String(template||'').replace(/\{([^{}]+)\}/g,(_token,header)=>bobjTemplateValue(row,header,omit));
+}
+
+function missingBobjFileNameFields(rows,template){
+  const headers=Array.from(new Set(Array.from(String(template||'').matchAll(/\{([^{}]+)\}/g),match=>match[1].trim())))
+    .filter(header=>!['fid','quote','today'].includes(normalizeBobjHeader(header)));
+  return headers.filter(header=>rows.some(row=>{
+    if(row._error)return false;
+    const value=bobjTemplateValue(row,header);return !value||value==='#';
+  }));
+}
+
+async function refreshBobjAndWait(){
+  if(!bobjTaskRefreshPromise)bobjTaskRefreshPromise=(async()=>{
+    bobjStatusRun++;clearTimeout(bobjPollTimer);bobjPollTimer=0;bobjRefreshing=true;updateBobjUpdate();
+    let status=await bridgeRequest('GET','/excel/status',undefined,10000);
+    if(!status.running){
+      try{status=await bridgeRequest('POST','/excel/refresh',{visible:false},20000)}
+      catch(error){if(error.status!==409)throw error;status=await bridgeRequest('GET','/excel/status',undefined,10000)}
+    }
+    const deadline=Date.now()+660000;
+    while(status.running){
+      bobjStatus=status;setBobjRefreshState('Updating · '+String(status.stage||'running'),'running');
+      if(Date.now()>deadline)throw new Error('BOBJ refresh did not finish within 11 minutes.');
+      await waitMs(1000);status=await bridgeRequest('GET','/excel/status',undefined,10000);
+    }
+    bobjStatus=status;bobjRefreshing=false;
+    if(status.stage!=='completed')throw new Error(status.message||'BOBJ update did not complete.');
+    const source=await readBobjDataSource(status);
+    if(!source||!source.available)throw new Error('The updated BOBJ workbook is unavailable.');
+    if(bobjDataPromise)await bobjDataPromise;
+    bobjDataReady=false; // Re-index once even if the filesystem timestamp has not changed.
+    if(!await ensureBobjDataSource()||!bobjDataIsCurrent())throw new Error('The updated BOBJ data could not be loaded.');
+    setBobjRefreshState('Update completed · '+bobjDataCount+' FIDs indexed.','');
+  })().finally(()=>{bobjRefreshing=false;bobjTaskRefreshPromise=null;updateBobjUpdate()});
+  return bobjTaskRefreshPromise;
+}
+
+async function prepareBobjFileNames(tool,rows,template){
+  await loadBobjRows(rows.map(row=>row.fid));
+  const missing=missingBobjFileNameFields(rows,template);
+  if(!missing.length||sapTools[tool].bobjPrompted)return;
+  sapTools[tool].bobjPrompted=true;
+  if(!bobjTaskRefreshPromise&&!unsafeWindow.confirm('BOBJ may be outdated. Update it first?'))return;
+  const progress=message=>{if(tool==='zbom')setZbomProgress(2,message);else setZbomCompareProgress(2,message)};
+  progress('Waiting for BOBJ update before continuing…');
+  try{
+    await refreshBobjAndWait();await loadBobjRows(rows.map(row=>row.fid));
+    rows.forEach(enrichZbomCompareRowFromBobj);
+    progress(missingBobjFileNameFields(rows,template).length?'BOBJ updated. Continuing with the available information…':'BOBJ updated. Continuing…');
+  }catch(error){
+    setBobjRefreshState('Update failed: '+bridgeError(error),'error');
+    progress('BOBJ update failed. Continuing with the available information…');
+  }
 }
 
 function enrichZbomCompareRowFromBobj(row){
@@ -1196,16 +1254,19 @@ function currentBobjFids(){
 }
 
 function refreshBobjConsumers(){
-  if(zbomRunning||zbomCompareRunning||!bridgeId('zbomInput'))return;
+  if(!bridgeId('zbomInput'))return;
   if(bridgeBusy){bobjConsumersPending=true;return}
   bobjConsumersPending=false;
-  previewZbomInput();previewZbomCompareInput();previewCreateQuoteInput();
+  if(!sapToolRunning('zbom')&&!zbomHasRun)previewZbomInput();
+  if(!sapToolRunning('zbomCompare')&&!zbomCompareHasRun)previewZbomCompareInput();
+  const retainedCreate=sapSessionTask(sapTools.createQuote.selection);
+  if(!sapToolRunning('createQuote')&&!(retainedCreate&&retainedCreate.tool==='createQuote'))previewCreateQuoteInput();
 }
 
 async function loadBobjDataSource(path,lastModified){
   const modified=Number(lastModified)||0;
   if(path===bobjDataPath&&modified===bobjDataModified&&bobjDataReady)return {count:bobjDataCount,changed:false};
-  const run=++bobjDataLoadRun,data=await bridgeFileRequest('read',{path:path},BRIDGE_FILE_TIMEOUT);if(!data||!data.contentBase64)throw new Error('The Bridge returned no BOBJ workbook content.');
+  const run=++bobjDataLoadRun,data=await bridgeFileRequest('read',{path:path},BRIDGE_FILE_TIMEOUT);if(!data||!data.contentBase64)throw new Error('SAPGUIcontrol returned no BOBJ workbook content.');
   const loading=callBobjWorker('load',{contentBase64:data.contentBase64});data.contentBase64='';const loaded=await loading;
   if(run!==bobjDataLoadRun)return {count:bobjDataCount,changed:false};
   bobjDataRows=new Map();bobjDataHeaderIndexes=new Map(loaded.headerIndexes||[]);bobjDataMissing=new Set();bobjDataPath=path;bobjDataModified=modified;bobjDataCount=Number(loaded.count)||0;bobjDataReady=true;return {count:bobjDataCount,changed:true};
@@ -1271,6 +1332,7 @@ async function readBobjDataSource(status){
 }
 
 async function refreshBobjStatus(){
+  if(bobjTaskRefreshPromise){try{await bobjTaskRefreshPromise;return bobjStatus}catch(_){return null}}
   const run=++bobjStatusRun,wasRefreshing=bobjRefreshing;clearTimeout(bobjPollTimer);bobjPollTimer=0;
   try{
     const status=await bridgeRequest('GET','/excel/status',undefined,10000);if(run!==bobjStatusRun)return null;
@@ -1297,7 +1359,7 @@ async function refreshBobjStatus(){
 }
 
 async function startBobjUpdate(){
-  if(bobjRefreshing)return;
+  if(bobjRefreshing||bobjTaskRefreshPromise)return;
   bobjStatusRun++;clearTimeout(bobjPollTimer);bobjPollTimer=0;bobjRefreshing=true;setBobjRefreshState('Starting background refresh…','running');updateBobjUpdate();
   try{
     bobjStatus=await bridgeRequest('POST','/excel/refresh',{visible:false},20000);bobjRefreshing=Boolean(bobjStatus.running);setBobjRefreshState('Updating · '+String(bobjStatus.stage||'queued'),'running');updateBobjUpdate();bobjPollTimer=setTimeout(refreshBobjStatus,500);
@@ -1312,69 +1374,216 @@ async function openBobjData(){
   finally{bobjOpening=false;updateBobjUpdate()}
 }
 
+function sapToolRunning(tool){return Boolean(sapTools[tool].starting||sapTools[tool].job)}
+
+function selectedBridgeSession(tool=activeSapTool){
+  return bridgeSessions.find(session=>session.sessionKey===sapTools[tool].selection)||null;
+}
+
+function sapSessionTask(key){return sharedSapTasks.find(task=>task.sessionKey===key)}
+
+function canStartSapTool(tool){
+  const session=selectedBridgeSession(tool);
+  return bridgeSupportsTasks&&bridgeTaskOnline&&!bridgeBusy&&!sapToolRunning(tool)&&session&&!session.busy&&!sapSessionTask(session.sessionKey);
+}
+
+function hasFreeSapSession(){return bridgeSessions.some(session=>!session.busy&&!sapSessionTask(session.sessionKey))}
+
+function selectFreeSapSession(tool){
+  if(sapToolRunning(tool))return;
+  const free=bridgeSessions.filter(session=>!session.busy&&!sapSessionTask(session.sessionKey));
+  if(!free.some(session=>session.sessionKey===sapTools[tool].selection))sapTools[tool].selection=free[0]?.sessionKey||'';
+}
+
 function setBridgeBusy(value){
   bridgeBusy=Boolean(value);
-  const locked=bridgeBusy||zbomRunning||zbomCompareRunning;
   document.querySelectorAll('[data-bridge-action]').forEach(button=>{
-    const needsSession=button.id.indexOf('sap')===0;
-    button.disabled=locked||(needsSession&&!selectedBridgeSession());
+    const panel=button.closest('[data-tool-panel]'),tool=panel&&panel.dataset.toolPanel;
+    button.disabled=bridgeBusy||Boolean(tool&&sapToolRunning(tool))||(button.id.indexOf('sap')===0&&!canStartSapTool('debug'));
   });
-  const sessionSelect=bridgeId('sapSession');
-  if(sessionSelect)sessionSelect.disabled=locked||!bridgeSessions.length;
+  document.querySelectorAll('[data-tool-panel] input,[data-tool-panel] textarea,[data-tool-panel] select').forEach(input=>{
+    const tool=input.closest('[data-tool-panel]').dataset.toolPanel;input.disabled=sapToolRunning(tool);
+  });
+  document.querySelectorAll('[data-zbom-token],[data-zbom-compare-token],#zbomOpenHistory,#zbomResetInput,#zbomResetTemplate,#zbomCompareOpenHistory,#zbomCompareResetInput,#zbomCompareResetTemplate,#zbomCompareKeepTemp').forEach(button=>{
+    button.disabled=sapToolRunning(button.closest('[data-tool-panel]').dataset.toolPanel);
+  });
+  renderSapSessionSelect();
   updateZbomStart();updateZbomCompareStart();updateCreateQuoteStart();updateBobjUpdate();
 }
 
-function selectedBridgeSession(){
-  const select=bridgeId('sapSession'),value=select&&select.value;
-  if(!value)return null;
-  const parts=value.split(':');
-  if(parts.length!==2)return null;
-  return {connectionIndex:Number(parts[0]),sessionIndex:Number(parts[1])};
+function renderSapSessionSelect(){
+  const select=bridgeId('sapSession');if(!select)return;
+  const state=sapTools[activeSapTool],sessions=bridgeSessions.slice();
+  sharedSapTasks.forEach(task=>{if(task.session&&!sessions.some(session=>session.sessionKey===task.sessionKey))sessions.push({...task.session,missing:true})});
+  if(!state.selection&&sessions.length){
+    const first=sessions.find(session=>!session.missing&&!session.busy&&!sapSessionTask(session.sessionKey));if(first)state.selection=first.sessionKey;
+  }
+  const signature=JSON.stringify([state.selection,sessions,sharedSapTasks.map(task=>[task.taskId,task.state,task.ownerId])]);
+  if(select.dataset.sessionOptions!==signature){
+    select.replaceChildren();select.dataset.sessionOptions=signature;
+    if(!sessions.some(session=>session.sessionKey===state.selection)){
+      const option=document.createElement('option');option.value=state.selection;option.textContent=state.selection?'Selected SAP window is no longer available':sessions.length?'No free SAP sessions — open another SAP window and refresh':'No SAP GUI sessions found';option.disabled=true;select.appendChild(option);
+    }
+    sessions.forEach(session=>{
+      const task=sapSessionTask(session.sessionKey),option=document.createElement('option');option.value=session.sessionKey;
+      const status=task?(SAP_TOOL_LABELS[task.tool]||task.tool)+' · '+(task.state==='running'?'Running':task.state==='held'?'Retained':'Interrupted')+(task.ownerId!==bridgePageId?' · Other K2 page':''):session.missing?'Unavailable':session.busy?'SAP busy':'Idle';
+      option.textContent=(task||session.busy||session.missing?'🔴 ':'🟢 ')+'Window '+(session.connectionIndex+1)+'.'+(session.sessionIndex+1)+' · '+(session.system||'SAP')+' '+(session.client||'')+' · '+(session.user||'')+' · '+(session.transaction||'No transaction')+' · '+(session.windowTitle||'')+' — '+status;
+      option.disabled=Boolean(task||session.busy||session.missing);if(option.disabled)option.style.color='#94a3b8';
+      select.appendChild(option);
+    });
+  }
+  select.value=state.selection;select.disabled=sapToolRunning(activeSapTool)||!sessions.length;
+  bridgeId('sapSessionLabel').textContent='SAP session · '+SAP_TOOL_LABELS[activeSapTool];
+  const task=sapSessionTask(state.selection),note=bridgeId('sapSessionState'),release=bridgeId('sapReleaseSession');
+  note.textContent=!bridgeSupportsTasks?'Update and restart SAPGUIcontrol to use independent sessions.':!bridgeTaskOnline?'Task status unavailable. Reconnecting…':task?(SAP_TOOL_LABELS[task.tool]||task.tool)+(task.state==='running'?' is running in this window.':task.state==='held'?' retained this window. Finish or discard its SAP work before releasing.':' was interrupted. Check SAP before releasing this window.'):'This selection belongs to '+SAP_TOOL_LABELS[activeSapTool]+'. Check the SAP window before starting.';
+  if(task&&task.releaseInSeconds!=null)note.textContent='Quote Create retained this window. Automatically available to K2 again in '+task.releaseInSeconds+' seconds.';
+  if(bridgeSessionRefreshPromise&&!hasFreeSapSession())note.textContent='Refreshing SAP windows…';
+  const retained=sharedSapTasks.filter(item=>item.tool===activeSapTool&&item.state!=='running');
+  const retainedTask=retained.find(item=>item.releaseInSeconds!=null);
+  if(!task&&retainedTask&&retainedTask.releaseInSeconds!=null)note.textContent+=' Quote Create window releases in '+retainedTask.releaseInSeconds+' seconds.';
+  release.hidden=!retained.length;release.disabled=!retained.some(item=>!item.inFlight)||!bridgeTaskOnline;
+  document.querySelectorAll('[data-tool-tab]').forEach(button=>{const tool=button.dataset.toolTab;button.textContent=SAP_TOOL_LABELS[tool]+(sapToolRunning(tool)?' · Running':'')});
 }
 
 function renderBridgeSessions(sessions){
-  bridgeSessions=Array.isArray(sessions)?sessions:[];
-  const select=bridgeId('sapSession'),previous=select.value;select.replaceChildren();
-  if(!bridgeSessions.length){
-    const option=document.createElement('option');option.value='';option.textContent='No SAP GUI sessions found';select.appendChild(option);select.disabled=true;
-  }else{
-    bridgeSessions.forEach((session,index)=>{
-      const option=document.createElement('option');option.value=String(session.connectionIndex)+':'+String(session.sessionIndex);
-      option.textContent=(session.system||'SAP')+' '+(session.client||'')+' · '+(session.user||'User')+' · '+(session.transaction||'No transaction')+(session.windowTitle?' · '+session.windowTitle:'');
-      select.appendChild(option);if(option.value===previous)select.selectedIndex=index;
-    });
-    select.disabled=bridgeBusy||zbomRunning;
+  bridgeSessions=Array.isArray(sessions)?sessions:[];setBridgeBusy(bridgeBusy);
+}
+
+function acceptSapTaskStatus(data){
+  sharedSapTasks=Array.isArray(data.tasks)?data.tasks:[];bridgeTaskOnline=true;setBridgeBusy(bridgeBusy);
+}
+
+async function pollSapTasks(){
+  if(bridgeTaskPolling||!bridgeSupportsTasks)return;
+  bridgeTaskPolling=true;clearTimeout(bridgeTaskPollTimer);
+  try{acceptSapTaskStatus(await bridgeRequest('POST','/tasks/heartbeat',{ownerId:bridgePageId},10000))}
+  catch(_){bridgeTaskOnline=false;setBridgeBusy(bridgeBusy)}
+  finally{bridgeTaskPolling=false;bridgeTaskPollTimer=setTimeout(pollSapTasks,3000)}
+}
+
+async function refreshSapSessionChoices(){
+  if(!bridgeSupportsTasks)return;
+  if(hasFreeSapSession()){
+    selectFreeSapSession(activeSapTool);setBridgeBusy(bridgeBusy);return;
   }
-  setBridgeBusy(bridgeBusy);
+  if(!bridgeSessionRefreshPromise){
+    bridgeSessionRefreshPromise=(async()=>{
+      const status=await bridgeRequest('GET','/tasks',undefined,10000);
+      sharedSapTasks=status.tasks||[];bridgeTaskOnline=true;selectFreeSapSession(activeSapTool);setBridgeBusy(bridgeBusy);
+      if(hasFreeSapSession())return;
+      try{
+        const health=await bridgeRequest('GET','/health',undefined,10000);
+        bridgeSupportsTasks=health.sessionTasks===true;bridgeSessions=health.sessions||[];
+        selectFreeSapSession(activeSapTool);
+      }catch(_){/* Keep the last known windows if SAP is busy. */}
+    })().catch(()=>{bridgeTaskOnline=false}).finally(()=>{bridgeSessionRefreshPromise=null;setBridgeBusy(bridgeBusy)});
+    setBridgeBusy(bridgeBusy);
+  }
+  await bridgeSessionRefreshPromise;
+}
+
+async function acquireSapTask(tool,options={}){
+  if(!bridgeSupportsTasks||!bridgeTaskOnline)throw new Error('Update/restart SAPGUIcontrol and refresh the connection first.');
+  const session=selectedBridgeSession(tool);if(!session)throw new Error('Select an available SAP GUI session for '+SAP_TOOL_LABELS[tool]+'.');
+  const job={taskId:crypto.randomUUID(),ownerId:bridgePageId,sessionKey:session.sessionKey,keep:true};
+  sapTools[tool].job=job;
+  try{acceptSapTaskStatus(await bridgeRequest('POST','/tasks/acquire',{...job,tool,...options},15000))}
+  catch(error){if(error.status)sapTools[tool].job=null;throw error}
+  return job;
+}
+
+async function runSapTool(tool,run){
+  if(sapToolRunning(tool))return;
+  sapTools[tool].starting=true;sapTools[tool].bobjPrompted=false;setBridgeBusy(bridgeBusy);
+  try{await run()}
+  catch(error){
+    const message=bridgeError(error);
+    if(tool==='zbom')setZbomProgress(0,message);
+    else if(tool==='zbomCompare')setZbomCompareProgress(0,message);
+    else if(tool==='createQuote')setCreateQuoteStatus(message,'error');
+    else showBridgeResult(message,'SAP action failed.');
+  }finally{
+    const job=sapTools[tool].job;
+    if(job)try{acceptSapTaskStatus(await bridgeRequest('POST','/tasks/finish',{taskId:job.taskId,ownerId:bridgePageId,keep:job.keep,autoRelease:job.autoRelease===true},10000))}
+    catch(_){bridgeTaskOnline=false}
+    sapTools[tool].job=null;sapTools[tool].starting=false;setBridgeBusy(bridgeBusy);if(bobjConsumersPending)refreshBobjConsumers();pollSapTasks();
+  }
+}
+
+async function releaseSapSession(){
+  const retained=sharedSapTasks.filter(item=>item.tool===activeSapTool&&item.state!=='running'&&!item.inFlight);
+  try{
+    for(const task of retained)acceptSapTaskStatus(await bridgeRequest('POST','/tasks/release',{taskId:task.taskId},10000));
+    await refreshSapSessionChoices();
+  }
+  catch(error){bridgeId('sapSessionState').textContent=bridgeError(error)}
+}
+
+function renderSapLog(){
+  const result=bridgeId('sapResult');if(!result)return;
+  result.textContent=activeSapTool==='zbom'?'ZBOM PDF log\n'+zbomLogLines.join('\n'):activeSapTool==='zbomCompare'?'ZBOM Compare log\n'+zbomCompareLogLines.join('\n'):activeSapTool==='debug'?bridgeDebugLog:'';
+  result.scrollTop=result.scrollHeight;
+}
+
+function isSapGuiControlUpdateAvailable(current,latest){
+  const local=current.replace(/^v/i,'').split('.'),remote=latest.replace(/^v/i,'').split('.');
+  for(let index=0;index<Math.max(local.length,remote.length);index++){
+    const difference=Number(remote[index]||0)-Number(local[index]||0);
+    if(difference)return difference>0;
+  }
+  return false;
+}
+
+function renderSapGuiControlUpdate(){
+  const state=sapGuiControlUpdate,release=state.release,download=bridgeId('bridgeDownload');
+  const newer=Boolean(release&&state.current&&isSapGuiControlUpdateAvailable(state.current,release.version));
+  download.href=release&&release.downloadUrl||SAPGUICONTROL_DOWNLOAD_URL;
+  download.hidden=state.online===null||Boolean(state.online&&!newer);
+  download.textContent=state.online?'Update SAPGUIcontrol':'Download SAPGUIcontrol';
+  download.title=(state.online&&release?'Download SAPGUIcontrol '+release.version+' (ZIP).':'Download SAPGUIcontrol.zip.')+' Extract it and run SAPGUIcontrol.exe.';
+  bridgeId('bridgeUpdateStatus').textContent=state.checking?'Checking for updates…':release?(state.online&&!newer?'Up to date':'Latest version: '+release.version):'Update check unavailable';
+}
+
+async function checkSapGuiControlUpdate(){
+  sapGuiControlUpdate.checking=true;renderSapGuiControlUpdate();
+  try{
+    const release=await bridgeRequest('GET',SAPGUICONTROL_VERSION_URL+'?t='+Date.now(),undefined,8000);
+    sapGuiControlUpdate.release={version:release.version.trim(),downloadUrl:release.downloadUrl};
+  }catch(_){sapGuiControlUpdate.release=null}
+  finally{sapGuiControlUpdate.checking=false;renderSapGuiControlUpdate()}
 }
 
 async function refreshBridge(){
-  setBridgeBusy(true);setBridgeBadge('Checking','');bridgeId('bridgeService').textContent='Checking 127.0.0.1:8765…';bridgeId('bridgeDownload').hidden=true;
+  setBridgeBusy(true);setBridgeBadge('Checking','');bridgeId('bridgeService').textContent='Checking 127.0.0.1:8765…';sapGuiControlUpdate.online=null;checkSapGuiControlUpdate();
   try{
     const health=await bridgeRequest('GET','/health',undefined,8000),mock=health.mode==='mock';
-    bridgeMock=mock;
+    bridgeMock=mock;bridgeSupportsTasks=health.sessionTasks===true;await pollSapTasks();
     bridgeId('bridgeService').textContent=(health.service||'SAPGUIcontrol')+' '+(health.version||'')+(mock?' · MOCK':'');
+    sapGuiControlUpdate.online=true;sapGuiControlUpdate.current=health.version||'';renderSapGuiControlUpdate();
     bridgeId('bridgeSap').textContent=mock?'Simulated SAP session':health.sapAvailable?'SAP GUI detected':'SAP GUI not detected';
     renderBridgeSessions(health.sessions);
+    selectFreeSapSession(activeSapTool);setBridgeBusy(bridgeBusy);
     if(bridgeSessions.length)setBridgeBadge(mock?'Mock ready':'Ready',mock?'warn':'ok');
     else setBridgeBadge('SAP unavailable','warn');
     showBridgeResult(health,'Connection refreshed.');
     await refreshBobjStatus();
   }catch(error){
-    bridgeMock=false;
+    bridgeMock=false;bridgeTaskOnline=false;
     renderBridgeSessions([]);
-    bridgeId('bridgeService').textContent=error.status?'Local bridge responded with an error':'Offline';bridgeId('bridgeSap').textContent='Unavailable';setBridgeBadge(error.status?'Bridge error':'Bridge offline','error');bridgeId('bridgeDownload').hidden=Boolean(error.status);
-    bobjStatusRun++;clearTimeout(bobjPollTimer);bobjPollTimer=0;bobjStatus=null;bobjRefreshing=false;bridgeId('bobjDataSource').textContent='Current Data Source: Unavailable';setBobjRefreshState('Local Bridge unavailable.','error');updateBobjUpdate();
+    bridgeId('bridgeService').textContent=error.status?'SAPGUIcontrol responded with an error':'Offline';bridgeId('bridgeSap').textContent='Unavailable';setBridgeBadge(error.status?'SAPGUIcontrol error':'SAPGUIcontrol offline','error');sapGuiControlUpdate.online=false;sapGuiControlUpdate.current='';renderSapGuiControlUpdate();
+    bobjStatusRun++;clearTimeout(bobjPollTimer);bobjPollTimer=0;bobjStatus=null;bobjRefreshing=false;bridgeId('bobjDataSource').textContent='Current Data Source: Unavailable';setBobjRefreshState('SAPGUIcontrol unavailable.','error');updateBobjUpdate();
     showBridgeResult(bridgeError(error),'Connection failed.');
   }finally{setBridgeBusy(false);if(bobjConsumersPending)refreshBobjConsumers()}
 }
 
 function setToolTab(name){
   if(name==='debug'&&!bridgeDebugUnlocked)name='zbom';
+  activeSapTool=name;
   document.querySelectorAll('[data-tool-tab]').forEach(button=>{
     const active=button.dataset.toolTab===name;button.setAttribute('aria-selected',active?'true':'false');
   });
   document.querySelectorAll('[data-tool-panel]').forEach(panel=>{panel.hidden=panel.dataset.toolPanel!==name});
+  setBridgeBusy(bridgeBusy);renderSapLog();refreshSapSessionChoices();
 }
 
 function splitZbomLine(line){
@@ -1497,7 +1706,7 @@ function renderCreateQuotePreview(){
   if(!createQuoteRows.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.className='missing';td.textContent='No preview yet.';tr.appendChild(td);body.appendChild(tr)}
   else createQuoteRows.forEach((row,index)=>{
     const tr=document.createElement('tr'),item=document.createElement('td'),crd=document.createElement('td'),crdInput=document.createElement('input'),version=document.createElement('td'),validTo=document.createElement('td');
-    item.textContent=String(index+1);version.textContent=row.version||createQuotePreviewFid(row.fid);crdInput.type='text';crdInput.className='create-quote-crd-input';crdInput.value=row.crd||'';crdInput.placeholder='CRD';crdInput.setAttribute('aria-label','CRD for FID '+row.fid);
+    item.textContent=String(index+1);version.textContent=row.version||createQuotePreviewFid(row.fid);crdInput.type='text';crdInput.disabled=sapToolRunning('createQuote');crdInput.className='create-quote-crd-input';crdInput.value=row.crd||'';crdInput.placeholder='CRD';crdInput.setAttribute('aria-label','CRD for FID '+row.fid);
     crdInput.addEventListener('input',()=>{crdInput.classList.remove('invalid');row.crd=crdInput.value;createQuoteManualCrd.add(row.fid);createQuoteCrdOverrides.set(row.fid,row.crd);saveCreateQuoteCrdOverrides()});
     crd.appendChild(crdInput);validTo.textContent=row.validTo||defaultCreateQuoteValidTo();tr.append(item,crd,version,validTo);body.appendChild(tr);
   });
@@ -1524,7 +1733,7 @@ function setCreateQuoteStatus(message,kind){
 
 function updateCreateQuoteStart(){
   const button=bridgeId('createQuoteStart');if(!button)return;
-  button.disabled=bridgeBusy||zbomRunning||zbomCompareRunning||!selectedBridgeSession()||!sanitizeCreateQuoteQuotation()||!createQuoteRows.length;
+  button.disabled=!canStartSapTool('createQuote')||!sanitizeCreateQuoteQuotation()||!createQuoteRows.length;
 }
 
 function validateCreateQuotePreview(){
@@ -1549,13 +1758,13 @@ async function startCreateQuote(){
   await ensureBobjDataSource();previewCreateQuoteInput();
   if(!validateCreateQuotePreview())return;
   recordCreateQuoteHistory(sanitizeCreateQuoteQuotation(),bridgeId('createQuoteInput').value);
-  setBridgeBusy(true);setCreateQuoteStatus('Opening SAP transaction ZVA21M…');
+  await acquireSapTask('createQuote');setBridgeBusy(bridgeBusy);setCreateQuoteStatus('Opening SAP transaction ZVA21M…');
   try{
-    await sendZbomAction('transaction',{code:'ZVA21M'});
-    await sendZbomAction('setText',{controlId:'wnd[0]/usr/txtGS_HEADER-VBELN',value:sanitizeCreateQuoteQuotation()});
-    await sendZbomAction('setKey',{controlId:'wnd[0]/usr/cmbGS_HEADER-ACQ_ID',value:'999'});
-    await sendZbomAction('sendVKey',{controlId:'wnd[0]',key:0});
-    const data=await sendZbomAction('readText',{controlId:'wnd[0]/usr/txtGS_HEADER-VERSION'}),referenceVersion=String(data&&data.value||'').trim(),fidMatch=referenceVersion.match(/(?:^|\D)(\d{6})(?!\d)/),referenceFid=fidMatch?fidMatch[1]:'';
+    await sendZbomAction('createQuote','transaction',{code:'ZVA21M'});
+    await sendZbomAction('createQuote','setText',{controlId:'wnd[0]/usr/txtGS_HEADER-VBELN',value:sanitizeCreateQuoteQuotation()});
+    await sendZbomAction('createQuote','setKey',{controlId:'wnd[0]/usr/cmbGS_HEADER-ACQ_ID',value:'999'});
+    await sendZbomAction('createQuote','sendVKey',{controlId:'wnd[0]',key:0});
+    const data=await sendZbomAction('createQuote','readText',{controlId:'wnd[0]/usr/txtGS_HEADER-VERSION'}),referenceVersion=String(data&&data.value||'').trim(),fidMatch=referenceVersion.match(/(?:^|\D)(\d{6})(?!\d)/),referenceFid=fidMatch?fidMatch[1]:'';
     if(!referenceFid){
       if(!unsafeWindow.confirm('FID could not be extracted from "'+(referenceVersion||'(blank)')+'". Continue?')){setCreateQuoteStatus('Create Quote stopped.');return}
     }else{
@@ -1563,7 +1772,7 @@ async function startCreateQuote(){
       if(row){
         const tail=referenceVersion.slice(referenceVersion.indexOf(referenceFid)+referenceFid.length),versionMatch=tail.match(/^(\D*)(\d+)(.*)$/);
         if(versionMatch){
-          const crdData=await sendZbomAction('readText',{controlId:'wnd[0]/usr/txtGS_HEADER-CRD'}),referenceCrd=String(crdData&&crdData.value||'').trim();
+          const crdData=await sendZbomAction('createQuote','readText',{controlId:'wnd[0]/usr/txtGS_HEADER-CRD'}),referenceCrd=String(crdData&&crdData.value||'').trim();
           row.version=referenceFid+versionMatch[1]+String(Number(versionMatch[2])+1).padStart(versionMatch[2].length,'0')+versionMatch[3];row.crd=referenceCrd;createQuoteCrdOverrides.set(row.fid,row.crd);saveCreateQuoteCrdOverrides();renderCreateQuotePreview();
         }else if(!unsafeWindow.confirm('FID Version "'+referenceVersion+'" could not be incremented. Continue?')){setCreateQuoteStatus('Create Quote stopped.');return}
       }
@@ -1572,17 +1781,18 @@ async function startCreateQuote(){
     const tableId='wnd[0]/usr/tblZSDR0390_MASS_QUOTE_CREATE1MYTABLE';
     for(let index=0;index<createQuoteRows.length;index++){
       const row=createQuoteRows[index];
-      if(row.crd)await sendZbomAction('setText',{controlId:tableId+'/ctxtGS_ITEM-REQ_DEL_DATE[1,'+index+']',value:row.crd});
-      await sendZbomAction('setText',{controlId:tableId+'/txtGS_ITEM-VERSION[2,'+index+']',value:row.version||createQuotePreviewFid(row.fid)});
-      await sendZbomAction('setText',{controlId:tableId+'/ctxtGS_ITEM-VALID_TO[3,'+index+']',value:row.validTo||defaultCreateQuoteValidTo()});
+      if(row.crd)await sendZbomAction('createQuote','setText',{controlId:tableId+'/ctxtGS_ITEM-REQ_DEL_DATE[1,'+index+']',value:row.crd});
+      await sendZbomAction('createQuote','setText',{controlId:tableId+'/txtGS_ITEM-VERSION[2,'+index+']',value:row.version||createQuotePreviewFid(row.fid)});
+      await sendZbomAction('createQuote','setText',{controlId:tableId+'/ctxtGS_ITEM-VALID_TO[3,'+index+']',value:row.validTo||defaultCreateQuoteValidTo()});
     }
     if(createQuoteRows.every(row=>String(row.crd||'').trim())){
-      await sendZbomAction('sapCall',{controlId:tableId+'/ctxtGS_ITEM-VALID_TO[3,0]',steps:[{action:'invoke',member:'SetFocus',arguments:[]}]});
-      await sendZbomAction('sendVKey',{controlId:'wnd[0]',key:0});
+      await sendZbomAction('createQuote','sapCall',{controlId:tableId+'/ctxtGS_ITEM-VALID_TO[3,0]',steps:[{action:'invoke',member:'SetFocus',arguments:[]}]});
+      await sendZbomAction('createQuote','sendVKey',{controlId:'wnd[0]',key:0});
     }
-    setCreateQuoteStatus(createQuoteRows.length+' item(s) entered. Ready for the next step.','ok');
+    sapTools.createQuote.job.autoRelease=true;
+    setCreateQuoteStatus(createQuoteRows.length+' item(s) entered. Ready for the next step. Session releases automatically after 1 minute.','ok');
   }catch(error){setCreateQuoteStatus('Unable to prepare ZVA21M: '+bridgeError(error),'error')}
-  finally{setBridgeBusy(false)}
+  finally{setBridgeBusy(bridgeBusy)}
 }
 
 function zbomCompareHeaderRole(value){
@@ -1753,7 +1963,7 @@ function renderZbomComparePreview(){
       groupCell.className='compare-group-cell';select.className='compare-group-select';select.dataset.quote=row.quote;select.setAttribute('aria-label','Compare group for quotation '+row.quote);
       options.forEach(value=>{const option=document.createElement('option');option.value=value;option.textContent=value===ZBOM_COMPARE_STANDALONE?'Standalone':value;select.appendChild(option)});
       select.value=row.group;select.disabled=zbomCompareRunning;select.addEventListener('change',()=>{row.group=select.value;saveZbomCompareGroups();invalidateZbomCompareResults();renderZbomComparePreview();const next=Array.from(body.querySelectorAll('select')).find(item=>item.dataset.quote===row.quote);if(next)next.focus()});
-      groupCell.appendChild(select);fileCell.className='compare-file-name';const fileName=fileNames.get(row.quote)||'',outputPath=result&&result.completed?String(result.outputPath||''):'';if(outputPath){const link=document.createElement('button');link.type='button';link.className='compare-file-link';link.textContent=fileName;link.title='Open '+outputPath;link.addEventListener('click',event=>{if(event.isTrusted)openZbomCompareWorkbook(outputPath,link)});fileCell.appendChild(link)}else fileCell.textContent=fileName;statusCell.textContent=result?result.status:'Ready';statusCell.className='compare-status'+(result&&['Exported','Formatted','Completed'].includes(result.status)?' row-ok':result&&result.status===ZBOM_COMPARE_FID_ERROR?' row-warning':result&&['Failed','Group incomplete'].includes(result.status)?' row-error':'');if(result&&(result.error||result.warning))statusCell.title=result.error||result.warning;tr.append(quoteCell,fidCell,customerCell,systemCell,groupCell,fileCell,statusCell);body.appendChild(tr);
+      groupCell.appendChild(select);fileCell.className='compare-file-name';const fileName=fileNames.get(row.quote)||'',outputPath=result&&result.completed?String(result.outputPath||''):'';if(outputPath){const link=document.createElement('button');link.type='button';link.className='compare-file-link';link.textContent=fileName;link.title='Open '+outputPath;link.addEventListener('click',()=>openZbomCompareWorkbook(outputPath,link));fileCell.appendChild(link)}else fileCell.textContent=fileName;statusCell.textContent=result?result.status:'Ready';statusCell.className='compare-status'+(result&&['Exported','Formatted','Completed'].includes(result.status)?' row-ok':result&&result.status===ZBOM_COMPARE_FID_ERROR?' row-warning':result&&['Failed','Group incomplete'].includes(result.status)?' row-error':'');if(result&&(result.error||result.warning))statusCell.title=result.error||result.warning;tr.append(quoteCell,fidCell,customerCell,systemCell,groupCell,fileCell,statusCell);body.appendChild(tr);
     });
   }
   const count=zbomCompareRows.length,parts=[count+' quotation'+(count===1?'':'s')];
@@ -1791,8 +2001,7 @@ function setZbomCompareRunning(value){
 function updateZbomCompareStart(){
   const button=bridgeId('zbomCompareStart');if(!button)return;
   const folder=bridgeId('zbomCompareOutputFolder'),path=String(folder&&folder.value||'').trim(),validPath=/^[A-Za-z]:[\\/]/.test(path);
-  button.disabled=zbomCompareRunning||bridgeBusy||!selectedBridgeSession()||!zbomCompareRows.length||!validPath;
-  const openButton=bridgeId('zbomCompareOpenFolder');if(openButton)openButton.disabled=zbomCompareRunning||bridgeBusy||!validPath;
+  button.disabled=!canStartSapTool('zbomCompare')||!zbomCompareRows.length||!validPath;
 }
 
 function normalizedZbomCompareFolder(){
@@ -1813,7 +2022,7 @@ function addZbomCompareLog(message){
   zbomCompareLogLines.push('['+new Date().toLocaleTimeString([], {hour12:false})+'] '+message);
   if(zbomCompareLogLines.length>160)zbomCompareLogLines.shift();
   const result=bridgeId('sapResult');if(!result)return;
-  result.textContent='ZBOM Compare log\n'+zbomCompareLogLines.join('\n');result.scrollTop=result.scrollHeight;
+  if(activeSapTool==='zbomCompare')renderSapLog();
 }
 
 function isZbomCompareAccessError(text){
@@ -1823,14 +2032,14 @@ function isZbomCompareAccessError(text){
 async function selectZbomCompareOutputType(row){
   const tableId='wnd[1]/usr/tblSAPLVMSGTABCONTROL',cellId=tableId+'/txtNAST-KSCHL[0,'+row+']';
   try{
-    await sendZbomAction('sapCall',{steps:[
+    await sendZbomAction('zbomCompare','sapCall',{steps:[
       {action:'invoke',member:'Table',arguments:[sapCallArgument('string',tableId)]},
       {action:'invoke',member:'SelectRow',arguments:[sapCallArgument('int',row)]},
       {action:'findById',arguments:[sapCallArgument('string',cellId)]},
       {action:'invoke',member:'SetFocus',arguments:[]}
     ]});
   }catch(_){
-    await sendZbomAction('sapCall',{steps:[
+    await sendZbomAction('zbomCompare','sapCall',{steps:[
       {action:'findById',arguments:[sapCallArgument('string',tableId)]},
       {action:'invoke',member:'GetAbsoluteRow',arguments:[sapCallArgument('int',row)]},
       {action:'set',member:'Selected',value:sapCallArgument('bool',true)},
@@ -1845,7 +2054,7 @@ async function findZbomCompareOutputRow(){
   if(bridgeMock)return {row:4,tableOpened:true};
   for(const row of rows){
     try{
-      const data=await sendZbomAction('readText',{controlId:tableId+'/txtNAST-KSCHL[0,'+row+']'});tableOpened=true;
+      const data=await sendZbomAction('zbomCompare','readText',{controlId:tableId+'/txtNAST-KSCHL[0,'+row+']'});tableOpened=true;
       if(String(data&&data.value||'').trim().toUpperCase()==='ZBOM'){zbomCompareOutputRowHint=row;return {row:row,tableOpened:true}}
     }catch(_){/* an absent row is expected near the end of the table */}
   }
@@ -1855,11 +2064,11 @@ async function findZbomCompareOutputRow(){
 async function setZbomCompareSaveTarget(tempFolder,fileName){
   const fullPath=tempFolder+'\\'+fileName;let splitPath=false;
   try{
-    await sendZbomAction('setText',{controlId:'wnd[1]/usr/ctxtDY_PATH',value:tempFolder});
-    await sendZbomAction('setText',{controlId:'wnd[1]/usr/ctxtDY_FILENAME',value:fileName});
+    await sendZbomAction('zbomCompare','setText',{controlId:'wnd[1]/usr/ctxtDY_PATH',value:tempFolder});
+    await sendZbomAction('zbomCompare','setText',{controlId:'wnd[1]/usr/ctxtDY_FILENAME',value:fileName});
     splitPath=true;
   }catch(_){/* older SAP dialogs provide only DY_FILENAME */}
-  if(!splitPath)await sendZbomAction('setText',{controlId:'wnd[1]/usr/ctxtDY_FILENAME',value:fullPath});
+  if(!splitPath)await sendZbomAction('zbomCompare','setText',{controlId:'wnd[1]/usr/ctxtDY_FILENAME',value:fullPath});
   return fullPath;
 }
 
@@ -1881,28 +2090,28 @@ async function waitForZbomCompareFile(path,timeout){
 
 async function exportOneZbomCompareQuotation(row,tempFolder){
   const quote=row.quote,fileName=quote+'.tsv',fullPath=tempFolder+'\\'+fileName;
-  await sendZbomAction('transaction',{code:'VA23'});
-  await sendZbomAction('setText',{controlId:'wnd[0]/usr/ctxtVBAK-VBELN',value:quote});
-  await sendZbomAction('select',{controlId:'wnd[0]/mbar/menu[0]/menu[5]'});
-  const popup=await sendZbomAction('readText',{controlId:'wnd[1]/usr/txtMESSTXT1'}).catch(()=>null),popupText=String(popup?.value||'').trim();
+  await sendZbomAction('zbomCompare','transaction',{code:'VA23'});
+  await sendZbomAction('zbomCompare','setText',{controlId:'wnd[0]/usr/ctxtVBAK-VBELN',value:quote});
+  await sendZbomAction('zbomCompare','select',{controlId:'wnd[0]/mbar/menu[0]/menu[5]'});
+  const popup=await sendZbomAction('zbomCompare','readText',{controlId:'wnd[1]/usr/txtMESSTXT1'}).catch(()=>null),popupText=String(popup?.value||'').trim();
   if(popupText){
-    await sendZbomAction('press',{controlId:'wnd[1]/tbar[0]/btn[0]'});addZbomCompareLog(quote+' — information popup confirmed: '+popupText);
+    await sendZbomAction('zbomCompare','press',{controlId:'wnd[1]/tbar[0]/btn[0]'});addZbomCompareLog(quote+' — information popup confirmed: '+popupText);
     if(isZbomCompareAccessError(popupText))throw new Error(quote+': '+popupText);
   }
   const {row:outputRow,tableOpened}=await findZbomCompareOutputRow();
   if(outputRow<0)throw new Error(quote+': '+(tableOpened?'ZBOM output type was not found.':popupText||'SAP output dialog did not open.'));
   await selectZbomCompareOutputType(outputRow);addZbomCompareLog(quote+' — ZBOM output selected.');
-  await sendZbomAction('press',{controlId:'wnd[1]/tbar[0]/btn[37]'});
-  await sendZbomAction('select',{controlId:'wnd[0]/mbar/menu[2]/menu[1]'});
-  await sendZbomAction('select',{controlId:'wnd[0]/mbar/menu[3]/menu[5]/menu[2]/menu[1]'});
+  await sendZbomAction('zbomCompare','press',{controlId:'wnd[1]/tbar[0]/btn[37]'});
+  await sendZbomAction('zbomCompare','select',{controlId:'wnd[0]/mbar/menu[2]/menu[1]'});
+  await sendZbomAction('zbomCompare','select',{controlId:'wnd[0]/mbar/menu[3]/menu[5]/menu[2]/menu[1]'});
   const radioId='wnd[1]/usr/subSUBSCREEN_STEPLOOP:SAPLSPO5:0150/sub:SAPLSPO5:0150/radSPOPLI-SELFLAG[1,0]';
-  await sendZbomAction('select',{controlId:radioId});
-  await sendZbomAction('sapCall',{controlId:radioId,steps:[{action:'invoke',member:'SetFocus',arguments:[]}]});
-  await sendZbomAction('press',{controlId:'wnd[1]/tbar[0]/btn[0]'});addZbomCompareLog(quote+' — local save dialog opened.');
+  await sendZbomAction('zbomCompare','select',{controlId:radioId});
+  await sendZbomAction('zbomCompare','sapCall',{controlId:radioId,steps:[{action:'invoke',member:'SetFocus',arguments:[]}]});
+  await sendZbomAction('zbomCompare','press',{controlId:'wnd[1]/tbar[0]/btn[0]'});addZbomCompareLog(quote+' — local save dialog opened.');
   await setZbomCompareSaveTarget(tempFolder,fileName);
-  await sendZbomAction('press',{controlId:'wnd[1]/tbar[0]/btn[11]'});
+  await sendZbomAction('zbomCompare','press',{controlId:'wnd[1]/tbar[0]/btn[11]'});
   for(const controlId of ['wnd[1]/tbar[0]/btn[11]','wnd[1]/usr/btnSPOP-OPTION1']){
-    try{await sendZbomAction('press',{controlId:controlId})}catch(_){/* optional overwrite/confirmation dialog */}
+    try{await sendZbomAction('zbomCompare','press',{controlId:controlId})}catch(_){/* optional overwrite/confirmation dialog */}
   }
   if(bridgeMock)return {path:fullPath,simulated:true};
   addZbomCompareLog(quote+' — save requested; waiting for '+fullPath+'.');
@@ -2045,7 +2254,7 @@ function parseZbomCompareTsv(text,path){
 
 async function readZbomCompareTsv(path){
   const data=await bridgeFileRequest('read',{path:path},BRIDGE_FILE_TIMEOUT);
-  if(!data||!data.contentBase64)throw new Error('The Bridge returned no file content for '+path+'.');
+  if(!data||!data.contentBase64)throw new Error('SAPGUIcontrol returned no file content for '+path+'.');
   return parseZbomCompareTsv(decodeZbomCompareBase64(data.contentBase64),path);
 }
 
@@ -2391,7 +2600,7 @@ function snapshotZbomCompareWorksheet(worksheet){
 
 function buildZbomCompareWorkbook(models,grouped){
   if(typeof ExcelJS==='undefined'||!ExcelJS.Workbook)throw new Error('Excel workbook library is unavailable. Refresh the page and try again.');
-  const workbook=new ExcelJS.Workbook();workbook.creator='NSR Control Tower';workbook.company='Lam Research';workbook.created=new Date();
+  const workbook=new ExcelJS.Workbook();workbook.creator='NSR Tracking Dashboard';workbook.company='Lam Research';workbook.created=new Date();
   const compareSheet=grouped&&models.length>1?addZbomCompareOptionComparison(workbook,models):null,compareGasSheet=grouped&&models.length>1?addZbomCompareGasComparison(workbook,models):null,modelSheets=[];
   models.forEach(model=>modelSheets.push({fid:model.fid,quote:model.quote,options:addZbomCompareOptionSheet(workbook,model),gas:addZbomCompareGasSheet(workbook,model)}));
   return {workbook:workbook,preview:{compare:snapshotZbomCompareWorksheet(compareSheet),compareGas:snapshotZbomCompareWorksheet(compareGasSheet),models:modelSheets.map(item=>({fid:item.fid,quote:item.quote,options:snapshotZbomCompareWorksheet(item.options),gas:snapshotZbomCompareWorksheet(item.gas)}))}};
@@ -2425,14 +2634,16 @@ async function startZbomCompare(){
   const rows=zbomCompareRows.slice(),folderInput=bridgeId('zbomCompareOutputFolder');let folder,tempFolder;
   try{folder=normalizedZbomCompareFolder();tempFolder=folder+'\\temp'}catch(error){setZbomCompareProgress(0,bridgeError(error));if(folderInput)folderInput.focus();return}
   if(!rows.length){setZbomCompareProgress(0,'Paste at least one valid Quotation first.');return}
-  if(!selectedBridgeSession()){setZbomCompareProgress(0,'Select an available SAP GUI session first.');return}
+  if(!selectedBridgeSession('zbomCompare')){setZbomCompareProgress(0,'Select an available SAP GUI session first.');return}
   if(rows.length>100&&!unsafeWindow.confirm('You are about to export '+rows.length+' quotations through SAP. Continue?'))return;
   if(folderInput){folderInput.value=folder;saveZbomCompareFolder()}
-  recordZbomCompareHistory(bridgeId('zbomCompareInput').value);invalidateZbomCompareResults();zbomCompareLogLines=[];bridgeId('sapResult').textContent='ZBOM Compare log\n';setZbomCompareRunning(true);renderZbomComparePreview();setZbomCompareProgress(2,'Preparing the temp folder…');
+  await acquireSapTask('zbomCompare',{outputFolder:folder});
+  tempFolder=folder+'\\temp-'+sapTools.zbomCompare.job.taskId;
+  recordZbomCompareHistory(bridgeId('zbomCompareInput').value);invalidateZbomCompareResults();zbomCompareLogLines=[];renderSapLog();setZbomCompareRunning(true);renderZbomComparePreview();setZbomCompareProgress(2,'Preparing the temp folder…');
   const formatted=new Map(),updateResult=(row,patch)=>{
     zbomCompareResults.set(row.quote,Object.assign({},zbomCompareResults.get(row.quote)||{},patch));renderZbomComparePreview();
   };
-  const groupPreviews=[],fidPreviews=new Map();let exported=0,outputs=0,tempReady=false;
+  const groupPreviews=[],fidPreviews=new Map();let exported=0,outputs=0,tempReady=false,sapFailed=false;
   try{
     await bridgeFileRequest('createDirectory',{path:tempFolder},30000);tempReady=true;
     for(let index=0;index<rows.length;index++){
@@ -2441,12 +2652,14 @@ async function startZbomCompare(){
       try{
         addZbomCompareLog(row.quote+' — export started.');const result=await exportOneZbomCompareQuotation(row,tempFolder);updateResult(row,{status:'Exported',path:result.path,simulated:result.simulated});exported++;addZbomCompareLog(row.quote+' — TSV exported.');
       }catch(error){
-        const message=bridgeError(error);updateResult(row,{status:'Failed',error:message});addZbomCompareLog(row.quote+' — FAILED: '+message);
+        sapFailed=true;const message=bridgeError(error);updateResult(row,{status:'Failed',error:message});addZbomCompareLog(row.quote+' — FAILED: '+message);
       }
     }
     if(bridgeMock){
+      sapTools.zbomCompare.job.keep=sapFailed;
       zbomCompareHasRun=true;renderZbomCompareResultSummary(exported,0,rows.length-exported,true);setZbomCompareProgress(100,'Mock export completed. No files were formatted.');setBridgeBadge('Mock ready','warn');return;
     }
+    sapTools.zbomCompare.job.keep=sapFailed;
     const exportedRows=rows.filter(row=>zbomCompareResults.get(row.quote)&&zbomCompareResults.get(row.quote).status==='Exported');
     for(let index=0;index<exportedRows.length;index++){
       const row=exportedRows[index],result=zbomCompareResults.get(row.quote);setZbomCompareProgress(58+(index/Math.max(1,exportedRows.length))*16,'Formatting '+row.quote+' ('+(index+1)+'/'+exportedRows.length+')…');updateResult(row,{status:'Formatting'});
@@ -2460,6 +2673,8 @@ async function startZbomCompare(){
         const message=bridgeError(error);updateResult(row,{status:'Failed',error:message});addZbomCompareLog(row.quote+' — FORMAT FAILED: '+message);
       }
     }
+    // Check BOBJ only after SAP has supplied the FIDs used for the output file names.
+    await prepareBobjFileNames('zbomCompare',rows.filter(row=>formatted.has(row.quote)&&zbomCompareResults.get(row.quote)?.status!=='Failed'&&bobjFidKey(row.fid)),bridgeId('zbomCompareTemplate').value||ZBOM_COMPARE_DEFAULT_TEMPLATE);
     renderZbomComparePreview();
     const standaloneRows=rows.filter(row=>row.group===ZBOM_COMPARE_STANDALONE),groups=new Map();
     rows.filter(row=>row.group!==ZBOM_COMPARE_STANDALONE).forEach(row=>{if(!groups.has(row.group))groups.set(row.group,[]);groups.get(row.group).push(row)});
@@ -2666,8 +2881,7 @@ function insertZbomToken(token){
 function updateZbomStart(){
   const button=bridgeId('zbomStart');if(!button)return;
   const valid=zbomRows.filter(row=>!row._error).length,templateError=zbomTemplateInfo().error;
-  button.disabled=zbomRunning||zbomCompareRunning||bridgeBusy||!selectedBridgeSession()||!valid||Boolean(zbomErrors.length)||Boolean(templateError);
-  const openButton=bridgeId('zbomOpenFolder');if(openButton)openButton.disabled=zbomRunning||zbomCompareRunning||bridgeBusy||!zbomHasRun;
+  button.disabled=!canStartSapTool('zbom')||!valid||Boolean(zbomErrors.length)||Boolean(templateError);
 }
 
 function bridgeFileRequest(operation,options,timeout){
@@ -2675,16 +2889,15 @@ function bridgeFileRequest(operation,options,timeout){
 }
 
 async function openZbomFolder(){
-  setBridgeBusy(true);
   try{
-    await bridgeFileRequest('openDirectory',{path:ZBOM_PDF_FOLDER},30000);addZbomLog('Opened '+ZBOM_PDF_FOLDER+' in Windows Explorer.');
+    const result=await openBridgeFolder(ZBOM_PDF_FOLDER);addZbomLog('Opened '+ZBOM_PDF_FOLDER+' in Windows Explorer.'+(result.foreground?' Window activated.':' Please switch to it manually.'));setBridgeBadge('Ready','ok');
   }catch(error){
     addZbomLog('Could not open '+ZBOM_PDF_FOLDER+': '+bridgeError(error));setBridgeBadge('Action failed','error');
-  }finally{setBridgeBusy(false)}
+  }
 }
 
 async function listZbomRawPdfs(){
-  const data=await bridgeFileRequest('list',{path:ZBOM_PDF_FOLDER,pattern:'00*.pdf',recursive:false,maxEntries:5000},30000),files=new Map();
+  const data=await bridgeFileRequest('list',{path:ZBOM_PDF_FOLDER,pattern:'00*.pdf',recursive:false},30000),files=new Map();
   (Array.isArray(data.entries)?data.entries:[]).forEach(entry=>{
     const name=String(entry.name||'');
     if(entry.kind!=='file'||!/^00.*\.pdf$/i.test(name)||zbomOutputClaims.has(name.toLowerCase()))return;
@@ -2704,17 +2917,25 @@ function changedZbomFiles(before,current){
 
 function waitMs(milliseconds){return new Promise(resolve=>setTimeout(resolve,milliseconds))}
 
-async function waitForZbomFiles(before){
+function zbomFilesCoverRows(files,rows){
+  const found=new Set(files.map(file=>matchZbomRow(file.name)?.quote).filter(Boolean));
+  return rows.every(row=>zbomResults.get(row.quote)?.files.size||found.has(row.quote));
+}
+
+async function waitForZbomFiles(before,rows){
+  const firstFileDeadline=Date.now()+SAP_PDF_FIRST_FILE_WAIT_MS;
   let deadline=Date.now()+SAP_FILE_WAIT_TIMEOUT,lastSignature='',stableSince=0,latest=[];
   while(Date.now()<deadline){
     const current=await listZbomRawPdfs();latest=changedZbomFiles(before,current);
     if(!latest.length){
+      if(Date.now()>=firstFileDeadline)return [];
       lastSignature='';stableSince=0;
       await waitMs(SAP_FILE_POLL_MS);continue;
     }
     const signature=latest.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(file=>file.name+':'+file.size+':'+file.lastModified).join('|');
     if(signature===lastSignature){
-      if(Date.now()-stableSince>=SAP_BATCH_SETTLE_MS)return latest;
+      const settle=zbomFilesCoverRows(latest,rows)?SAP_FILE_SETTLE_MS:SAP_BATCH_SETTLE_MS;
+      if(Date.now()-stableSince>=settle)return latest;
     }else{lastSignature=signature;stableSince=Date.now();deadline=Math.max(deadline,stableSince+SAP_BATCH_SETTLE_MS+SAP_FILE_POLL_MS)}
     await waitMs(SAP_FILE_POLL_MS);
   }
@@ -2725,7 +2946,7 @@ function addZbomLog(message){
   zbomLogLines.push('['+new Date().toLocaleTimeString([], {hour12:false})+'] '+message);
   if(zbomLogLines.length>120)zbomLogLines.shift();
   const result=bridgeId('sapResult');
-  result.textContent='ZBOM PDF log\n'+zbomLogLines.join('\n');result.scrollTop=result.scrollHeight;
+  if(activeSapTool==='zbom')renderSapLog();
 }
 
 function setZbomProgress(percent,message){
@@ -2733,8 +2954,9 @@ function setZbomProgress(percent,message){
   bridgeId('zbomProgressBar').style.width=value+'%';bridgeId('zbomProgressNumber').textContent=Math.round(value)+'%';
 }
 
-async function sendZbomAction(operation,options){
-  const payload=Object.assign(requireBridgeSession(),{operation:operation},options||{}),started=Date.now();
+async function sendZbomAction(tool,operation,options){
+  const job=sapTools[tool].job;if(!job)throw new Error('No SAP window is assigned to this task.');
+  const payload=Object.assign({},options||{},{operation:operation,sessionKey:job.sessionKey,taskId:job.taskId,ownerId:job.ownerId}),started=Date.now();
   while(Date.now()-started<SAP_BUSY_TIMEOUT){
     try{return await bridgeRequest('POST','/action',payload,SAP_ACTION_TIMEOUT)}catch(error){
       if(!error||error.status!==409||!/SAP is busy/i.test(bridgeError(error)))throw error;
@@ -2804,7 +3026,8 @@ async function collectZbomFiles(files,version){
       await moveZbomFile(descriptor,name);
       addZbomLog('Could not match '+descriptor.name+' to exactly one input Quote; renamed to '+name+'.');moved++;continue;
     }
-    const actual={fid:metadata.fid||row.fid,systemDescription:row.systemDescription,quote:metadata.quote||row.quote};await loadBobjRows([actual.fid]);
+    const actual={fid:metadata.fid||row.fid,systemDescription:row.systemDescription,quote:metadata.quote||row.quote};
+    if(bobjFidKey(actual.fid))await prepareBobjFileNames('zbom',[actual],zbomTemplateInfo().template);
     const template=zbomTemplateInfo().template,baseName=renderZbomFileName(actual,template),outputName=claimZbomOutputName(baseName,actual.quote);
     await moveZbomFile(descriptor,outputName);
     let result=zbomResults.get(row.quote);
@@ -2819,22 +3042,23 @@ async function collectZbomFiles(files,version){
   return moved;
 }
 
-async function runZbomVersion(version,quotationText,previousClipboard,startProgress,collectProgress){
+async function runZbomVersion(version,rows,previousClipboard,startProgress,collectProgress){
   const before=bridgeMock?new Map():await listZbomRawPdfs();let actionError=null,clipboardWritten=false;
-  setZbomProgress(startProgress,'Running SAP Version '+version+'…');addZbomLog('Starting Version '+version+' for '+zbomRows.filter(row=>!row._error).length+' quotation(s).');
+  const quotationText=rows.map(row=>row.quote).join('\r\n');
+  setZbomProgress(startProgress,'Running SAP Version '+version+'…');addZbomLog('Starting Version '+version+' for '+rows.length+' quotation(s).');
   try{
-    let data=await sendZbomAction('transaction',{code:'ZMASSPRINT'});addZbomLog('Version '+version+': opened ZMASSPRINT.'+sapStatusSummary(data));
-    await sendZbomAction('setText',{controlId:'wnd[0]/usr/ctxtRG_KSCHL-LOW',value:'ZBOM'});
-    await sendZbomAction('setText',{controlId:'wnd[0]/usr/ctxtP_FILE',value:ZBOM_PDF_FOLDER});
-    await sendZbomAction('press',{controlId:'wnd[0]/usr/btn%_RG_VBELN_%_APP_%-VALU_PUSH'});
+    let data=await sendZbomAction('zbom','transaction',{code:'ZMASSPRINT'});addZbomLog('Version '+version+': opened ZMASSPRINT.'+sapStatusSummary(data));
+    await sendZbomAction('zbom','setText',{controlId:'wnd[0]/usr/ctxtRG_KSCHL-LOW',value:'ZBOM'});
+    await sendZbomAction('zbom','setText',{controlId:'wnd[0]/usr/ctxtP_FILE',value:ZBOM_PDF_FOLDER});
+    await sendZbomAction('zbom','press',{controlId:'wnd[0]/usr/btn%_RG_VBELN_%_APP_%-VALU_PUSH'});
     writeQuotationClipboard(quotationText);clipboardWritten=true;
-    await sendZbomAction('press',{controlId:'wnd[1]/tbar[0]/btn[24]'});
-    await sendZbomAction('press',{controlId:'wnd[1]/tbar[0]/btn[8]'});
-    await sendZbomAction('setText',{controlId:'wnd[0]/usr/ctxtPM_VERMO',value:String(version)});
-    data=await sendZbomAction('press',{controlId:'wnd[0]/tbar[1]/btn[8]'});addZbomLog('Version '+version+': execute completed.'+sapStatusSummary(data));
+    await sendZbomAction('zbom','press',{controlId:'wnd[1]/tbar[0]/btn[24]'});
+    await sendZbomAction('zbom','press',{controlId:'wnd[1]/tbar[0]/btn[8]'});
+    await sendZbomAction('zbom','setText',{controlId:'wnd[0]/usr/ctxtPM_VERMO',value:String(version)});
+    data=await sendZbomAction('zbom','press',{controlId:'wnd[0]/tbar[1]/btn[8]'});addZbomLog('Version '+version+': execute completed.'+sapStatusSummary(data));
     for(const controlId of ['wnd[0]/tbar[1]/btn[5]','wnd[0]/tbar[1]/btn[14]']){
-      try{data=await sendZbomAction('press',{controlId:controlId});addZbomLog('Version '+version+': pressed '+controlId+'.'+sapStatusSummary(data))}
-      catch(error){addZbomLog('Version '+version+': optional '+controlId+' was unavailable: '+bridgeError(error))}
+      data=await sendZbomAction('zbom','pressIfPresent',{controlId:controlId});
+      if(data.value)addZbomLog('Version '+version+': pressed '+controlId+'.'+sapStatusSummary(data));
     }
   }catch(error){
     actionError=error;addZbomLog('Version '+version+' did not complete all SAP steps: '+bridgeError(error));
@@ -2843,7 +3067,7 @@ async function runZbomVersion(version,quotationText,previousClipboard,startProgr
   }
   if(bridgeMock){addZbomLog('Version '+version+': mock mode creates no PDF files.');return {count:0,error:actionError}}
   setZbomProgress(collectProgress,'Checking files created by Version '+version+'…');
-  const changed=await waitForZbomFiles(before),count=await collectZbomFiles(changed,version);
+  const changed=await waitForZbomFiles(before,rows),count=await collectZbomFiles(changed,version);
   return {count:count,error:actionError};
 }
 
@@ -2867,17 +3091,21 @@ async function startZbomExport(){
   await ensureBobjDataSource();previewZbomInput();
   const validRows=zbomRows.filter(row=>!row._error),templateInfo=zbomTemplateInfo();
   if(!validRows.length||zbomErrors.length||templateInfo.error){setZbomProgress(0,'Fix the detected data or file-name template before export.');return}
-  if(!selectedBridgeSession()){setZbomProgress(0,'Select an available SAP GUI session first.');return}
+  if(!selectedBridgeSession('zbom')){setZbomProgress(0,'Select an available SAP GUI session first.');return}
   if(validRows.length>100&&!unsafeWindow.confirm('You are about to print '+validRows.length+' quotations through SAP. Continue?'))return;
+  await acquireSapTask('zbom');
   recordZbomHistory(bridgeId('zbomInput').value);
   const previousClipboardPromise=readClipboardBestEffort();
-  zbomHasRun=false;setZbomRunning(true);zbomLogLines=[];zbomOutputClaims=new Map();zbomResults=new Map();bridgeId('zbomResultSummary').replaceChildren();bridgeId('sapResult').textContent='ZBOM PDF log\n';
+  zbomHasRun=false;setZbomRunning(true);zbomLogLines=[];zbomOutputClaims=new Map();zbomResults=new Map();bridgeId('zbomResultSummary').replaceChildren();renderSapLog();
   setZbomProgress(2,'Preparing the ZBOM PDF export…');
   try{
-    addZbomLog('Output folder: '+ZBOM_PDF_FOLDER+' (managed by Bridge).');
-    const quotationText=validRows.map(row=>row.quote).join('\r\n'),previousClipboard=await previousClipboardPromise;
-    const version2=await runZbomVersion(2,quotationText,previousClipboard,10,42);
-    const version1=await runZbomVersion(1,quotationText,previousClipboard,52,84);
+    addZbomLog('Output folder: '+ZBOM_PDF_FOLDER+' (managed by SAPGUIcontrol).');
+    const previousClipboard=await previousClipboardPromise;
+    const version2=await runZbomVersion(2,validRows,previousClipboard,10,42);
+    const remaining=validRows.filter(row=>!zbomResults.get(row.quote)?.files.size);
+    const version1=remaining.length?await runZbomVersion(1,remaining,previousClipboard,52,84):{count:0,error:null};
+    if(!remaining.length)addZbomLog('All preview quotations have PDFs. Version 1 was not needed.');
+    sapTools.zbom.job.keep=Boolean(version1.error||version2.error);
     const summary=renderZbomResultSummary();
     setZbomProgress(100,summary.missing?'Completed with '+summary.missing+' quotation(s) to review.':'Export completed successfully.');
     zbomHasRun=true;
@@ -2892,38 +3120,37 @@ async function startZbomExport(){
   }
 }
 
-function requireBridgeSession(){
-  const session=selectedBridgeSession();if(!session)throw new Error('Select an available SAP GUI session first.');return session;
-}
-
 async function runBridgeAction(operation){
-  setBridgeBusy(true);
-  try{
-    const payload=Object.assign(requireBridgeSession(),{operation:operation});
-    if(operation==='transaction')payload.code=bridgeId('sapTransaction').value.trim();
-    else if(operation==='sendVKey'){payload.controlId=bridgeId('sapVKeyTarget').value.trim()||'wnd[0]';payload.key=Number(bridgeId('sapVKey').value)}
-    else{payload.controlId=bridgeId('sapControlId').value.trim();payload.value=bridgeId('sapControlValue').value}
-    const data=await bridgeRequest('POST','/action',payload,SAP_ACTION_TIMEOUT);
+  return runSapTool('debug',async()=>{
+    const options={};
+    if(operation==='transaction')options.code=bridgeId('sapTransaction').value.trim();
+    else if(operation==='sendVKey'){options.controlId=bridgeId('sapVKeyTarget').value.trim()||'wnd[0]';options.key=Number(bridgeId('sapVKey').value)}
+    else{options.controlId=bridgeId('sapControlId').value.trim();options.value=bridgeId('sapControlValue').value}
+    await acquireSapTask('debug');
+    const data=await sendZbomAction('debug',operation,options);
     if(operation==='readText'&&Object.prototype.hasOwnProperty.call(data,'value'))bridgeId('sapControlValue').value=data.value==null?'':String(data.value);
-    showBridgeResult(data,'SAP action completed.');setBridgeBadge('Ready','ok');
-  }catch(error){showBridgeResult(bridgeError(error),'SAP action failed.');setBridgeBadge('Action failed','error')}
-  finally{setBridgeBusy(false)}
+    sapTools.debug.job.keep=false;showBridgeResult(data,'SAP action completed.');
+  });
 }
 
 function bindBridgeEvents(){
-  const trusted=handler=>event=>{if(!event.isTrusted){showBridgeResult('Synthetic page actions are blocked.','Request blocked.');return}handler(event)};
-  bridgeId('bridgeRefresh').addEventListener('click',trusted(refreshBridge));
-  bridgeId('bobjUpdate').addEventListener('click',trusted(startBobjUpdate));
-  bridgeId('bobjOpen').addEventListener('click',trusted(openBobjData));
-  bridgeId('sapSession').addEventListener('change',()=>{setBridgeBusy(false);updateZbomStart();updateZbomCompareStart();updateCreateQuoteStart()});
+  unsafeWindow.KyraBridge={runPowerShell:runBridgePowerShell,runVba:runBridgeVba,openFolder:openBridgeFolder,activateWindow:handle=>bridgeRequest('POST','/windows/activate',{handle:handle},20000)};
+  bridgeId('nativeRun').addEventListener('click',runNativeScriptFromEditor);
+  bridgeId('nativeLanguage').addEventListener('change',()=>{bridgeId('nativeEntryPointField').hidden=bridgeId('nativeLanguage').value!=='vba'});
+  bridgeId('bridgeRefresh').addEventListener('click',refreshBridge);
+  bridgeId('bobjUpdate').addEventListener('click',startBobjUpdate);
+  bridgeId('bobjOpen').addEventListener('click',openBobjData);
+  bridgeId('sapSession').addEventListener('change',()=>{sapTools[activeSapTool].selection=bridgeId('sapSession').value;setBridgeBusy(bridgeBusy)});
+  bridgeId('sapReleaseSession').addEventListener('click',releaseSapSession);
+  window.addEventListener('beforeunload',event=>{if(Object.keys(sapTools).some(sapToolRunning)){event.preventDefault();event.returnValue=''}});
   document.querySelectorAll('[data-tool-tab]').forEach(button=>button.addEventListener('click',()=>{setToolTab(button.dataset.toolTab);if(button.dataset.toolTab!=='debug')ensureBobjForCurrentInput()}));
-  bridgeId('sapRunTransaction').addEventListener('click',trusted(()=>runBridgeAction('transaction')));
-  bridgeId('sapReadText').addEventListener('click',trusted(()=>runBridgeAction('readText')));
-  bridgeId('sapSetText').addEventListener('click',trusted(()=>runBridgeAction('setText')));
-  bridgeId('sapSetKey').addEventListener('click',trusted(()=>runBridgeAction('setKey')));
-  bridgeId('sapPress').addEventListener('click',trusted(()=>runBridgeAction('press')));
-  bridgeId('sapSelect').addEventListener('click',trusted(()=>runBridgeAction('select')));
-  bridgeId('sapSendVKey').addEventListener('click',trusted(()=>runBridgeAction('sendVKey')));
+  bridgeId('sapRunTransaction').addEventListener('click',()=>runBridgeAction('transaction'));
+  bridgeId('sapReadText').addEventListener('click',()=>runBridgeAction('readText'));
+  bridgeId('sapSetText').addEventListener('click',()=>runBridgeAction('setText'));
+  bridgeId('sapSetKey').addEventListener('click',()=>runBridgeAction('setKey'));
+  bridgeId('sapPress').addEventListener('click',()=>runBridgeAction('press'));
+  bridgeId('sapSelect').addEventListener('click',()=>runBridgeAction('select'));
+  bridgeId('sapSendVKey').addEventListener('click',()=>runBridgeAction('sendVKey'));
   bridgeId('zbomInput').addEventListener('input',()=>{saveZbomInput();previewZbomInput();ensureBobjForCurrentInput()});
   bridgeId('zbomTemplate').addEventListener('input',()=>{saveZbomTemplate();zbomHasRun=false;zbomResults=new Map();bridgeId('zbomResultSummary').replaceChildren();renderZbomPreview();ensureBobjForCurrentInput()});
   document.querySelectorAll('[data-zbom-token]').forEach(button=>button.addEventListener('click',()=>insertZbomToken(button.dataset.zbomToken)));
@@ -2935,44 +3162,44 @@ function bindBridgeEvents(){
   bridgeId('zbomCompareTemplate').addEventListener('input',()=>{saveZbomCompareTemplate();invalidateZbomCompareResults();renderZbomComparePreview();ensureBobjForCurrentInput()});
   bridgeId('zbomCompareSeparator').addEventListener('input',()=>{saveZbomCompareSeparator();invalidateZbomCompareResults();renderZbomComparePreview()});
   bridgeId('zbomCompareOutputFolder').addEventListener('input',()=>{saveZbomCompareFolder();invalidateZbomCompareResults();renderZbomComparePreview();updateZbomCompareStart()});
-  bridgeId('zbomCompareKeepTemp').addEventListener('click',trusted(()=>{
+  bridgeId('zbomCompareKeepTemp').addEventListener('click',()=>{
     const button=bridgeId('zbomCompareKeepTemp'),keep=!keepZbomCompareTemp();button.setAttribute('aria-pressed',keep?'true':'false');button.title=keep?'The temp folder will be kept.':'The temp folder will be deleted after Compare finishes.';
-  }));
+  });
   document.querySelectorAll('[data-zbom-compare-token]').forEach(button=>button.addEventListener('click',()=>insertZbomCompareToken(button.dataset.zbomCompareToken)));
-  bridgeId('zbomCompareOpenFolder').addEventListener('click',trusted(openZbomCompareOutputFolder));
-  bridgeId('zbomCompareOpenHistory').addEventListener('click',trusted(openZbomCompareHistory));
-  bridgeId('zbomCompareCloseHistory').addEventListener('click',trusted(closeZbomCompareHistory));
-  document.querySelector('[data-zbom-compare-history-close]').addEventListener('click',trusted(closeZbomCompareHistory));
-  bridgeId('createQuoteOpenHistory').addEventListener('click',trusted(openCreateQuoteHistory));
-  bridgeId('createQuoteCloseHistory').addEventListener('click',trusted(closeCreateQuoteHistory));
-  document.querySelector('[data-create-quote-history-close]').addEventListener('click',trusted(closeCreateQuoteHistory));
-  bridgeId('zbomOpenHistory').addEventListener('click',trusted(openZbomHistory));
-  bridgeId('zbomCloseHistory').addEventListener('click',trusted(closeZbomHistory));
-  document.querySelector('[data-zbom-history-close]').addEventListener('click',trusted(closeZbomHistory));
+  bridgeId('zbomCompareOpenFolder').addEventListener('click',openZbomCompareOutputFolder);
+  bridgeId('zbomCompareOpenHistory').addEventListener('click',openZbomCompareHistory);
+  bridgeId('zbomCompareCloseHistory').addEventListener('click',closeZbomCompareHistory);
+  document.querySelector('[data-zbom-compare-history-close]').addEventListener('click',closeZbomCompareHistory);
+  bridgeId('createQuoteOpenHistory').addEventListener('click',openCreateQuoteHistory);
+  bridgeId('createQuoteCloseHistory').addEventListener('click',closeCreateQuoteHistory);
+  document.querySelector('[data-create-quote-history-close]').addEventListener('click',closeCreateQuoteHistory);
+  bridgeId('zbomOpenHistory').addEventListener('click',openZbomHistory);
+  bridgeId('zbomCloseHistory').addEventListener('click',closeZbomHistory);
+  document.querySelector('[data-zbom-history-close]').addEventListener('click',closeZbomHistory);
   document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(!bridgeId('zbomHistoryDialog').hidden)closeZbomHistory();if(!bridgeId('zbomCompareHistoryDialog').hidden)closeZbomCompareHistory();if(!bridgeId('createQuoteHistoryDialog').hidden)closeCreateQuoteHistory()});
   document.addEventListener('keydown',event=>{if(event.ctrlKey&&event.altKey&&event.shiftKey&&event.code==='KeyD'){event.preventDefault();bridgeDebugUnlocked=!bridgeDebugUnlocked;writePersistent(BRIDGE_DEBUG_STORAGE_KEY,bridgeDebugUnlocked?'1':'0');bridgeId('tabDebug').hidden=!bridgeDebugUnlocked;setToolTab(bridgeDebugUnlocked?'debug':'zbom');}});
-  bridgeId('zbomResetInput').addEventListener('click',trusted(()=>{
+  bridgeId('zbomResetInput').addEventListener('click',()=>{
     const input=bridgeId('zbomInput');input.value='';saveZbomInput();previewZbomInput();input.focus();
-  }));
-  bridgeId('zbomResetTemplate').addEventListener('click',trusted(()=>{
+  });
+  bridgeId('zbomResetTemplate').addEventListener('click',()=>{
     const input=bridgeId('zbomTemplate');input.value=ZBOM_DEFAULT_TEMPLATE;saveZbomTemplate();zbomHasRun=false;zbomResults=new Map();bridgeId('zbomResultSummary').replaceChildren();renderZbomPreview();input.focus();
-  }));
-  bridgeId('zbomCompareResetInput').addEventListener('click',trusted(()=>{
+  });
+  bridgeId('zbomCompareResetInput').addEventListener('click',()=>{
     const input=bridgeId('zbomCompareInput');input.value='';saveZbomCompareInput();previewZbomCompareInput();input.focus();
-  }));
-  bridgeId('zbomCompareResetTemplate').addEventListener('click',trusted(()=>{
+  });
+  bridgeId('zbomCompareResetTemplate').addEventListener('click',()=>{
     const input=bridgeId('zbomCompareTemplate'),separator=bridgeId('zbomCompareSeparator'),folder=bridgeId('zbomCompareOutputFolder');input.value=ZBOM_COMPARE_DEFAULT_TEMPLATE;separator.value=ZBOM_COMPARE_DEFAULT_SEPARATOR;folder.value=ZBOM_COMPARE_DEFAULT_FOLDER;saveZbomCompareTemplate();saveZbomCompareSeparator();saveZbomCompareFolder();invalidateZbomCompareResults();renderZbomComparePreview();updateZbomCompareStart();input.focus();
-  }));
-  bridgeId('createQuoteResetInput').addEventListener('click',trusted(()=>{
+  });
+  bridgeId('createQuoteResetInput').addEventListener('click',()=>{
     const input=bridgeId('createQuoteInput');input.value='';createQuoteCrdOverrides=new Map();createQuoteManualCrd=new Set();saveCreateQuoteInput();saveCreateQuoteCrdOverrides();previewCreateQuoteInput();setCreateQuoteStatus('Ready.');input.focus();
-  }));
-  bridgeId('createQuoteResetSettings').addEventListener('click',trusted(()=>{
+  });
+  bridgeId('createQuoteResetSettings').addEventListener('click',()=>{
     const validToDays=bridgeId('createQuoteDefaultValidTo'),fidSuffix=bridgeId('createQuoteFidSuffix');validToDays.value=CREATE_QUOTE_DEFAULT_VALID_TO_DAYS;fidSuffix.value=CREATE_QUOTE_DEFAULT_FID_SUFFIX;saveCreateQuoteValidToDays();saveCreateQuoteFidSuffix();renderCreateQuotePreview();validToDays.focus();
-  }));
-  bridgeId('zbomStart').addEventListener('click',trusted(startZbomExport));
-  bridgeId('zbomOpenFolder').addEventListener('click',trusted(openZbomFolder));
-  bridgeId('zbomCompareStart').addEventListener('click',trusted(startZbomCompare));
-  bridgeId('createQuoteStart').addEventListener('click',trusted(startCreateQuote));
+  });
+  bridgeId('zbomStart').addEventListener('click',()=>runSapTool('zbom',startZbomExport));
+  bridgeId('zbomOpenFolder').addEventListener('click',openZbomFolder);
+  bridgeId('zbomCompareStart').addEventListener('click',()=>runSapTool('zbomCompare',startZbomCompare));
+  bridgeId('createQuoteStart').addEventListener('click',()=>runSapTool('createQuote',startCreateQuote));
   bridgeDebugUnlocked=readPersistent(BRIDGE_DEBUG_STORAGE_KEY,'0')==='1';bridgeId('tabDebug').hidden=!bridgeDebugUnlocked;
   loadZbomPreferences();previewZbomInput();loadZbomComparePreferences();previewZbomCompareInput();loadCreateQuotePreferences();previewCreateQuoteInput();setToolTab('zbom');
 }
@@ -3402,7 +3629,10 @@ async function loadInitialNsrData(){
     if(cached){
       $id('rawFile').value='';
       commitRaw(cached.rows,{file:'SAP cached data',isSap:true,fromCache:true,from:cached.from,to:cached.to,pages:cached.pages,savedAt:cached.savedAt});
-      setLoading(false);return;
+      const today=localDate(new Date());
+      if(cached.to!==today)await loadSapData({from:cached.from,to:today});
+      else setLoading(false);
+      return;
     }
   }catch(error){console.warn('[Toolkit Kyra] Could not read the NSR cache; loading from SAP.',error)}
   if(run===state.sourceRun)await loadSapData(sapRange());
@@ -4385,7 +4615,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 'use strict';
 if(location.hostname!=='techinfo.mylam.com'||!location.pathname.startsWith('/portal/group/mylam/contenttyperesults'))return;
 const jq=jQuery,filters=new Map();
-if(!jq.fn.chosen)return;if(!jq.trim)jq.trim=value=>value==null?'':String(value).trim();
+if(!jq.fn.chosen)return;
 const selector='.filterContainerClass ul.multiSelect,.filterContainerClass select:not(.kyra-chosen-input),select[id="contentList"],select[id="savedFilters"]';
 const css=`
 .kyra-chosen-source,.kyra-chosen-source~.select2{display:none!important}.kyra-mylam-chosen{min-width:0;width:100%;margin-top:9px}.searchbox .kyra-mylam-chosen{width:220px;flex:0 1 220px;margin-top:0}
