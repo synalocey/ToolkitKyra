@@ -241,7 +241,7 @@
     <h1 data-en="ToolKit is not running">未检测到 ToolKit</h1>
     <p data-en="Install or enable the latest script, then refresh this page.">请安装或启用最新版脚本，再刷新此页。</p>
     <div class="guide-actions">
-      <a class="action" href="./index.html" data-language-link data-en="Install ToolKit →">安装 ToolKit →</a>
+      <a class="action" href="./" data-language-link data-en="Install ToolKit →">安装 ToolKit →</a>
       <button class="next" id="refresh-guide" type="button" data-en="Refresh">刷新页面</button>
     </div>
   </section>
@@ -251,7 +251,7 @@
       <div class="sidebar-heading"><span data-en="Tool guides">功能指南</span><span class="feature-count" data-feature-count></span></div>
       <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="feature-nav"><span data-en="Contents">功能目录</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5" /></svg></button>
       <nav class="feature-nav" id="feature-nav" aria-label="功能目录" data-en-label="Tool guides"></nav>
-      <div class="sidebar-footer"><a href="./index.html" data-language-link data-en="Install or reinstall ↗">安装与重装 ↗</a></div>
+      <div class="sidebar-footer"><a href="./" data-language-link data-en="Install or reinstall ↗">安装与重装 ↗</a></div>
     </aside>
     <main class="doc-main" id="doc-main">
       <div class="doc-breadcrumb" id="guide-heading"><span data-en="Guide">使用指南</span><span aria-hidden="true">/</span><span id="active-doc-title"></span></div>
@@ -392,16 +392,16 @@
             <div class="source-loading">
               <figure class="step-media">
                 <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-data-sources" aria-label="放大 FCID 数据源示例" data-en-label="Enlarge the FCID data source example">
-                  <img src="./images/guide-illustrations.svg#fcid-data-sources" width="338" height="494" loading="lazy" alt="FCID data sources with status lights and date ranges at the top right, source labels after loading, and optional NCE import">
+                  <img src="./images/guide-illustrations.svg#fcid-data-sources" width="338" height="494" loading="lazy" alt="FCID data sources with BOBJ badges, loaded date ranges, Import buttons and download help for CTL-NSR List and NCE / FA Review">
                 </a>
               </figure>
               <div class="source-loading-steps">
                 <div>
                   <h3 data-en="<span class='shot-step'>1</span><span class='shot-step'>2</span> Load FCID and CTL BOBJ data"><span class="shot-step">1</span><span class="shot-step">2</span> 加载 FCID 与 CTL BOBJ 数据</h3>
-                  <p data-en="Keep <strong>SAPGUIcontrol.exe</strong> running (see <a href='#sap-connect'>Connect to SAP GUI</a>). On opening, the page attempts to load <strong>[1] FCID Database (BOBJ)</strong> and <strong>[2] CTL Report (BOBJ)</strong> automatically. Click <strong>Update</strong> for the corresponding source to automatically update BOBJ data; this usually takes two minutes. The date range for FCID Database uses <strong>Slot Actual</strong>.">保持 <strong>SAPGUIcontrol.exe</strong> 运行（参见<a href="#sap-connect">连接 SAP GUI</a>）。打开页面后，会尝试自动读取 <strong>[1] FCID Database (BOBJ)</strong> 和 <strong>[2] CTL Report (BOBJ)</strong>。点击对应数据源的 <strong>Update</strong> 可自动更新 BOBJ 数据，通常需要两分钟。FCID Database 的日期范围取自 <strong>Slot Actual</strong>。</p>
+                  <p data-en="Keep <strong>SAPGUIcontrol.exe</strong> running (see <a href='#sap-connect'>Connect to SAP GUI</a>). On opening, the page attempts to load <strong>[1] FCID Database (BOBJ)</strong> and <strong>[2] CTL Report (BOBJ)</strong> automatically. Click <strong>Update</strong> for the corresponding source to automatically update BOBJ data; this usually takes two minutes.">保持 <strong>SAPGUIcontrol.exe</strong> 运行（参见<a href="#sap-connect">连接 SAP GUI</a>）。打开页面后，会尝试自动读取 <strong>[1] FCID Database (BOBJ)</strong> 和 <strong>[2] CTL Report (BOBJ)</strong>。点击对应数据源的 <strong>Update</strong> 可自动更新 BOBJ 数据，通常需要两分钟。</p>
                 </div>
                 <div>
-                  <h3 data-en="<span class='shot-step'>3</span> CTL-NSR List automatically loads the preset version"><span class="shot-step">3</span> CTL-NSR List 会自动加载预置版本</h3>
+                  <h3 data-en="<span class='shot-step'>3</span> CTL-NSR List automatically loads the preset version"><span class="shot-step">3</span> CTL-NSR List 自动加载预置版本</h3>
                   <p class="hint" data-en="For the latest data, manually export a file from the CTL system and import it using Import.">如需使用最新数据，可从 CTL 系统手动导出文件，并通过 Import 导入。</p>
                 </div>
                 <div>
@@ -409,8 +409,8 @@
                   <p data-en="By default, NSR data from the past year loads automatically. To load a specific period, click <strong>Load NSR</strong> and select the date range in the dialog.">默认会自动加载近 1 年的 NSR 数据。如需读取指定时间范围，点击 <strong>Load NSR</strong>，在弹出的框内选择日期。</p>
                 </div>
                 <div>
-                  <h3 data-en="<span class='shot-step'>5</span> Import NCE / FA data (optional)"><span class="shot-step">5</span> 导入 NCE / FA 数据（可选）</h3>
-                  <p data-en="Click <strong>Import</strong> to manually import an Excel or CSV file.">点击 <strong>Import</strong>，手动导入 Excel 或 CSV 文件</p>
+                  <h3 data-en="<span class='shot-step'>5</span> NCE / FA automatically loads the preset version"><span class="shot-step">5</span> NCE / FA 自动加载预置版本</h3>
+                  <p class="hint" data-en="For the latest data, please import it manually using Import.">如需使用最新数据，请手动通过 Import 导入。</p>
                 </div>
               </div>
             </div>
@@ -781,8 +781,8 @@
       const updateLink = document.getElementById('script-update');
       const retryVersion = document.getElementById('retry-version');
       const updateMessages = {
-        zh: {idle: '', checking: '正在检查更新…', current: 'Up to date', update: '新版 v{version} 可用', unavailable: '暂无法检查更新', preview: '预览模式', automatic: '会自动保持最新', enabled: '自动更新已开启', disabled: '自动更新已关闭'},
-        en: {idle: '', checking: 'Checking for updates…', current: 'Up to date', update: 'v{version} available', unavailable: 'Unable to check for updates', preview: 'Preview mode', automatic: 'Automatically kept up to date', enabled: 'Auto-updates on', disabled: 'Auto-updates off'}
+        zh: {idle: '', checking: '正在检查更新…', current: 'Up to date', update: '新版 v{version} 可用', unavailable: '暂无法检查更新', preview: '预览模式', enabled: '自动更新已开启', disabled: '自动更新已关闭'},
+        en: {idle: '', checking: 'Checking for updates…', current: 'Up to date', update: 'v{version} available', unavailable: 'Unable to check for updates', preview: 'Preview mode', enabled: 'Auto-updates on', disabled: 'Auto-updates off'}
       };
 
       function renderVersionStatus() {
@@ -790,7 +790,7 @@
         versionStatus.textContent = messages[updateState].replace('{version}', latestVersion);
         versionStatus.dataset.state = updateState;
         autoUpdateNote.hidden = autoUpdate === null || updateState === 'preview';
-        autoUpdateNote.textContent = autoUpdate ? messages[updateState === 'current' ? 'automatic' : 'enabled'] : messages.disabled;
+        autoUpdateNote.textContent = autoUpdate ? messages.enabled : messages.disabled;
         updateLink.hidden = !['update', 'unavailable'].includes(updateState) && !(autoUpdate === false && updateState === 'current');
         retryVersion.hidden = updateState !== 'unavailable';
       }
