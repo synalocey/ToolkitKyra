@@ -1,2 +1,4 @@
-# Local development / bridge directory
-NSR_SAP_GUI_Bridge/
+SAPGUIcontrol/
+tests/
+examples/
+/AGENTS.md

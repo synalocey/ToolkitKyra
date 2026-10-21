@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-en="Install ToolKit">安装 ToolKit</title>
+  <style>
+    :root { color-scheme: light; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color: #19313a; background: #f3f6f7; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 48px 20px; line-height: 1.7; }
+    main { max-width: 800px; margin: auto; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    .brand { color: #0f766e; font-size: 14px; font-weight: 700; letter-spacing: .12em; }
+    .language-switch { min-height: 40px; padding: 7px 16px; border: 1px solid #bacbd0; border-radius: 8px; background: white; color: #0f766e; font: inherit; cursor: pointer; }
+    .language-switch:hover { background: #eff8f5; }
+    h1 { margin: 8px 0; font-size: clamp(28px, 5vw, 38px); line-height: 1.3; }
+    .hint { color: #52656e; }
+    nav { display: flex; gap: 12px; margin-bottom: 20px; }
+    nav button { flex: 1; padding: 12px 8px; border: 1px solid #d7e1e4; border-radius: 10px; background: white; color: #52656e; font: inherit; cursor: pointer; }
+    nav button[aria-current="step"] { color: #0b655e; border-color: #0f766e; background: #e7f5f1; font-weight: 700; }
+    section { padding: 32px; border: 1px solid #dce5e8; border-radius: 16px; background: white; box-shadow: 0 8px 28px #18333f08; }
+    [hidden] { display: none !important; }
+    h2 { margin: 0 0 16px; font-size: 25px; }
+    ol { padding-left: 24px; margin: 18px 0 26px; }
+    li { padding: 4px 0; }
+    a { color: #0f766e; }
+    .action, .next, .copy { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 10px 20px; border: 1px solid #0f766e; border-radius: 9px; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+    .action { background: #0f766e; color: white; }
+    .action:hover { background: #0b655e; }
+    .next, .copy { background: white; color: #0f766e; }
+    .next:hover, .copy:hover { background: #eff8f5; }
+    .controls { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 28px; padding-top: 24px; border-top: 1px solid #e5ecee; }
+    .hint { font-size: 14px; }
+    .note { padding: 14px 18px; border-left: 3px solid #79b9ac; background: #f0f8f5; border-radius: 0 7px 7px 0; }
+    .address { display: flex; gap: 10px; margin: 16px 0; }
+    input { min-width: 0; flex: 1; width: 100%; padding: 10px 12px; border: 1px solid #bacbd0; border-radius: 8px; font: 16px Consolas, monospace; }
+    .status { min-height: 24px; color: #0f766e; font-size: 14px; }
+    figure { max-width: 672px; margin: 24px auto; }
+    .screenshot { display: block; width: 100%; padding: 0; overflow: hidden; border: 1px solid #dce5e8; border-radius: 10px; background: #fff; cursor: zoom-in; }
+    .screenshot svg { display: block; width: 100%; height: auto; }
+    .screenshot:hover { border-color: #0f766e; }
+    .ui-shot { font: 14px "Segoe UI", Arial, sans-serif; fill: #262626; text-align: left; }
+    .ui-muted { fill: #60666b; }
+    .ui-link { fill: #2b608f; }
+    .annotation { fill: none; stroke: #d83c32; stroke-width: 3; }
+    .annotation-number { fill: #d83c32; stroke: #fff; stroke-width: 2; }
+    .annotation-text { fill: #fff; font: 700 18px "Segoe UI", sans-serif; text-anchor: middle; dominant-baseline: central; }
+    .viewer { width: min(1200px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px); padding: 16px; border: 0; border-radius: 12px; color: #19313a; }
+    .viewer::backdrop { background: #102a37b8; }
+    .viewer form { display: flex; justify-content: flex-end; margin: 0 0 12px; }
+    #screenshot-preview { max-height: calc(100dvh - 180px); overflow: auto; }
+    .viewer svg { display: block; width: 100%; height: auto; }
+    :focus-visible { outline: 3px solid #eab355; outline-offset: 3px; }
+    @media (max-width: 560px) { body { padding: 24px 12px; } section { padding: 22px; } nav { gap: 6px; } nav button { font-size: 12px; padding: 10px 4px; } .address { flex-wrap: wrap; } .address input { flex-basis: 100%; } }
+    .installed-notice { display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 800px; padding: 24px 26px; margin: 0 auto 40px; border: 1px solid #a9caee; border-left: 5px solid #2874bb; border-radius: 12px; background: #eaf3ff; color: #184f80; }
+    .installed-notice strong { font-size: 21px; }
+    .installed-notice p { margin: 5px 0 0; color: #42658a; font-size: 14px; }
+    .installed-notice .action { flex-shrink: 0; border-color: #2265a4; background: #2265a4; }
+    .installed-notice .action:hover { background: #194e80; }
+    .guide { max-width: 1080px; }
+    .guide-gate { max-width: 720px; margin: 28px auto; }
+    .guide-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    .guide-meta { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0 28px; color: #52656e; font-size: 14px; }
+    .guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .guide-card { display: flex; flex-direction: column; padding: 26px; }
+    .guide-card h2 { font-size: 23px; }
+    .guide-card p { margin: 0; }
+    .guide-card ol { flex: 1; }
+    .guide-card .action { align-self: flex-start; }
+    .installation-success { padding: 28px; border-color: #add8cc; background: #e7f5f1; }
+    .installation-success h1 { color: #0b655e; }
+    .installation-success p { margin: 10px 0 0; }
+    .guide-footer { margin: 28px 0 0; }
+    @media (max-width: 700px) { .guide-grid { grid-template-columns: 1fr; } .installed-notice { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <aside class="installed-notice" id="installed-notice" role="status" hidden>
+      <div>
+        <strong data-en="ToolKit is installed">ToolKit 已安装</strong>
+        <p data-en="Open the guide, or follow the steps below to reinstall.">可直接查看指南，或按下方步骤重新安装。</p>
+      </div>
+      <a class="action" href="./guide" data-language-link data-en="Open guide →">查看指南 →</a>
+  </aside>
+  <main>
+    <header>
+      <div class="brand">ToolKit</div>
+      <button class="language-switch" id="language-switch" type="button" lang="en" aria-label="Switch to English">English</button>
+    </header>
+    <h1 data-en="Install in Edge">在 Edge 中完成安装</h1>
+    <nav aria-label="安装步骤" data-en-label="Installation steps">
+      <button type="button" data-step="0" aria-current="step" data-en="1 Extension">1 安装扩展</button>
+      <button type="button" data-step="1" data-en="2 Settings">2 开启开关</button>
+      <button type="button" data-step="2" data-en="3 Script">3 安装脚本</button>
+    </nav>
+
+    <section data-panel="0" aria-labelledby="step-one">
+      <h2 id="step-one" tabindex="-1" data-en="Step 1: Install Tampermonkey">第一步：安装 Tampermonkey</h2>
+      <a class="action" href="https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd?hl=en-GB&amp;gl=HK" target="_blank" rel="noopener" data-en="Open Tampermonkey in the store ↗">打开 Tampermonkey 商店页面 ↗</a>
+      <ol>
+        <li data-en="Click <strong>Get</strong> on the store page.">在商店页面点击 <strong>获取（Get）</strong>。</li>
+        <li data-en="Click <strong>Add extension</strong> in the confirmation window.">在确认窗口点击 <strong>添加扩展（Add extension）</strong>。</li>
+        <li data-en="Wait for installation to finish, then return to this page.">等待安装完成，然后返回本页面。</li>
+      </ol>
+      <figure>
+        <button class="screenshot" type="button" aria-label="放大商店界面示意图" data-en-label="Enlarge the store illustration">
+          <svg class="ui-shot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 855 130" lang="en" role="img" aria-label="英文扩展商店中的 Tampermonkey 和 Get 按钮示意图" data-en-label="Illustration of Tampermonkey and the Get button in the English add-ons store">
+            <rect width="855" height="130" fill="#f8f9fa" />
+            <g transform="translate(14 17)">
+              <rect width="100" height="100" rx="3" fill="#398b25" />
+              <rect x="12" y="14" width="76" height="86" rx="24" fill="#232722" />
+              <g fill="#dbe2db"><circle cx="32" cy="70" r="16" /><circle cx="68" cy="70" r="16" /></g>
+            </g>
+            <text x="134" y="48" font-size="25" font-weight="600">Tampermonkey</text>
+            <rect x="314" y="21" width="104" height="32" rx="16" fill="#fff" stroke="#d9dddf" />
+            <path d="m336 29 3 2 3 1v4l-1 4-4 3-4-3-1-4v-4l3-1z" fill="#2878da" />
+            <path d="m334 36 2 2 4-4" fill="none" stroke="#fff" stroke-width="1.5" />
+            <text x="348" y="42" font-size="13" font-weight="600">Featured</text>
+            <text class="ui-muted" x="136" y="78" font-size="13">Extension<tspan dx="9">|</tspan><tspan class="ui-link" dx="9">Jan Biniok</tspan></text>
+            <text class="ui-muted" x="134" y="108" font-size="13"><tspan font-size="16">★★★★☆</tspan><tspan dx="5">(5.2K)</tspan><tspan dx="8">|</tspan><tspan dx="8">13,000,000+ Users</tspan><tspan dx="8">|</tspan><tspan class="ui-link" dx="8">Productivity</tspan></text>
+            <rect x="730" y="25" width="100" height="32" rx="4" fill="#2169ed" />
+            <text x="780" y="46" text-anchor="middle" fill="#fff" font-size="14" font-weight="600">Get</text>
+            <text class="ui-muted" x="830" y="78" text-anchor="end" font-size="10">Compatible with your browser</text>
+            <ellipse class="annotation" cx="780" cy="41" rx="63" ry="23" />
+          </svg>
+        </button>
+      </figure>
+      <p class="note" data-en="If the store button says Remove, Tampermonkey is already installed. Continue to the next step.<br>If the extension is not working correctly, you can remove and reinstall it.">如果商店按钮显示 Remove（移除），说明已经安装，可以直接继续。<br>如果运行异常，可以移除后重新安装。</p>
+      <div class="controls">
+        <button class="next" type="button" data-step="1" data-en="Installed — next step →">已安装，下一步 →</button>
+      </div>
+    </section>
+
+    <section data-panel="1" aria-labelledby="step-two" hidden>
+      <h2 id="step-two" tabindex="-1" data-en="Step 2: Enable Script Functionality">第二步：开启脚本功能</h2>
+      <p data-en="Copy the address below, then press <strong>Ctrl+T to open a new tab</strong> in Edge. Paste it into the new tab's address bar and press Enter.">复制下面的地址，然后在 Edge 中按 <strong>Ctrl+T 新建标签页</strong>，粘贴到新标签页的地址栏后按 Enter。</p>
+      <div class="address">
+        <input id="extensions-address" value="edge://extensions/?id=iikmkjmpaadaobahmlepeloendndfphd" readonly aria-label="Edge 扩展设置地址" data-en-label="Edge extensions settings address">
+        <button class="copy" id="copy-address" type="button" data-en="Copy address">复制地址</button>
+      </div>
+      <div class="status" id="copy-status" role="status" aria-live="polite"></div>
+      <ol>
+        <li data-en="In the <strong>bottom-left corner</strong>, find <strong>Developer mode</strong> and turn it on.">在<strong>左下角</strong>找到 <strong>开发人员模式（Developer mode）</strong>，把开关打开。</li>
+        <li data-en="On the <strong>right</strong>, find <strong>Allow user scripts</strong> and <strong>turn it on</strong>.">在<strong>右侧</strong>找到 <strong>允许用户脚本（Allow user scripts）</strong>，把开关打开。</li>
+        <li data-en="Make sure the extension switch to the <strong>right of Tampermonkey</strong> is <strong>on</strong>.">确认 <strong>Tampermonkey 名称右侧</strong>的扩展开关已开启。</li>
+      </ol>
+      <figure>
+        <button class="screenshot" type="button" aria-label="放大脚本权限设置示意图" data-en-label="Enlarge the script permissions illustration">
+          <svg class="ui-shot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" lang="en" role="img" aria-label="英文扩展详情页中开发人员模式、允许用户脚本及 Tampermonkey 三个开关均已开启的示意图" data-en-label="Illustration of Developer mode, Allow User Scripts, and the Tampermonkey extension switch, all turned on">
+            <rect width="960" height="560" fill="#fff" />
+            <path d="M252 0v560" stroke="#e4e4e4" />
+            <text x="22" y="38" font-size="27" font-weight="700">Extensions</text>
+            <rect x="22" y="62" width="208" height="32" rx="7" fill="#f6f6f6" stroke="#e4e4e4" />
+            <g stroke="#60666b" fill="none"><circle cx="40" cy="77" r="5" /><path d="m44 81 5 5" /></g>
+            <text class="ui-muted" x="57" y="83" font-size="12">Search installed extensions</text>
+            <rect x="22" y="106" width="208" height="34" rx="8" fill="#ebebeb" />
+            <path d="M23 113v20" stroke="#333" stroke-width="3" stroke-linecap="round" />
+            <path d="M36 117h4v-3h5v3h4v5h-3v5h3v4H36v-4h-3v-5h3z" fill="none" stroke="#333" />
+            <text x="58" y="128">My extensions</text>
+            <g fill="none" stroke="#333"><rect x="33" y="153" width="17" height="12" rx="1" /><path d="M36 157h11m-11 4h11" stroke-dasharray="2 1" /></g>
+            <text x="58" y="165">Keyboard shortcuts</text>
+            <path d="M22 188h208" stroke="#e5e5e5" />
+            <text x="24" y="218" font-size="12">Get extensions for Microsoft Edge</text>
+            <path d="M222 207h6v6m-8 2 8-8m-5 10h-6v-7" fill="none" stroke="#333" />
+            <text x="38" y="522" font-size="16">Developer mode</text>
+            <rect x="194" y="506" width="36" height="20" rx="10" fill="#4bb266" />
+            <circle cx="220" cy="516" r="8" fill="#fff" />
+            <path d="m277 25-6 6 6 6" fill="none" stroke="#444" stroke-width="1.5" />
+            <text x="293" y="37" font-size="19" font-weight="700">Installed extensions / Tampermonkey</text>
+            <rect x="280" y="65" width="658" height="469" rx="20" fill="#fff" stroke="#e8e8e8" />
+            <rect x="304" y="88" width="34" height="34" rx="8" fill="#292929" />
+            <g fill="#fff"><circle cx="313" cy="113" r="6" /><circle cx="329" cy="113" r="6" /></g>
+            <text x="350" y="108" font-size="17" font-weight="600">Tampermonkey</text>
+            <text class="ui-muted" x="350" y="129" font-size="12">Size 5.4 MB   Version 5.5.1</text>
+            <rect x="875" y="96" width="36" height="20" rx="10" fill="#4bb266" />
+            <circle cx="901" cy="106" r="8" fill="#fff" />
+            <text x="304" y="169">Description</text>
+            <text x="304" y="191">Change the web at will with userscripts</text>
+            <text x="304" y="233">Permissions</text>
+            <text x="304" y="257">•  Read your browsing history<tspan x="304" dy="22">•  Display notifications</tspan><tspan x="304" dy="22">•  Modify data you copy and paste</tspan></text>
+            <text x="304" y="338">Site access</text>
+            <text class="ui-muted" x="304" y="360" font-size="12">Allow this extension to read and change data on websites you visit.</text>
+            <rect x="766" y="318" width="145" height="32" rx="7" fill="#f6f6f6" stroke="#e4e4e4" />
+            <text x="777" y="339">On all sites</text>
+            <path d="m891 332 5 5 5-5" fill="none" stroke="#444" />
+            <text x="304" y="406" font-size="16">Allow User Scripts</text>
+            <text class="ui-muted" x="304" y="438" font-size="12">The extension can run code that has not been reviewed by Microsoft Edge.<tspan x="304" dy="18">Only turn this on if you fully trust the extension.</tspan></text>
+            <rect x="875" y="390" width="36" height="20" rx="10" fill="#4bb266" />
+            <circle cx="901" cy="400" r="8" fill="#fff" />
+            <text x="304" y="501">Allow in InPrivate</text>
+            <rect x="875" y="485" width="36" height="20" rx="10" fill="#cecece" />
+            <circle cx="885" cy="495" r="8" fill="#fff" />
+            <rect class="annotation" x="16" y="494" width="222" height="44" rx="22" />
+            <rect class="annotation" x="294" y="380" width="630" height="40" rx="20" />
+            <ellipse class="annotation" cx="893" cy="106" rx="31" ry="22" />
+            <circle class="annotation-number" cx="29" cy="476" r="16" />
+            <text class="annotation-text" x="29" y="476">1</text>
+            <circle class="annotation-number" cx="281" cy="400" r="16" />
+            <text class="annotation-text" x="281" y="400">2</text>
+            <circle class="annotation-number" cx="841" cy="106" r="16" />
+            <text class="annotation-text" x="841" y="106">3</text>
+          </svg>
+        </button>
+      </figure>
+      <div class="controls">
+        <button class="next" type="button" data-step="0" data-en="← Previous step">← 上一步</button>
+        <button class="next" type="button" data-step="2" data-en="All three switches enabled — next step →">三个开关已开启，下一步 →</button>
+      </div>
+    </section>
+
+    <section data-panel="2" aria-labelledby="step-three" hidden>
+      <h2 id="step-three" tabindex="-1" data-en="Step 3: Install the ToolKit script">第三步：安装 ToolKit 脚本</h2>
+      <a class="action" href="https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/ToolKit.user.js" target="_blank" rel="noopener" data-en="Open the script installation page ↗">打开脚本安装页面 ↗</a>
+      <ol>
+        <li data-en="Click <strong>Install</strong>. If the script is already installed, the button may say Reinstall or Update.">点击 <strong>安装（Install）</strong>；如果之前安装过，可能显示“重新安装”或“更新”。</li>
+      </ol>
+      <figure>
+        <button class="screenshot" type="button" aria-label="放大脚本安装界面示意图" data-en-label="Enlarge the script installation illustration">
+          <svg class="ui-shot" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 390" lang="en" role="img" aria-label="英文脚本安装页中的 ToolKit 名称和 Install 安装按钮示意图" data-en-label="Illustration of the ToolKit name and Install button on the English userscript installation page">
+            <rect width="650" height="390" fill="#fff" />
+            <path d="m20 34 10-17 10 17H20m7-3h6l-3-6z" fill="#292929" fill-rule="evenodd" />
+            <text x="48" y="36" font-size="16" font-weight="700">ToolKit</text>
+            <g font-size="13" text-anchor="end"><text x="172" y="64">AUTHOR</text><text x="172" y="85">DESCRIPTION</text><text x="172" y="106">SOURCE</text></g>
+            <text x="205" y="64" font-size="13">Syna</text>
+            <text x="205" y="85" font-size="13">ToolKit</text>
+            <text x="205" y="106" font-size="12">https://raw.githubusercontent.com/synalocey/<tspan x="205" dy="17">ToolkitKyra/main/ToolKit.user.js</tspan></text>
+            <text x="20" y="185" font-size="19" font-weight="700">Userscript installation</text>
+            <circle cx="162" cy="211" r="7" fill="none" stroke="#5d717a" />
+            <text x="162" y="215" text-anchor="middle" fill="#5d717a" font-size="11" font-weight="700">i</text>
+            <text x="205" y="215" font-size="12">Malicious scripts can violate your privacy and act on your behalf!<tspan x="205" dy="17">Only install scripts from sources that you trust.</tspan></text>
+            <text x="172" y="271" text-anchor="end" font-size="13">INCLUDE(S)</text>
+            <text x="205" y="271" font-size="12">https://fep.lamresearch.com/*<tspan x="205" dy="20">https://www.lamresearch.com/*</tspan><tspan x="205" dy="20">https://techinfo.mylam.com/portal/group/mylam/contenttyperesults*</tspan></text>
+            <rect x="132" y="341" width="52" height="26" rx="2" fill="#f7f7f7" stroke="#666" />
+            <rect x="135" y="344" width="46" height="20" rx="1" fill="none" stroke="#777" stroke-dasharray="1 2" />
+            <text x="158" y="359" text-anchor="middle" font-size="13">Install</text>
+            <rect x="189" y="341" width="56" height="26" rx="2" fill="#f7f7f7" stroke="#333" stroke-width="2" />
+            <text x="217" y="359" text-anchor="middle" font-size="13">Cancel</text>
+            <ellipse class="annotation" cx="158" cy="354" rx="43" ry="24" />
+            <circle class="annotation-number" cx="83" cy="354" r="17" />
+            <text class="annotation-text" x="83" y="354">1</text>
+          </svg>
+        </button>
+      </figure>
+      <div class="controls">
+        <button class="next" type="button" data-step="1" data-en="← Previous step">← 上一步</button>
+        <a class="action" href="./guide?from=install" data-language-link data-en="Get started →">开始使用 →</a>
+      </div>
+    </section>
+  </main>
+  <dialog class="viewer" id="screenshot-viewer" aria-label="界面示意图预览" data-en-label="Interface illustration preview">
+    <form method="dialog"><button class="next" type="submit" data-en="Close ×">关闭 ×</button></form>
+    <div id="screenshot-preview"></div>
+  </dialog>
+  <script>
+    const panels = [...document.querySelectorAll('[data-panel]')];
+    const stepButtons = [...document.querySelectorAll('nav [data-step]')];
+    const copyStatus = document.getElementById('copy-status');
+    const screenshotViewer = document.getElementById('screenshot-viewer');
+    const screenshotPreview = document.getElementById('screenshot-preview');
+    const copyMessages = {
+      zh: {copied: '已复制', manual: '地址已选中，请按 Ctrl+C 复制，再按 Ctrl+T 新建标签页，粘贴地址并按 Enter。'},
+      en: {copied: 'Copied', manual: 'Address selected. Press Ctrl+C to copy it, then Ctrl+T for a new tab. Paste the address and press Enter.'}
+    };
+    let copyState = '';
+    function renderCopyStatus() {
+      copyStatus.textContent = copyState ? copyMessages[document.documentElement.lang === 'en' ? 'en' : 'zh'][copyState] : '';
+    }
+    document.addEventListener('toolkit:languagechange', renderCopyStatus);
+    function showStep(step) {
+      panels.forEach((panel, index) => { panel.hidden = index !== step; });
+      stepButtons.forEach((button, index) => {
+        if (index === step) button.setAttribute('aria-current', 'step');
+        else button.removeAttribute('aria-current');
+      });
+      panels[step].querySelector('h2').focus();
+    }
+    document.querySelectorAll('[data-step]').forEach(button => {
+      button.addEventListener('click', () => showStep(Number(button.dataset.step)));
+    });
+    document.querySelectorAll('input[readonly]').forEach(input => {
+      input.addEventListener('click', () => input.select());
+    });
+    document.querySelectorAll('.screenshot').forEach(button => {
+      button.addEventListener('click', () => {
+        const illustration = button.querySelector('svg').cloneNode(true);
+        illustration.style.minWidth = illustration.viewBox.baseVal.width + 'px';
+        screenshotPreview.replaceChildren(illustration);
+        screenshotViewer.showModal();
+      });
+    });
+    screenshotViewer.addEventListener('click', event => {
+      if (event.target !== screenshotViewer) return;
+      const bounds = screenshotViewer.getBoundingClientRect();
+      if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) screenshotViewer.close();
+    });
+    document.getElementById('copy-address').addEventListener('click', async () => {
+      const address = document.getElementById('extensions-address');
+      try {
+        await navigator.clipboard.writeText(address.value);
+        copyState = 'copied';
+      } catch {
+        address.focus();
+        address.select();
+        copyState = 'manual';
+      }
+      renderCopyStatus();
+    });
+  </script>
+  <script>
+    (() => {
+      const translations = [...document.querySelectorAll('[data-en]')].map(element => ({element, zh: element.innerHTML, en: element.dataset.en}));
+      const labels = [...document.querySelectorAll('[data-en-label]')].map(element => ({element, zh: element.getAttribute('aria-label'), en: element.dataset.enLabel}));
+      const languageSwitch = document.getElementById('language-switch');
+      let language = new URL(location.href).searchParams.get('lang') === 'en' ? 'en' : 'zh';
+
+      function renderLanguage() {
+        translations.forEach(item => { item.element.innerHTML = item[language]; });
+        labels.forEach(item => { item.element.setAttribute('aria-label', item[language]); });
+        document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
+        languageSwitch.textContent = language === 'zh' ? 'English' : '中文';
+        languageSwitch.lang = language === 'zh' ? 'en' : 'zh-CN';
+        languageSwitch.setAttribute('aria-label', language === 'zh' ? 'Switch to English' : '切换为中文');
+        document.querySelectorAll('[data-language-link]').forEach(link => {
+          const target = new URL(link.getAttribute('href'), location.href);
+          if (language === 'en') target.searchParams.set('lang', 'en');
+          else target.searchParams.delete('lang');
+          link.href = target.href;
+        });
+        const address = new URL(location.href);
+        if (language === 'en') address.searchParams.set('lang', 'en');
+        else address.searchParams.delete('lang');
+        if (address.href !== location.href) history.replaceState(null, '', address.href);
+        document.dispatchEvent(new CustomEvent('toolkit:languagechange'));
+      }
+
+      languageSwitch.addEventListener('click', () => {
+        language = language === 'zh' ? 'en' : 'zh';
+        renderLanguage();
+      });
+      document.getElementById('refresh-guide')?.addEventListener('click', () => location.reload());
+
+      function showInstalled(version) {
+        const notice = document.getElementById('installed-notice');
+        if (notice) notice.hidden = false;
+        const guide = document.getElementById('guide-content');
+        if (guide) {
+          document.getElementById('guide-gate').hidden = true;
+          guide.hidden = false;
+          const address = new URL(location.href);
+          if (address.searchParams.get('from') === 'install') {
+            document.getElementById('guide-heading').hidden = true;
+            document.getElementById('installation-success').hidden = false;
+            address.searchParams.delete('from');
+            history.replaceState(null, '', address.href);
+          }
+        }
+        document.querySelectorAll('[data-toolkit-version]').forEach(element => { element.textContent = 'v' + version; });
+      }
+
+      window.addEventListener('message', event => {
+        if (event.source !== window || event.origin !== location.origin || event.data?.type !== 'toolkit:ready' || typeof event.data.version !== 'string') return;
+        showInstalled(event.data.version);
+      });
+
+      document.addEventListener('keydown', event => {
+        if (!event.ctrlKey || !event.altKey || !event.shiftKey || event.metaKey || event.repeat || (event.code !== 'KeyD' && event.key?.toLowerCase() !== 'd')) return;
+        event.preventDefault();
+        showInstalled('preview');
+      }, true);
+
+      renderLanguage();
+      if (location.protocol !== 'file:') window.postMessage({type: 'toolkit:check'}, location.origin);
+    })();
+  </script>
+</body>
+</html>
