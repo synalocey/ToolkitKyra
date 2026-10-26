@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.10.21
+// @version      26.10.25
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
@@ -11,8 +11,10 @@
 // @require      https://cdn.jsdelivr.net/npm/jquery@4.0.0/dist/jquery.min.js
 // @require      https://cdn.jsdelivr.net/gh/JJJ/chosen@4.0.0/dist/js/chosen.jquery.min.js
 // @require      https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js
-// @require      https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
 // @require      https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.24.0/dist/zip.min.js
+// @resource     excelJs https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js
+// @resource     tabulatorJs https://cdn.jsdelivr.net/npm/tabulator-tables@6.5.0/dist/js/tabulator.min.js
+// @resource     tabulatorCss https://cdn.jsdelivr.net/npm/tabulator-tables@6.5.0/dist/css/tabulator.min.css
 // @resource     chosenCss https://cdn.jsdelivr.net/gh/JJJ/chosen@4.0.0/dist/css/chosen.min.css
 // @resource     xlsxJs https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js
 // @match        *://*.lamresearch.com/*
@@ -30,204 +32,35 @@
 // @connect      127.0.0.1
 // @connect      raw.githubusercontent.com
 // ==/UserScript==
-/* globals jQuery, XLSX, ExcelJS, zip */
+/* globals jQuery, XLSX, zip */
 const chosenBaseCss=GM_getResourceText('chosenCss');
+let excelJs;
+function loadExcelJs(){
+  if(excelJs)return excelJs;
+  const lib={exports:{}};
+  new Function('module','exports',GM_getResourceText('excelJs'))(lib,lib.exports);
+  if(typeof lib.exports.Workbook!=='function')throw new Error('Excel workbook library is unavailable. Refresh the page and try again.');
+  excelJs=lib.exports;return excelJs;
+}
 
 (function(){
 'use strict';
-const date_v = new Date('20' + GM_info.script.version); const APP_PATH='/k1.png'; const BRIDGE_PATH='/k2.png'; const FCID_PATH='/stacey1.png'; const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
+const date_v = new Date('20' + GM_info.script.version); const APP_PATH='/k1.png'; const BRIDGE_PATH='/k2.png'; const FCID_PATH='/staceykyra.png'; const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
 const BRIDGE_URLS=[25972,25973,25974,8765].map(port=>'http://127.0.0.1:'+port); let bridgeUrl='',bridgeDiscovery=null;
-const SAPGUICONTROL_DOWNLOAD_URL='https://github.com/synalocey/ToolkitKyra/raw/main/SAPGUIcontrol.zip'; const SAPGUICONTROL_VERSION_URL='https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/SAPGUIcontrol.version.json';
+const SAPGUICONTROL_DOWNLOAD_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.zip'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
 const GUIDE_URL='https://synalocey.github.io/ToolkitKyra/guide';
-const APP_CSS=chosenBaseCss+(`
-:root{--bg:#f3f6f9;--panel:#fff;--ink:#1e293b;--muted:#64748b;--line:#dce5ed;--navy:#10384b;--blue:#2563eb;--teal:#0f766e;--cyan:#0891b2;--green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;
---shadow:0 2px 6px rgba(15,23,42,.025),0 10px 28px rgba(15,23,42,.035);--radius:14px;--side:350px;
---font-sans:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",Arial,sans-serif}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);` +
-  `font-family:var(--font-sans);font-size:13px;font-weight:400;line-height:1.45}
-h1,h2,h3,b,strong{font-weight:600}button,input,select,textarea{font:inherit}input::placeholder,textarea::placeholder{color:#8493a5}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid rgba(37,99,235,.22);outline-offset:2px}.hero{background:linear-gradient(115deg,#10384b 0,#15556c ` +
-  `58%,#176f6b 100%);color:#fff;padding:24px 30px;box-shadow:0 3px 12px rgba(16,56,75,.1)}
-.hero-inner{max-width:1900px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:24px}.hero h1{display:flex;align-items:center;gap:10px;margin:0 0 7px;font-size:28px;line-height:1.25;` +
-  `letter-spacing:-.6px}
-.hero h1>span{display:inline-flex;align-items:center;justify-content:center;width:37px;height:37px;border:1px solid #ffffff24;border-radius:10px;background:#ffffff12;font-size:25px;letter-spacing:0}
-.hero p{margin:0;color:#d0e4e8;font-size:12px;line-height:1.6;max-width:1050px}.tag{display:inline-flex;align-items:center;border:1px solid #ffffff40;background:#ffffff14;border-radius:999px;padding:4px 10px;margin:0 6px 4px ` +
-  `0;font-size:11px;font-weight:600;letter-spacing:.2px}
-.hero-source{min-width:270px;background:#ffffff0d;border:1px solid #ffffff26;border-radius:11px;padding:12px 15px;text-align:right}.hero-source small{display:block;color:#c1dce1;font-size:10px;text-transform:uppercase;` +
-  `letter-spacing:.8px;font-weight:600}
-.hero-source strong{display:block;font-size:13px;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:390px}
-.layout{display:grid;grid-template-columns:var(--side) minmax(0,1fr);gap:16px;max-width:1900px;margin:auto;padding:16px}.card,.side{background:var(--panel);border:1px solid var(--line);border-radius:
-var(--radius);box-shadow:var(--shadow)}.side{align-self:start;padding:16px}.main{display:grid;align-content:start;gap:16px;
-min-width:0}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.section-title h2,.side h2{font-size:16px;margin:0;letter-spacing:-.2px}
-.section-title p{margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.5}.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:18px 0 8px;padding-top:16px;border-top:1px solid ` +
-  `#e8eef3}.upload-box{border:1px solid #dce7ed;background:linear-gradient(180deg,#f6fafc,#fbfdfe);border-radius:11px;padding:12px;margin-top:12px}.upload-box label{display:block;font-size:11px;font-weight:600;color:#334155;` +
-  `text-transform:
-uppercase;letter-spacing:.45px;margin-bottom:7px}.upload-manual{margin-top:12px;padding-top:12px;border-top:1px solid #dbe5ee}.upload-manual summary{color:#334155;font-size:11px;font-weight:600;text-transform:uppercase;` +
-  `letter-spacing:.45px;cursor:pointer}.upload-manual-content{padding-top:10px}.upload-box input{display:block;width:100%;font-size:11px;color:#475569}.upload-box input::file-selector-button{border:1px solid #d4e0e8;` +
-  `border-radius:7px;background:#fff;color:#334155;font:inherit;font-weight:600;padding:7px 9px;margin-right:7px;cursor:pointer}.source-status{margin-top:10px;border-left:3px solid var(--blue);background:#eff6ff;color:#1e3a8a;` +
-  `border-radius:8px;padding:9px 10px;font-size:11px;line-height:1.5}.source-status.loading{border-color:var(--amber);background:#fffbeb;color:#78350f}.source-status.error{border-color:var(--red);background:#fef2f2;
-color:#991b1b}.source-status.ok{border-color:var(--teal);background:#ecfdf5;color:#14532d}.btn{border:1px solid transparent;border-radius:8px;background:var(--teal);color:#fff;font-size:13px;font-weight:600;line-height:1.35;` +
-  `padding:9px 13px;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.06);
-transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,transform .15s ease}.btn:hover:not(:disabled){background:#0d665f;box-shadow:0 3px 7px rgba(15,23,42,.1);transform:translateY(-1px)}
-.btn.light{border-color:#d5e0e8;background:#fff;color:#334155;box-shadow:0 1px 2px rgba(15,23,42,.025)}.btn.light:hover:not(:disabled){border-color:#b9cbd8;background:#f1f6f9}.btn.blue{background:var(--blue)}` +
-  `.btn.blue:hover:not(:disabled){background:#1d4ed8}
-.btn.small{padding:5px 9px;font-size:11px}.btn.wide{width:100%;margin-top:0}
-.filter-group{border-top:1px solid #edf2f6;padding:11px 0 3px}.filter-label{display:flex;align-items:center;justify-content
-:space-between;gap:8px;margin-bottom:5px}.filter-label label{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.45px;font-weight:600;cursor:pointer}.filter-label button{border:0;
-background:0 0;color:var(--blue);padding:2px;font-size:10px;font-weight:600;cursor:pointer}.filter-select{width:100%;min-height:38px;border:1px solid var(--line);border-radius:9px;background:#fff;
-padding:6px}.quick-pick{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:6px}.quick-pick span{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:
-.35px}.quick-pick button{border:1px solid #dce5ed;background:#f7f9fb;color:#475569;border-radius:6px;padding:4px 7px;font-size:10px;font-weight:600;cursor:pointer}.quick-pick button:hover{border-color:#8ebdbb;color:#0f766e}` +
-  `.quick-pick button.active{border-color:#83bcb6;background:#e6f4f1;color:#115e59}.quick-pick button.partial{border-color:#a7cbe0;background:#edf6fc;color:#075985}
-.quick-search{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 10px;font-size:12px;color:var(--ink)}.chosen-container{font-family:var(--font-sans)!important;font-size:12px!important;width:
-100%!important}.chosen-container-multi .chosen-choices{min-height:38px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:#fff!important;background-image:
-none!important;box-shadow:none!important;padding:3px 5px!important}.chosen-container-active .chosen-choices{border-color:#38bdf8!important;box-shadow:0 0 0 3px rgba(56,189,248,.13)!important}
-.chosen-container-multi .chosen-choices li.search-choice{border:0!important;background:#eaf4f7!important;color:#195b70!important;border-radius:6px!important;box-shadow:none!important;padding:5px 22px
-5px 7px!important;font-weight:600!important}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close{top:50%!important;right:5px!important;width:14px!important;height:
-14px!important;margin-top:-7px!important;background:0 0!important;font-size:0!important}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close::after{content:"×";display:block;
-color:#0369a1;font-size:15px;line-height:13px;text-align:center;font-weight:400;pointer-events:none}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close:hover::after{color:
-var(--red)}.chosen-container .chosen-drop{border:1px solid #b8c8d8!important;border-radius:0 0 11px 11px!important;box-shadow:0 12px 26px rgba(15,23,42,.16)!important}
-.chosen-container .chosen-results li.highlighted{background:#0f766e!important;background-image:none!important}.chosen-container .chosen-results{max-height:250px!important}
-.chosen-container-multi .chosen-choices li.search-field input{height:28px!important;color:#64748b!important;font-family:inherit!important;font-size:12px!important;line-height:28px!important}.active-filters{display:flex;` +
-  `flex-wrap:wrap;gap:6px
-;margin-top:9px}.filter-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #bae6fd;background:#f0f9ff;color:#075985;border-radius:999px;padding:4px 7px 4px 9px;font-size:10px;
-font-weight:600;max-width:100%}.filter-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.filter-chip button{border:0;background:0 0;color:#075985;cursor:pointer;padding:0;font-size:
-14px;line-height:1}.all-chip{font-size:11px;color:var(--muted);padding:3px 0}.hint{border-left:3px solid #81b7b1;background:#f0f7f7;color:#486570;border-radius:8px;padding:9px 10px;font-size:11px;line-height:1.5;` +
-  `margin-top:12px}.kpis{display:grid;grid-template-columns:repeat(5,minmax(125px,1fr));gap:12px}.kpis:empty{display:none}.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);` +
-  `padding:15px 16px;min-height:105px;position:relative;overflow:hidden}.kpi::after{content:"";position:absolute;height:3px;left:16px;right:16px;top:0;border-radius:0 0 3px 3px;background:var(--kpi-color,#2563eb);opacity:.65}` +
-  `.kpi small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}.kpi strong,.kpi-num{display:block;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;` +
-  `letter-spacing:-.7px;line-height:1.1;margin:9px 0 5px;color:var(--kpi-color,#2563eb)}.kpi-num{border:0;background:0 0;padding:0;font-weight:700;cursor:pointer;text-align:left}.kpi-num:hover{text-decoration:
-underline;text-underline-offset:3px}.kpi span{font-size:11px;color:#64748b}.card{padding:18px;min-width:0}.context-badge{display:inline-flex;align-items:center;gap:7px;background:#edf8f3;color:#22604b;border:1px solid ` +
-  `#cde7d9;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:600;white-space:nowrap}.context-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:#25a568;box-shadow:0 0 0 3px ` +
-  `rgba(37,165,104,.09)}.pivot-grid{display:grid;grid-template-columns:repeat(3,minmax(260px,1fr));gap:12px}.pivot-card{border:1px solid #e0e8ef;border-radius:10px;background:#fff;min-width:0;overflow:hidden}` +
-  `.pivot-head{display:flex;justify-content:space-between;align-items:center;gap:9px;padding:11px 12px;border-bottom:1px solid #e7edf2;background:#f7fafc}
-.pivot-head h3{font-size:12px;margin:0;color:#334155}.pivot-head span{font-size:10px;color:var(--muted);white-space:nowrap}.pivot-list{height:310px;min-height:120px;padding:7px 9px 9px;overflow:auto;resize:vertical;
-scrollbar-width:thin}.pivot-row{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(55px,1fr) 42px;gap:8px;align-items:center;padding:6px 3px;border-radius:6px}.pivot-row:hover{background:
-#f1f5f9}.pivot-label{font-size:11px;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pivot-bar{height:6px;background:#edf2f6;border-radius:999px;overflow:hidden}.pivot-bar i{
-display:block;height:100%;min-width:3px;border-radius:999px;background:var(--bar,#0f766e)}.pivot-count{border:0;background:#edf5fa;color:#195b70;border-radius:6px;padding:4px 6px;font-size:11px;font-weight:700;cursor:pointer;` +
-  `text-align:center;font-variant-numeric:tabular-nums}.pivot-count:hover{background:#0f766e;color:#fff}.empty{padding:28px 14px;text-align:center;color:var(--muted);
-font-size:12px}.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:11px}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:
-8px;flex-wrap:wrap}.table-search{width:290px;max-width:60vw;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:12px}.row-count{font-size:11px;color:#526579;background:#f3f6f9;border:1px solid #e5ebf1;` +
-  `border-radius:6px;padding:4px 7px;font-variant-numeric:tabular-nums}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:660px;background:#fff;scrollbar-width:thin}` +
-  `table{border-collapse:separate;
-border-spacing:0;table-layout:fixed;width:1658px;min-width:1658px;font-size:11px}td,th{border-right:1px solid #edf1f5;border-bottom:1px solid #e7edf4;padding:7px 8px;text-align:left;white-space:nowrap
-;overflow:hidden;text-overflow:ellipsis}th{position:sticky;top:0;z-index:4;background:#f2f6f9;color:#475569;font-size:10px;text-transform:uppercase;letter-spacing:.3px;font-weight:600;cursor:pointer;
-user-select:none}td:first-child,th:first-child{position:sticky;left:0;box-shadow:2px 0 0 #dbe5ee}th:first-child{z-index:6}td:first-child{z-index:2;background:#fff}th:hover{background:#e8f0f7}
-th .sort-mark{margin-left:5px;color:#94a3b8}th.sorted .sort-mark{color:var(--blue)}tbody tr:nth-child(2n) td{background:#fbfdff}tbody tr:hover td{background:#f0fdfa}.status-pill{display:inline-flex;
-align-items:center;border-radius:999px;padding:3px 7px;font-size:11px;font-weight:400;line-height:1.2;background:#dbeafe;color:#1d4ed8}.status-pill.terminal{background:#dcfce7;color:#166534}
-.status-pill.stop{background:#fee2e2;color:#991b1b}.status-pill.unknown{background:#fef3c7;color:#92400e}.footer{max-width:1900px;margin:auto;padding:0 18px 20px;color:#64748b;font-size:10px;
-line-height:1.5}.toast{position:fixed;right:20px;bottom:20px;z-index:50;max-width:390px;background:#0f172a;color:#fff;border-radius:12px;padding:11px 14px;box-shadow:0 18px 36px rgba(15,23,42,.26);
-font-size:12px;line-height:1.45;opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s ease}.toast.show{opacity:1;transform:translateY(0)}.toast.error{background:#991b1b}.loading-line
-{height:3px;position:fixed;left:0;top:0;z-index:99;background:#2dd4bf;width:0;transition:width .25s ease}.loading-line.on{width:72%;animation:loading 1.3s ease-in-out infinite}.loading-line.done{width
-:100%}@keyframes loading{0%{opacity:.55}50%{opacity:1}100%{opacity:.55}}@media(max-width:1450px){.pivot-grid{grid-template-columns:repeat(2,minmax(260px,1fr))}.kpis{grid-template-columns:repeat(3,1fr)
-}}@media(max-width:980px){body{min-width:1030px}.hero-inner{display:block}.hero-source{margin-top:12px;text-align:left}.layout{grid-template-columns:320px minmax(680px,1fr);min-width:1030px}` +
-  `.pivot-grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.hero{padding:20px 16px}
-.hero h1{font-size:24px}.layout{padding:10px}.kpis{grid-template-columns:1fr 1fr;gap:8px}.kpi{min-height:90px;padding:11px}.kpi strong,.kpi-num{font-size:23px}.table-search{width:100%;max-width:none}}
-@media print{.footer,.pivot-grid,.side,.table-toolbar{display:none}.layout{display:block}.hero{background:#075985!important;-webkit-print-color-adjust:exact}.table-wrap{max-height:none;overflow:
-visible}table{width:100%;font-size:7px}td,th{position:static!important;white-space:normal}}.tabs{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;` +
-  `border-bottom:1px solid var(--line);box-shadow:0 2px 5px rgba(15,23,42,.025);padding:9px max(16px,calc((100vw - 1900px)/ 2 + 16px))}
-.tab-list{display:flex;gap:3px;padding:3px;border:1px solid #e1e8ef;border-radius:11px;background:#f0f4f7}.tab-btn{border:1px solid transparent;background:transparent;color:#64748b;border-radius:8px;padding:7px 14px;` +
-  `font-size:12px;font-weight:600;cursor:pointer;transition:background .15s ease,color .15s ease,box-shadow .15s ease}
-.tab-btn:hover{background:#e7eef3;color:#195b70}.tab-btn.active{border-color:#d9e5e7;background:#fff;color:#0f766e;box-shadow:0 1px 3px rgba(15,23,42,.07)}
-.tab-page{display:none}.tab-page.active{display:block}.cycle-shell{display:grid;gap:16px;max-width:1900px;margin:auto;padding:16px}
-.cycle-label{display:block;color:#334155;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.45px;margin-bottom:6px}.cycle-input{display:block;width:100%;resize:vertical;min-height
-:120px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:11px 12px;font:12px/1.55 Consolas,"Segoe UI",sans-serif}.cycle-input:focus{outline:3px solid 
-rgba(14,165,233,.2);border-color:#38bdf8}.cycle-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}.cycle-progress{display:
-block;width:100%;height:6px;margin-top:14px;accent-color:var(--teal);appearance:none;border:0;border-radius:999px;overflow:hidden;background:#e9eff3}.cycle-progress::-webkit-progress-bar{background:#e9eff3;` +
-  `border-radius:999px}
-.cycle-progress::-webkit-progress-value{background:var(--teal);border-radius:999px}.cycle-progress::-moz-progress-bar{background:var(--teal);border-radius:999px}.cycle-status{margin-top:7px;color:var(--muted);font-size:11px;` +
-  `line-height:1.45}.cycle-status:empty{display:none}.cycle-wrap{max-height:690px}#cycleTable{width:
-2422px;min-width:2422px}.ct-link{border:0;background:0 0;color:#0369a1;padding:0;font:inherit;font-weight:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.ct-link:hover{
-color:#0f766e}.ct-link:focus-visible{outline:2px solid #38bdf8;outline-offset:3px;border-radius:2px}.duration-over,.duration-over .ct-link{color:var(--red)!important}.wf-modal[hidden]{display:none}
-.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(15,23,42,.48);backdrop-filter:blur(2px);` +
-  `cursor:default
-}.wf-box{position:relative;display:flex;flex-direction:column;width:min(1180px,calc(100vw - 40px));max-height:calc(100vh - 40px);overflow:hidden;border:1px solid #cbd5e1;border-radius:16px;background:
-#fff;box-shadow:0 24px 80px rgba(15,23,42,.35)}.wf-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 17px;border-bottom:1px solid var(--line);background:#f8fafc}
-.wf-head h2{margin:0;color:#0f172a;font-size:17px}.wf-head p{margin:3px 0 0;color:var(--muted);font-size:11px}.wf-actions{display:flex;align-items:center;gap:8px}.wf-wrap{overflow:auto;max-height:
-calc(100vh - 120px)}#wfTable{width:1120px;min-width:1120px;table-layout:fixed}#wfTable th:first-child{width:190px}#wfTable th:nth-child(2){width:120px}#wfTable th:nth-child(3){width:160px}
-#wfTable th:nth-child(4){width:95px}#wfTable th:nth-child(5){width:120px}#wfTable th:nth-child(6){width:435px}#wfTable td{white-space:normal;overflow-wrap:anywhere;vertical-align:top;line-height:1.45}
-#wfTable td:nth-child(6){white-space:pre-wrap}body.wf-open,body.sap-range-open{overflow:hidden}.toast{z-index:1100}#wfTable th{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;cursor:default}
-.wf-box{width:min(1320px,calc(100vw - 40px))}#wfTable{width:1280px;min-width:1280px}#wfTable th:nth-child(4){width:160px}#wfTable th:nth-child(5){width:95px}#wfTable th:nth-child(6){width:120px}
-#wfTable th:nth-child(7){width:435px}#wfTable td:nth-child(6){white-space:normal}#wfTable td:nth-child(7){white-space:pre-wrap}.wf-box.sap-range-box{width:min(460px,calc(100vw - 40px))}
-.sap-range-form{display:grid;gap:14px;padding:17px}.sap-range-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.sap-range-field{display:grid;gap:6px}.sap-range-field label{color:#475569;` +
-  `font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}.sap-range-field input{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:10px;font-size:12px}` +
-  `.sap-range-field input:focus{outline:3px solid rgba(14,165,233,.2);border-color:#38bdf8}.sap-range-note,.sap-range-default{color:var(--muted);font-size:10px;line-height:1.45}.sap-range-default{margin-top:9px}` +
-  `.sap-range-error{min-height:16px;color:#b91c1c;font-size:11px}.sap-range-form .wf-actions{justify-content:flex-end}.btn:disabled{cursor:not-allowed;box-shadow:none;transform:none;opacity:.48}
-@media(max-width:980px){.tabs{min-width:1030px}.cycle-shell{min-width:1030px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
-`);
-const APP_HTML=`<div id="loadingLine" class="loading-line"></div>
-<header class="hero">
-  <div class="hero-inner">
-    <div>
-      <h1><span aria-hidden="true">📊</span> NSR Tracking Dashboard</h1>
-      <p>One-page NSR workflow view. Every pivot uses the same filtered NSR population; click any count to drill into that value and update the filter panel.</p>
-    </div>
-    <div class="hero-source"><small>Current data source</small><strong id="heroSource">Checking local cache…</strong></div>
-  </div>
-</header>
-<nav class="tabs" aria-label="NSR Tracking Dashboard pages">
-  <div class="tab-list" role="tablist">
-    <button id="overviewBtn" class="tab-btn active" type="button" role="tab" aria-selected="true" data-tab="overview">NSR Overview</button>
-    <button id="cycleBtn" class="tab-btn" type="button" role="tab" aria-selected="false" data-tab="cycle">NSR Cycle Time</button>
-  </div>
-</nav>
-
-<section id="overviewTab" class="tab-page active" role="tabpanel" aria-labelledby="overviewBtn"><div class="layout">
-  <aside class="side">
-    <h2>Data Source</h2>
-    <div class="upload-box">
-      <button id="sapRangeOpen" class="btn blue wide" type="button">Load / Refresh NSR</button>
-      <div id="sapRangeDefault" class="sap-range-default"></div>
-      <details class="upload-manual">
-        <summary>Upload raw data</summary>
-        <div class="upload-manual-content">
-          <label for="rawFile">Choose CSV or Excel file</label>
-          <input id="rawFile" type="file" accept=".xlsx,.xls,.csv">
-        </div>
-      </details>
-      <div id="sourceStatus" class="source-status loading">Checking local NSR cache…</div>
-    </div>
-
-    <div class="side-head"><h2>Filters</h2><button id="resetBtn" class="btn light small" type="button">Reset all</button></div>
-    <div class="filter-group">
-      <div class="filter-label"><label for="globalSearch">NSR / title quick search</label><button type="button" data-clear-search>Clear</button></div>
-      <input id="globalSearch" class="quick-search" placeholder="NSR#, FCID, title…" title="Paste multiple FIDs / NSRs from Excel, or separate with whitespace, commas, semicolons, / or |. Matches any ID." autocomplete="off">
-    </div>
-    <div id="filterHost"></div>
-    <div id="activeFilters" class="active-filters"><span class="all-chip">All NSRs are selected.</span></div>
-  </aside>
-
-  <main class="main">
-    <section id="kpis" class="kpis" aria-label="NSR summary"></section>
-
-    <section class="card">
-      <div class="section-title">
-        <div><h2>Interactive Pivot</h2></div>
-        <span id="pivotContext" class="context-badge">0 filtered NSRs</span>
-      </div>
-      <div id="pivotGrid" class="pivot-grid"></div>
-    </section>
-
-    <section class="card" id="detailSection">
-      <div class="section-title">
-        <div><h2>NSR Detail</h2></div>
-      </div>
-      <div class="table-toolbar">
-        <div class="toolbar-left">
-          <input id="tableSearch" class="table-search" placeholder="Search within current result…" autocomplete="off">
-          <span id="rowCount" class="row-count">0 rows</span>
-        </div>
-        <div class="toolbar-right">
-          <button id="copyBtn" class="btn light" type="button">Copy</button>
-          <button id="sendCycleBtn" class="btn blue" type="button">Cycle Time</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table id="detailTable" aria-label="Filtered NSR detail"></table>
-      </div>
-    </section>
-  </main>
-</div>
-</section>
-<section id="cycleTab" class="tab-page" role="tabpanel" aria-labelledby="cycleBtn">
+const FID_DASHBOARD_TITLE='🏭 FID & NSR Tracking Dashboard';
+const DASHBOARD_BASE_CSS=chosenBaseCss+`
+:root{--bg:#f3f6fc;--panel:#fff;--ink:#24354e;--muted:#53657d;--line:#d8e1ee;--blue:#2563eb;--teal:#0f766e;--green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;--radius:12px;--font-sans:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",Arial,sans-serif;--shadow:0 3px 16px #253c6410}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 var(--font-sans)}h1,h2,h3,b,strong{font-weight:600}button,input,select,textarea{font:inherit}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #8ab4f2;outline-offset:2px}.card,.side{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{border:1px solid transparent;border-radius:8px;background:var(--teal);color:#fff;font-weight:600;line-height:1.35;padding:8px 12px;cursor:pointer}.btn:disabled{cursor:not-allowed;opacity:.48}.btn:hover:not(:disabled){filter:brightness(.96)}
+.chosen-container{font-family:var(--font-sans);width:100%!important}.chosen-container-multi .chosen-choices{background-image:none;min-height:34px}.chosen-container-multi .chosen-choices li.search-field input{height:26px;line-height:26px;font-family:inherit}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close{top:50%;right:5px;width:14px;height:14px;margin-top:-7px;background:none;font-size:0}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close::after{content:"×";display:block;color:#365c95;font-size:15px;line-height:13px;text-align:center}.chosen-container .chosen-drop{border-color:#b8c8d8;border-radius:0 0 9px 9px;box-shadow:0 9px 24px #263b6425}.chosen-container .chosen-results{max-height:230px}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-title h2{margin:0}.context-badge{display:inline-flex;align-items:center;background:#e7f6ed;color:#22604b;border:1px solid #b8dcc7;border-radius:18px;padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.table-search{width:290px;max-width:70vw;border:1px solid var(--line);border-radius:8px;padding:8px 10px}.row-count{font-size:12px;color:#425a7b;background:#f3f6fa;border:1px solid #dce5ef;border-radius:6px;padding:4px 7px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff;scrollbar-width:thin}
+#cycleTable,#wfTable{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13px}#cycleTable{width:2422px;min-width:2422px}#cycleTable td,#cycleTable th,#wfTable td,#wfTable th{border-right:1px solid #e4eaf3;border-bottom:1px solid #dde6f0;padding:8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#cycleTable th,#wfTable th{position:sticky;top:0;z-index:4;background:#edf2fa;color:#425a7b;font-size:12px;font-weight:600;cursor:pointer;user-select:none}#cycleTable td:first-child,#cycleTable th:first-child,#wfTable td:first-child,#wfTable th:first-child{position:sticky;left:0;box-shadow:2px 0 0 #d8e2ef}#cycleTable td:first-child,#wfTable td:first-child{background:#fff;z-index:2}#cycleTable th:first-child,#wfTable th:first-child{z-index:6}#cycleTable tbody tr:nth-child(even) td,#wfTable tbody tr:nth-child(even) td{background:#f7f9fd}#cycleTable th .sort-mark{margin-left:5px;color:#526c91}.status-pill{display:inline-flex;border-radius:12px;padding:3px 7px;font-size:12px;line-height:1.3;background:#dbeafe;color:#1d4ed8}.status-pill.terminal{background:#dcfce7;color:#166534}.status-pill.stop{background:#fee2e2;color:#991b1b}.status-pill.unknown{background:#fef3c7;color:#92400e}
+.cycle-shell{display:grid;gap:14px}.cycle-label{display:block;color:#425a7b;font-size:12px;font-weight:600;margin-bottom:6px}.cycle-input{display:block;width:100%;resize:vertical;min-height:110px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:10px;font:13px/1.5 Consolas,"Segoe UI",sans-serif}.cycle-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}.cycle-progress{display:block;width:100%;height:6px;margin-top:12px;accent-color:var(--teal);appearance:none;border:0;border-radius:9px;overflow:hidden;background:#e9eff4}.cycle-progress::-webkit-progress-bar{background:#e9eff4}.cycle-progress::-webkit-progress-value,.cycle-progress::-moz-progress-bar{background:var(--teal)}.cycle-status{margin-top:7px;color:var(--muted);font-size:12px}.cycle-status:empty{display:none}.cycle-wrap{max-height:650px}.ct-link{border:0;background:none;color:#0369a1;padding:0;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.duration-over,.duration-over .ct-link{color:var(--red)!important}
+.wf-modal[hidden]{display:none}.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0f172a7a;backdrop-filter:blur(2px)}.wf-box{position:relative;display:flex;flex-direction:column;width:min(1320px,calc(100vw - 36px));max-height:calc(100vh - 36px);overflow:hidden;border:1px solid #bdcde1;border-radius:13px;background:#fff;box-shadow:0 24px 70px #1a2e5259}.wf-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line);background:#f7f9fc}.wf-head h2{margin:0;font-size:17px}.wf-head p{margin:3px 0 0;color:var(--muted);font-size:13px}.wf-actions{display:flex;align-items:center;gap:8px}.wf-wrap{overflow:auto;max-height:calc(100vh - 120px)}#wfTable{width:1280px;min-width:1280px}#wfTable th:first-child{width:190px}#wfTable th:nth-child(2){width:120px}#wfTable th:nth-child(3){width:160px}#wfTable th:nth-child(4){width:160px}#wfTable th:nth-child(5){width:95px}#wfTable th:nth-child(6){width:120px}#wfTable th:nth-child(7){width:435px}#wfTable td{white-space:normal;overflow-wrap:anywhere;vertical-align:top;line-height:1.45}#wfTable td:nth-child(7){white-space:pre-wrap}#wfTable th{white-space:normal;overflow:visible;text-overflow:clip;cursor:default}body.wf-open{overflow:hidden}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+`;
+const NSR_CYCLE_HTML=`<section id="cycleTab" class="tab-page" role="tabpanel" aria-label="NSR Cycle Time">
   <div class="cycle-shell">
     <section class="card">
       <div class="section-title">
@@ -264,23 +97,6 @@ const APP_HTML=`<div id="loadingLine" class="loading-line"></div>
     </section>
   </div>
 </section>
-<div id="sapRangeModal" class="wf-modal" hidden>
-  <button class="wf-bg" type="button" data-sap-range-close aria-label="Close SAP date range"></button>
-  <section class="wf-box sap-range-box" role="dialog" aria-modal="true" aria-label="Load or refresh NSR date range">
-    <form id="sapRangeForm" class="sap-range-form">
-      <div class="sap-range-fields">
-        <div class="sap-range-field"><label for="sapRangeFrom">From date</label><input id="sapRangeFrom" type="date" required></div>
-        <div class="sap-range-field"><label for="sapRangeTo">To date</label><input id="sapRangeTo" type="date" required></div>
-      </div>
-      <div class="sap-range-note">Larger ranges may take 1-2 minutes.</div>
-      <div id="sapRangeError" class="sap-range-error" role="alert" aria-live="polite"></div>
-      <div class="wf-actions">
-        <button class="btn light" type="button" data-sap-range-close>Cancel</button>
-        <button id="sapRangeLoad" class="btn blue" type="submit">Load</button>
-      </div>
-    </form>
-  </section>
-</div>
 <div id="wfModal" class="wf-modal" hidden>
   <button class="wf-bg" type="button" data-wf-close aria-label="Close workflow detail"></button>
   <section class="wf-box" role="dialog" aria-modal="true" aria-labelledby="wfTitle">
@@ -294,7 +110,7 @@ const APP_HTML=`<div id="loadingLine" class="loading-line"></div>
     <div class="wf-wrap"><table id="wfTable" aria-label="Full NSR workflow detail"></table></div>
   </section>
 </div>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>`;
+`;
 const BRIDGE_CSS=(`
 :root{--bg:#f3f7fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--line:#d8e3ee;--blue:#2563eb;--teal:#0f766e;--green:#16a34a;--amber:#d97706;--red:#dc2626;--shadow:0 14px 34px rgba(15,23,42,.08);
 --font-sans:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",Arial,sans-serif}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color
@@ -673,17 +489,18 @@ const CREATE_QUOTE_DEFAULT_FID_SUFFIX='-01'; const CREATE_QUOTE_HISTORY_LIMIT=50
 const CREATE_QUOTE_STORAGE_KEYS={quotation:'nsrSapToolbox.createQuoteQuotation.v1',input:'nsrSapToolbox.createQuoteInput.v1',validToDays:'nsrSapToolbox.createQuoteValidToDays.v1',fidSuffix:'nsrSapToolbox.createQuoteFidSuffix.v1',crdOverrides:'nsrSapToolbox.createQuoteCrdOverrides.v1',
   history:'nsrSapToolbox.createQuoteHistory.v1'};
 const BRIDGE_DEBUG_STORAGE_KEY='nsrSapToolbox.debugUnlocked.v1'; const SAP_TOOL_LABELS={zbom:'ZBOM PDF',zbomCompare:'ZBOM Compare',createQuote:'Quote Create',debug:'Debug'}; const sapGuiControlUpdate={online:null,current:'',release:null,checking:true};
+const toolHistories={zbom:{render:renderZbomHistory},zbomCompare:{render:renderZbomCompareHistory},createQuote:{render:renderCreateQuoteHistory}};
 const bridgePageId=crypto.randomUUID(); const sapTools=Object.fromEntries(Object.keys(SAP_TOOL_LABELS).map(name=>[name,{selection:'',starting:false,job:null}])); let bobjTaskRefreshPromise=null;
 let activeSapTool='zbom',sharedSapTasks=[],bridgeSupportsTasks=false,bridgeTaskOnline=false,bridgeTaskPollTimer=0,bridgeTaskPolling=false,bridgeSessionRefreshPromise=null,bridgeDebugLog='';
-let bridgeBusy=false,bridgeRefreshPending=false,bridgeReconnectTimer=0,bridgeSessions=[],bridgeMock=false,zbomRows=[],zbomErrors=[],zbomRunning=false,zbomHasRun=false,zbomLogLines=[],zbomOutputClaims=new Map(),zbomResults=new Map(),zbomHistory=[],zbomHistoryReturnFocus=null;
-let zbomCompareRows=[],zbomCompareStats={duplicates:0,ignored:0},zbomCompareSavedGroups=new Map(),zbomCompareRunning=false,zbomCompareHasRun=false,zbomCompareResults=new Map(),zbomCompareLogLines=[],zbomCompareOutputRowHint=4,zbomCompareHistory=[],zbomCompareHistoryReturnFocus=null,
+let bridgeBusy=false,bridgeRefreshPending=false,bridgeReconnectTimer=0,bridgeSessions=[],bridgeMock=false,zbomRows=[],zbomErrors=[],zbomRunning=false,zbomHasRun=false,zbomLogLines=[],zbomOutputClaims=new Map(),zbomResults=new Map(),zbomHistory=[];
+let zbomCompareRows=[],zbomCompareStats={duplicates:0,ignored:0},zbomCompareSavedGroups=new Map(),zbomCompareRunning=false,zbomCompareHasRun=false,zbomCompareResults=new Map(),zbomCompareLogLines=[],zbomCompareOutputRowHint=4,zbomCompareHistory=[],
   zbomCompareResultTabs=[],zbomCompareActiveResultTab='';
-let createQuoteRows=[],createQuoteStats={duplicates:0,ignored:0},createQuoteCrdOverrides=new Map(),createQuoteManualCrd=new Set(),createQuoteHistory=[],createQuoteHistoryReturnFocus=null; let bridgeDebugUnlocked=false;
+let createQuoteRows=[],createQuoteStats={duplicates:0,ignored:0},createQuoteCrdOverrides=new Map(),createQuoteManualCrd=new Set(),createQuoteHistory=[]; let bridgeDebugUnlocked=false;
 let ctlBobjStatus=null,ctlBobjBusy=false,ctlBobjTimer=0,ctlBobjRun=0;
 let bobjStatus=null,bobjRefreshing=false,bobjOpening=false,bobjPollTimer=0,bobjStatusRun=0,bobjDataRows=new Map(),bobjDataHeaderIndexes=new Map(),bobjDataMissing=new Set(),bobjDataPath='',bobjDataModified=0,bobjDataCount=0,bobjDataReady=false,bobjDataLoadRun=0,
   bobjConsumersPending=false,bobjSourcePath='',bobjSourceModified=0,bobjDataLoading=false,bobjDataPromise=null,bobjWorker=null,bobjWorkerRequest=0,bobjWorkerPending=new Map();
 
-GM_registerMenuCommand('📊 NSR Tracking Dashboard',()=>unsafeWindow.open(APP_PATH+'?nsrct=1','_blank','noopener')); GM_registerMenuCommand('🏭 FCID Governance Control Tower',()=>unsafeWindow.open('https://fep.lamresearch.com'+FCID_PATH,'_blank','noopener'));
+GM_registerMenuCommand(FID_DASHBOARD_TITLE,()=>unsafeWindow.open('https://fep.lamresearch.com'+FCID_PATH+'?nsrct=1','_blank','noopener'));
 GM_registerMenuCommand('🧰 SAP Toolbox',()=>unsafeWindow.open(BRIDGE_PATH+'?nsrbridge=1','_blank','noopener')); GM_registerMenuCommand('📖 Help',()=>unsafeWindow.open(GUIDE_URL,'_blank','noopener'));
 
 function toolkitExpired(){
@@ -699,7 +516,7 @@ if(location.origin==='https://synalocey.github.io'&&location.pathname.startsWith
 }
 
 const currentPath=unsafeWindow.location.pathname.toLowerCase();
-if(currentPath===APP_PATH){whenBody(mountApp);}else if(currentPath===BRIDGE_PATH){whenBody(mountBridgeApp);}else if(currentPath===FCID_PATH&&unsafeWindow.location.hostname.toLowerCase()==='fep.lamresearch.com'){whenBody(runFcidGovernance);}
+if(currentPath===APP_PATH){if(!toolkitExpired()){const target=new URL(FCID_PATH,unsafeWindow.location.href);target.search=unsafeWindow.location.search;target.hash='nsr';unsafeWindow.location.replace(target.href)}}else if(currentPath===BRIDGE_PATH){whenBody(mountBridgeApp);}else if(currentPath===FCID_PATH){whenBody(runFcidGovernance);}
   else if(unsafeWindow.location.hostname.toLowerCase()==='fep.lamresearch.com')addNsrHeaderButton();
 
 function whenBody(callback){if(document.body)callback();else document.addEventListener('DOMContentLoaded',callback,{once:true});}
@@ -708,8 +525,9 @@ async function addNsrHeaderButton(){
   while(true){
     const target=document.getElementById('shellAppTitle-button'),title=target&&target.querySelector('.sapUshellAppTitleText');
     if(target&&String(title&&title.textContent||'').trim().toUpperCase()==='NSR'&&!document.getElementById(NSR_HEADER_BUTTON_ID)){
-      const button=document.createElement('button');button.id=NSR_HEADER_BUTTON_ID;button.type='button';button.title='Open NSR Tracking Dashboard';button.textContent='📊 NSR Tracking'; button.style.cssText='margin-left:8px;padding:4px 8px;cursor:pointer';
-      button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();unsafeWindow.open(APP_PATH+'?nsrct=1','_blank','noopener')}); target.insertAdjacentElement('afterend',button);
+      const button=document.createElement('button');button.id=NSR_HEADER_BUTTON_ID;button.type='button';button.title='Open '+FID_DASHBOARD_TITLE;button.textContent=FID_DASHBOARD_TITLE; button.style.cssText='margin-left:8px;padding:4px 8px;cursor:pointer;white-space:nowrap';
+      button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();unsafeWindow.open(FCID_PATH+'?nsrct=1','_blank','noopener')}); target.insertAdjacentElement('afterend',button);
+      if(button.getBoundingClientRect().right>innerWidth)button.textContent=FID_DASHBOARD_TITLE.replace(' Tracking','');
     }
     await new Promise(resolve=>setTimeout(resolve,500));
   }
@@ -841,81 +659,58 @@ function showZbomCompareResultPreview(groupPreviews,fidPreviews){
 
 function historyDisplayTime(value){const date=new Date(value);return Number.isNaN(date.getTime())?String(value):date.toLocaleString([], {hour12:false});}
 function historyDisplayText(value){const lines=String(value||'').split(/\r?\n/).map(line=>line.trim()).filter(Boolean); if(!lines.length)return '(empty)'; const preview=lines.slice(0,4); if(lines.length>4)preview.push('… '+lines.length+' lines total'); return preview.join('\n');}
-function openZbomHistory(){const dialog=bridgeId('zbomHistoryDialog');if(!dialog)return; closeZbomCompareHistory();closeCreateQuoteHistory(); zbomHistoryReturnFocus=document.activeElement;renderZbomHistory();dialog.hidden=false;document.body.classList.add('history-open');
-  bridgeId('zbomCloseHistory').focus();}
 
-function closeZbomHistory(){
-  const dialog=bridgeId('zbomHistoryDialog');if(!dialog||dialog.hidden)return;
-  dialog.hidden=true;document.body.classList.remove('history-open'); const returnFocus=zbomHistoryReturnFocus;zbomHistoryReturnFocus=null;
+function openToolHistory(prefix){
+  const dialog=bridgeId(prefix+'HistoryDialog');if(!dialog)return;
+  for(const other of Object.keys(toolHistories))if(other!==prefix)closeToolHistory(other);
+  const history=toolHistories[prefix];history.focus=document.activeElement;history.render();dialog.hidden=false;document.body.classList.add('history-open');bridgeId(prefix+'CloseHistory').focus();
+}
+function closeToolHistory(prefix){
+  const dialog=bridgeId(prefix+'HistoryDialog');if(!dialog||dialog.hidden)return;
+  dialog.hidden=true;document.body.classList.remove('history-open');const history=toolHistories[prefix],returnFocus=history.focus;history.focus=null;
   if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus();
 }
-
-function renderZbomHistory(){
-  const list=bridgeId('zbomHistoryList'),count=bridgeId('zbomHistoryCount'),buttonCount=bridgeId('zbomHistoryButtonCount');
-  if(buttonCount)buttonCount.textContent=String(zbomHistory.length);
+function renderToolHistory(prefix,entries,limit,empty,label,restore,preview=entry=>historyDisplayText(entry.text)){
+  const list=bridgeId(prefix+'HistoryList'),count=bridgeId(prefix+'HistoryCount'),buttonCount=bridgeId(prefix+'HistoryButtonCount');
+  if(buttonCount)buttonCount.textContent=String(entries.length);
   if(!list||!count)return;
-  count.textContent=zbomHistory.length+'/'+ZBOM_HISTORY_LIMIT;list.replaceChildren();
-  if(!zbomHistory.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent='No export history.';list.appendChild(empty);return}
-  zbomHistory.forEach((entry,index)=>{
-    const displayTime=historyDisplayTime(entry.runAt),button=document.createElement('button');button.type='button';button.className='history-entry';button.dataset.historyIndex=String(index);button.setAttribute('aria-label','Restore quotation data from '+displayTime);
-    const time=document.createElement('span');time.className='history-entry-time';time.textContent=displayTime; const text=document.createElement('span');text.className='history-entry-text';text.textContent=historyDisplayText(entry.text); button.append(time,text);
-      button.addEventListener('click',()=>{const current=zbomHistory[index];if(!current)return; const input=bridgeId('zbomInput');input.value=current.text;saveZbomInput();previewZbomInput();closeZbomHistory();input.focus();}); list.appendChild(button);
+  count.textContent=entries.length+'/'+limit;list.replaceChildren();
+  if(!entries.length){const message=document.createElement('div');message.className='history-empty';message.textContent=empty;list.appendChild(message);return}
+  entries.forEach((entry,index)=>{
+    const displayTime=historyDisplayTime(entry.runAt),button=document.createElement('button');button.type='button';button.className='history-entry';
+    if(prefix==='zbom')button.dataset.historyIndex=String(index);
+    button.setAttribute('aria-label','Restore '+label+' data from '+displayTime);
+    const time=document.createElement('span');time.className='history-entry-time';time.textContent=displayTime;
+    const text=document.createElement('span');text.className='history-entry-text';text.textContent=preview(entry);
+    button.append(time,text);button.addEventListener('click',()=>restore(index));list.appendChild(button);
+  });
+}
+function renderZbomHistory(){
+  renderToolHistory('zbom',zbomHistory,ZBOM_HISTORY_LIMIT,'No export history.','quotation',index=>{
+    const current=zbomHistory[index];if(!current)return;
+    const input=bridgeId('zbomInput');input.value=current.text;saveZbomInput();previewZbomInput();closeToolHistory('zbom');input.focus();
   });
 }
 
 function recordZbomHistory(text){zbomHistory=[{text:String(text||''),runAt:new Date().toISOString()},...zbomHistory].slice(0,ZBOM_HISTORY_LIMIT); writePersistent(ZBOM_STORAGE_KEYS.history,JSON.stringify(zbomHistory));renderZbomHistory();}
 
-function openZbomCompareHistory(){
-  const dialog=bridgeId('zbomCompareHistoryDialog');if(!dialog)return;
-  closeZbomHistory();closeCreateQuoteHistory(); zbomCompareHistoryReturnFocus=document.activeElement;renderZbomCompareHistory();dialog.hidden=false;document.body.classList.add('history-open');bridgeId('zbomCompareCloseHistory').focus();
-}
-
-function closeZbomCompareHistory(){
-  const dialog=bridgeId('zbomCompareHistoryDialog');if(!dialog||dialog.hidden)return;
-  dialog.hidden=true;document.body.classList.remove('history-open'); const returnFocus=zbomCompareHistoryReturnFocus;zbomCompareHistoryReturnFocus=null;
-  if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus();
-}
 
 function renderZbomCompareHistory(){
-  const list=bridgeId('zbomCompareHistoryList'),count=bridgeId('zbomCompareHistoryCount'),buttonCount=bridgeId('zbomCompareHistoryButtonCount');
-  if(buttonCount)buttonCount.textContent=String(zbomCompareHistory.length);
-  if(!list||!count)return;
-  count.textContent=zbomCompareHistory.length+'/'+ZBOM_HISTORY_LIMIT;list.replaceChildren();
-  if(!zbomCompareHistory.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent='No compare history.';list.appendChild(empty);return}
-  zbomCompareHistory.forEach((entry,index)=>{
-    const displayTime=historyDisplayTime(entry.runAt),button=document.createElement('button');button.type='button';button.className='history-entry';button.setAttribute('aria-label','Restore ZBOM Compare data from '+displayTime); const time=document.createElement('span');
-      time.className='history-entry-time';time.textContent=displayTime; const text=document.createElement('span');text.className='history-entry-text';text.textContent=historyDisplayText(entry.text); button.append(time,text);button.addEventListener('click',
-      ()=>{const current=zbomCompareHistory[index];if(!current)return; const input=bridgeId('zbomCompareInput');input.value=current.text;saveZbomCompareInput();previewZbomCompareInput();closeZbomCompareHistory();input.focus();}); list.appendChild(button);
+  renderToolHistory('zbomCompare',zbomCompareHistory,ZBOM_HISTORY_LIMIT,'No compare history.','ZBOM Compare',index=>{
+    const current=zbomCompareHistory[index];if(!current)return;
+    const input=bridgeId('zbomCompareInput');input.value=current.text;saveZbomCompareInput();previewZbomCompareInput();closeToolHistory('zbomCompare');input.focus();
   });
 }
 
 function recordZbomCompareHistory(text){zbomCompareHistory=[{text:String(text||''),runAt:new Date().toISOString()},...zbomCompareHistory].slice(0,ZBOM_HISTORY_LIMIT); writePersistent(ZBOM_COMPARE_STORAGE_KEYS.history,JSON.stringify(zbomCompareHistory));renderZbomCompareHistory();}
 
-function openCreateQuoteHistory(){
-  const dialog=bridgeId('createQuoteHistoryDialog');if(!dialog)return;
-  closeZbomHistory();closeZbomCompareHistory();createQuoteHistoryReturnFocus=document.activeElement;renderCreateQuoteHistory();dialog.hidden=false;document.body.classList.add('history-open');bridgeId('createQuoteCloseHistory').focus();
-}
-
-function closeCreateQuoteHistory(){
-  const dialog=bridgeId('createQuoteHistoryDialog');if(!dialog||dialog.hidden)return;
-  dialog.hidden=true;document.body.classList.remove('history-open'); const returnFocus=createQuoteHistoryReturnFocus;createQuoteHistoryReturnFocus=null;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus();
-}
 
 function renderCreateQuoteHistory(){
-  const list=bridgeId('createQuoteHistoryList'),count=bridgeId('createQuoteHistoryCount'),buttonCount=bridgeId('createQuoteHistoryButtonCount');
-  if(buttonCount)buttonCount.textContent=String(createQuoteHistory.length);if(!list||!count)return;
-  count.textContent=createQuoteHistory.length+'/'+CREATE_QUOTE_HISTORY_LIMIT;list.replaceChildren();
-  if(!createQuoteHistory.length){const empty=document.createElement('div');empty.className='history-empty';empty.textContent='No Quote Create history.';list.appendChild(empty);return}
-  createQuoteHistory.forEach((entry,index)=>{
-    const displayTime=historyDisplayTime(entry.runAt),button=document.createElement('button');button.type='button';button.className='history-entry';button.setAttribute('aria-label','Restore Quote Create data from '+displayTime); const time=document.createElement('span');
-      time.className='history-entry-time';time.textContent=displayTime; const text=document.createElement('span');text.className='history-entry-text';text.textContent='Reference Quotation: '+(String(entry&&entry.quotation||'').trim()||'(empty)')+'\nFID:\n'+historyDisplayText(entry&&
-      entry.input);button.append(time,text);button.addEventListener('click',
-      ()=>{
-      const current=createQuoteHistory[index];if(!current)return;
-      const quotation=bridgeId('createQuoteQuotation'),input=bridgeId('createQuoteInput');quotation.value=current.quotation;input.value=current.input;sanitizeCreateQuoteQuotation();saveCreateQuoteQuotation();saveCreateQuoteInput();previewCreateQuoteInput();
-        setCreateQuoteStatus('Ready.');ensureBobjForCurrentInput();closeCreateQuoteHistory();input.focus();
-    });list.appendChild(button);
-  });
+  renderToolHistory('createQuote',createQuoteHistory,CREATE_QUOTE_HISTORY_LIMIT,'No Quote Create history.','Quote Create',index=>{
+    const current=createQuoteHistory[index];if(!current)return;
+    const quotation=bridgeId('createQuoteQuotation'),input=bridgeId('createQuoteInput');quotation.value=current.quotation;input.value=current.input;sanitizeCreateQuoteQuotation();saveCreateQuoteQuotation();saveCreateQuoteInput();previewCreateQuoteInput();
+    setCreateQuoteStatus('Ready.');ensureBobjForCurrentInput();closeToolHistory('createQuote');input.focus();
+  },entry=>'Reference Quotation: '+(String(entry&&entry.quotation||'').trim()||'(empty)')+'\nFID:\n'+historyDisplayText(entry&&entry.input));
 }
 
 function recordCreateQuoteHistory(quotation,input){createQuoteHistory=[{quotation:String(quotation||''),input:String(input||''),runAt:new Date().toISOString()},...createQuoteHistory].slice(0,CREATE_QUOTE_HISTORY_LIMIT); writePersistent(CREATE_QUOTE_STORAGE_KEYS.history,
@@ -926,13 +721,6 @@ function emojiFavicon(emoji){
   icon.href='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text x="32" y="52" text-anchor="middle" font-size="54" font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif">${emoji}</text></svg>`); return icon;
 }
 
-function mountApp(){
-  if(toolkitExpired())return;
-  if(document.documentElement.dataset.nsrCtMounted)return;
-  document.documentElement.dataset.nsrCtMounted='1';document.documentElement.lang='en'; const charset=document.createElement('meta');charset.charset='utf-8'; const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1';
-  const title=document.createElement('title');title.textContent='NSR Tracking Dashboard'; const style=document.createElement('style');style.textContent=APP_CSS; document.head.replaceChildren(charset,viewport,title,emojiFavicon('📊'),style);document.body.innerHTML=APP_HTML;
-  runDashboard();
-}
 
 function mountBridgeApp(){
   if(toolkitExpired())return;
@@ -1069,7 +857,7 @@ async function prepareBobjFileNames(tool,rows,template){
   if(!missing.length||sapTools[tool].bobjPrompted)return;
   sapTools[tool].bobjPrompted=true;
   if(!bobjTaskRefreshPromise&&!unsafeWindow.confirm('FID BOBJ Data may be outdated. Update it first?'))return;
-  const progress=message=>{if(tool==='zbom')setZbomProgress(2,message);else setZbomCompareProgress(2,message)}; progress('Waiting for the FID BOBJ update before continuing…');
+  const progress=message=>{if(tool==='zbom')setZbomProgress(2);else setZbomCompareProgress(2,message)}; progress('Waiting for the FID BOBJ update before continuing…');
   try{await refreshBobjAndWait();await loadBobjRows(rows.map(row=>row.fid)); rows.forEach(enrichZbomCompareRowFromBobj); progress(missingBobjFileNameFields(rows,template).length?'FID BOBJ updated. Continuing with the available information…':'FID BOBJ updated. Continuing…');}
     catch(error){setBobjRefreshState('Update failed: '+bridgeError(error),'error'); progress('FID BOBJ update failed. Continuing with the available information…');}
 }
@@ -1347,7 +1135,7 @@ async function runSapTool(tool,run){
   if(sapToolRunning(tool))return;
   sapTools[tool].starting=true;sapTools[tool].bobjPrompted=false;setBridgeBusy(bridgeBusy);
   try{await run()}
-  catch(error){const message=bridgeError(error); if(tool==='zbom')setZbomProgress(0,message); else if(tool==='zbomCompare')setZbomCompareProgress(0,message); else if(tool==='createQuote')setCreateQuoteStatus(message,'error'); else showBridgeResult(message,'SAP action failed.');}
+  catch(error){const message=bridgeError(error); if(tool==='zbom'){setZbomProgress(0);addZbomLog('SAP action failed: '+message)} else if(tool==='zbomCompare')setZbomCompareProgress(0,message); else if(tool==='createQuote')setCreateQuoteStatus(message,'error'); else showBridgeResult(message,'SAP action failed.');}
     finally{
     const job=sapTools[tool].job;
     if(job)try{acceptSapTaskStatus(await bridgeRequest('POST','/tasks/finish',{taskId:job.taskId,ownerId:bridgePageId,keep:job.keep,autoRelease:job.autoRelease===true},10000))} catch(_){bridgeTaskOnline=false}
@@ -1409,11 +1197,7 @@ function setToolTab(name){
 
 function splitZbomLine(line){
   if(line.indexOf('\t')>=0)return line.split('\t').map(value=>value.trim());
-  if(line.indexOf(',')>=0){
-    const values=[];let value='',quoted=false;
-    for(let index=0;index<line.length;index++){const character=line[index]; if(character==='"'){if(quoted&&line[index+1]==='"'){value+='"';index++}else quoted=!quoted;}else if(character===','&&!quoted){values.push(value.trim());value=''} else value+=character;}
-    values.push(value.trim());return values;
-  }
+  if(line.indexOf(',')>=0)return splitQuotedLine(line,',').map(value=>value.trim());
   if(/\s{2,}/.test(line.trim()))return line.trim().split(/\s{2,}/).map(value=>value.trim());
   return [line.trim()];
 }
@@ -1470,7 +1254,7 @@ function formatCreateQuoteDate(date){return String(date.getMonth()+1).padStart(2
 function formatCreateQuoteDateParts(year,month,day){return createQuoteUtcDate(year,month,day)===null?'':String(Number(month)).padStart(2,'0')+'/'+String(Number(day)).padStart(2,'0')+'/'+String(Number(year)).padStart(4,'0');}
 
 function normalizeCreateQuoteDate(value){
-  const text=String(value||'').trim();if(!text)return '';
+  const text=String(value||'').trim();if(!text||/^\d{6}$/.test(text))return '';
   let match=text.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})$/);
   if(match)return formatCreateQuoteDateParts(match[1],match[2],match[3]);
   match=text.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日$/);
@@ -1480,7 +1264,8 @@ function normalizeCreateQuoteDate(value){
   match=text.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);
   if(match){const first=Number(match[1]),second=Number(match[2]),month=first>12?second:first,day=first>12?first:second; return formatCreateQuoteDateParts(match[3],month,day);}
   if(/^\d{4,5}(?:\.\d+)?$/.test(text)){const serial=Number(text); if(serial>=20000&&serial<=80000){const date=new Date(Date.UTC(1899,11,30)+Math.round(serial*86400000));return formatCreateQuoteDateParts(date.getUTCFullYear(),date.getUTCMonth()+1,date.getUTCDate())}}
-  const parsed=Date.parse(text);return Number.isFinite(parsed)?formatCreateQuoteDate(new Date(parsed)):'';
+  const parsed=Date.parse(text);if(!Number.isFinite(parsed))return '';
+  const formatted=formatCreateQuoteDate(new Date(parsed));return /^\d{2}\/\d{2}\/\d{4}$/.test(formatted)?formatted:'';
 }
 
 function defaultCreateQuoteValidTo(){const input=bridgeId('createQuoteDefaultValidTo'),raw=normalizeCreateQuoteDays(input&&input.value),days=raw===''?Number(CREATE_QUOTE_DEFAULT_VALID_TO_DAYS):Number(raw),date=new Date(); date.setHours(12,0,0,0);date.setDate(date.getDate()+days);
@@ -1570,8 +1355,6 @@ function zbomCompareHeaderRole(value){
 function extractZbomCompareQuote(value){const text=String(value||'').trim(); if(/^2\d{7}$/.test(text))return text; const match=text.match(/(?:^|\D)(2\d{7})(?!\d)/); return match?match[1]:'';}
 function normalizeZbomCompareGroup(value,allowCustom){const text=String(value||'').trim(); if(!text)return ''; if(/^standalone$/i.test(text)||/^do[\s_-]*not[\s_-]*compare$/i.test(text))return ZBOM_COMPARE_STANDALONE; if(/^g\d+$/i.test(text))return 'G'+text.slice(1);
   return allowCustom&&/^[A-Za-z0-9]+$/.test(text)?text:'';}
-function mappedZbomCompareValue(values,index){return index>=0&&index<values.length?String(values[index]||'').trim():'';}
-
 function inferZbomCompareColumns(rows,mapping){
   if(mapping.systemDescription>=0)return mapping;
   const width=Math.max(0,...rows.map(values=>values.length)),reserved=new Set(Object.values(mapping).filter(index=>index>=0));let best=-1,bestMatches=0;
@@ -1582,17 +1365,17 @@ function inferZbomCompareColumns(rows,mapping){
 
 function classifyZbomCompareRow(values,mapping){
   const cells=values.map((value,index)=>({value:String(value||'').trim(),index:index})).filter(cell=>cell.value),used=new Set(); Object.values(mapping).forEach(index=>{if(index>=0)used.add(index)});
-  let quote=extractZbomCompareQuote(mappedZbomCompareValue(values,mapping.quote)),quoteIndex=quote?mapping.quote:-1;
+  let quote=extractZbomCompareQuote(pickZbomValue(values,mapping.quote)),quoteIndex=quote?mapping.quote:-1;
   if(!quote){
     const candidates=cells.filter(cell=>!used.has(cell.index)).map(cell=>Object.assign({},cell,{quote:extractZbomCompareQuote(cell.value)})).filter(cell=>cell.quote); const candidate=candidates.find(cell=>cell.value===cell.quote)||candidates[0];
     if(candidate){quote=candidate.quote;quoteIndex=candidate.index;used.add(candidate.index)}
   }
-  let fid=mappedZbomCompareValue(values,mapping.fid);
+  let fid=pickZbomValue(values,mapping.fid);
   if(!/^\d{6}$/.test(fid))fid='';
   if(!fid){const candidate=cells.find(cell=>!used.has(cell.index)&&/^\d{6}$/.test(cell.value)); if(candidate){fid=candidate.value;used.add(candidate.index)}}
-  let group=normalizeZbomCompareGroup(mappedZbomCompareValue(values,mapping.group),mapping.group>=0);
+  let group=normalizeZbomCompareGroup(pickZbomValue(values,mapping.group),mapping.group>=0);
   if(!group){const candidate=cells.find(cell=>!used.has(cell.index)&&/^g\d+$/i.test(cell.value)); if(candidate){group=normalizeZbomCompareGroup(candidate.value,false);used.add(candidate.index)}}
-  let customer=mappedZbomCompareValue(values,mapping.customer),systemDescription=mappedZbomCompareValue(values,mapping.systemDescription); const unknown=cells.filter(cell=>!used.has(cell.index));
+  let customer=pickZbomValue(values,mapping.customer),systemDescription=pickZbomValue(values,mapping.systemDescription); const unknown=cells.filter(cell=>!used.has(cell.index));
   if(!systemDescription){const marked=unknown.find(cell=>/[\/_]/.test(cell.value)); if(marked){systemDescription=marked.value;used.add(marked.index)}}
   const remaining=unknown.filter(cell=>!used.has(cell.index));
   if(!customer&&!systemDescription){if(remaining.length===1)systemDescription=remaining[0].value; else if(remaining.length>1){customer=remaining[0].value;systemDescription=remaining[1].value}}else if(!customer&&remaining.length)customer=remaining[0].value; else if(!systemDescription&&
@@ -1774,13 +1557,13 @@ function decodeZbomCompareBase64(contentBase64){
   const offset=bytes[0]===0xef&&bytes[1]===0xbb&&bytes[2]===0xbf?3:0; return new TextDecoder('utf-8').decode(bytes.subarray(offset));
 }
 
-function splitZbomCompareTsvLine(line){
+function splitQuotedLine(line,delimiter){
   const values=[];let value='',quoted=false;
-  for(let index=0;index<line.length;index++){const character=line[index]; if(character==='"'){if(quoted&&line[index+1]==='"'){value+='"';index++}else quoted=!quoted;}else if(character==='\t'&&!quoted){values.push(value);value=''}else value+=character;}
+  for(let index=0;index<line.length;index++){const character=line[index];if(character==='"'){if(quoted&&line[index+1]==='"'){value+='"';index++}else quoted=!quoted;}else if(character===delimiter&&!quoted){values.push(value);value=''}else value+=character;}
   values.push(value);return values;
 }
 
-function parseZbomCompareTsvRows(text){return String(text||'').replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').split('\n').map(line=>splitZbomCompareTsvLine(line).map(value=>String(value||'').replace(/\u00a0/g,' ').trim()));}
+function parseZbomCompareTsvRows(text){return String(text||'').replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n').split('\n').map(line=>splitQuotedLine(line,'\t').map(value=>String(value||'').replace(/\u00a0/g,' ').trim()));}
 function extractZbomCompareFid(rows){const pattern=/Quotation\s*No\.?\s*[:#]?\s*(\d{6}(?:[-_][A-Za-z0-9]+)*)/i; for(const row of rows){const match=row.join(' ').match(pattern); if(match)return match[1];} return '';}
 
 function parseZbomCompareOptions(rows,gasStart){
@@ -1861,29 +1644,48 @@ function applyZbomCompareFidFallback(model,row){
 
 function completedZbomCompareResult(result,outputPath){return {status:result&&result.warning?ZBOM_COMPARE_FID_ERROR:'Completed',outputPath:outputPath,completed:true};}
 
+// Keep two score rows and one byte per traceback step; both alignment paths use the same tie rules.
+function alignZbomRows(left,right,scoreOf,gap){
+  const rowCount=left.length,columnCount=right.length,directions=Array.from({length:rowCount+1},()=>new Uint8Array(columnCount+1));
+  let previous=new Float64Array(columnCount+1),current=new Float64Array(columnCount+1);
+  for(let column=1;column<=columnCount;column++)previous[column]=column*gap;
+  for(let row=1;row<=rowCount;row++){
+    current[0]=row*gap;
+    for(let column=1;column<=columnCount;column++){
+      const score=scoreOf(left[row-1],right[column-1]),diagonal=previous[column-1]+score,above=previous[column]+gap,across=current[column-1]+gap;
+      current[column]=Math.max(diagonal,above,across);
+      directions[row][column]=diagonal===current[column]&&(score>0||(diagonal>above&&diagonal>across))?1:above===current[column]?2:3;
+    }
+    [previous,current]=[current,previous];
+  }
+  const actions=[];let row=rowCount,column=columnCount;
+  while(row||column){
+    const direction=row&&column?directions[row][column]:row?2:3;
+    if(direction===1){actions.push(['match',row-1,column-1]);row--;column--}
+    else if(direction===2){actions.push(['missing',row-1,-1]);row--}
+    else{actions.push(['insert',-1,column-1]);column--}
+  }
+  return actions.reverse();
+}
 function alignZbomCompareRecordSets(recordSets,keyOf,similar){
   if(!recordSets.length)return [];
   let slots=(recordSets[0]||[]).map(record=>({records:[record]}));
   for(let fileIndex=1;fileIndex<recordSets.length;fileIndex++){
-    const incoming=recordSets[fileIndex]||[],rowCount=slots.length,columnCount=incoming.length,gap=-2,dp=Array.from({length:rowCount+1},()=>Array(columnCount+1).fill(0));
-    for(let row=1;row<=rowCount;row++)dp[row][0]=dp[row-1][0]+gap;
-    for(let column=1;column<=columnCount;column++)dp[0][column]=dp[0][column-1]+gap;
-    const matchScore=(slot,record)=>{const existing=slot.records.filter(Boolean),key=keyOf(record); if(existing.some(item=>keyOf(item)===key))return 12; if(similar&&existing.some(item=>similar(item,record)))return 4; return -5;};
-    for(let row=1;row<=rowCount;row++){for(let column=1;column<=columnCount;column++){const diagonal=dp[row-1][column-1]+matchScore(slots[row-1],incoming[column-1]),above=dp[row-1][column]+gap,left=dp[row][column-1]+gap; dp[row][column]=Math.max(diagonal,above,left);}}
-    const actions=[];let row=rowCount,column=columnCount;
-    while(row>0||column>0){
-      const score=row>0&&column>0?matchScore(slots[row-1],incoming[column-1]):-Infinity,diagonal=row>0&&column>0?dp[row-1][column-1]+score:-Infinity,above=row>0?dp[row-1][column]+gap:-Infinity,left=column>0?dp[row][column-1]+gap:-Infinity;
-      if(row>0&&column>0&&diagonal===dp[row][column]&&(score>0||(diagonal>above&&diagonal>left))){actions.push(['match',row-1,column-1]);row--;column--}
-      else if(row>0&&above===dp[row][column]){actions.push(['missing',row-1,-1]);row--} else{actions.push(['insert',-1,column-1]);column--}
-    }
-    actions.reverse();
-    slots=actions.map(action=>{
-      if(action[0]==='insert')return {records:Array(fileIndex).fill(null).concat(incoming[action[2]])};
-      const slot=slots[action[1]],records=slot.records.slice();while(records.length<fileIndex)records.push(null);
-      records.push(action[0]==='match'?incoming[action[2]]:null);return {records:records};
+    const incoming=recordSets[fileIndex]||[],existing=new Map(slots.map(slot=>{
+      const records=slot.records.filter(Boolean);return [slot,{records,keys:new Set(records.map(record=>keyOf(record)))}];
+    })),incomingKeys=new Map(incoming.map(record=>[record,keyOf(record)]));
+    const matchScore=(slot,record)=>{
+      const previous=existing.get(slot),key=incomingKeys.get(record);
+      if(key===key&&previous.keys.has(key))return 12; // Preserve strict equality for NaN.
+      return similar&&previous.records.some(item=>similar(item,record))?4:-5;
+    };
+    slots=alignZbomRows(slots,incoming,matchScore,-2).map(([action,row,column])=>{
+      if(action==='insert')return {records:Array(fileIndex).fill(null).concat(incoming[column])};
+      const records=slots[row].records.slice();while(records.length<fileIndex)records.push(null);
+      records.push(action==='match'?incoming[column]:null);return {records};
     });
   }
-  slots.forEach(slot=>{while(slot.records.length<recordSets.length)slot.records.push(null)}); return slots;
+  slots.forEach(slot=>{while(slot.records.length<recordSets.length)slot.records.push(null)});return slots;
 }
 
 function zbomCompareFileColor(index){
@@ -1903,7 +1705,7 @@ function similarZbomCompareOption(left,right){
 
 function isZbomCompareSectionOption(option){const title=normalizedZbomCompareCell(option&&option.optionType),selection=normalizedZbomCompareCell(option&&option.selection); return Boolean(title&&!selection&&/[A-Z]/.test(title)&&title===title.toUpperCase());}
 
-function splitZbomCompareOptionSections(options){
+function splitZbomOptionSections(options){
   const sections=[];let section=null;
   (options||[]).forEach(option=>{
     if(isZbomCompareSectionOption(option)){const title=normalizedZbomCompareCell(option.optionType).replace(/\s+/g,' ').toUpperCase(); section={key:'SECTION:'+title,records:[]};sections.push(section);}else if(!section){section={key:'PREAMBLE',records:[],preamble:true};
@@ -1913,29 +1715,24 @@ function splitZbomCompareOptionSections(options){
   return sections;
 }
 
-function scoreZbomCompareSectionContent(left,right){
+function scoreZbomSectionContent(left,right){
   const records=section=>section.records.slice(section.preamble?0:1).map(zbomCompareOptionKey),leftKeys=records(left),rightKeys=records(right),counts=new Map(); leftKeys.forEach(key=>counts.set(key,(counts.get(key)||0)+1));let matches=0;
   rightKeys.forEach(key=>{const count=counts.get(key)||0;if(count){matches++;counts.set(key,count-1)}}); return leftKeys.length+rightKeys.length?Math.round(200*matches/(leftKeys.length+rightKeys.length)):100;
 }
 
-function scoreZbomCompareSectionMatch(slot,section){const existing=slot.sections.filter(Boolean).filter(item=>item.key===section.key); if(!existing.length)return -1; return 1000+Math.max(...existing.map(item=>scoreZbomCompareSectionContent(item,section)));}
+function scoreZbomCompareSectionMatch(slot,section){const existing=slot.sections.filter(Boolean).filter(item=>item.key===section.key); if(!existing.length)return -1; return 1000+Math.max(...existing.map(item=>scoreZbomSectionContent(item,section)));}
 
-function orderedZbomCompareSectionMatches(slots,incoming){
-  const rowCount=slots.length,columnCount=incoming.length,dp=Array.from({length:rowCount+1},()=>Array(columnCount+1).fill(0));
-  for(let row=1;row<=rowCount;row++)for(let column=1;column<=columnCount;column++){const score=scoreZbomCompareSectionMatch(slots[row-1],incoming[column-1]),diagonal=score>=0?dp[row-1][column-1]+score:-1; dp[row][column]=Math.max(diagonal,dp[row-1][column],dp[row][column-1]);}
-  const matches=[];let row=rowCount,column=columnCount;
-  while(row&&column){const score=scoreZbomCompareSectionMatch(slots[row-1],incoming[column-1]),diagonal=score>=0?dp[row-1][column-1]+score:-1; if(score>=0&&diagonal===dp[row][column]){matches.push([row-1,column-1]);row--;column--} else if(dp[row-1][column]>=dp[row][column-1])row--;
-    else column--;}
-  return matches.reverse();
+function orderZbomSectionMatches(slots,incoming){
+  return alignZbomRows(slots,incoming,scoreZbomCompareSectionMatch,0).filter(([action])=>action==='match').map(([,row,column])=>[row,column]);
 }
 
-function alignZbomCompareOptionSections(optionSets){
+function alignZbomOptionSections(optionSets){
   if(!optionSets.length)return [];
-  let slots=splitZbomCompareOptionSections(optionSets[0]).map(section=>({sections:[section]}));
+  let slots=splitZbomOptionSections(optionSets[0]).map(section=>({sections:[section]}));
   for(let fileIndex=1;fileIndex<optionSets.length;fileIndex++){
-    const incoming=splitZbomCompareOptionSections(optionSets[fileIndex]),assignments=new Map(),usedSlots=new Set(); slots.forEach(slot=>{while(slot.sections.length<=fileIndex)slot.sections.push(null)});
+    const incoming=splitZbomOptionSections(optionSets[fileIndex]),assignments=new Map(),usedSlots=new Set(); slots.forEach(slot=>{while(slot.sections.length<=fileIndex)slot.sections.push(null)});
     // Preserve the original Section order wherever an ordered match is possible.
-    orderedZbomCompareSectionMatches(slots,incoming).forEach(([slotIndex,incomingIndex])=>{slots[slotIndex].sections[fileIndex]=incoming[incomingIndex];assignments.set(incomingIndex,slots[slotIndex]);usedSlots.add(slotIndex);});
+    orderZbomSectionMatches(slots,incoming).forEach(([slotIndex,incomingIndex])=>{slots[slotIndex].sections[fileIndex]=incoming[incomingIndex];assignments.set(incomingIndex,slots[slotIndex]);usedSlots.add(slotIndex);});
 
     // Only unmatched Sections with the same title may move to a different position.
     const moved=[];
@@ -2014,7 +1811,7 @@ function addZbomCompareGasSheet(workbook,model){
 }
 
 function addZbomCompareOptionComparison(workbook,models){
-  const worksheet=workbook.addWorksheet(safeZbomCompareSheetName(workbook,'Compare'));prepareZbomCompareWorksheet(worksheet); const slots=alignZbomCompareOptionSections(models.map(model=>model.options));
+  const worksheet=workbook.addWorksheet(safeZbomCompareSheetName(workbook,'Compare'));prepareZbomCompareWorksheet(worksheet); const slots=alignZbomOptionSections(models.map(model=>model.options));
   models.forEach((model,fileIndex)=>{
     const start=1+fileIndex*4;worksheet.getCell(1,start).value='FID No.';worksheet.getCell(1,start+1).value=model.fid; ['Option Type','Option Selection','Comment'].forEach((label,index)=>worksheet.getCell(2,start+index).value=label);
     for(let column=0;column<3;column++){setZbomCompareHeaderStyle(worksheet.getCell(1,start+column));setZbomCompareHeaderStyle(worksheet.getCell(2,start+column))}
@@ -2086,7 +1883,7 @@ function snapshotZbomCompareWorksheet(worksheet){
 }
 
 function buildZbomCompareWorkbook(models,grouped){
-  if(typeof ExcelJS==='undefined'||!ExcelJS.Workbook)throw new Error('Excel workbook library is unavailable. Refresh the page and try again.');
+  const ExcelJS=loadExcelJs();
   const workbook=new ExcelJS.Workbook();workbook.creator='NSR Tracking Dashboard';workbook.company='Lam Research';workbook.created=new Date();
   const compareSheet=grouped&&models.length>1?addZbomCompareOptionComparison(workbook,models):null,compareGasSheet=grouped&&models.length>1?addZbomCompareGasComparison(workbook,models):null,modelSheets=[];
   models.forEach(model=>modelSheets.push({fid:model.fid,quote:model.quote,options:addZbomCompareOptionSheet(workbook,model),gas:addZbomCompareGasSheet(workbook,model)}));
@@ -2311,8 +2108,8 @@ async function waitForZbomFiles(before,rows){
   return latest;
 }
 
-function addZbomLog(message){zbomLogLines.push('['+new Date().toLocaleTimeString([], {hour12:false})+'] '+message); if(zbomLogLines.length>120)zbomLogLines.shift(); const result=bridgeId('sapResult'); if(activeSapTool==='zbom')renderSapLog();}
-function setZbomProgress(percent,message){const value=Math.max(0,Math.min(100,Number(percent)||0)); bridgeId('zbomProgressBar').style.width=value+'%';bridgeId('zbomProgressNumber').textContent=Math.round(value)+'%';}
+function addZbomLog(message){zbomLogLines.push('['+new Date().toLocaleTimeString([], {hour12:false})+'] '+message); if(zbomLogLines.length>120)zbomLogLines.shift(); if(activeSapTool==='zbom')renderSapLog();}
+function setZbomProgress(percent){const value=Math.max(0,Math.min(100,Number(percent)||0)); bridgeId('zbomProgressBar').style.width=value+'%';bridgeId('zbomProgressNumber').textContent=Math.round(value)+'%';}
 
 async function sendZbomAction(tool,operation,options){
   const job=sapTools[tool].job;if(!job)throw new Error('No SAP window is assigned to this task.');
@@ -2370,7 +2167,7 @@ async function collectZbomFiles(files,version){
 }
 
 async function runZbomVersion(version,rows,previousClipboard,startProgress,collectProgress){
-  const before=bridgeMock?new Map():await listZbomRawPdfs();let actionError=null,clipboardWritten=false; const quotationText=rows.map(row=>row.quote).join('\r\n'); setZbomProgress(startProgress,'Running SAP Version '+version+'…');addZbomLog('Starting Version '+version+' for '+
+  const before=bridgeMock?new Map():await listZbomRawPdfs();let actionError=null,clipboardWritten=false; const quotationText=rows.map(row=>row.quote).join('\r\n'); setZbomProgress(startProgress);addZbomLog('Starting Version '+version+' for '+
     rows.length+' quotation(s).');
   try{
     let data=await sendZbomAction('zbom','transaction',{code:'ZMASSPRINT'});addZbomLog('Version '+version+': opened ZMASSPRINT.'+sapStatusSummary(data)); await sendZbomAction('zbom','setText',{controlId:'wnd[0]/usr/ctxtRG_KSCHL-LOW',value:'ZBOM'});
@@ -2380,7 +2177,7 @@ async function runZbomVersion(version,rows,previousClipboard,startProgress,colle
     for(const controlId of ['wnd[0]/tbar[1]/btn[5]','wnd[0]/tbar[1]/btn[14]']){data=await sendZbomAction('zbom','pressIfPresent',{controlId:controlId}); if(data.value)addZbomLog('Version '+version+': pressed '+controlId+'.'+sapStatusSummary(data));}
   }catch(error){actionError=error;addZbomLog('Version '+version+' did not complete all SAP steps: '+bridgeError(error));}finally{if(clipboardWritten&&previousClipboard!==null)try{writeQuotationClipboard(previousClipboard)}catch(_){/* ignore */}}
   if(bridgeMock){addZbomLog('Version '+version+': mock mode creates no PDF files.');return {count:0,error:actionError}}
-  setZbomProgress(collectProgress,'Checking files created by Version '+version+'…'); const changed=await waitForZbomFiles(before,rows),count=await collectZbomFiles(changed,version); return {count:count,error:actionError};
+  setZbomProgress(collectProgress); const changed=await waitForZbomFiles(before,rows),count=await collectZbomFiles(changed,version); return {count:count,error:actionError};
 }
 
 function renderZbomResultSummary(){
@@ -2396,19 +2193,19 @@ function setZbomRunning(value){
 
 async function startZbomExport(){
   await ensureBobjDataSource();previewZbomInput(); const validRows=zbomRows.filter(row=>!row._error),templateInfo=zbomTemplateInfo();
-  if(!validRows.length||zbomErrors.length||templateInfo.error){setZbomProgress(0,'Fix the detected data or file-name template before export.');return}
-  if(!selectedBridgeSession('zbom')){setZbomProgress(0,'Select an available SAP GUI session first.');return}
+  if(!validRows.length||zbomErrors.length||templateInfo.error){setZbomProgress(0);addZbomLog('Fix the detected data or file-name template before export.');return}
+  if(!selectedBridgeSession('zbom')){setZbomProgress(0);addZbomLog('Select an available SAP GUI session first.');return}
   if(validRows.length>100&&!unsafeWindow.confirm('You are about to print '+validRows.length+' quotations through SAP. Continue?'))return;
   await acquireSapTask('zbom'); recordZbomHistory(bridgeId('zbomInput').value); const previousClipboardPromise=readClipboardBestEffort(); zbomHasRun=false;setZbomRunning(true);zbomLogLines=[];zbomOutputClaims=new Map();zbomResults=new Map();
-    bridgeId('zbomResultSummary').replaceChildren();renderSapLog(); setZbomProgress(2,'Preparing the ZBOM PDF export…');
+    bridgeId('zbomResultSummary').replaceChildren();renderSapLog(); setZbomProgress(2);
   try{
     addZbomLog('Output folder: '+ZBOM_PDF_FOLDER+' (managed by SAPGUIcontrol).'); const previousClipboard=await previousClipboardPromise; const version2=await runZbomVersion(2,validRows,previousClipboard,10,42);
     const remaining=validRows.filter(row=>!zbomResults.get(row.quote)?.files.size); const version1=remaining.length?await runZbomVersion(1,remaining,previousClipboard,52,84):{count:0,error:null};
     if(!remaining.length)addZbomLog('All preview quotations have PDFs. Version 1 was not needed.');
-    sapTools.zbom.job.keep=Boolean(version1.error||version2.error); const summary=renderZbomResultSummary(); setZbomProgress(100,summary.missing?'Completed with '+summary.missing+' quotation(s) to review.':'Export completed successfully.'); zbomHasRun=true;
+    sapTools.zbom.job.keep=Boolean(version1.error||version2.error); const summary=renderZbomResultSummary(); setZbomProgress(100); zbomHasRun=true;
     addZbomLog('Completed: '+summary.success+' quotation(s) exported, '+summary.missing+' produced no PDF.');
     if(version1.error&&version2.error)addZbomLog('Both SAP paths reported an action error. Review the SAP messages and the rows with no PDF.');
-  }catch(error){setZbomProgress(100,'Export stopped: '+bridgeError(error));zbomHasRun=true;addZbomLog('Export stopped: '+bridgeError(error));setBridgeBadge('Action failed','error');}finally{const previousClipboard=await previousClipboardPromise; if(previousClipboard!==
+  }catch(error){setZbomProgress(100);zbomHasRun=true;addZbomLog('Export stopped: '+bridgeError(error));setBridgeBadge('Action failed','error');}finally{const previousClipboard=await previousClipboardPromise; if(previousClipboard!==
     null)try{writeQuotationClipboard(previousClipboard)}catch(_){/* ignore */} setZbomRunning(false);}
 }
 
@@ -2445,11 +2242,12 @@ function bindBridgeEvents(){
   bridgeId('zbomCompareKeepTemp').addEventListener('click',()=>{const button=bridgeId('zbomCompareKeepTemp'),keep=!keepZbomCompareTemp();button.setAttribute('aria-pressed',keep?'true':'false');button.title=
     keep?'The temp folder will be kept.':'The temp folder will be deleted after Compare finishes.';});
   document.querySelectorAll('[data-zbom-compare-token]').forEach(button=>button.addEventListener('click',()=>insertZbomCompareToken(button.dataset.zbomCompareToken))); bridgeId('zbomCompareOpenFolder').addEventListener('click',openZbomCompareOutputFolder);
-  bridgeId('zbomCompareOpenHistory').addEventListener('click',openZbomCompareHistory); bridgeId('zbomCompareCloseHistory').addEventListener('click',closeZbomCompareHistory); document.querySelector('[data-zbom-compare-history-close]').addEventListener('click',closeZbomCompareHistory);
-  bridgeId('createQuoteOpenHistory').addEventListener('click',openCreateQuoteHistory); bridgeId('createQuoteCloseHistory').addEventListener('click',closeCreateQuoteHistory); document.querySelector('[data-create-quote-history-close]').addEventListener('click',closeCreateQuoteHistory);
-  bridgeId('zbomOpenHistory').addEventListener('click',openZbomHistory); bridgeId('zbomCloseHistory').addEventListener('click',closeZbomHistory); document.querySelector('[data-zbom-history-close]').addEventListener('click',closeZbomHistory);
-  document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(!bridgeId('zbomHistoryDialog').hidden)closeZbomHistory();if(!bridgeId('zbomCompareHistoryDialog').hidden)closeZbomCompareHistory();
-    if(!bridgeId('createQuoteHistoryDialog').hidden)closeCreateQuoteHistory()});
+  for(const prefix of Object.keys(toolHistories)){
+    const close=()=>closeToolHistory(prefix);
+    bridgeId(prefix+'OpenHistory').addEventListener('click',()=>openToolHistory(prefix));bridgeId(prefix+'CloseHistory').addEventListener('click',close);
+    document.querySelector('[data-'+prefix.replace(/[A-Z]/g,letter=>'-'+letter.toLowerCase())+'-history-close]').addEventListener('click',close);
+  }
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')Object.keys(toolHistories).forEach(closeToolHistory)});
   document.addEventListener('keydown',event=>{if(event.ctrlKey&&event.altKey&&event.shiftKey&&event.code==='KeyD'){event.preventDefault();bridgeDebugUnlocked=!bridgeDebugUnlocked;writePersistent(BRIDGE_DEBUG_STORAGE_KEY,bridgeDebugUnlocked?'1':'0'); bridgeId('tabDebug').hidden=
     !bridgeDebugUnlocked;setToolTab(bridgeDebugUnlocked?'debug':'zbom');}});
   bridgeId('zbomResetInput').addEventListener('click',()=>{const input=bridgeId('zbomInput');input.value='';saveZbomInput();previewZbomInput();input.focus();});
@@ -2477,23 +2275,24 @@ if(document.documentElement.dataset.fcidMounted)return;
 document.documentElement.dataset.fcidMounted='1';document.documentElement.lang='en'; const id=value=>document.getElementById(value); const text=value=>String(value??'').trim();
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character])); const field=(label,aliases=[],required=false)=>({label,aliases:[label,...aliases],required});
 const ctlFields={
-  fid:field('Opportunity ID',['FCID','FID'],true),number:field('CTL ID',['CTL#','CTL Number'],true), change:field('Change Cat',['Change Type','Change Category','CTL Change Type'],true),status:field('Status',['CTL Status']), mcsd:field('MCSD @ Current',['MCSD','Current MCSD']),
+  fid:field('Opportunity ID',['FCID','FID'],true),number:field('CTL ID',['CTL#','CTL Number'],true), change:field('Change Cat',['Change Type','Change Category','CTL Change Type'],true),mcsd:field('MCSD @ Current',['MCSD','Current MCSD']),
     srd:field('SRD @ Current',['Sales Ops RD','Current SRD','SRD']), slotSrd:field('SRD @ SOPs Approval',['SRD at SOPs Approval']),approved:field('1st SOps Appr Dt',['Sales Ops Approval Date','SOPS Approval Date']), created:field('Create Date',['Creation Date']),
-    modified:field('Last Modified Date',['Modified Date']), summary:field('Change Summary',['Summary']),mfg:field('Mfg Upgrade Type',['Manufacturing Upgrade Type'])
+    initiator:field('Initiator',['Created By','Initiated By','Requester']),businessUnit:field('Business Unit',['BU']),modified:field('Last Modified Date',['Modified Date']), summary:field('Change Summary',['Summary']),mfg:field('Mfg Upgrade Type',['Manufacturing Upgrade Type']),
+    stage:field('Stage',['CTL Stage']),quote:field('Quote ID',['Quote Number']),customer:field('Customer group 2',['Customer','Customer Name','End Customer']),configFrz:field('Config Frz@Current',['Config Frz','Config Frozen Date','Config Freeze Date']),rootCause:field('Root Cause',['Root Cause of Late Change']),notes:field('Notes',['CTL Notes']),subReason:field('Sub Reason')
 };
 const sources={
-  fcid:{label:'FCID Database',sheet:'BOBJ',fields:{
+  fcid:{label:'FID Database',sheet:'BOBJ',fields:{
     fid:field('FID',['FCID','Field ID'],true),commit:field('Commit: Field',['Commit Field','Field Commit','Commit Status'],true), calendarQuarter:field('Time: Calendar Quarter',['Calendar Quarter','Cal Quarter','Quarter']),
-    account:field('Account Group',['Account Team','Sales Territory','AT']),fab:field('Fab Name',['Fab']),fabSegment:field('Fab Segment',['Fab_Segment']), customer:field('Customer',['Customer Name','End Customer']),product:field('Primary Product',['Product','Product Name',
-      'FID Description']), system:field('System Description',['System Desc','System']),quote:field('Active Quote Number',['Quote Number','Active Quote']), targetShip:field('Date: Target Ship',['Target Ship Date','Target Ship']),mcsd:field('Date: Mfg Commit Ship',['Mfg Commit Ship',
+    account:field('Account Group',['Account Team','Sales Territory','AT']),businessUnit:field('Business Unit',['BU']),fab:field('Fab Name',['Fab']),fabSegment:field('Fab Segment',['Fab_Segment']), customer:field('Customer',['Customer Name','End Customer']),
+    description:field('FID Description'),system:field('System Description',['System Desc','System']),quote:field('Active Quote Number',['Quote Number','Active Quote']),crd:field('Date: Customer Request',['Customer Request Date']),targetShip:field('Date: Target Ship',['Target Ship Date','Target Ship']),mcsd:field('Date: Mfg Commit Ship',['Mfg Commit Ship',
       'Manufacturing Commit Ship Date','MCSD']), rd:field('Date: Sales Ops Request Date (RD)',['Sales Ops Request Date','Sales Ops RD','RD']),mfg:ctlFields.mfg
   }},
   ctl:{label:'CTL BOBJ',sheet:'CTL BOBJ',fields:ctlFields},
-  ctlNsr:{label:'CTL-NSR List',sheet:'export',fields:{...ctlFields, fid:field('FCID',['FID','Opportunity ID'],true),change:field('Change Type',['Change Cat','CTL Change Type'],true), status:field('CTL Status',['Status']),mcsd:field('MCSD',['MCSD @ Current']),srd:field('Sales Ops RD',
+  ctlNsr:{label:'CTL-NSR List',sheet:'export',fields:{...ctlFields, fid:field('FCID',['FID','Opportunity ID'],true),change:field('Change Type',['Change Cat','CTL Change Type'],true),mcsd:field('MCSD',['MCSD @ Current']),srd:field('Sales Ops RD',
     ['SRD','SRD @ Current','Field CRD']), approved:field('Sales Ops Approval Date',['1st SOps Appr Dt','SOPS Approval Date']),stage:field('Stage',['CTL Stage']), quote:field('Quote Number',['Quote ID']),sourceQuote:field('Source Quote',['Source Quote Number'])
   }},
   nsr:{label:'NSR Log',sheet:'Whole list',fields:{
-    fid:field('Reference Fcid',['REF FCID','Reference FID','FCID','FID'],true),number:field('NSR#',['NSR #','NSR Number','NSR No'],true), status:field('NSR Status',['Status']),workflow:field('Workflow Status',['Workflow']),task:field('Task Name',['Workflow Task']),
+    fid:field('Reference Fcid',['REF FCID','Reference FID','FCID','FID']),number:field('NSR#',['NSR #','NSR','NSR Number','NSR No','NSR ID'],true), status:field('NSR Status',['Status']),workflow:field('Workflow Status',['Workflow']),task:field('Task Name',['Task','Workflow Task']),
     title:field('NSR Title',['Title']),leadTime:field('NSR LT',['NSR_LT','LT','Lead Time']),submitted:field('Submit Date',['Submitted Date','Submission Date']), customer:field('Customer',['Customer Name']),product:field('Primary Product',['Product']),tempId:field('Temp Id#',
       ['Temp ID','TempId'])
   }},
@@ -2503,169 +2302,1040 @@ const sources={
   }}
 };
 
-sources.ctl.label='CTL Report'; const BOBJ_SOURCES={fcid:{label:'FID BOBJ',endpoint:'/excel',file:'BOBJ_FID.xlsm'}, ctl:{label:'CTL BOBJ',endpoint:'/excel/ctl',file:'BOBJ_CTL.xlsm'}}; const HOSTED_ARCHIVE_URL='https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/Stacey1.zip';
+sources.ctl.label='CTL Report'; const BOBJ_SOURCES={fcid:{label:'FID BOBJ',endpoint:'/excel',file:'BOBJ_FID.xlsm'}, ctl:{label:'CTL BOBJ',endpoint:'/excel/ctl',file:'BOBJ_CTL.xlsm'}}; const HOSTED_ARCHIVE_URL='https://synalocey.github.io/ToolkitKyra/Stacey1.zip';
 const HOSTED_PASSWORD_URL='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNameDateTimeSet/?$filter=Userid%20eq%20%27LONGKY%27',HOSTED_SOURCE_PREFIXES={ctlNsr:'c',nce:'n'};
 const SOURCE_DATES={
   fcid:{fields:['Slot Actual'],label:'Slot Actual'}, ctl:{fields:['Creation Date','Create Date'],label:'Creation Date'}, ctlNsr:{fields:['Create Date','Creation Date'],label:'Create Date'},
   nsr:{fields:['Submit Date','Submitted Date','Submission Date'],label:'Submit Date'}, nce:{fields:['Open Date'],label:'Open Date'}
 };
-const CACHE_PREFIX='fcid-governance:'; const store={raw:Object.fromEntries(Object.keys(sources).map(key=>[key,[]])),meta:{},busy:new Set(),refreshing:false,runs:{},controllers:{},messages:{}};
-const nsrData=createNsrDataService((range,count)=>sourceMessage('nsr',`Loading SAP · ${range.from} to ${range.to} · ${count.toLocaleString()} rows`,'loading')); let nsrRange=nsrData.sapRange();
-const currentYear=new Date().getFullYear(),quarterYears=Array.from({length:5},(_,index)=>currentYear+index-2); const filterDefs=[['fQuarter','Quarter'],['fAccount','Account'],['fInitiator','Initiator'],['fCustomer','Customer'],['fRisk','Status / Risk']];
-const riskNames=['Pre Late Risk','No Slot CTL','Post Config CTL Risk','MCSD Pending','NSR Appeal Watch','OOBQ / NCE Signal'];
-const css=chosenBaseCss+(`
-:root{--bg:#f4f7fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--line:#d9e3ef;--teal:#0f766e;--blue:#2563eb;--green:#16a34a;--amber:#f59e0b;--red:#dc2626;--purple:#7c3aed;--shadow:0 14px 34px rgba(15,23,42,.08);--r:18px}` +
-  `*{box-sizing:border-box}body{margin:0;min-width:1980px;background:var(--bg);color:var(--ink);font-family:Segoe UI,Arial,"Microsoft YaHei",sans-serif}.hero{background:linear-gradient(135deg,#052e44,#075985 54%,#0f766e);` +
-  `color:#fff;padding:24px 30px}.hero h1{margin:8px 0 6px;font-size:30px}.hero p{margin:0;color:#dffcf5;max-width:1650px;line-height:1.55}.tag{display:inline-block;border:1px solid #ffffff55;background:#ffffff22;` +
-  `border-radius:999px;padding:4px 10px;margin-right:7px;font-size:12px;font-weight:800}.layout{display:grid;grid-template-columns:410px 1fr;gap:16px;max-width:1980px;margin:auto;padding:16px}.side,.card{background:var(--panel);` +
-  `border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px}.side{position:sticky;top:14px;align-self:start;max-height:calc(100vh - 28px);overflow:auto}.main{display:grid;gap:16px}` +
-  `h2{font-size:18px;margin:0 0 12px}h3{font-size:14px;margin:0 0 8px;color:#334155}.small{font-size:12px;color:var(--muted);line-height:1.55}.upload{border:1.5px dashed #a9bbca;background:#fbfdff;border-radius:14px;` +
-  `padding:12px;margin-bottom:14px}.upload label{display:block;font-weight:900;color:#334155;font-size:12px;margin:9px 0 4px}.required-star{color:var(--red);font-size:14px;margin-left:2px}.upload input{width:100%;font-size:12px}` +
-  `.btn{border:0;border-radius:11px;background:var(--teal);color:#fff;font-weight:900;padding:10px 12px;cursor:pointer}.btn.light{background:#e2e8f0;color:#0f172a}.btn.blue{background:var(--blue)}` +
-  `.btn.warn{background:var(--amber);color:#111827}.btn.red{background:var(--red)}.btnrow{display:flex;gap:8px;flex-wrap:wrap}.fg{margin:10px 0}.fg label{display:block;font-size:11px;color:#64748b;text-transform:uppercase;` +
-  `letter-spacing:.4px;font-weight:900;margin-bottom:5px}.fg label[for]{cursor:pointer}.fg select,.fg input{width:100%;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fff}.fg select[multiple]{width:100%;` +
-  `max-width:100%;height:92px;min-height:56px;resize:vertical;overflow:auto}.hint{border-left:4px solid var(--teal);background:#ecfeff;color:#164e63;border-radius:10px;padding:10px;font-size:12px;line-height:1.55;` +
-  `margin-top:10px}.warnbox{border-left:4px solid var(--amber);background:#fffbeb;color:#78350f;border-radius:10px;padding:10px;font-size:12px;line-height:1.55;margin-top:10px}.msg{border-left:4px solid var(--blue);` +
-  `background:#eff6ff;color:#1e3a8a;border-radius:10px;padding:10px;font-size:12px;line-height:1.55;margin-top:10px;max-height:190px;overflow:auto}.tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{border:1px solid var(--line);` +
-  `background:#fff;border-radius:999px;padding:9px 13px;font-weight:900;color:#334155;cursor:pointer}.tab.active{background:var(--teal);border-color:var(--teal);color:#fff}.page{display:grid;gap:16px}` +
-  `.hidden{display:none!important}.sectionTitle{display:flex;justify-content:space-between;align-items:center;gap:12px}.badge{font-size:11px;color:#fff;background:#134e4a;border-radius:999px;padding:4px 10px;font-weight:900}` +
-  `.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{min-height:116px}.kpi small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.55px;font-weight:900}.kpi ` +
-  `b{display:block;font-size:28px;margin:8px 0 2px}.kpiJump{cursor:pointer;border-radius:7px;width:max-content;max-width:100%;transition:opacity .15s ease}.kpiJump:hover{text-decoration:underline;text-underline-offset:4px}` +
-  `.kpiJump:focus-visible{outline:3px solid #38bdf8;outline-offset:3px}.blue b{color:var(--blue)}.green b{color:var(--green)}.amber b{color:var(--amber)}.red b{color:var(--red)}.purple b{color:var(--purple)}.grid2{display:grid;` +
-  `grid-template-columns:1fr 1fr;gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.miniGrid{display:grid;` +
-  `grid-template-columns:repeat(4,1fr);gap:10px}.mini{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px}.mini small{display:block;color:#64748b;font-size:11px;text-transform:uppercase;font-weight:900}` +
-  `.mini b{font-size:18px}.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:14px;max-height:680px}table{border-collapse:collapse;width:100%;min-width:1500px;font-size:12px}th,td{
-    padding:9px 10px;
-    border-bottom:1px solid #edf2f7;
-    text-align:left;
-    vertical-align:top;
-}th{background:#f8fafc;color:#334155;position:sticky;top:0;z-index:1}tr:hover{background:#fbfdff}.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:900}` +
-  `.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.warnp{background:#fef3c7;color:#92400e}.info{background:#dbeafe;color:#1d4ed8}.purplep{background:#ede9fe;color:#5b21b6}.barRow{display:grid;` +
-  `grid-template-columns:205px 1fr 70px;gap:9px;align-items:center;margin:10px 0}.bar{height:13px;background:#e2e8f0;border-radius:999px;overflow:hidden}.bar span{display:block;height:100%;border-radius:999px}.heat{display:grid;` +
-  `grid-template-columns:160px repeat(5,1fr);border:1px solid var(--line);border-radius:14px;overflow:hidden}.heat div{padding:10px;border-right:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb;font-size:12px}.heat ` +
-  `.head{background:#f8fafc;font-weight:900;color:#334155}.heat .g{background:#dcfce7;color:#166534;font-weight:900}.heat .y{background:#fef3c7;color:#92400e;font-weight:900}.heat .r{background:#fee2e2;color:#991b1b;` +
-  `font-weight:900}.funnel{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}.step{border:1px solid var(--line);border-radius:14px;background:#fbfdff;min-width:155px;flex:1;padding:13px;text-align:center}.step ` +
-  `b{display:block;font-size:22px;margin:3px 0;color:#0f766e}.arrow{font-weight:900;color:#94a3b8;align-self:center}.code{font-family:Consolas,monospace;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;` +
-  `padding:10px;white-space:pre-wrap;font-size:12px;color:#334155}.searchBox{display:flex;gap:8px;flex-wrap:wrap}.searchBox input{flex:1;min-width:260px;border:1px solid var(--line);border-radius:11px;padding:10px}` +
-  `.footer{font-size:11px;color:#64748b;line-height:1.45;max-width:1980px;margin:auto;padding:0 16px 18px}.sectionFocusPulse{position:relative;isolation:isolate}.sectionFocusPulse::after{content:"";position:absolute;inset:-4px;` +
-  `border-radius:calc(var(--r) + 4px);padding:4px;background:linear-gradient(115deg,#14b8a6,#38bdf8,#7c3aed,#f59e0b,#14b8a6);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);` +
-  `-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 10px rgba(37,99,235,.5));pointer-events:none;animation:sectionFocusBorder 5s cubic-bezier(.22,.61,.36,1) forwards}@keyframes ` +
-  `sectionFocusBorder{0%{opacity:0}8%{opacity:1}22%{opacity:.95}55%{opacity:.55}100%{opacity:0}}
-.btn[href]{display:inline-block;text-decoration:none}.agCtl{font-size:14px}.agGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.agBox{border:1px solid var(--line);border-radius:12px;padding:10px;` +
-  `background:#f8fafc}.agBox label{display:block;font-weight:900;color:#334155;margin-bottom:6px}.agBox textarea{width:100%;min-height:165px;resize:vertical;border:1px solid var(--line);border-radius:9px;padding:8px;` +
-  `font:12px/1.45 Consolas,monospace;background:#fff}
-`)+(`.fc-source{position:relative;border:1px solid #dce7ed;background:#fbfdfe;border-radius:10px;padding:10px 8px;margin-top:9px}.fc-source-head{display:flex;align-items:center;justify-content:space-between;gap:5px;` +
-  `margin-bottom:7px}.fc-source h3{display:flex;align-items:center;gap:3px;min-width:0;margin:0;color:#24364b;font-size:12px;line-height:1.35}.fc-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}` +
-  `.fc-source-number{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;background:var(--teal);color:#fff;border-radius:6px;font-size:12px;font-weight:600}.fc-source-bobj{flex:none;border:1px solid #d5e0e8;border-radius:4px;padding:1px 4px;color:#64748b;font-size:9px;font-weight:600}
-.fc-source-state{display:inline-flex;align-items:center;gap:5px;flex:none;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#64748b;font-size:10px;line-height:1.5}.fc-source-state.has-range{max-width:none}` +
-  `.fc-source-state::before{content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:#94a3b8}.fc-source-state.ok{color:#166534}.fc-source-state.ok::before{background:var(--green)}` +
-  `.fc-source-state.loading{color:#92400e}.fc-source-state.loading::before{background:var(--amber)}.fc-source-state.error{color:#991b1b;cursor:help}.fc-source-state.error::before{background:var(--red)}
-.fc-source-toolbar{display:flex;align-items:center;gap:6px;min-width:0}.fc-source-file{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#64748b;font-size:10px;line-height:1.5}` +
-  `.fc-source-toolbar>.btn,.fc-source-help>.btn{flex:none;padding:4px 6px;font-size:10px;line-height:1.4}.fc-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.fc-source-help{position:relative;flex:none}.fc-source-help>summary{list-style:none;font:inherit}.fc-source-help>summary::-webkit-details-marker{display:none}
-.fc-source-help-bubble{position:absolute;z-index:20;right:0;top:calc(100% + 7px);width:230px;max-width:calc(100vw - 48px);padding:9px 10px;border:1px solid #dce7ed;border-radius:8px;background:#fff;color:#475569;box-shadow:0 5px 18px #0f172a1a;font-size:11px;line-height:1.5}
-.fc-source-help-bubble::before{content:"";position:absolute;right:7px;top:-5px;width:8px;height:8px;border-top:1px solid #dce7ed;border-left:1px solid #dce7ed;background:#fff;transform:rotate(45deg)}.fc-source-help-bubble a{color:#0f766e}
-.fc-nsr-dialog{width:380px;max-width:calc(100vw - 32px);padding:20px;border:1px solid #d5e0e8;border-radius:12px;background:#fff;color:var(--ink);box-shadow:0 18px 60px #0f172a33;font:13px/1.5 var(--font-sans)}
-.fc-nsr-dialog::backdrop{background:#0f172a66}.fc-nsr-dialog h2{margin:0 0 16px;font-size:16px}.fc-nsr-dialog .fc-actions{justify-content:flex-end;margin-top:20px}
-.fc-nsr-help{margin:12px 0 0;color:#64748b;font-size:11px}.fc-nsr-help a{color:inherit;text-underline-offset:2px}
-.fc-range{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fc-range label{font-size:12px;color:#475569}.fc-range input{display:block;width:100%;min-width:0;margin-top:5px;padding:8px;border:1px solid var(--line);border-radius:7px;` +
-  `background:#fff;font:inherit;color:#334155}
-.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:19px 0 10px;padding-top:17px;border-top:1px solid #e5ecf2}.side-head h2{margin:0}.quick-search{display:block;width:100%;padding:9px 10px;` +
-  `border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font-size:12px}.quick-search::placeholder{color:#8493a5}
-.btn{border:1px solid transparent;border-radius:8px;background:var(--teal);color:#fff;font-size:12px;font-weight:600;line-height:1.4;padding:8px 12px;cursor:pointer;box-shadow:0 1px 2px #0f172a0a;transition:background ` +
-  `.15s,border-color .15s}.fc-side .btn:hover:not(:disabled){background:#0d665f}.fc-side .btn.ghost{border-color:#ffffff66;background:#ffffff18;flex:none}.fc-side .btn.ghost:hover:not(:disabled){background:#ffffff28}.fc-side ` +
-  `.btn.light{border-color:#d5e0e8;background:#fff;color:#334155;box-shadow:0 1px 2px #0f172a05}.fc-side .btn.light:hover:not(:disabled){border-color:#b9cbd8;background:#f1f6f9}.fc-side .btn.blue{background:var(--blue)}.fc-side ` +
-  `.btn.blue:hover:not(:disabled){background:#1d4ed8}.fc-side .btn.warn{border-color:#f2d28b;background:#fff6dc;color:#8f4f00}.fc-side .btn.warn:hover:not(:disabled){background:#ffedb8}.fc-side .btn.red{background:var(--red)}` +
-  `.fc-side .btn.small{padding:5px 8px;font-size:11px}
-.fc-filter{margin-top:14px}.fc-filter>label{display:block;font-size:11px;color:#475569;font-weight:600;margin-bottom:5px}.fc-filter select{width:100%;height:80px;min-height:56px;resize:vertical;border:1px solid var(--line);` +
-  `border-radius:8px;background:#fff;padding:6px}.fc-filter .fc-actions{justify-content:flex-end;margin-top:5px}.chosen-container{font-family:var(--font-sans);font-size:12px;width:100%!important;max-width:100%}` +
-  `.chosen-container-multi .chosen-choices{min-height:38px;border:1px solid var(--line);border-radius:8px;background:#fff;background-image:none;box-shadow:none;padding:3px 5px}.chosen-container-active ` +
-  `.chosen-choices{border-color:#38bdf8;box-shadow:0 0 0 3px #38bdf822}.chosen-container-multi .chosen-choices li.search-choice{border:1px solid #b5dcd6;border-radius:5px;background:#e6f5f1;background-image:none;color:#115e59;` +
-  `box-shadow:none}.fc-filter .chosen-container-multi .chosen-choices li.search-field input.chosen-search-input{font-size:12px}
-.fc-years{display:flex;align-items:center;gap:4px;white-space:nowrap;margin-top:6px}.fc-years span{font-size:9px;color:var(--muted);font-weight:600}.fc-years button{flex:none;border:1px solid #dce5ed;border-radius:6px;` +
-  `background:#f7f9fb;color:#475569;padding:3px 5px;font-size:10px;font-weight:600}.fc-years button:hover:not(:disabled){border-color:#8ebdbb;color:#0f766e}.fc-years button.active{border-color:#83bcb6;background:#e6f4f1;` +
-  `color:#115e59}.fc-years button.partial{border-color:#a7cbe0;background:#edf6fc;color:#075985}
-`)+(`
-body.fcid-app{min-width:0;font-size:13px}.hero{padding:23px 28px}.hero-inner{max-width:1900px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px}.hero-inner>div{min-width:0;flex:1}.hero ` +
-  `.tag{font-size:10px;font-weight:600}.hero h1{font-size:28px}.hero p{font-size:12px}.hero .fc-refresh{flex:none;border:1px solid #ffffff66;background:#ffffff18;font-weight:600;font-size:12px;padding:8px 12px}` +
-  `.layout{grid-template-columns:340px minmax(0,1fr);max-width:1900px}.fc-side{position:static;max-height:none;overflow:visible;padding:16px;align-self:start}.main{min-width:0;align-content:start}.main>.card,.page>.card,.grid2>` +
-  `.card{min-width:0}.main .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.main .miniGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.main table{min-width:1000px}.main ` +
-  `.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}.main .grid2 .tableWrap{min-width:0}.main .heat{grid-template-columns:110px repeat(5,minmax(45px,1fr));overflow:auto}.main .heat div{font-size:11px;padding:8px}.main ` +
-  `.barRow{grid-template-columns:155px minmax(0,1fr) 42px;font-size:11px}.main .card{box-shadow:0 2px 6px #0f172a07,0 10px 28px #0f172a09}.main .tab,.main .btn{font-weight:600;font-size:12px}.fc-side h2{font-size:16px}.fc-side ` +
-  `button,.fc-side input,.fc-side select{font:inherit}.fc-side .fc-years button{font-size:10px}.fc-side .btn{font-size:12px}.fc-side .btn.small{font-size:11px}.fc-side .chosen-container{font-size:12px}.fc-side ` +
-  `[hidden]{display:none!important}button:disabled,input:disabled{cursor:not-allowed;opacity:.48}.main .agGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.main .agBox{min-width:0}.footer{max-width:1900px}` +
-  `.fc-note:empty{display:none}
-@media(max-width:1250px){.layout{grid-template-columns:300px minmax(0,1fr)}.main .grid2{grid-template-columns:minmax(0,1fr)}.main .agGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:800px){.layout{grid-template-columns:minmax(0,1fr);padding:10px}.hero{padding:20px 16px}.hero h1{font-size:22px}.main .kpis,.main .miniGrid,.main .grid3,.main ` +
-  `.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}.main .heat{grid-template-columns:100px repeat(5,55px)}.main .heatmap-scroll{overflow:auto}.main .agGrid{grid-template-columns:minmax(0,1fr)}.main .searchBox ` +
-  `input{min-width:0}}
-`);
+const CACHE_PREFIX='fcid-governance:'; const store={raw:Object.fromEntries(Object.keys(sources).map(key=>[key,[]])),meta:{},busy:new Set(),refreshing:false,dirty:false,runs:{},controllers:{}};
+const NSR_MARKS_KEY='toolkitKyra.nsr.marks.v1',IGNORED_NSRS_KEY='toolkitKyra.nsr.ignored.v1',FID_MARKS_KEY='toolkitKyra.fid.marks.v1',FID_NOTES_KEY='toolkitKyra.fid.notes.v1',TABLE_ORDERS_KEY='toolkitKyra.table.orders.v1';
+const ignoredNsrs=new Set(),importantNsrs=new Set(),ignoredFids=new Set(),importantFids=new Set();
+const markKinds={
+  nsr:{key:NSR_MARKS_KEY,legacy:IGNORED_NSRS_KEY,label:'NSR#',plural:'NSRs',prefix:'Nsr',ignored:ignoredNsrs,important:importantNsrs,pattern:/^[A-Z]\d{5,9}$/,status:'fcNsrMarksStatus'},
+  fid:{key:FID_MARKS_KEY,label:'FID',plural:'FIDs',prefix:'Fid',ignored:ignoredFids,important:importantFids,pattern:/^\d{5,10}$/,status:'fcFidMarksStatus'}
+};
+for(const [kind,config]of Object.entries(markKinds))try{
+  const saved=GM_getValue(config.key,null),legacy=saved===null&&config.legacy?GM_getValue(config.legacy,null):null,parsed=typeof(saved??legacy)==='string'?JSON.parse(saved??legacy):saved??legacy;
+  const entries=Array.isArray(parsed)?parsed.map(number=>[number,'ignore']):Object.entries(parsed||{});
+  for(const [value,mark]of entries){const number=String(value).trim().toUpperCase();if(!number||kind==='fid'&&!config.pattern.test(number))continue;if(mark==='ignore')config.ignored.add(number);else if(mark==='important')config.important.add(number)}
+}catch(_){/* Keep source data available when personal marks cannot be read. */}
+let fidNotes={};
+try{const saved=GM_getValue(FID_NOTES_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;fidNotes=Object.fromEntries(Object.entries(parsed||{}).filter(([fid,note])=>markKinds.fid.pattern.test(fid)&&typeof note==='string'&&note.trim()).map(([fid,note])=>[fid,note.replace(/\r\n?/g,'\n')]))}catch(_){/* Keep source data available when notes cannot be read. */}
+let tableOrders={};
+try{const saved=GM_getValue(TABLE_ORDERS_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))tableOrders=Object.fromEntries(Object.entries(parsed).filter(([,order])=>Array.isArray(order)&&order.every(label=>typeof label==='string')).map(([name,order])=>[name,[...new Set(order)]]))}catch(_){/* Invalid preferences leave the default column order available. */}
+if(tableOrders.ctlTable){
+  tableOrders.ctlTable=tableOrders.ctlTable.map(label=>label==='Created'?'Created Date':label);
+  for(const [label,after]of [['Elapsed Days','Created Date'],['CTL Notes','Root Cause'],['Sub Reason','CTL Notes']])if(!tableOrders.ctlTable.includes(label)&&tableOrders.ctlTable.includes(after))tableOrders.ctlTable.splice(tableOrders.ctlTable.indexOf(after)+1,0,label);
+}
+const nsrData=createNsrDataService((range,count)=>sourceMessage('nsr',`Loading SAP · ${range.from} to ${range.to} · ${count} rows`,'loading')); let nsrRange=nsrData.sapRange();
+const nsrRecords=createNsrRecords(),accountMapping=createFidAccountMapping(),report=createFidSourceReaders(sources);
+const gridModule={exports:{}};new Function('module','exports',GM_getResourceText('tabulatorJs'))(gridModule,gridModule.exports);const Tabulator=gridModule.exports;
+const filterDefs=[
+  ['fAccount','Account','account','common'],['fQuarter','Calendar Quarter','quarter','fid'],['fOwner','FID Owner','owner','fidCtl'],
+  ['fCustomer','FID Customer','customer','fid'],['fSystem','System Description','system','fid'],['fBusinessUnit','Business Unit','businessUnit','fid'],['fSalesAdmin','Sales Admin','salesAdmin','fidSalesAdmin'],
+  ['fSlotInitiator','Slot Initiator','slot.initiator','fidCtl'],['fFidStatus','FID Status','fidStatus','fidCtl'],['fRisk','Risk Drivers','riskType','fidRisk'],
+  ['fCtlStage','CTL Stage','ctl.stage','ctl'],['fCtlInitiator','CTL Initiator','ctl.initiator','ctl'],['fCtlCreatedDate','CTL Created Date','ctl.created','ctl'],['fCtlChange','CTL Type','ctl.change','ctl'],['fCtlCustomer','CTL Customer','ctl.customer','ctl'],
+  ['fNsrInitiator','NSR Initiator','nsr.initiator','nsr'],['fNsrSubmitDate','NSR Submit Date','nsr.submitted','nsr'],
+  ['fNsrTaskStatus','NSR Task Status','nsr.taskStatus','nsr'],['fNsrType','NSR Type','nsr.type','nsr'],['fNsrOrg','NSR Org','nsr.org','nsr'],
+  ['fNsrSubsystem','NSR Subsystem','nsr.subsystem','nsr'],['fNsrProduct','NSR Product','nsr.product','nsr'],['fNsrCustomer','NSR Customer','nsr.customer','nsr']
+];
+const dateFilters=['nsr.submitted','ctl.created'];
+function ctlDateRange(period){
+  const today=new Date(),year=today.getFullYear(),month=today.getMonth();
+  if(period.endsWith('week')){const day=today.getDate()-(today.getDay()+6)%7-(period==='Last week'?7:0);return [new Date(year,month,day),new Date(year,month,day+6)].map(nsrData.localDate)}
+  const offset=period==='Last month'?-1:0;return [new Date(year,month+offset,1),new Date(year,month+offset+1,0)].map(nsrData.localDate);
+}
+const ownerHint="Inferred from CTL/NSR records based on the highest operation count, with the Slot Initiator preferred when counts are equal. For reference only; may be inaccurate.";
+const salesAdminHint="Inferred from Pull/Push CTL records based on the highest operation count. For reference only; may be inaccurate.";
+const inferenceHelp=tip=>`<span class="inference-help" title="" aria-label="${escapeHtml(tip)}"></span>`;
+const lifecycleNames={'open':'Pending NSR','discarded':'Cancelled / Rejected','completed-5d':'Completed 5D NSR','completed-unlinked':'Completed NSR but no CTL','ctl-pending':'CTL pending approval','implemented':'CTL approved','ctl-unavailable':'CTL status unknown',ignore:'⊘ Ignore','ignore-completed':'⊘ Ignore',important:'★ Star'};
+const markLabels={all:'All',normal:'Unmarked',ignore:'⊘ Ignore',important:'★ Star'};
+const nsrCompletedTasks=Object.fromEntries(['completed-unlinked','ctl-pending','implemented','completed-5d'].map(key=>['15-Completed|'+key,lifecycleNames[key]]));
+const defaultCtlTypes=['Config','Slot','Drop Slot'];
+const pendingCtlTypes={'Pending Config CTL':['Slot','Config'],'Pending Pull/Push CTL':['Pull','Push']};
+const overviewColors={total:'#94a3b8',completed:'#16843f',workflow:'#2563eb',originator:'#8a5c0c',rejected:'#c42f48',cancelled:'#52647d',unknown:'#52647d'};
+let includeIgnored=true;
+function ignoredToggle(view){return `<label class="ignore-scope" title="Exclude Ignore-marked FIDs, their linked records and Ignore NSRs from statistics and Details"><input type="checkbox" data-exclude-ignored="${view}"${includeIgnored?'':' checked'}>Exclude ignored FID/NSR</label>`}
+function overviewHead(view,count,total,selected){const unit=view==='portfolio'?'FID':'NSR';return `<div class="section-head overview-head"><h2>${unit} Overview</h2><div class="overview-tools"><span class="badge">${selected?`${number(count)} / ${number(total)} selected ${unit}s`:`${number(count)} filtered ${unit}s`}</span>${ignoredToggle(view)}</div></div>`}
+const ctlStageOrder=['0-Cancelled','0-Rejected','1-Originator','PM','Sales Ops','NSR PE','CE','MSPM','MS','15-Completed'];
+function ctlStageName(value){const stage=text(value).replace(/^\d+\s*-\s*/,'');return ({cancelled:'0-Cancelled',canceled:'0-Cancelled',rejected:'0-Rejected',originator:'1-Originator',completed:'15-Completed'})[stage.toLowerCase()]||stage}
+function compareCtlStages(a,b){const rank=value=>!value||value==='[Unknown]'?100:value==='15-Completed'?99:ctlStageOrder.includes(value)?ctlStageOrder.indexOf(value):98;const left=ctlStageName(a),right=ctlStageName(b);return rank(left)-rank(right)||left.localeCompare(right,undefined,{numeric:true})}
+function taskGroup(value,ctl=false){return value==='15-Completed'?'completed':value==='0-Rejected'?'rejected':value==='0-Cancelled'?'cancelled':ctl&&value==='1-Originator'?'originator':ctl&&(!value||value==='[Unknown]')?'unknown':'workflow'}
+function taskOverview(kind,terms,groups,total){
+  const unit=kind.toUpperCase(),equation=total+' = '+terms.map(([group])=>groups[group]).join(' + ');
+  const card=(group,label,count,color)=>{
+    const active=taskFilterSelected(kind,group),percent=total?(100*count/total).toFixed(1):'0.0';
+    return `<button class="nsr-kpi" style="--kpi-color:${color}" type="button" data-${kind==='ctl'?'ctl-status':'nsr-group'}="${group}" data-count="${count}" aria-pressed="${active}"${group!=='all'&&!count&&!active?' disabled':''} title="${escapeHtml(group==='all'?equation:`${label} / Total ${unit} = ${count} / ${total} = ${percent}%`)}"><small>${escapeHtml(label)}</small><b>${number(count)}</b><span>${percent}%</span></button>`;
+  };
+  return card('all','Total '+unit,total,overviewColors.total)+'<span class="math-sign" aria-hidden="true">=</span>'+terms.map(([group,label,color],index)=>(index?'<span class="math-sign" aria-hidden="true">+</span>':'')+card(group,label,groups[group],color)).join('');
+}
+function taskFilterValues(kind,key){if(key==='all')return [];if(kind==='nsr'&&Object.hasOwn(nsrCompletedTasks,'15-Completed|'+key))return ['15-Completed|'+key];return [...id(kind==='ctl'?'fCtlStage':'fNsrTaskStatus').options].map(option=>option.value).filter(value=>!Object.hasOwn(nsrCompletedTasks,value)&&taskGroup(kind==='ctl'?ctlStageName(value):value,kind==='ctl')===key)}
+function taskFilterSelected(kind,key,types){const selected=filterValues[kind==='ctl'?'ctl.stage':'nsr.taskStatus']||[],parts=taskFilterValues(kind,key),changes=filterValues['ctl.change']||[];return key==='all'?!selected.length:parts.length>0&&parts.every(value=>selected.includes(value))&&(!types||!changes.length||types.every(value=>changes.includes(value)))}
+function selectTaskFilter(kind,key,types){
+  const path=kind==='ctl'?'ctl.stage':'nsr.taskStatus',selected=filterValues[path]||[],parts=taskFilterValues(kind,key),active=taskFilterSelected(kind,key,types);
+  if(types){
+    if(!parts.length)return;
+    const changes=taskFilterSelected(kind,key)?filterValues['ctl.change']?.length?filterValues['ctl.change']:[...id('fCtlChange').options].map(option=>option.value):[];
+    const next=active?changes.filter(value=>!types.includes(value)):[...new Set([...changes,...types])];
+    changeFilter({[path]:active&&!next.length?selected.filter(value=>!parts.includes(value)):[...new Set([...selected,...parts])],'ctl.change':next});
+  }else changeFilter(path,key==='all'?[]:active?selected.filter(value=>!parts.includes(value)):[...selected,...parts]);
+}
+function normalizeNsrTasks(values){const selected=[...new Set(values)],previous=filterValues['nsr.taskStatus']||[];if(selected.includes('15-Completed')&&selected.some(value=>Object.hasOwn(nsrCompletedTasks,value)))return selected.filter(value=>!previous.includes('15-Completed')?!Object.hasOwn(nsrCompletedTasks,value):value!=='15-Completed');return selected}
+const fidStatusNames={'no-slot':'No Slot','slot-ready':'Slotted FID','stable-slot':'Stable Slot','late-slot':'Late Slot','stable-ctl':'Stable CTL/NSR','late-ctl-nsr':'Late CTL/NSR','late-ctl':'Late CTL','open-nsr':'Late NSR','slot-unknown':'Slot status unknown','slot-date-unknown':'Slot date unknown','ctl-unknown':'CTL/NSR status unknown','risk-fid':'Risk FID','risk-free':'No Late Flags','risk-unknown':'Risk Status Unknown','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'No Slot · drop slot'};
+const fidCellNames={'stable-slot|stable-ctl':'No Late Flags (Stable Slot & Stable CTL/NSR)','late-slot|stable-ctl':'Late Slot with Stable CTL/NSR','stable-slot|late-ctl-nsr':'Stable Slot with Late CTL/NSR','late-slot|late-ctl-nsr':'Late Slot with Late CTL/NSR','stable-slot|ctl-unknown':'Stable Slot · CTL/NSR unknown','late-slot|ctl-unknown':'Late Slot · CTL/NSR unknown','slot-date-unknown|stable-ctl':'Slot date unknown · Stable CTL/NSR','slot-date-unknown|late-ctl-nsr':'Late CTL/NSR · Slot unknown','slot-date-unknown|ctl-unknown':'Slot & CTL/NSR status unknown'};
+const fidCauseNames={'late-ctl':'Late CTL','open-nsr':'Late NSR','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'No Slot · drop slot'};
+const fidCauseKeys=Object.keys(fidCauseNames);
+const fidSelection={order:[],groups:{}};
+const css=GM_getResourceText('tabulatorCss')+DASHBOARD_BASE_CSS+`
+body.fcid-app{--side:370px;--fid-ink:#2458a6;--fid-tint:#eaf1ff;--fid-line:#bed0ef;--nsr-ink:#b13d53;--nsr-tint:#fceef1;--nsr-line:#e6b6c1;--shadow:0 2px 12px #253c6410;font-size:13px;min-width:0}.fcid-app [hidden]{display:none!important}.fcid-app h1,.fcid-app h2,.fcid-app h3{font-weight:600;line-height:1.3;margin:0}.fcid-app h2{font-size:16px}.fcid-app h3{font-size:13px}.fcid-app .card{padding:14px;min-width:0;border-radius:11px}.fcid-app .btn{color:#fff;font-size:12px;padding:7px 10px;font-weight:600;white-space:nowrap}.fcid-app .btn.small{padding:4px 7px}.fcid-app .btn.light{background:#edf1f6;border:1px solid #ccd6e3;color:#354d6d}.fcid-app .btn.blue{background:#2863d6;color:#fff}.muted,.small{font-size:12px;color:#53657d}.btnrow,.fc-hero-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.badge{font-size:12px;background:#edf2fa;color:#435a7b;border-radius:6px;padding:3px 7px;white-space:nowrap}
+.fc-hero{padding:15px 18px;background:linear-gradient(110deg,#e8f3ff,#f0ebff 57%,#fff0e4);border-bottom:1px solid #ccd9ed}.fc-hero-inner{max-width:1900px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px}.fc-brand{font-size:12px;letter-spacing:1.5px;color:#4d5b89}.fc-hero h1{font-size:27px;margin-top:3px;letter-spacing:-.5px}.fc-heading{display:flex;align-items:center;gap:13px}#fcToggleSide{font-size:21px;padding:4px 10px;line-height:1.3}
+.fcid-app .layout{max-width:1948px;margin:auto;display:grid;grid-template-columns:var(--side) minmax(0,1fr);gap:14px;padding:14px;align-items:start}.fcid-app .main{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.fcid-app .side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin;padding:13px;min-width:0}.side-collapsed .layout{grid-template-columns:minmax(0,1fr)}.side-collapsed .side{display:none}
+.fc-source{position:relative;border:1px solid #dce7ed;background:#fbfdfe;border-radius:9px;padding:9px 8px;margin-top:8px}.fc-source-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:7px}.fc-source h3{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;color:#24364b}.fc-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fc-source-bobj{flex:none;border:1px solid #d5e0e8;border-radius:4px;padding:1px 4px;color:#64748b;font-size:9px;font-weight:600}.fc-source-number{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;background:#376bd2;color:#fff;border-radius:6px;font-size:12px;font-weight:600}.fc-source[data-source=ctl] .fc-source-number{background:#8152bf}.fc-source[data-source=ctlNsr] .fc-source-number{background:#a85c07}.fc-source[data-source=nsr] .fc-source-number{background:#bf3d74}.fc-source[data-source=nce] .fc-source-number{background:#087e70}.fc-source-state{display:inline-flex;align-items:center;gap:5px;flex:none;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}.fc-source-state.has-range{max-width:none}.fc-source-state::before{content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:#94a3b8}.fc-source-state.ok{color:#166534}.fc-source-state.ok::before{background:#158653}.fc-source-state.stale{color:#d97706}.fc-source-state.stale::before{background:#d97706}.fc-source-state.loading{color:#92400e}.fc-source-state.loading::before{background:#d97706}.fc-source-state.error{cursor:help}.fc-source-toolbar{display:flex;align-items:center;gap:6px;min-width:0}.fc-source-toolbar>.btn{flex:none}.fc-source-file{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5}.fc-source-help{position:relative}.fc-source-help summary{list-style:none}.fc-source-help-bubble{position:absolute;right:0;top:30px;width:235px;z-index:30;padding:10px;background:#fff;border:1px solid #c4d0e4;border-radius:8px;box-shadow:0 8px 26px #23395630;font-size:12px}.fc-source-help a,.fc-nsr-help a{color:#265dbb}.fc-note{font-size:12px;color:#a73047;white-space:pre-line}.fc-note:empty{display:none}
+.filter-head{display:flex;align-items:center;justify-content:space-between;margin:17px 0 10px}.fc-filter{margin-top:9px}.filter-head h2{font-size:18px;color:#30445f}.fc-filter[data-filter-needs=common]{--filter-ink:#52647d;--filter-tint:#f4f6fa;--filter-line:#cbd5e1}.fc-filter[data-filter-needs^=fid]{--filter-ink:var(--fid-ink);--filter-tint:var(--fid-tint);--filter-line:var(--fid-line)}.fc-filter[data-filter-needs=nsr]{--filter-ink:var(--nsr-ink);--filter-tint:var(--nsr-tint);--filter-line:var(--nsr-line)}.fc-filter label{display:block;font-size:12px;font-weight:600;color:var(--filter-ink,#435775);margin-bottom:4px}.fc-filter select{font-size:12px;width:100%;min-height:32px;border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:5px;background:#fff;color:var(--filter-ink,#263e60)}.fc-filter .chosen-container,.fc-filter .chosen-container-multi .chosen-choices li.search-field input.chosen-search-input{font-size:12px}.fc-filter .chosen-choices{border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:2px;background:#fff;box-shadow:none;min-height:32px}.fc-filter .chosen-choices li.search-choice{color:var(--filter-ink,#294c88);background:var(--filter-tint,#e8effd);border-color:var(--filter-line,#bacdee);padding:4px 22px 4px 6px}.fc-filter .chosen-results li{font-size:12px;line-height:1.4;padding:5px 7px}.fc-filter .chosen-results li.highlighted{background:var(--filter-ink,#2f64ca);color:#fff}.fc-filter input::placeholder{color:#526782}.fc-filter-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.fc-filter-head>label{min-width:0;margin-bottom:0}.fc-filter-actions{display:flex;flex:none;gap:6px;justify-content:flex-end}.fc-filter-actions button{border:0;background:none;color:var(--filter-ink,#365c97);font-size:12px;padding:1px 2px;cursor:pointer}.fcid-app .filter-group-title{font-size:16px;font-weight:600;color:var(--fid-ink);border-top:1px solid #dde5f1;margin-top:18px;padding-top:13px}.filter-group-title[data-filter-needs=nsr]{color:var(--nsr-ink);border-top-color:var(--nsr-line)}.fc-filter.primary-filter{border-left:3px solid var(--filter-line,#83a8e8);padding:7px 8px;background:var(--filter-tint,#f1f5fd);border-radius:0 6px 6px 0}.fc-filter.primary-filter .fc-filter-head>label{color:var(--filter-ink,#2f5590)}.quick-search,.fid-lookup input{width:100%;border:1px solid #cbd6e6;border-radius:6px;padding:7px;color:#243b5c;font-size:13px}.quick-search{resize:vertical;min-height:52px}.nsr-year-picks{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.nsr-year-picks button{font-size:12px;border:1px solid var(--filter-line,#cbd8e9);border-radius:5px;color:var(--filter-ink,#405a80);background:var(--filter-tint,#f4f7fc);padding:2px 6px;cursor:pointer}.nsr-year-picks button.active{background:var(--filter-ink,#315b96);border-color:var(--filter-ink,#315b96);color:#fff}.nsr-year-picks button.partial{background:#eaf3fc;border-color:#8db3d9;color:#285982}
+.fid-lookup{display:flex;align-items:center;gap:7px}.fid-lookup input{flex:1;min-width:0;width:0}.fid-lookup .btn{flex:none;padding:6px 8px}
+.fc-filter[data-filter-needs] .chosen-drop{border-color:var(--filter-line)}.fc-filter[data-filter-needs] .chosen-container-active .chosen-choices{border-color:var(--filter-ink);box-shadow:0 0 0 2px var(--filter-tint)}
+body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
+.fc-filter[data-filter-needs=ctl]{--filter-ink:var(--ctl-ink);--filter-tint:var(--ctl-tint);--filter-line:var(--ctl-line)}.filter-group-title[data-filter-needs=ctl]{color:var(--ctl-ink);border-top-color:var(--ctl-line)}
+.ctl-overview{container-type:inline-size}.ctl-flow{display:grid;grid-template-columns:minmax(0,1fr) repeat(var(--ctl-terms),14px minmax(0,1fr));gap:7px;padding:2px 0}.ctl-flow .nsr-kpi{padding:11px 9px}.ctl-flow .nsr-kpi small{overflow:hidden;text-overflow:ellipsis}
+#view-changes .section-head h2{color:var(--ctl-ink)}#view-changes .pivot-head,#view-changes .tabulator-header,#view-changes .tabulator-header .tabulator-col{background:var(--ctl-tint)}#view-changes .pivot-count{color:var(--ctl-ink);background:var(--ctl-tint)}
+#view-nsr .section-head h2{color:var(--nsr-ink)}#view-nsr .pivot-head{background:var(--nsr-tint)}#view-nsr .pivot-card,#view-nsr .pivot-head{border-color:var(--nsr-line)}#view-nsr .pivot-count,#view-nsr .interactive-pivot .badge{color:var(--nsr-ink);background:var(--nsr-tint)}
+.fc-filter[data-filter-needs=nsr] input[type=date]{border-color:var(--nsr-line);color:var(--nsr-ink)}.fc-filter[data-filter-needs=nsr] :focus-visible{outline-color:var(--nsr-ink)}
+.filter-chip:has([data-locate-filter^=fNsr]){--chip-ink:var(--nsr-ink);--chip-tint:var(--nsr-tint);--chip-line:var(--nsr-line)}.filter-chip:has([data-locate-filter^=fCtl]){--chip-ink:var(--ctl-ink);--chip-tint:var(--ctl-tint);--chip-line:var(--ctl-line)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])){color:var(--chip-ink);background:var(--chip-tint);border-color:var(--chip-line)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])):hover{border-color:var(--chip-ink)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])) .filter-chip-remove{color:var(--chip-ink)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])) .filter-chip-remove:hover{background:var(--chip-line)}
+@container(max-width:850px){.ctl-flow{grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr)}.ctl-flow>[data-ctl-status=all]{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;align-items:center}.ctl-flow>[data-ctl-status=all] b{grid-column:2;grid-row:1/3;margin:0}}
+@media(max-width:760px){.fcid-app .ctl-pivots{grid-template-columns:minmax(0,1fr)}}
+#fNsrTaskStatus_chosen{--chosen-group-option-indent:22px}
+#fFidStatus_chosen .chosen-results .fid-status-parent{font-weight:600}
+#fFidStatus_chosen .chosen-results .fid-status-child{padding-inline-start:22px}
+#fFidStatus_chosen .chosen-results .fid-status-detail{padding-inline-start:37px}
+.workspace-nav{display:flex;gap:12px;flex-wrap:wrap;padding:6px;background:#fff;border:1px solid var(--line);border-radius:10px}.workspace-nav button{border:0;background:transparent;color:#485d7b;font-size:13px;font-weight:600;padding:8px 10px;border-radius:7px;cursor:pointer}.workspace-nav button.active{background:#e4edff;color:#1e52ad}.workspace-nav button:hover{background:#eef3fd}.workspace-nav button[data-view=rules]{margin-left:auto}.fc-view{display:grid;gap:12px;min-width:0}.filter-context{display:flex;align-items:center;flex-wrap:wrap;gap:7px 10px;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:9px;font-size:12px}.context-title{flex:none;font-weight:600;color:#304d77}.filter-tags{display:flex;align-items:center;min-height:27px;flex:1 1 240px;min-width:0;flex-wrap:wrap;gap:6px}.filter-chip{display:inline-flex;align-items:center;gap:0;max-width:min(360px,100%);min-width:0;border:1px solid #c8d6ed;background:#f5f8ff;color:#31528a;border-radius:16px;padding:0;font-size:12px;line-height:1.4;cursor:pointer}.filter-chip:hover{background:#eaf1ff;border-color:#94b2df}.filter-chip-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:4px 0 4px 9px;cursor:pointer;border-radius:16px 0 0 16px}.filter-chip-remove{flex:none;align-self:stretch;border:0;background:none;font-size:15px;line-height:1;color:#536d95;padding:0 8px 0 6px;cursor:pointer;border-radius:0 16px 16px 0}.filter-chip-remove:hover{background:#dfe9fb;color:#244c87}.scope-note{margin-left:auto;color:#53657d}
+.workspace-nav button[data-view=portfolio]{--nav-ink:var(--fid-ink);--nav-tint:var(--fid-tint);--nav-line:var(--fid-line)}.workspace-nav button[data-view=nsr]{--nav-ink:var(--nsr-ink);--nav-tint:var(--nsr-tint);--nav-line:var(--nsr-line)}.workspace-nav button[data-view=changes]{--nav-ink:var(--ctl-ink);--nav-tint:var(--ctl-tint);--nav-line:var(--ctl-line)}.workspace-nav button[data-view=cycle]{--nav-ink:#a85c07;--nav-tint:#fff4e4;--nav-line:#e6c79e}.workspace-nav button[data-view=summary]{--nav-ink:#3d805d;--nav-tint:#edf7ef;--nav-line:#c1dcc7}.workspace-nav button:not([data-view=rules]){background:var(--nav-tint);color:var(--nav-ink);box-shadow:inset 0 0 0 1px var(--nav-line)}.workspace-nav button:not([data-view=rules]):hover{box-shadow:inset 0 0 0 1px var(--nav-ink)}.workspace-nav button:not([data-view=rules]).active{background:var(--nav-ink);color:#fff;box-shadow:inset 0 0 0 1px var(--nav-ink),0 2px 5px #253c6420}
+
+.signal-strip{display:flex;gap:7px;flex-wrap:wrap}.mark-filter .signal[aria-pressed=true]{outline:2px solid #3566b0;outline-offset:2px}.signal{border:1px solid #d4deef;background:#fff;color:#3e5575;padding:6px 9px;border-radius:7px;font-size:12px;cursor:pointer}.signal b{margin-right:5px;color:#34539d;font-variant-numeric:tabular-nums}
+.fid-risk-drivers .signal{border:0;border-radius:0;padding:8px 15px;background:#edf2fa;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.fid-risk-drivers .signal b{font:inherit;margin:0;color:inherit}.fid-risk-drivers .signal small{font-size:11px;opacity:.8;white-space:nowrap}
+.fid-risk-drivers .signal:hover{background:#e5efff}
+.fid-risk-drivers .signal:disabled{opacity:.55;cursor:default}
+@media(max-width:760px){.fc-heading .title-tracking{display:none}}
+.summary-heading.overview-tools{flex:1;flex-wrap:nowrap;justify-content:flex-start;max-width:100%}.summary-heading>h2{flex:none}.summary-heading .ignore-scope{margin-left:auto}
+.overview-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}.overview-tools>.badge{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ignore-scope{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:12px;color:#758192;white-space:nowrap;cursor:pointer}.ignore-scope input{margin:0;accent-color:#758192}.section-head.overview-head{flex-wrap:nowrap}.overview-head>h2{flex:none}
+.fid-risk-drivers .signal[aria-pressed=true]{background:#3566b0;color:#fff}
+.fid-risk-drivers .signal:focus-visible{outline:0;box-shadow:inset 0 0 0 2px currentColor}
+.fid-risk-drivers .signal[data-nsr-lifecycle="open"]{background:var(--nsr-tint);color:var(--nsr-ink)}
+.fid-risk-drivers .signal[data-nsr-lifecycle="open"]:hover{background:#f8e0e6}
+.fid-risk-drivers .signal[data-nsr-lifecycle="open"][aria-pressed=true]{background:var(--nsr-ink);color:#fff}
+.fid-risk-drivers .signal[data-group-value="Pending Config CTL"][aria-pressed=true]{background:#745097;color:#fff}
+.table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 8px}.table-toolbar>.toolbar-left{flex:1 1 270px;min-width:0}.table-toolbar input{width:min(310px,100%);border:1px solid #c5d2e5;border-radius:6px;padding:7px 9px;font-size:13px}.table-count{font-size:12px;color:#4d6383}.fc-table-shell{min-width:0}.fc-table-wrap.tabulator{overflow:hidden;resize:vertical;min-height:105px;border:1px solid #d5dfed;border-radius:8px;scrollbar-width:thin;background:#fff;font:13px/20px var(--font-sans);color:#344c6b}.fid-dialog .fc-table-wrap.tabulator{min-height:0;resize:none}.fid-dialog .tabulator-tableholder{min-height:34px}.fc-table-wrap .tabulator-header{background:#edf2fb;border-bottom:1px solid #d5dfed;color:#344c6b;font-weight:600}.fc-table-wrap .tabulator-header .tabulator-col{background:#edf2fb;border-right:1px solid #e0e7f1;font-size:12px}.fc-table-wrap .tabulator-header .tabulator-col .tabulator-col-content{padding:7px 9px}.fc-table-wrap .tabulator-row{background:#fff;color:#344c6b;min-height:34px}.fc-table-wrap .tabulator-row.tabulator-row-even{background:#f8faff}.fc-table-wrap .tabulator-row:hover{background:#f0f5fc}.fc-table-wrap .tabulator-row .tabulator-cell{padding:6px 9px;height:34px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid #e8edf5;border-bottom:1px solid #e3e9f3}.fc-table-wrap .tabulator-row .tabulator-cell.tabulator-frozen{background:inherit;border-right:1px solid #d6e0ed}.fc-table-wrap .tabulator-tableholder{scrollbar-width:thin;overflow-anchor:none}.cell-content{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-height:22px}.fid-status-tags{display:inline-flex;gap:4px;vertical-align:top}#portfolioTable .tabulator-cell:has(.fid-status-tags){cursor:pointer}.fid-status-tags .pill{flex:none}.cell-content .pill,.cell-content .status-pill{max-width:100%;white-space:nowrap;vertical-align:top}.fc-link{border:0;background:none;color:#215fbb;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:0;font-size:13px;white-space:nowrap}.pill{display:inline-block;font-size:12px;line-height:17px;padding:2px 6px;border-radius:5px;background:#edf2fa;color:#3e5a80}.pill.risk,.pill.alert{background:#ffe5eb;color:#a12d47}.pill.clear{background:#ddf4e7;color:#196747}.pill.unknown,.fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{background:#fff1cf;color:#7c5514}.pill.info{background:#e7effb;color:#375b91}.fcid-app .status-pill{padding:2px 6px;line-height:17px}
+.record-mark-toggle{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin:0;padding:0;border:1px solid #a9b3c0;border-radius:3px;background:transparent;color:#7d8a9d;font:600 13px/1 var(--font-sans);vertical-align:middle;cursor:pointer}.record-mark-toggle svg{display:block;width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:1.2}.record-mark-toggle[data-record-mark=ignore]{background:#edf0f4}.record-mark-toggle[data-record-mark=important]{border-color:#d99aa5;background:#fff1f3;color:#b8324a}.record-mark-toggle:focus-visible{outline:2px solid #557cae;outline-offset:2px}.fc-table-wrap .tabulator-row[data-record-mark=ignore] .tabulator-cell,.fc-table-wrap .tabulator-row[data-record-mark=ignore] .tabulator-cell *{color:#929aa5}.fc-table-wrap .tabulator-row[data-record-mark=important] .tabulator-cell,.fc-table-wrap .tabulator-row[data-record-mark=important] .tabulator-cell *{color:#b8324a}.pill.ignore{background:#edf0f4;color:#667184}
+.fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]),.pill.pending,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){background:#f2edfb;--fid-history-line:#aa83c6}
+.pill.pending,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){color:#745097}
+.fc-table-wrap .tabulator-header-filter{display:none}.fc-table-wrap.column-filters .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title{padding-right:29px}.fc-table-wrap.column-filters .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter{right:0}.fc-table-wrap.column-filters .tabulator-col-sorter .tabulator-arrow{border-left-width:4px;border-right-width:4px}.column-heading>span{display:block;overflow:hidden;text-overflow:ellipsis}.column-funnel{position:absolute;right:11px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:16px;height:18px;padding:2px;border:0;border-radius:3px;background:none;color:#8a97aa;cursor:pointer}.column-funnel svg{width:12px;height:12px;fill:currentColor}.column-funnel:hover,.column-funnel.active{background:#dceaff;color:#215fbb}.column-funnel:focus-visible{outline:2px solid #557cae;outline-offset:-2px}
+.column-filter-bar{display:flex;align-items:center;flex-wrap:wrap;gap:4px;flex:1 1 160px;min-width:0}.column-filter-bar:empty{display:none}.column-filter-bar .pill{max-width:min(220px,100%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;cursor:pointer}
+.column-filter-popup{position:fixed;position-area:bottom;position-try-fallbacks:flip-block;inset:auto;margin:8px;width:min(240px,calc(100vw - 16px));color:#344c6b;box-shadow:0 6px 22px #213a612b}.column-filter-popup label>span{font-weight:600}.column-filter-popup input{display:block;width:100%;margin:7px 0 10px;padding:7px;border:1px solid #c5d2e5;border-radius:5px}.column-filter-popup .btnrow{justify-content:space-between}
+.fid-dialog .tabulator-row[data-fid-risk^="late-"],.fid-header-status .pill.risk{background:#fff2f5;--fid-history-line:#c75970}
+.fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]):hover,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]):hover{background:#e8ddf5}
+.fid-dialog .tabulator-row[data-fid-risk^="late-"]:hover{background:#ffe0e8}
+.fid-dialog .tabulator-row[data-fid-risk="pending-pull-push"],.pill.neutral,.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]){background:#f1f3f6;--fid-history-line:#a2abb8}
+.pill.neutral,.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]){color:#626e7c}
+.fid-dialog .tabulator-row[data-fid-risk="pending-pull-push"]:hover,.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]):hover{background:#e4e8ed}
+.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"])[aria-pressed=true]{background:#697586;color:#fff}
+.fid-header-status .pill:is(.pending,.risk,.neutral){border-left:3px solid var(--fid-history-line)}
+.fid-dialog .tabulator-row[data-fid-risk]:not([data-fid-risk=""]) .tabulator-cell:first-child{background-image:linear-gradient(var(--fid-history-line),var(--fid-history-line));background-size:3px 100%;background-position:0 0;background-repeat:no-repeat}
+.fid-dialog .tabulator-row.nsr-ctl-match{outline:2px solid #3b82f6;outline-offset:-2px}.fid-dialog .nsr-ctl-match .tabulator-frozen{box-shadow:inset 0 2px #3b82f6,inset 0 -2px #3b82f6}.fid-dialog .nsr-ctl-match .tabulator-cell:first-child{box-shadow:inset 2px 0 #3b82f6,inset 0 2px #3b82f6,inset 0 -2px #3b82f6}
+.fid-dialog>.section-head>div{min-width:0;flex:1}.fid-header-status{display:inline-flex;flex-wrap:wrap;gap:6px;min-width:0;max-width:100%;font-weight:400}.fid-header-status .pill{padding:3px 8px;font-size:13px;line-height:20px;white-space:nowrap}
+.fid-dialog>.section-head>[data-export-fid]{align-self:flex-start;flex:none;margin-top:-4px}
+.fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{border-color:#e4c381}.fid-detail-value.no-slot small{color:inherit}
+.interactive-pivot>summary{list-style:none;pointer-events:none}.interactive-pivot>summary::-webkit-details-marker{display:none}.interactive-pivot:not([open])>summary{margin-bottom:0}.pivot-toggle{display:inline-block;margin-left:7px;padding:2px 4px;color:#53657d;font-size:12px;cursor:pointer;pointer-events:auto}.pivot-toggle::before{content:"▶"}.interactive-pivot[open] .pivot-toggle::before{content:"▼"}
+#nsrTable .fid-sorted .tabulator-row{background:#fff}#nsrTable .fid-sorted .tabulator-row[data-fid-band="1"]{background:#edf3fc}#nsrTable .fid-sorted .tabulator-row .tabulator-cell{border-bottom-color:transparent}#nsrTable .fid-sorted .tabulator-row[data-fid-start="true"] .tabulator-cell{box-shadow:inset 0 1px #b8c0cb}#nsrTable .fid-sorted .tabulator-row:hover{background:#e3edfc}
+.nsr-overview{container-type:inline-size}.nsr-flow{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,16px minmax(0,1fr));gap:7px;padding:2px 0}.nsr-equation,.nsr-breakdown{display:contents}.nsr-kpi{min-width:0;text-align:left;border:1px solid #d6e1ed;border-top:3px solid var(--kpi-color);border-radius:9px;background:#fff;padding:11px;color:var(--kpi-color);cursor:pointer}.nsr-kpi small{display:block;font-size:12px;font-weight:600;color:#435774;white-space:nowrap}.nsr-kpi b{display:block;font-size:28px;line-height:1.2;font-weight:600;margin:6px 0 3px}.nsr-kpi span{font-size:12px;color:#53657d}.math-sign{align-self:center;justify-self:center;font-size:22px;color:#52657f;font-weight:600}.nsr-completed-arrow{grid-column:3;grid-row:2;position:relative;margin-top:12px;color:#78a98b}.nsr-completed-arrow::before{content:"";position:absolute;left:50%;right:0;top:-19px;bottom:50%;border-left:1.5px solid;border-bottom:1.5px solid;border-bottom-left-radius:12px}.nsr-completed-arrow::after{content:"";position:absolute;right:0;top:50%;width:6px;height:6px;border-top:1.5px solid;border-right:1.5px solid;transform:translateY(-50%) rotate(45deg)}.nsr-breakdown-equals{grid-column:4;grid-row:2;margin-top:12px;color:#16843f}.nsr-stage-sum{position:relative;grid-column:5/-1;grid-row:2;display:flex;gap:7px;min-width:0;margin-top:12px}.nsr-stage-sum::before{content:"";position:absolute;top:-10px;left:-23px;right:0;border-top:1px solid #d9dee4;pointer-events:none}.nsr-stage-sum>.math-sign{flex:none;width:16px}.nsr-stage-spacer{display:none}.nsr-stage{flex:1;display:flex;flex-direction:column}.nsr-stage small{white-space:normal;min-height:2.8em}.nsr-stage b{margin-top:auto}.nsr-stage.alert{background:#fff2f5;border-color:#ecb0bf}.nsr-stage.alert small,.nsr-stage.alert span{color:#992f49}.nsr-stage.approved{background:#f1fbf5}.nsr-stage.pending{background:#fff9ed}.nsr-stage.unknown{background:#f3f5f9}.nsr-pivots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pivot-card{border:1px solid #d6dff0;border-radius:9px;overflow:hidden;min-width:0}.pivot-head{display:flex;justify-content:space-between;gap:7px;padding:9px 10px;background:#f5f8fc;border-bottom:1px solid #dce5ef}.pivot-head span{font-size:12px;color:#52657f;white-space:nowrap}.pivot-list{height:320px;min-height:100px;padding:8px 10px;overflow:auto;resize:vertical;scrollbar-width:thin}.pivot-row{display:grid;grid-template-columns:minmax(85px,1fr) minmax(20px,.8fr) 42px;align-items:center;gap:7px;padding:5px 0;font-size:12px}.pivot-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#405775}.pivot-bar{height:5px;background:#eaf0fa;border-radius:4px;overflow:hidden}.pivot-bar i{display:block;height:100%;background:var(--bar);border-radius:4px}.pivot-count{border:0;border-radius:4px;background:#edf1ff;color:#3e5b9a;font-size:12px;padding:3px;cursor:pointer}
+.nsr-kpi[aria-pressed=true]{outline:2px solid var(--kpi-color);outline-offset:2px}
+.nsr-kpi[data-fid-status=all],.nsr-kpi[data-nsr-group=all],.nsr-kpi[data-ctl-status=all]{background:#fff;color:#344c6b;border-top:1px solid #d6e1ed}
+.fid-flow{overflow-x:auto;padding:6px}
+.fid-flow-inner{display:grid;grid-template-columns:120px;grid-auto-rows:100px;gap:0 8px}
+.fid-flow-inner.has-breakdown{grid-template-columns:120px 16px minmax(156px,max-content) 16px minmax(180px,.85fr) 28px minmax(392px,2fr);grid-template-rows:auto 24px 136px 28px;min-width:1040px;padding-top:56px}
+.fid-flow-inner.has-slot-unknown{min-width:1152px}
+.fid-equation{display:contents}
+.fid-equation>*{grid-row:3}
+.fid-flow-inner:not(.has-breakdown) .fid-equation>*{grid-row:1}
+.fid-slot-sum{grid-column:7;grid-row:3;display:grid;grid-template-columns:repeat(var(--matrix-cols),minmax(0,1fr));min-width:0;position:relative;gap:1px;border:1px solid #b9cadd;border-radius:10px;background:#cbd7e5}
+.fid-axis-item{position:relative;min-width:0;display:flex}
+.fid-origin-pre{grid-column:6;grid-row:3;display:grid}.fid-origin-post{grid-column:5;grid-row:2;display:grid}
+.fid-breakdown{grid-column:5;grid-row:1;position:relative;display:grid;grid-template-rows:repeat(var(--matrix-rows),minmax(108px,1fr));gap:1px;min-width:0;border:1px solid #b9cadd;border-radius:10px;background:#cbd7e5}
+.fid-axis-item>.nsr-kpi{width:100%;min-width:0;border:0;border-radius:0;background:#f4f7fb;padding:10px;box-shadow:none}
+.fid-breakdown .fid-axis-item:first-child>.nsr-kpi{border-radius:9px 9px 0 0}.fid-breakdown .fid-axis-item:last-of-type>.nsr-kpi{border-radius:0 0 9px 9px}
+.fid-slot-sum .fid-axis-item:first-child>.nsr-kpi{border-radius:9px 0 0 9px}.fid-slot-sum .fid-axis-item:nth-last-of-type(1)>.nsr-kpi{border-radius:0 9px 9px 0}
+.fid-matrix{grid-column:7;grid-row:1;position:relative;min-width:0;isolation:isolate}
+.fid-matrix-grid{display:grid;height:100%;grid-template-columns:repeat(var(--matrix-cols),minmax(0,1fr));grid-template-rows:repeat(var(--matrix-rows),minmax(108px,1fr));gap:1px;border:1px solid #b9cadd;border-radius:10px;overflow:hidden;background:#cbd7e5}
+.fid-risk-outline{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1}
+.fid-risk-outline path{fill:none;stroke:#c75970;stroke-width:1.6;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.fid-risk-label{position:absolute;right:14px;top:14px;transform:translateY(-100%);z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:1px solid #dc9eac;border-radius:7px;padding:6px 12px;background:#fff5f6;color:#a93049;text-align:left;white-space:nowrap;font:600 16px/1.4 var(--font-sans);cursor:pointer}
+.fid-risk-label .fid-percent{color:#53657d;font:400 14px/1.4 var(--font-sans)}
+.fid-matrix-cell{min-width:0;position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:9px 12px;border:0;background:#fff5f6;color:#ad3048;font:inherit;text-align:left;cursor:pointer}
+.fid-matrix-cell[data-assessment=risk-free]{background:#eff9f3;color:#17683e}
+.fid-matrix-cell[data-assessment=risk-unknown]{background:#f3f5f8;color:#536275}
+.fid-matrix-cell small{font-size:12px;line-height:1.45;font-weight:600;white-space:normal}.fid-matrix-cell b{font-size:26px;line-height:1.2;font-weight:600;margin:2px 0}.fid-matrix-cell .fid-percent{font-size:14px;line-height:1.4;color:#52657e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.fid-selection-outline{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2}
+.fid-overview :is(.nsr-kpi,.fid-risk-label,.fid-cause-list button)[aria-pressed=true],.fid-no-slot:has(>.fid-no-slot-main[aria-pressed=true]){outline:2px solid #3566b0;outline-offset:2px}
+.fid-overview button:is(.fid-aggregate,.fid-risk-label)[aria-pressed=true]{outline-color:#c75970}
+.fid-overview [data-fid-status=all][aria-pressed=true]{outline-color:#94a3b8}
+.fid-axis-item:has(>.nsr-kpi[aria-pressed=true]){z-index:2}
+.fid-overview :is([data-fid-status],[data-fid-cell],[data-fid-region]):focus-visible{outline:2px solid #6f839a;outline-offset:-3px}
+.fid-row-equals{grid-column:6;grid-row:1;display:grid;grid-template-rows:repeat(var(--matrix-rows),minmax(108px,1fr));gap:1px;padding:1px 0}.fid-col-equals{grid-column:7;grid-row:2;display:grid;grid-template-columns:repeat(var(--matrix-cols),minmax(0,1fr));gap:1px;padding:0 1px}
+.fid-relation-sign{visibility:hidden;opacity:0;pointer-events:none;z-index:4;font:600 22px/28px var(--font-sans);color:#294b7b;text-align:center;min-width:28px;background:#fff;border-radius:50%;justify-self:center;align-self:center}
+.fid-relation-sign.is-visible{visibility:visible;opacity:1}
+.fid-relation-sign.floating{position:absolute;transform:translate(-50%,-50%)}
+.fid-pre-axis{grid-column:7;grid-row:4;position:relative;display:flex;align-items:center;justify-content:center;color:#385b88;font-size:12px}
+.fid-post-axis{grid-column:4;grid-row:1;position:relative;display:flex;align-items:center;justify-content:center;color:#385b88;font-size:12px}
+.fid-pre-axis::before,.fid-post-axis::before{content:'';position:absolute;background:#9cb1ca}.fid-pre-axis::before{height:1px;left:0;right:4px}.fid-post-axis::before{width:1px;top:4px;bottom:0}
+.fid-pre-axis::after,.fid-post-axis::after{content:'';position:absolute;width:6px;height:6px;border-top:1px solid #718fb2;border-right:1px solid #718fb2}.fid-pre-axis::after{right:2px;transform:rotate(45deg)}.fid-post-axis::after{top:2px;transform:rotate(-45deg)}
+.fid-pre-axis span,.fid-post-axis span{position:relative;background:#fff;padding:0 10px;white-space:nowrap}.fid-post-axis span{writing-mode:vertical-rl;transform:rotate(180deg);padding:10px 0}
+.fid-late-causes{flex-direction:column;background:#f4f7fb}
+.fid-breakdown .fid-late-causes:first-child{border-radius:9px 9px 0 0}.fid-breakdown .fid-late-causes:last-of-type{border-radius:0 0 9px 9px}
+.fid-flow .fid-late-causes>.nsr-kpi{flex:1;padding:6px 10px 2px}.fid-flow .fid-late-causes>.nsr-kpi b{margin:2px 0}
+.fid-overview .fid-late-causes:has(>.nsr-kpi[aria-pressed=true]){outline:2px solid #c75970;outline-offset:2px}.fid-overview .fid-late-causes>.nsr-kpi[aria-pressed=true]{outline:none}
+.fid-causes{margin:0 10px 6px;color:#64748b;font-size:11px;line-height:1.45}
+.fid-causes summary{width:fit-content;padding:1px 0;cursor:pointer}.fid-causes summary::marker{font-size:9px;color:#8190a4}.fid-causes summary:hover{color:#405972}.fid-causes summary>span:last-child,.fid-causes[open] summary>span:first-child{display:none}.fid-causes[open] summary>span:last-child{display:inline}
+.fid-cause-list{margin-top:4px;border-radius:3px}.fid-cause-list button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-width:0;border:0;border-radius:3px;padding:2px 4px;background:none;color:#53657d;font:inherit;font-size:12px;cursor:pointer}
+.fid-cause-list button small{font:inherit}.fid-cause-list b{font-weight:600;font-variant-numeric:tabular-nums}.fid-cause-list .fid-percent{display:none}
+.fid-cause-list button:hover{background:#e9eff6}.fid-cause-list button[aria-pressed=true]{background:#edf2f6;color:#425b70}
+.fid-flow .nsr-kpi{position:relative;display:flex;flex-direction:column;justify-content:center;padding:10px}
+.fid-flow .nsr-kpi b{font-size:26px;margin:4px 0 2px;white-space:nowrap}
+.fid-flow .nsr-kpi small{white-space:normal}
+.fid-flow .nsr-kpi span{display:block}
+.fid-flow .nsr-kpi .fid-percent{font-size:14px;line-height:1.4}
+.fid-flow [data-fid-status=all]{border-top-width:3px}
+.fid-equation>.nsr-kpi{display:flex;justify-content:flex-start;padding-top:12px}
+.fid-flow-inner.has-breakdown .fid-equation>:is([data-fid-status=all],.fid-no-slot){height:164px;align-self:end}
+.fid-flow-inner.has-breakdown .fid-equation>:is([data-fid-status=all],.fid-no-slot) small{margin-bottom:20px}
+.fid-flow [data-fid-status=slot-ready] .fid-percent{white-space:nowrap}
+.fid-slot-sum .fid-percent,.fid-breakdown .fid-percent{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4}
+.fid-flow [data-fid-status=slot-ready]{background:#eff5ff;border-color:#9fbae7;justify-content:center;padding-top:10px}
+.fid-no-slot{cursor:default;background:#fff1cf;border-color:#e4c381;border-top-color:#c58b2a}.fid-no-slot .fid-no-slot-main small,.fid-no-slot .fid-percent{color:var(--kpi-color)}
+.fid-no-slot-main{position:relative;display:flex;flex-direction:column;align-items:stretch;width:100%;border:0;background:none;padding:0;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.fid-flow .fid-no-slot .fid-subcount{margin-top:4px;border-top:1px solid #e4c381;padding-top:3px;font-size:11px;line-height:1.45;color:#8d651e;white-space:nowrap}
+.fid-subcount-filter{display:block;width:100%;border:0;border-radius:3px;background:none;padding:0;color:inherit;text-align:left;font:inherit;white-space:nowrap;cursor:pointer}
+.fid-subcount-filter[aria-pressed=true],.fid-subcount:has(>button[aria-pressed=true]):not(:has(>button[aria-pressed=false])){outline:2px solid #3566b0;outline-offset:1px}
+.fid-subcount:not(:has(>button[aria-pressed=false]))>button[aria-pressed=true]{outline:none}
+.fid-overview :is(.fid-subcount,.fid-cause-list)>button[aria-pressed=true]:focus-visible{outline:2px solid #6f839a;outline-offset:-2px}
+.fid-subcount-filter:hover{color:#405972;text-decoration:underline;text-underline-offset:2px}
+.fid-waiting{margin-top:12px;font-size:12px;color:#7c5514}
+.notice{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 13px;border:1px solid #e6a5b5;border-left:4px solid #c43c5c;background:#fff0f3;color:#992f48;border-radius:9px;font-size:13px}.notice small{display:block;font-size:12px;margin-top:3px}.statistics-state{margin-top:8px;color:#196b50;font-size:12px}.statistics-state.error{color:#ac3049}.ag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.marked-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.nsr-mark-editors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ag-box label{display:block;font-size:13px;font-weight:600;margin:6px 0}.ag-box textarea{width:100%;min-height:150px;resize:vertical;border:1px solid #cbd7e9;border-radius:7px;padding:8px;color:#345073}.ag-notice{white-space:pre-line;background:#fff3d7;color:#805b16;border:1px solid #debf79;border-radius:7px;padding:10px;margin:10px 0;font-size:13px}
+.fc-nsr-dialog,.fid-dialog,.fc-note-dialog{border:1px solid #b7c7e0;border-radius:12px;padding:17px;background:#f6f8fe;color:#2e486c;box-shadow:0 16px 70px #1e355550}.fc-nsr-dialog{width:min(450px,94vw)}.fc-nsr-dialog::backdrop,.fid-dialog::backdrop,.fc-note-dialog::backdrop{background:#152e505c}.fc-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.fc-range input{width:100%;padding:8px;border:1px solid #c2d0e4;border-radius:6px;margin-top:5px}.fc-nsr-help{font-size:12px;margin:12px 0}.fc-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}.fid-dialog{width:min(1400px,96vw);height:min(860px,92vh);max-width:96vw;max-height:94vh;min-width:min(600px,94vw);min-height:300px;overflow:auto;resize:both}.fid-dialog>.section-head{position:sticky;top:-17px;background:#f6f8fe;z-index:10;padding:10px 0}.fid-dialog h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:20px}.fid-action{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#215fbb;font-size:12px;line-height:1.3;text-decoration:none;white-space:nowrap;cursor:pointer}.fid-close{align-self:flex-start;margin:-8px -8px 0 0;width:36px;height:36px;padding:0;border:0;border-radius:7px;background:transparent;color:#526b8d;font-size:28px;line-height:1;cursor:pointer}.fid-action:hover,.fid-close:hover{background:#e7edf8}.fid-dialog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fid-detail-value{padding:9px;background:#fff;border:1px solid #d6e0ef;border-radius:7px;font-size:13px;overflow-wrap:anywhere}.fid-detail-value small{display:block;font-size:12px;color:#526b8d;margin-bottom:3px}.fid-evidence{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.fid-evidence>.notice{display:block;min-width:0;overflow-wrap:anywhere}.fid-evidence>.notice.clear{border-color:#a8d5bb;border-left-color:#2d8b60;background:#eef9f2;color:#196747}.fid-evidence>.notice.unknown{border-color:#d2dcee;border-left-color:#91a2ba;background:#fff;color:#526b8d}.fid-evidence b{font-weight:600}.fid-evidence p{margin:7px 0 0}.fid-dialog h2{margin:0}.fid-dialog .table-toolbar{margin:16px 0 8px}.fc-toast{position:fixed;right:20px;bottom:20px;z-index:150;background:#244a79;color:#fff;padding:11px 14px;border-radius:9px;font-size:13px;max-width:min(480px,90vw);display:flex;align-items:center;gap:13px}.fc-toast button{color:#fff;border:1px solid #b7cceb;border-radius:5px;background:none;padding:4px 7px;cursor:pointer}.fcid-app .cycle-shell{display:grid;gap:12px}.fcid-app #cycleTab{display:block}.fcid-app #cycleTab:not(.active){display:none}.fcid-app #cycleTable td,.fcid-app #wfTable td{font-size:13px;color:#344c6b}.fcid-app #cycleTable th,.fcid-app #wfTable th,.fcid-app .cycle-status,.fcid-app .cycle-label,.fcid-app .row-count,.fcid-app .context-badge{font-size:12px;color:#425c7f}body:has(#dashboardWorkspace.wf-open){overflow:hidden}.cycle-wrap{height:450px;max-height:none;resize:vertical;min-height:140px}
+.inference-help{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;box-sizing:border-box;margin-left:5px;vertical-align:middle;border:1px solid #b6c5da;border-radius:50%;color:#6c809d;font-size:10px;font-weight:600;line-height:1;cursor:help}.inference-help::before{content:"?"}.inference-help:hover{color:#2458a6;border-color:#6d90c2;background:#edf3ff;outline:2px solid #c0d2ed;outline-offset:2px}
+.inference-tooltip{position:fixed;inset:auto;margin:0;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:9px 11px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#344c6b;box-shadow:0 3px 14px #253c6426;font:12px/1.5 var(--font-sans);pointer-events:none}
+.detail-head{justify-content:flex-start;flex-wrap:wrap}.detail-head h2{white-space:nowrap}.mark-filter{align-items:center;gap:6px}.mark-filter .signal{white-space:nowrap}.mark-filter .signal:not(.all){padding:4px 7px;font-size:11px}.mark-filter .all{margin-right:5px}.mark-filter .ignore{color:#758192;background:#f3f5f8}.mark-filter .important{color:#b8324a;background:#fff1f3}.mark-filter .signal b{margin:0;color:inherit}.fid-note-cell{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.fid-note-add{display:inline-block;min-width:28px;border:1px solid #c5d2e5;border-radius:4px;background:#f5f8fd;line-height:18px;text-align:center;text-decoration:none}.fid-note-panel{margin:12px 0;border:1px solid #d2dcee;border-radius:8px;background:#fff}.fid-note-view{display:block;width:100%;padding:10px 12px;border:0;border-radius:7px;background:none;color:inherit;text-align:left;cursor:text}.fid-note-title{display:block;margin-bottom:6px;font-size:17px;font-weight:600}.fid-note-panel>form{padding:10px 12px}#fidNoteForm .section-head{margin-bottom:6px}.fid-note-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5}.fid-personal-mark{display:inline-flex;align-items:center}.fc-note-dialog{position:fixed;inset:auto;margin:0;width:min(520px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto}#fidNoteForm textarea{width:100%;min-height:180px;resize:vertical;border:1px solid #c2d0e4;border-radius:7px;padding:9px;font:13px/1.5 var(--font-sans);color:#263e60;background:#fff}.fc-note-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px}
+.date-picks{margin:0 0 6px}.date-picks:empty{display:none}.fc-filter .fc-range{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:0}.fc-filter .fc-range label{min-width:0;font-weight:400}.fc-filter .fc-range input{min-width:0;min-height:32px;padding:5px 6px;margin-top:0;background:#fff;color:var(--filter-ink,#263e60);border-color:var(--filter-line,#c2d0e4);font:inherit}
+.summary-heading{display:flex;align-items:center;gap:10px}.summary-controls{display:grid;grid-template-columns:170px minmax(0,1fr);gap:14px;padding:12px;margin-bottom:6px;background:#f5f7fb;border-radius:9px}.summary-controls .fc-filter{margin:0}.summary-chart{overflow:auto}.summary-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0 10px;color:#344c6b}.summary-table th{font-size:12px;font-weight:600}.summary-table .fc-link{color:inherit;font:inherit;text-align:left;white-space:normal;text-decoration:none}.summary-table .fc-link:hover{text-decoration:underline}.summary-table thead th{padding:4px 10px 2px;color:#5b6d85;overflow-wrap:anywhere}.summary-table th:first-child{position:sticky;left:0;z-index:1;text-align:left}.summary-table thead th:first-child{background:#fff;z-index:2}.summary-table tbody tr{--metric-color:var(--fid-ink);--metric-bg:var(--fid-tint)}.summary-table tr[data-summary-source=nsr],.summary-table tr[data-summary-source=linked]{--metric-color:var(--nsr-ink);--metric-bg:var(--nsr-tint)}.summary-table tr[data-summary-source=ctl]{--metric-color:var(--ctl-ink);--metric-bg:var(--ctl-tint)}.summary-table tr:is([data-summary-metric=slotted],[data-summary-metric=stableSlot],[data-summary-metric=stablePost]){--metric-color:#3d805d;--metric-bg:#edf7ef}.summary-table tbody th,.summary-table td{background:var(--metric-bg);border-block:1px solid #e0e6ef}.summary-table tbody th{border-left:3px solid var(--metric-color);border-radius:9px 0 0 9px;padding:16px;color:#304967;font-size:13px;line-height:1.5}.summary-table td{padding:0}.summary-table td:last-child{border-right:1px solid #e0e6ef;border-radius:0 9px 9px 0}.summary-plot{position:relative;height:112px;font-variant-numeric:tabular-nums;text-align:center}.summary-bar{position:absolute;bottom:14px;left:calc(50% - 17px);width:34px;height:var(--bar);background:var(--metric-color);border-radius:4px 4px 0 0}.summary-value{position:absolute;top:10px;left:0;width:100%;font-size:14px;font-weight:600;color:#304967;white-space:nowrap}.summary-plot.unavailable .summary-value{color:#8794a5;font-weight:400}.summary-empty{padding:22px 12px;color:#61738c}.summary-legend{margin-top:6px;font-size:12px;color:#61738c}@media(max-width:760px){.summary-controls{grid-template-columns:minmax(0,1fr)}.summary-heading{flex-wrap:wrap}.summary-table tbody th{padding:12px}}
+@container(max-width:700px){.nsr-stage-sum::before{display:none}.nsr-flow{grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr)}.nsr-equation>[data-nsr-group=all]{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:1fr auto;align-items:center}.nsr-equation>[data-nsr-group=all] b{grid-column:2;grid-row:1/3;margin:0}.nsr-equation>.math-sign:nth-child(2){grid-column:1;grid-row:2}.nsr-equation>[data-nsr-group=completed]{grid-column:2;grid-row:2}.nsr-equation>.math-sign:nth-child(4){grid-column:3;grid-row:2}.nsr-equation>[data-nsr-group=workflow]{grid-column:4;grid-row:2}.nsr-equation>.math-sign:nth-child(6){grid-column:1;grid-row:3}.nsr-equation>[data-nsr-group=rejected]{grid-column:2;grid-row:3}.nsr-equation>.math-sign:nth-child(8){grid-column:3;grid-row:3}.nsr-equation>[data-nsr-group=cancelled]{grid-column:4;grid-row:3}.has-completed .nsr-equation>[data-nsr-group=completed]{grid-column:2/-1;display:grid;grid-template-columns:1fr auto;align-items:center}.has-completed .nsr-equation>[data-nsr-group=completed] b{grid-column:2;grid-row:1/3;margin:0}.nsr-completed-arrow{grid-column:2;grid-row:3;margin:0;height:22px}.nsr-completed-arrow::before{top:-7px}.nsr-breakdown-equals{grid-column:3;grid-row:3;margin:0}.nsr-stage-sum{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr);margin:0}.nsr-stage-spacer{display:block}.nsr-stage:only-of-type{grid-column:2/-1}.has-completed .nsr-equation>.math-sign:nth-child(4){grid-column:1;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=workflow]{grid-column:2;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(6){grid-column:3;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=rejected]{grid-column:4;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(8){grid-column:1;grid-row:6}.has-completed .nsr-equation>[data-nsr-group=cancelled]{grid-column:2;grid-row:6}}
+
+@media(max-width:1250px){body.fcid-app{--side:360px}.nsr-pivots{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-hero h1{font-size:25px}}@media(max-width:1000px){.marked-settings{grid-template-columns:minmax(0,1fr)}.ag-grid,.fid-dialog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.fcid-app .layout{grid-template-columns:minmax(0,1fr);padding:10px;gap:10px}.fcid-app .side{position:static;max-height:none}.fc-hero{padding:12px}.fc-hero h1{font-size:21px}.fc-hero-inner{align-items:flex-start;flex-wrap:wrap}.fc-hero-actions{margin-left:auto}.fcid-app .nsr-pivots,.ag-grid,.fid-evidence{grid-template-columns:minmax(0,1fr)}.workspace-nav button{padding:7px}.scope-note{margin-left:0}.fid-dialog>.section-head{flex-wrap:nowrap}.fid-header-status{flex-basis:100%}.section-head{flex-wrap:wrap}}
+`;
 const sourceHtml=Object.entries(sources).map(([key,source],index)=>{
-  const help=BOBJ_SOURCES[key]?`Open SAPGUIcontrol.exe, then try again. <a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer">Download SAPGUIcontrol</a>.`:key==='ctlNsr'?'Download from the CTL system: <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">Open download page</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
-  return `<section class="fc-source" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+
-    1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span>${BOBJ_SOURCES[key]?'<small class="fc-source-bobj">BOBJ</small>':''}</h3><span class="fc-source-state" id="fcSource-${key}" role="status">Not loaded</span></div>
-    <div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>
-      ${key==='fcid'?'<button class="btn small" data-source-action="bobj-update" aria-label="Update BOBJ">Update</button>':''}
-      ${key==='ctl'?'<button class="btn small" data-source-action="ctl-bobj-update" aria-label="Update CTL BOBJ">Update</button>':''}
-      ${key==='nsr'?'<button class="btn small" data-source-action="nsr-open">Load NSR</button>':''}
-      <button id="fcImport-${key}" class="btn light small" data-import-source="${key}">Import</button>
-      ${help?`<details class="fc-source-help" id="fcHelp-${key}"${BOBJ_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Download help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble" role="note">${help}</div></details>`:''}
-    </div><input id="fcFile-${key}" data-source-file="${key}" type="file" aria-label="Import ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden>
-    ${key==='nsr'?'<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help">Manual download: <a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn" type="submit">Load</button></div></form></dialog>':''}</section>`;
+  const importLabel=key==='ctlNsr'?'Append':'Import';
+  const help=BOBJ_SOURCES[key]?`Open SAPGUIcontrol.exe. <a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer">Download SAPGUIcontrol</a>.`:key==='ctlNsr'?'Download from the CTL system: <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">Open download page</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
+  return `<section class="fc-source" data-source="${key}" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span>${BOBJ_SOURCES[key]?'<small class="fc-source-bobj">BOBJ</small>':''}</h3><span id="fcSource-${key}" class="fc-source-state" role="status">Unavailable</span></div><div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>${BOBJ_SOURCES[key]?`<button class="btn small" data-source-action="${key==='fcid'?'bobj-update':'ctl-bobj-update'}">Update</button>`:key==='nsr'?'<button class="btn small light" data-source-action="nsr-open">Load NSR</button>':''}<button id="fcImport-${key}" class="btn small light" data-import-source="${key}">${importLabel}</button>${help?`<details class="fc-source-help" id="fcHelp-${key}"${BOBJ_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble">${help}</div></details>`:''}</div><input type="file" id="fcFile-${key}" data-source-file="${key}" aria-label="${importLabel} ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden></section>`;
 }).join('');
+const filterHtml=([name,label,path,needs])=>dateFilters.includes(path)?`<div class="fc-filter primary-filter" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name.slice(0,-4)}From">${label}</label><div class="fc-filter-actions"><button type="button" data-clear-filter="${name}">Clear</button></div></div><div id="${name.slice(0,-4)}${needs==='ctl'?'Periods':'Years'}" class="nsr-year-picks date-picks"></div><div id="${name}" class="fc-range" role="group" aria-label="${label}"><label>From<input id="${name.slice(0,-4)}From" type="date" aria-label="${label} from"></label><label>To<input id="${name.slice(0,-4)}To" type="date" aria-label="${label} to"></label></div></div>`:`<div class="fc-filter${['fAccount','fQuarter','fOwner','fSlotInitiator','fNsrInitiator','fCtlStage','fCtlInitiator'].includes(name)?' primary-filter':''}" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name}" title="${path==='owner'?escapeHtml(ownerHint):path.startsWith('nsr.')?'All selected NSR conditions must match the same NSR':''}">${label}${path==='owner'?inferenceHelp(ownerHint):path==='salesAdmin'?inferenceHelp(salesAdminHint):''}</label><div class="fc-filter-actions">${name==='fAccount'?'<button type="button" data-mapping-rule title="Fab / Account Mapping">Rule</button>':''}${name==='fQuarter'?'<button type="button" data-reset-quarter>Reset</button>':''}<button type="button" data-select-all="${name}">All</button><button type="button" data-clear-filter="${name}">Clear</button></div></div><select id="${name}" multiple aria-label="${label}"></select></div>`;
+const views=[['portfolio','FID Portfolio'],['changes','Slot / CTL'],['nsr','NSR List'],['cycle','NSR Cycle Time'],['summary','Summary Metrics'],['rules','Rules & Settings']];
 
-const filterHtml=filterDefs.map(([name,label])=>`<div class="fc-filter"><label for="${name}">${label}</label><select id="${name}" multiple>${name==='fRisk'?riskNames.map(value=>'<option>'+value+'</option>').join(''):''}</select>${name===
-  'fQuarter'?'<div class="fc-years"><span>Select Year</span>'+quarterYears.map(year=>'<button type="button" data-quarter-year="'+ year+'" aria-pressed="false">'+year+'</button>').join('')+
-  '</div>':''}<div class="fc-actions">${name==='fAccount'?'<button class="btn light small" type="button" data-reference-click="28" aria-controls="fabAccountMapping" title="Fab / Account Group Mapping">Rule</button>':''}<button class="btn light small" data-select-all="${name}">All</button><button class="btn light small" data-clear-filter="${name}">Clear</button></div></div>`).join('');
-const charset=document.createElement('meta');charset.charset='utf-8'; const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1'; const title=document.createElement('title');title.textContent=
-  'FCID Governance Control Tower'; const style=document.createElement('style'); style.textContent=css; document.head.replaceChildren(charset,viewport,
-  title,emojiFavicon('🏭'),style);document.body.className='fcid-app';
-document.body.innerHTML=`<header class="hero"><div class="hero-inner"><div>`+(
-  `<h1>🏭 FCID Governance Control Tower</h1><p>Quarter priority = MCSD → Target Ship → Sales Ops RD → Calendar Quarter. Governance population excludes NCFUPG, Software, SW-UPGRADE, ` +
-  `and Cust_Bus_Flex. All exports and KPIs follow the current multi-select filters.</p>`)+
-    (`</div><button id="fcRefresh" class="btn fc-refresh" type="button" title="Reset all data sources and reload the default sources" disabled>Refresh</button></div></header><div class="layout"><aside class="side fc-side"><h2>` +
-  `Data Sources</h2>`)+
-    sourceHtml+`<div id="fcActionStatus" class="fc-note" role="status"></div><div id="loadStatus" hidden></div><div class="side-head"><h2>Filters</h2><button id="fcReset" class="btn light small" type="button">Reset Filters</button></div>`+
-    filterHtml+`<div class="fc-filter"><label for="fSearch">Search FCID / CTL / NSR</label><input id="fSearch" class="quick-search" placeholder="e.g. 257020 / 8000295092 / N515783"></div></aside>`+(
-  `<main class="main"><section class="card"><div class="tabs"><button class="tab active" data-reference-click="0">Executive</button><button class="tab" data-reference-click="1">Stability Engine</button><button class="tab" ` +
-  `data-reference-click="2">Slot Governance</button><button class="tab" data-page="Drivers" data-reference-click="3">Risk Drivers</button><button class="tab" data-page="NSR"\ndata-reference-click="4">\nNSR Governance\n</button>` +
-  `<button class="tab" data-reference-click="5">Quarter Governance</button><button class="tab" data-reference-click="6">FCID 360°</button><button class="tab" data-reference-click="7">Mapping Diagnostics</button><button ` +
-  `class="tab" data-reference-click="8">UAT Console</button><button class="tab" data-page="Rules" data-reference-click="9">Rules</button></div></section>\n<section class="card"><div class="sectionTitle"><h2>Export Center</h2><span class="badge">` +
-  `Current Filter Only</span></div><div class="btnrow"><button class="btn blue" data-reference-click="10">Export Population</button><button class="btn blue" data-reference-click="11">Export Excluded</button><button class="btn ` +
-  `blue" data-reference-click="12">Export Stability</button><button class="btn blue" data-reference-click="13">Export Slot</button><button class="btn blue" data-reference-click="14">Export Risk</button><button class="btn blue" ` +
-  `data-reference-click="15">Export Quarter</button><button class="btn warn" data-reference-click="16">Export All Tabs</button></div></section>\n<section class="card" id="filterContextCard"><div class="sectionTitle"><h2>Current ` +
-  `Population Context</h2><span class="badge" id="filterContextBadge">All Population</span></div><div class="miniGrid" id="filterContextMini"></div></section>\n<section id="pageExecutive" class="page"><div class="card"><div ` +
-  `class="sectionTitle"><h2>Executive Command Center</h2><span class="badge">Filtered KPI</span></div><div class="kpis"><div class="card kpi blue"><small>Commit FCID</small><b id="kPop">0</b><div class="small">Filtered Commit ` +
-  `Population</div></div><div class="card kpi green"><small>Projected Pre-Slot</small><b id="kPre">0%</b><div class="small">On-time slot CTL</div></div><div class="card kpi green"><small>Projected Post-Slot</small><b id="kPost">` +
-  `0%</b><div class="small">No config CTL in 20w window</div></div><div class="card kpi red"><small>Risk FCID</small><b id="kRisk" class="kpiJump" role="button" tabindex="0" aria-label="Open Risk Driver Detail" ` +
-  `data-reference-click="17" data-reference-keydown="18">0</b><div class="small">P1/P2/P3 distinct</div></div><div class="card kpi green"><small>Slot Readiness</small><b id="kSlotReady">0%</b><div class="small">Slot Ready / ` +
-  `Governance Population</div></div><div class="card kpi purple"><small>Open NSR Qty</small><b id="kNSRWatch" class="kpiJump" role="button" tabindex="0" aria-label="Open NSR Population" data-reference-click="19" ` +
-  `data-reference-keydown="20">0</b><div class="small">Management Attention Items</div></div><div class="card kpi blue">\n<small>FCIDs Under Open NSR</small>\n<b id="kNSRImpact" class="kpiJump" role="button" tabindex="0" ` +
-  `aria-label="Open NSR Population" data-reference-click="19" data-reference-keydown="20">0</b>\n<div class="small">\nDistinct FCIDs with Open NSRs\n</div>\n</div></div></div><div class="card"><h2>Governance ` +
-  `Funnel</h2><div id="funnel" class="funnel"></div></div><div class="grid2"><div class="card"><h2>Quarter Stability Heatmap</h2><div id="heatmap" class="heat"></div></div><div class="card"><h2>Top Risk Drivers</h2><div ` +
-  `id="driverBars"></div></div></div><div class="card"><h2>Executive Watchlist</h2><div class="tableWrap"><table id="watchTbl"></table></div></div></section>\n<section id="pageStability" class="page hidden"><div class="grid2">` +
-  `<div class="card"><h2>Official-aligned Projection Logic</h2><div class="code">Pre-Slot Projection = FIDs with slot CTL submitted on time / filtered governance population\\nPost-Slot Projection = FIDs without qualifying config ` +
-  `CTL inside 20w to MCSD / filtered governance population\\nQuarter = derived by MCSD, Target Ship, RD, Calendar Quarter priority.</div></div><div class="card"><h2>Projection Summary</h2><div id="projectionMini" ` +
-  `class="miniGrid"></div></div></div><div class="card"><h2>Stability Detail by FCID</h2><div class="tableWrap"><table id="stabilityTbl"></table></div></div></section>\n<section id="pageSlot" class="page hidden"><div ` +
-  `class="grid3"><div class="card kpi green"><small>Slot + MCSD</small><b id="kSlotMcsd">0</b></div><div class="card kpi amber"><small>Slot + No MCSD</small><b id="kSlotNoMcsd">0</b></div><div class="card kpi red"><small>No ` +
-  `Slot CTL</small><b id="kNoSlotCtl">0</b></div></div><div class="card"><h2>Slot Governance Population</h2><div class="tableWrap"><table id="slotTbl"></table></div></div></section>\n<section id="pageDrivers" class="page hidden">` +
-  `<div class="card"><h2>Risk Driver Cards</h2><div id="driverCards" class="grid4"></div></div><div class="card" id="riskDriverDetail"><h2>Risk Driver Detail</h2><div class="tableWrap"><table id="riskTbl"></table></div></div>` +
-  `</section>\n<section id="pageNSR"\nclass="page hidden">\n\n<div class="card" id="openNsrPopulation">\n<h2>Open NSR Population</h2>\n<div class="tableWrap">\n<table id="nsrTbl"></table>\n</div>\n` +
-  `    </div>\n\n</section><section id="pageQuarter" class="page hidden"><div class="card"><h2>Quarter Governance View</h2><div class="tableWrap"><table id="quarterTbl"></table></div></div><div class="card"><h2>Quarter Source ` +
-  `Detail</h2><div class="tableWrap"><table id="quarterSourceTbl"></table></div></div></section>\n<section id="pageFCID" class="page hidden"><div class="card"><h2>FCID 360°</h2><div class="searchBox"><input id="fcidInput" ` +
-  `placeholder="输入 FCID / FID"><button class="btn" data-reference-click="21">View FCID</button><button class="btn blue" data-reference-click="22">Export FCID360</button></div></div><div class="grid2"><div class="card"><h2>Basic ` +
-  `Info</h2><div id="fcidBasic" class="miniGrid"></div></div><div class="card"><h2>Recommended Action</h2><div id="fcidAction" class="hint">输入 FCID 查看。</div></div></div><div class="card"><h2>FCID360 History & Evidence</h2><div ` +
-  `class="tableWrap"><table id="fcidTbl"></table></div></div></section>\n<section id="pageMapping" class="page hidden"><div class="grid2"><div class="card"><h2>Workbook Loading Summary</h2><div class="tableWrap"><table ` +
-  `id="loadTbl"></table></div></div><div class="card"><h2>Key Diagnostics</h2><div class="tableWrap"><table id="overlapTbl"></table></div></div></div><div class="card"><h2>Field Mapping Matrix</h2><div class="tableWrap"><table ` +
-  `id="mappingTbl"></table></div></div></section>\n<section id="pageUAT" class="page hidden"><div class="card"><h2>UAT Console</h2><div class="tableWrap"><table id="uatTbl"></table></div></div></section>\n<section id="pageRules" ` +
-  `class="page hidden"><div class="card"><h2>Rule Book</h2><div class="tableWrap"><table id="rulesTbl"></table></div></div><div class="card" id="fabAccountMapping"><h2>Fab / Account Group Mapping</h2><div id="agNotice" class="warnbox" role="status" style="white-space:pre-line;margin-bottom:12px" hidden></div><div id="agGrid" class="agGrid"></div>` +
-  `<div class="btnrow" style="margin-top:12px"><button class="btn blue agCtl" data-reference-click="23">Save</button><button class="btn light agCtl" data-reference-click="26">Restore Defaults</button></div></div></section>\n</main>`)+`</div>`;
-// Keep the reference export actions at the bottom of every tab.
-const exportCenter=[...document.querySelectorAll('main > .card')].find(card=>card.querySelector('h2')?.textContent==='Export Center'); document.querySelectorAll('main > .page').forEach(page=>page.append(exportCenter.cloneNode(true))); exportCenter.remove();
-const report=createReferenceReport();
+const charset=document.createElement('meta');charset.charset='utf-8';const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1';const title=document.createElement('title');title.textContent=FID_DASHBOARD_TITLE.replace(/^🏭\s*/,'');const style=document.createElement('style');style.textContent=css;
+document.head.replaceChildren(charset,viewport,title,emojiFavicon('🏭'),style);document.body.className='fcid-app';
+document.body.innerHTML=`<header class="fc-hero"><div class="fc-hero-inner"><div class="fc-heading"><button id="fcToggleSide" class="btn light" aria-label="Toggle Data Sources and Filters" aria-expanded="true" title="Data Sources / Filters">☰</button><div><div class="fc-brand">TOOLKIT</div><h1>${escapeHtml(FID_DASHBOARD_TITLE).replace(' Tracking','<span class="title-tracking"> Tracking</span>')}</h1></div></div><div class="fc-hero-actions"><button id="fcRefresh" class="btn light" disabled>Refresh</button><a class="btn light" href="${GUIDE_URL}" target="_blank" rel="noopener noreferrer">Help</a></div></div></header>
+<div class="layout" id="dashboardWorkspace"><aside class="side card"><div class="section-head"><h2>Data Sources</h2><span class="badge" id="fcSourceCount">0 / 5</span></div>${sourceHtml}<div id="fcActionStatus" class="fc-note" role="status"></div>
+<div class="filter-head"><h2>Filters</h2><button class="btn small light" id="fcReset">Reset</button></div><div class="fc-filter"><textarea id="fSearch" class="quick-search" placeholder="Search FIDs / CTLs / NSRs" aria-label="Search FIDs / CTLs / NSRs" rows="2"></textarea></div>
+<form id="fidLookup" class="fc-filter fid-lookup"><input id="fFid360" type="text" inputmode="numeric" placeholder="FID 360°" aria-label="FID 360°" autocomplete="off"><button class="btn light" type="submit" aria-label="Open FID 360°" title="Open FID 360°"><span aria-hidden="true">🔍</span></button></form>
+${['fAccount'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="fid">FID Filters</h3>${['fQuarter','fOwner','fSlotInitiator','fFidStatus','fRisk','fCustomer','fSystem','fBusinessUnit','fSalesAdmin'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="ctl">CTL Filters</h3>${['fCtlStage','fCtlInitiator','fCtlCreatedDate','fCtlChange','fCtlCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="nsr">NSR Filters</h3>${['fNsrInitiator','fNsrSubmitDate','fNsrTaskStatus','fNsrType','fNsrOrg','fNsrSubsystem','fNsrProduct','fNsrCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}</aside>
+<main class="main"><nav class="workspace-nav" id="workspaceNav" aria-label="Dashboard views">${views.map(([view,label])=>`<button type="button" data-view="${view}" aria-selected="${view==='nsr'}"${view==='nsr'?' class="active"':''}${['nsr','cycle','rules'].includes(view)?'':' hidden'}>${label}</button>`).join('')}</nav><div id="filterContext" class="filter-context"></div>${views.map(([view])=>`<section id="view-${view}" class="fc-view"${view==='nsr'?'':' hidden'}></section>`).join('')}</main></div>
+<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card column-filter-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
+const cycleTemplate=document.createElement('template');cycleTemplate.innerHTML=NSR_CYCLE_HTML;id('view-cycle').append(cycleTemplate.content.querySelector('#cycleTab'));id('dashboardWorkspace').append(cycleTemplate.content.querySelector('#wfModal'));
+let selectedView='nsr',graph=null,current=null,revision=0,modelRevision=0,toastTimer=0,searchTimer=0,sidebarAnimation=null;
+const rendered=new Map(),tables=new Map(),filterValues={},localTables=new Map();let mappingDraft=null;const markDrafts={nsr:null,fid:null};
+const cycle=createNsrCycle(id('dashboardWorkspace'),{getRows:nsrs=>{
+  const selected=new Set(nsrs);
+  return nsrCopyRows(graph.nsrs.filter(nsr=>selected.has(nsr.number))).map(row=>({...row,'REF FCID':row.FID}));
+},onNotify:message=>toast(message)});
+const pretty=(value,path='')=>path==='nsr.taskStatus'?(nsrCompletedTasks[value]||value||'[Unknown]'):path==='ctl.stage'?ctlStageName(value)||'[Unknown]':path==='fidStatus'?(value==='stable-slot|stable-ctl'?fidStatusNames['risk-free']:value.startsWith('cause:')?fidCauseNames[value.slice(6)]||value:fidCellNames[value]||fidStatusNames[value]||value):path==='riskType'?(value==='MCSD pending'?'Slot + no MCSD':value):value||'[Unknown]';
+const number=value=>String(Number(value||0));
+const pill=(value,kind='info',tip='')=>`<span class="pill ${kind}"${tip?` title="${escapeHtml(tip)}"`:''}>${escapeHtml(value||'—')}</span>`;
+const fidLink=value=>value?`<button type="button" class="fc-link" data-fid="${escapeHtml(value)}">${escapeHtml(value)}</button>`:'—';
+const quarterYear=value=>nsrRecords.periodYear(value)||String(value).match(/'(\d{2})$/)?.[1]?.replace(/^(\d{2})$/,'20$1')||'';
+function defaultQuarters(){
+  const now=new Date(),first=now.getFullYear()*4+Math.floor(now.getMonth()/3);
+  return Array.from({length:5},(_,offset)=>{const quarter=first+offset;return ['QMar','QJun','QSep','QDec'][quarter%4]+"'"+String(Math.floor(quarter/4)).slice(-2)});
+}
+const setPath=(value,path,next)=>{const keys=path.split('.'),last=keys.pop();let target=value;keys.forEach(key=>target=target[key]??={});target[last]=next;};
+function toast(message){clearTimeout(toastTimer);id('fcToast').innerHTML=`<span>${escapeHtml(message)}</span><button type="button" data-toast-close aria-label="Dismiss">×</button>`;id('fcToast').hidden=false;toastTimer=setTimeout(()=>id('fcToast').hidden=true,4500)}
+function buildFilters(paths){
+  const nodes=graph.population,statNsrs=graph.nsrs.filter(nsr=>nsr.eligible),statCtls=graph.ctls;let observations;
+  const slotUnknown=nodes.some(node=>node.portfolioCell.startsWith('slot-date-unknown|')),ctlUnknown=nodes.some(node=>node.portfolioCell.endsWith('|ctl-unknown'));
+  const cells=Object.keys(fidCellNames).filter(key=>(!key.startsWith('slot-date-unknown|')||slotUnknown)&&(!key.endsWith('|ctl-unknown')||ctlUnknown));
+  const normalCells=['stable-slot|stable-ctl','stable-slot|late-ctl-nsr','late-slot|late-ctl-nsr','late-slot|stable-ctl'];
+  const options=[['no-slot',0],['cause:slot-pending',1],['cause:slot-dropped',1],['slot-ready',0],
+    ...normalCells.map(key=>[key,1]),['cause:late-ctl',2],['cause:open-nsr',2],
+    ...cells.filter(key=>!normalCells.includes(key)).map(key=>[key,1]),
+    ...(nodes.some(node=>node.portfolioCell==='slot-unknown')?[['slot-unknown',0]]:[])];
+  fidSelection.order=options.map(([value])=>value).filter(value=>value!=='slot-ready');
+  fidSelection.groups={'slot-ready':cells,
+    ...Object.fromEntries(['stable-slot','late-slot','slot-date-unknown','stable-ctl','late-ctl-nsr','ctl-unknown'].map(key=>[key,cells.filter(cell=>cell.split('|').includes(key))])),
+    'risk-fid':cells.filter(key=>fidRiskAssessment(key)==='risk-fid'),
+    'risk-free':['stable-slot|stable-ctl'],
+    'risk-unknown':cells.filter(key=>fidRiskAssessment(key)==='risk-unknown')};
+  const fidDepth=new Map(options),fidStatuses=options.map(([value])=>value);
+  const riskOrder=['MCSD pending','NCE / FA signal'];
+  for(const [name,,path] of filterDefs){
+    if(paths&&!paths.includes(path))continue;
+    if(dateFilters.includes(path)){
+      if(!(path==='nsr.submitted'?statNsrs:statCtls).length)delete filterValues[path];const [from='',to='']=filterValues[path]||[],[start,end]=id(name).querySelectorAll('input');start.value=from;end.value=to;start.max=to;end.min=from;start.setCustomValidity('');end.setCustomValidity('');
+      id(name).previousElementSibling.innerHTML=path==='ctl.created'?['This week','Last week','This month','Last month'].map(period=>{
+        const range=ctlDateRange(period),active=from===range[0]&&to===range[1];return `<button type="button" data-ctl-period="${period}" class="${active?'active':''}" aria-pressed="${active}" title="${range.join(' → ')}">${period}</button>`;
+      }).join(''):[...document.querySelectorAll('[data-fid-year]')].map(button=>{
+        const year=button.dataset.fidYear,active=from===year+'-01-01'&&to===year+'-12-31';
+        return `<button type="button" data-nsr-year="${year}" class="${active?'active':''}" aria-pressed="${active}" title="Select January 1 through December 31, ${year}">${year}</button>`;
+      }).join('');continue;
+    }
+    const values=path==='fidStatus'?[]:path==='account'?[...nodes.map(node=>node.account),...statNsrs.flatMap(nsr=>nsr.accounts.length?nsr.accounts:[''])]:path==='riskType'?nodes.flatMap(node=>node.risks.map(risk=>risk.label)).filter(value=>riskOrder.includes(value)):path.startsWith('ctl.')?statCtls.map(ctl=>ctl[path.slice(4)]):path.startsWith('nsr.')?(observations??=statNsrs.flatMap(nsr=>nsr.observations.length?nsr.observations:[nsr])).map(observation=>observation[path.slice(4)]):path==='slot.initiator'?nodes.map(node=>node.slot.initiator):nodes.map(node=>node[path]);
+    const quarters=path==='quarter'?[...(store.raw.fcid.length?defaultQuarters():[]),...(filterValues.quarter||[])]:path==='ctl.change'&&(store.meta.ctl||store.meta.ctlNsr)?[...defaultCtlTypes,...Object.values(pendingCtlTypes).flat()]:[];
+    const available=path==='fidStatus'?fidStatuses:[...new Set([...values.map(value=>value||'[Unknown]'),...quarters])].sort((a,b)=>Number(a==='[Unknown]')-Number(b==='[Unknown]')||(path==='nsr.taskStatus'?nsrRecords.compareStatus(a,b):path==='ctl.stage'?compareCtlStages(a,b):path==='riskType'?riskOrder.indexOf(a)-riskOrder.indexOf(b):path.toLowerCase().includes('quarter')?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||a.localeCompare(b):a.localeCompare(b,undefined,{numeric:true})));
+    if(path==='nsr.taskStatus'&&available.includes('15-Completed'))available.splice(available.indexOf('15-Completed')+1,0,...Object.keys(nsrCompletedTasks));
+    const select=id(name),saved=path==='fidStatus'?normalizeFidStatus(filterValues[path]||[]):filterValues[path]||[];
+    const option=value=>{
+      const depth=fidDepth.get(value);
+      const classes=path==='fidStatus'
+        ? [depth===1?'fid-status-child':depth===2?'fid-status-detail':'',['no-slot','slot-ready'].includes(value)?'fid-status-parent':''].filter(Boolean).join(' ')
+        : path==='nsr.taskStatus'&&Object.hasOwn(nsrCompletedTasks,value)?'group-option':'';
+      const label=path==='fidStatus'&&['cause:slot-pending','cause:slot-dropped'].includes(value)?pretty(value,path).replace(/^No Slot · /,''):pretty(value,path);
+      return `<option value="${escapeHtml(value)}"${classes?` class="${classes}"`:''}${saved.includes(value)?' selected':''}>${escapeHtml(label)}</option>`;
+    };
+    select.innerHTML=available.map(option).join('');
+    filterValues[path]=saved.filter(value=>available.includes(value));jQuery(select).trigger('chosen:updated');
+    if(name==='fQuarter'){
+      const currentYear=new Date().getFullYear();let years=select.parentElement.querySelector('.nsr-year-picks');
+      if(!years){years=document.createElement('div');years.className='nsr-year-picks';select.after(years)}
+      years.innerHTML=[...new Set(values.map(quarterYear).filter(year=>year>=currentYear-1&&year<=currentYear+3))].sort().map(year=>`<button type="button" data-fid-year="${year}" title="Select / clear all quarters in ${year}">${year}</button>`).join('');
+    }
+  }
+}
+function syncFilters(){
+  const fid=store.raw.fcid.length>0,nsr=store.raw.nsr.length>0,ctl=store.raw.ctl.length>0||store.raw.ctlNsr.length>0;
+  const needs={common:fid||nsr,fid,fidCtl:fid&&ctl,fidSalesAdmin:fid&&ctl&&graph.population.some(node=>node.salesAdmin),fidRisk:fid&&(ctl||nsr||store.raw.nce.length>0),ctl,nsr};document.querySelectorAll('[data-filter-needs]').forEach(group=>group.hidden=!needs[group.dataset.filterNeeds]);
+}
+function recalculate(updateMarks=false){
+  const started=performance.now();graph=createFidGraph(store.raw,{fidMarks:currentMarks('fid'),accountMap:accountMapping.match,ignoredNsrs,importantNsrs,loadedSources:Object.fromEntries(Object.keys(store.meta).map(key=>[key,true])),today:nsrData.localDate(new Date())});modelRevision++;
+  buildFilters();syncFilters();applyFilters(updateMarks);store.dirty=false;store.buildMs=performance.now()-started;
+}
+function queryFilters(){const filters={search:id('fSearch').value,fidStatus:filterValues.fidStatus||[],signal:filterValues.signal||[],includeIgnored};for(const [,,path] of filterDefs)if(filterValues[path]?.length)setPath(filters,path,dateFilters.includes(path)?{from:filterValues[path][0],to:filterValues[path][1]}:filterValues[path]);return filters}
+function applyFilters(updateMarks=false,changedNsr=''){
+  const detailFid=id('fidDetail').open?id('fidDetail').dataset.fid:'',view=id('view-'+selectedView),anchor=changedNsr&&!detailFid&&selectedView==='nsr'?id('nsrTable'):view,position=updateMarks?anchor?.getBoundingClientRect():null;
+  current=graph.query(queryFilters());revision++;
+  for(const [name,state] of tables){if(updateMarks&&(changedNsr||state.grid.element.closest('.fc-view')?.hidden===false||state.grid.element.closest('.fid-dialog')?.open))continue;tableResize.unobserve(state.grid.element);state.grid.destroy();tables.delete(name)}
+  rendered.clear();paintContext();showView(selectedView,updateMarks,changedNsr);if(detailFid)showFid(detailFid,updateMarks,changedNsr);
+  // Keep visible content in place when filter chips or NSR Overview cards change height.
+  if(position?.top<innerHeight&&position.bottom>0)window.scrollBy({top:anchor.getBoundingClientRect().top-position.top,behavior:'instant'});
+}
+function paintContext(){
+  document.querySelectorAll('[data-exclude-ignored]').forEach(input=>input.checked=!includeIgnored);
+  document.querySelectorAll('[data-fid-year]').forEach(button=>{const values=[...id('fQuarter').options].map(option=>option.value).filter(value=>quarterYear(value)===button.dataset.fidYear),selected=filterValues.quarter||[],count=values.filter(value=>selected.includes(value)).length;button.classList.toggle('active',count>0&&count===values.length);button.classList.toggle('partial',count>0&&count<values.length);button.setAttribute('aria-pressed',String(count>0&&count===values.length))});
+  id('filterContext').hidden=!Object.keys(store.meta).length;
+  const chip=(value,target,clear,label)=>{
+    const reset=target==='fQuarter'||target==='fCtlChange',action=target==='fQuarter'?'data-reset-quarter title="Reset to the default five quarters"':target==='fCtlChange'?'data-reset-ctl-type title="Reset to Config, Slot and Drop Slot"':clear;
+    return `<span class="filter-chip" title="${escapeHtml(value)}"><button class="filter-chip-label" type="button" data-locate-filter="${target}" aria-label="Locate ${escapeHtml(label)} filter">${escapeHtml(value)}</button><button class="filter-chip-remove" type="button" ${action} aria-label="${reset?'Reset':'Remove'} ${escapeHtml(label)} filter">${reset?'↺':'×'}</button></span>`;
+  };
+  const chips=filterDefs.filter(([, ,path])=>filterValues[path]?.length).map(([name,label,path])=>chip(label+': '+(dateFilters.includes(path)?(filterValues[path][0]&&filterValues[path][1]?filterValues[path].join(' → '):filterValues[path][0]?'From '+filterValues[path][0]:'Through '+filterValues[path][1]):filterValues[path].map(value=>pretty(value,path)).join(' or ')),name,`data-clear-filter="${name}"`,label));
+  if(filterValues.signal?.length)chips.push(chip('Signal: '+filterValues.signal.map(value=>fidStatusNames[value]||(value==='nce'?'NCE / FA':'Pending Config CTL')).join(' or '),'fRisk','data-clear-signal','signal'));
+  const search=id('fSearch').value.trim();if(search)chips.push(chip('Search: '+search,'fSearch','data-clear-search','search'));
+  id('filterContext').innerHTML=`<span class="context-title">Filtered By:</span><div class="filter-tags">${chips.join('')||'<span class="muted">All values</span>'}</div><span class="scope-note">Commit portfolio: ${number(current.fids.length)} FIDs · NSR List: ${number(current.nsrs.length)}</span>`;
+}
+function showView(name,updateMarks=false,changedNsr=''){
+  selectedView=name;
+  id('workspaceNav').querySelectorAll('[data-view]').forEach(button=>{const active=button.dataset.view===name;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
+  document.querySelectorAll('.fc-view').forEach(element=>element.hidden=element.id!=='view-'+name);id('cycleTab').classList.toggle('active',name==='cycle');
+  if(name==='cycle'||rendered.get(name)===revision)return;
+  ({portfolio:renderPortfolio,changes:renderChanges,nsr:renderNsrs,summary:renderSummaryMetrics,rules:renderRules}[name])(id('view-'+name),updateMarks,changedNsr);rendered.set(name,revision);
+}
+// Persist only leaf selections. Every aggregate is the same set of cells, regardless of entry point.
+function normalizeFidStatus(values){
+  const selected=new Set(values.flatMap(value=>fidSelection.groups[value]||[value])),postRisk=fidSelection.groups['late-ctl-nsr'];
+  if(selected.has('cause:late-ctl')&&selected.has('cause:open-nsr'))postRisk.forEach(cell=>selected.add(cell));
+  if(postRisk.every(cell=>selected.has(cell))){selected.delete('cause:late-ctl');selected.delete('cause:open-nsr')}
+  return fidSelection.order.filter(value=>selected.has(value));
+}
+function fidStatusSelected(value){
+  const parts=fidSelection.groups[value],selected=filterValues.fidStatus||[];
+  return parts?parts.length>0&&parts.length===selected.length&&parts.every(part=>selected.includes(part)):selected.includes(value);
+}
+function selectFidStatus(value){
+  const parts=fidSelection.groups[value]||[value],selected=filterValues.fidStatus||[];
+  if(fidSelection.groups[value]){changeFilter('fidStatus',fidStatusSelected(value)?[]:parts);return}
+  changeFilter('fidStatus',parts.every(part=>selected.includes(part))
+    ?selected.filter(item=>!parts.includes(item)):[...selected,...parts]);
+}
+function changeFilter(path,values){
+  let changed=false;
+  for(const [key,next] of typeof path==='string'?[[path,values]]:Object.entries(path)){
+    const selected=key==='fidStatus'?normalizeFidStatus(next):key==='nsr.taskStatus'?normalizeNsrTasks(next):next,previous=filterValues[key]||[];changed||=selected.length!==previous.length||selected.some((value,index)=>value!==previous[index]);filterValues[key]=selected;const definition=filterDefs.find(def=>def[2]===key);
+    if(definition){if(dateFilters.includes(key))buildFilters([key]);else{const select=id(definition[0]);for(const option of select.options)option.selected=selected.includes(option.value);jQuery(select).trigger('chosen:updated')}}
+  }
+  if(changed)applyFilters(true);
+}
+function positionFilterChoices(select){
+  const chosen=id(select.id+'_chosen');if(!chosen?.classList.contains('chosen-with-drop'))return;
+  const bounds=chosen.closest('.side').getBoundingClientRect(),box=chosen.getBoundingClientRect(),height=chosen.querySelector('.chosen-drop').getBoundingClientRect().height;
+  const below=Math.min(innerHeight,bounds.bottom)-box.bottom,above=box.top-Math.max(0,bounds.top);chosen.classList.toggle('chosen-dropup',height>below&&above>below);
+}
+const portfolioColumns=[markColumn('fid'),
+  ['FID',node=>node.id,fidLink],['FID Status & Risks',node=>fidDetailStatus(node,false).map(([label])=>label).join(' · '),(_,node)=>`<span class="fid-status-tags">${fidDetailStatus(node).map(([label,kind,tip])=>pill(label,kind,tip)).join('')}</span>`],
+  ['Quarter',node=>node.quarter],['System Description',node=>node.system],['CRD',node=>node.crd],['SRD',node=>node.pre.referenceDate||node.rd],['MCSD',node=>node.mcsd],
+  ['Account',node=>node.account],['Customer',node=>node.customer],['FID Owner',node=>node.owner,(value,node)=>`<span title="${escapeHtml(ownerTip(node))}">${escapeHtml(value||'[Unknown]')}</span>`],['Slot Initiator',node=>node.slot.initiator],['Active CTL',node=>node.slot.active?.number],
+  ['Note',node=>fidNotes[node.id]||'',(value,node)=>`<button type="button" class="fc-link fid-note-cell${value?'':' fid-note-add'}" data-note-fid="${escapeHtml(node.id)}" aria-label="${value?'Edit':'Add'} note for FID ${escapeHtml(node.id)}" title="${escapeHtml(value||'Add note')}">${escapeHtml(value?value.replace(/\r\n?|\n/g,' '):'…')}</button>`]
+];
+function fidDetailStatus(node,withTips=true){
+  const tags=[];
+  if(node.portfolioStates.includes('risk-free'))tags.push(['No Late Flags','clear',withTips?[riskTip(node.pre),riskTip(node.post)].join('\n'):'']);
+  if(!node.slot.active)tags.push([fidStatusNames[node.portfolioStates[0]],'unknown',withTips?riskTip(node.pre):'']);
+  else if(node.pre.state==='risk')tags.push(['Late Slot','risk',withTips?riskTip(node.pre):'']);
+  else if(node.pre.state==='unknown')tags.push(['Slot date unknown','unknown',withTips?riskTip(node.pre):'']);
+  if(node.post.ctls.length)tags.push(['Late CTL ('+node.post.ctls.length+')','risk',withTips?riskTip(node.post):'']);
+  const late=node.post.nsrs,count=late.length||node.risks.find(risk=>risk.label==='Pending NSR')?.count||0,label=late.length?'Late NSR':'Pending NSR';
+  if(count)tags.push([label+' ('+count+')',late.length?'risk':'pending',withTips?label+' for this FID'+(late.length?' (<20 weeks to MCSD / SRD, including overdue)':' (in workflow)')+': '+(late.length?late:node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open')).map(nsr=>nsr.number).join(', '):'']);
+  for(const [label,kind]of [['Pending Config CTL','pending'],['Pending Pull/Push CTL','neutral']]){
+    const risk=node.risks.find(risk=>risk.label===label);
+    if(risk)tags.push([label+' ('+risk.count+')',kind,withTips?label+' for this FID: Submitted '+(kind==='pending'?'Slot / Config':'Pull / Push')+' CTLs.':'']);
+  }
+  if(node.slot.active&&node.post.state==='unknown')tags.push(['CTL/NSR status unknown','unknown',withTips?riskTip(node.post):'']);
+  return tags;
+}
+function riskTip(risk){return [risk.reason,risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:'',risk.ctlIds?.length?'CTL: '+risk.ctlIds.slice(0,4).join(', '):'',risk.nsrEvidence?.length?'NSR: '+risk.nsrEvidence.slice(0,4).map(event=>event.nsr.number+' ('+(event.dateBasis==='unlinked'?'unlinked':event.dateBasis==='today'?'today':event.eventDate)+')').join(', '):''].filter(Boolean).join('\n')}
+function ownerTip(node){
+  const evidence=node.ownerEvidence,nsrFallback=evidence&&!evidence.ctlCandidates.length&&evidence.nsrCandidates.length;return [`Inferred owner · Account: ${node.account||'[Unknown]'} · people learned from Slot authors`,
+    'CTL (Slot / Config): '+((evidence?.ctlCandidates||[]).map(candidate=>candidate.name+': '+candidate.count).join(' · ')||'No eligible CTL votes'),
+    nsrFallback?'NSR fallback (all eligible CTL counts are 0): '+evidence.nsrCandidates.map(candidate=>candidate.name+': '+candidate.count).join(' · '):evidence?.tied?'NSR among tied CTL candidates: '+evidence.tiedCandidates.map(candidate=>candidate.name+': '+(evidence.nsrCandidates.find(row=>row.name===candidate.name)?.count||0)).join(' · '):'',
+    evidence?.source+(evidence?.tied?(evidence.tieBreaker?' · tie resolved with '+(evidence.source==='slot-tiebreaker'?'current Slot submitter':'NSR submissions'):' · unresolved tie'):''),
+    evidence?.excludedCandidates?.length?'Outside Account: '+evidence.excludedCandidates.map(candidate=>candidate.name+': '+candidate.count).join(' · '):'',
+    evidence?.aliases?.map(alias=>alias.account+' → '+alias.name).join(' · ')
+  ].filter(Boolean).join('\n');
+}
 
-function recalculate(){report.setSources(store.raw,store.meta);paintQuarterYears()}
-function normalizeNsrRows(rows){return report.canonicalize(rows.map(row=>({...row,'Reference Fcid':row['Reference Fcid']??row['REF FCID']??row['Reference FID']??row.FCID??row.FID??'','Workflow Status':row['Workflow Status']??row['NSR Status']??row['Task Name']??''})),'nsr');}
+function renderPortfolio(target,updateMarks=false){
+  updateMarks=updateMarks&&tables.has('portfolioTable');
+  const m=current.metrics;if(!Object.keys(store.meta).length){target.innerHTML='';return}
+  const riskFilters=queryFilters();delete riskFilters.riskType;
+  const riskResult=filterValues.riskType?.length?graph.query(riskFilters):current,riskCounts=new Map([...(store.meta.nsr?['Pending NSR']:[]),...(store.meta.ctl||store.meta.ctlNsr?Object.keys(pendingCtlTypes):[]),...[...id('fRisk').options].map(option=>option.value)].map(label=>[label,{count:0,fids:0}]));
+  for(const [label,key]of [['Pending Config CTL','pendingCtl'],['Pending Pull/Push CTL','pendingPullPushCtl']])if(riskCounts.has(label))riskCounts.set(label,{count:riskResult.metrics[key],fids:riskResult.metrics[key+'Fids']});
+  for(const node of riskResult.fids)for(const risk of node.risks){
+    const total=riskCounts.get(risk.label);if(!total||risk.label==='Pending NSR'||pendingCtlTypes[risk.label])continue;
+    total.count++;total.fids++;
+  }
+  if(store.meta.nsr){
+    const nsrFilters=queryFilters();if(nsrFilters.nsr)delete nsrFilters.nsr.taskStatus;
+    const nsrs=filterValues['nsr.taskStatus']?.length?graph.query(nsrFilters,'nsrs'):current.nsrs,total=riskCounts.get('Pending NSR'),fids=new Set();
+    for(const nsr of nsrs)if(taskGroup(nsr.taskStatus)==='workflow'){total.count++;for(const fid of nsr.matchedFidIds||nsr.fidIds)fids.add(fid)}
+    total.fids=fids.size;
+  }
+  const filters=queryFilters(),selected=filterValues.fidStatus||[],causes=(filterValues.signal||[]).filter(key=>fidCauseKeys.includes(key));delete filters.fidStatus;
+  filters.signal=filters.signal.filter(key=>!fidCauseKeys.includes(key));
+  const rows=selected.length||causes.length?graph.query(filters,'fids'):current.fids,counts=Object.fromEntries(Object.keys(fidStatusNames).map(key=>[key,0]));
+  let lateNsrCount=0;
+  for(const node of rows){
+    for(const key of node.portfolioStates)counts[key]++;
+    if(node.portfolioCell.includes('|'))counts[node.portfolioCell]=(counts[node.portfolioCell]||0)+1;
+    lateNsrCount+=Boolean(node.slot.active&&node.post.nsrs.length);
+  }
+  counts['late-ctl-nsr']=counts['late-ctl']+counts['open-nsr'];
+  counts['open-nsr']=lateNsrCount;
+  const ctlReady=Boolean(store.meta.ctl||store.meta.ctlNsr);
+  const slotKeys=['stable-slot','late-slot',...(counts['slot-date-unknown']?['slot-date-unknown']:[])];
+  const postKeys=[!counts['stable-ctl']&&(!store.meta.nsr||counts['ctl-unknown'])?'ctl-unknown':'stable-ctl','late-ctl-nsr'];if(counts['ctl-unknown']&&!postKeys.includes('ctl-unknown'))postKeys.push('ctl-unknown');postKeys.reverse();
+  const selectedCells=new Set(selected);
+  const card=(key,label,count,color,denominator=rows.length,tip='')=>{
+    const value=fidCauseKeys.includes(key)?'cause:'+key:key,active=key==='all'?!selected.length&&!causes.length:fidStatusSelected(value),percent=denominator?(100*count/denominator).toFixed(1):'0.0',base=['all','no-slot','slot-ready'].includes(key)?'Total FID':'Slotted FID';
+    const titleName=key==='open-nsr'?label:fidStatusNames[key]||label;
+    const title=titleName+' / '+base+' = '+count+' / '+denominator+' = '+percent+'%'+(tip?'\n'+tip:'');
+    const shareLabel={'slot-ready':'Slot Completion','stable-slot':'Pre-slot Stability','late-slot':'Pre-slot Risk','stable-ctl':'Post-slot Stability','late-ctl-nsr':'Post-slot Risk'}[key];
+    const share=`${percent}%${shareLabel?' '+shareLabel:''}`;
+    const buttonClass=['late-ctl','open-nsr'].includes(key)?'':'nsr-kpi'+(fidSelection.groups[key]?' fid-aggregate':'');
+    const button=`<button class="${key==='no-slot'?'fid-no-slot-main':buttonClass}" style="--kpi-color:${color}" type="button" data-fid-status="${key}" data-fid-value="${value}" data-count="${count}" aria-pressed="${active}" title="${escapeHtml(title)}"><small>${label}</small><b>${number(count)}</b><span class="fid-percent">${share}</span></button>`;
+    return key==='no-slot'?`<div class="nsr-kpi fid-no-slot" style="--kpi-color:${color}">${button}<div class="fid-subcount">${[['slot-pending','pending approval','No Slot with a pending Slot request.'],['slot-dropped','drop slot','No Slot whose latest effective event is Drop Slot.']].map(([cause,name,description])=>`<button class="fid-subcount-filter" type="button" data-fid-status="${cause}" data-fid-value="cause:${cause}" data-count="${counts[cause]}" aria-pressed="${selected.includes('cause:'+cause)}" title="${description} Pending approval and drop slot may overlap.">${number(counts[cause])} ${name}</button>`).join('')}</div></div>`:button;
+  };
+  const sign=value=>`<span class="math-sign" aria-hidden="true">${value}</span>`;
+  const riskLabelOffset=postKeys[0]==='late-ctl-nsr'?0:(slotKeys.length-1-slotKeys.indexOf('late-slot'))*100/slotKeys.length;
+  const riskPercent=counts['slot-ready']?(100*counts['risk-fid']/counts['slot-ready']).toFixed(1):'0.0';
+  const relation=(symbol,equation,position='')=>`<span class="fid-relation-sign${position?' floating':''}" data-fid-equation="${equation}"${position?` style="${position}"`:''} aria-hidden="true">${symbol}</span>`;
+  const isRisk=(row,column)=>fidRiskAssessment(slotKeys[column]+'|'+postKeys[row])==='risk-fid';
+  const outline=[],selection=[],cells=[],cellOperators=[];
+  for(let row=0;row<postKeys.length;row++)for(let column=0;column<slotKeys.length;column++){
+    const slot=slotKeys[column],post=postKeys[row],assessment=fidRiskAssessment(slot+'|'+post);
+    const label=assessment==='risk-unknown'?'Risk Status Unknown':fidCellNames[slot+'|'+post];
+    const count=counts[slot+'|'+post]||0,percent=counts['slot-ready']?(100*count/counts['slot-ready']).toFixed(1):'0.0';
+    const active=selectedCells.has(slot+'|'+post);
+    if(active)selection.push(`<rect data-selection-cell="${slot}|${post}" x="${column*100/slotKeys.length}%" y="${row*100/postKeys.length}%" width="${100/slotKeys.length}%" height="${100/postKeys.length}%"/>`);
+    cells.push(`<button class="fid-matrix-cell" type="button" data-fid-cell="${slot}|${post}" data-matrix-slot="${slot}" data-matrix-post="${post}" data-assessment="${assessment}" data-count="${count}" aria-pressed="${active}" title="${escapeHtml(fidStatusNames[slot]+' ∩ '+fidStatusNames[post]+'\n'+count+' / '+counts['slot-ready']+' Slotted FID = '+percent+'%\n'+(assessment==='risk-fid'?'A known Late condition takes priority over missing evidence.':assessment==='risk-unknown'?'No known Late condition; more source data or dates are needed.':'Both Slot and CTL/NSR are confirmed Stable.'))}"><small>${escapeHtml(label)}</small><b>${number(count)}</b><span class="fid-percent">${percent}%${assessment==='risk-free'?' Stable FID':''}</span></button>`);
+    if(column<slotKeys.length-1)cellOperators.push(relation('+','post:'+post+(isRisk(row,column)&&isRisk(row,column+1)?' risk-fid':''),`left:${(column+1)*100/slotKeys.length}%;top:${(row+.5)*100/postKeys.length}%`));
+    if(row<postKeys.length-1)cellOperators.push(relation('+','slot:'+slot+(isRisk(row,column)&&isRisk(row+1,column)?' risk-fid':''),`left:${(column+.5)*100/slotKeys.length}%;top:${(row+1)*100/postKeys.length}%`));
+    if(!isRisk(row,column))continue;
+    // Draw the outside edges of the union, producing an L for the normal 2 × 2 matrix.
+    const x=column*100,y=row*100;
+    if(row===0||!isRisk(row-1,column))outline.push(`M${x},${y}h100`);
+    if(column===slotKeys.length-1||!isRisk(row,column+1))outline.push(`M${x+100},${y}v100`);
+    if(row===postKeys.length-1||!isRisk(row+1,column))outline.push(`M${x},${y+100}h100`);
+    if(column===0||!isRisk(row,column-1))outline.push(`M${x},${y}v100`);
+  }
+  // Dilate the combined cells in screen pixels, then subtract the inner area: adjacent cells share one outer border.
+  const selectionOutline=selection.length?`<svg class="fid-selection-outline" aria-hidden="true"><defs><filter id="fid-selection-border" x="-10%" y="-10%" width="120%" height="120%" primitiveUnits="userSpaceOnUse"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="outer"/><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="inner"/><feComposite in="outer" in2="inner" operator="out" result="border"/><feFlood flood-color="#3566b0" result="color"/><feComposite in="color" in2="border" operator="in"/></filter></defs><g fill="#fff" filter="url(#fid-selection-border)">${selection.join('')}</g></svg>`:'';
+  const tips={'stable-slot':'Slot submitted on time. SRD / RD − approved Slot effective date: ≥20 weeks; No Labor: ≥12 weeks. Approval confirms completion.','late-slot':'Slot submitted too late. SRD / RD − approved Slot effective date: <20 weeks; No Labor: <12 weeks. Approval confirms completion.','slot-date-unknown':'Active approved Slot, but its SRD / RD is missing.','stable-ctl':'No late approved Config Change and no Late NSR. Both sources and a reference date must be available.','late-ctl-nsr':'Late CTL ∪ Late NSR, counted once per FID. MCSD is used first, with SRD as fallback.','ctl-unknown':'CTL/NSR sources or MCSD / SRD are insufficient. A known Late condition still belongs to Late CTL/NSR.'};
+  const causesOpen=target.querySelector('.fid-causes')?.open;
+  const axis=key=>`<div class="fid-axis-item${key==='late-ctl-nsr'?' fid-late-causes':''}">${card(key,fidStatusNames[key],counts[key],key.includes('unknown')?'#64748b':key.startsWith('late')?'#b3314c':'#16843f',counts['slot-ready'],tips[key])}${key==='late-ctl-nsr'?`
+    <details class="fid-causes"${causesOpen?' open':''}><summary><span>Causes</span><span>Causes (may overlap)</span></summary><div class="fid-cause-list">
+      ${card('late-ctl','Late CTL',counts['late-ctl'],'#b3314c',counts['slot-ready'],'Approved Config Change <20 weeks before MCSD / SRD. Pull / Push excluded. May overlap Late NSR.')}
+      ${card('open-nsr','Late NSR',counts['open-nsr'],'#93600b',counts['slot-ready'],'In-work NSR with <20 weeks to MCSD / SRD, including overdue. May overlap Late CTL. Completed NSRs do not participate.')}
+    </div></details>`:''}</div>`;
+  const overview=`${overviewHead('portfolio',current.fids.length,rows.length,selected.length||causes.length)}
+    <div class="fid-flow"><div class="fid-flow-inner${ctlReady?' has-breakdown':''}${counts['slot-date-unknown']?' has-slot-unknown':''}" style="--matrix-cols:${slotKeys.length};--matrix-rows:${postKeys.length}"><div class="fid-equation" aria-label="${ctlReady?'Total FID − No Slot = Slotted FID':'Total FID'}">
+    ${card('all','Total FID',rows.length,'#94a3b8')}${ctlReady?`${sign('−')}${card('no-slot','No Slot',counts['no-slot'],'#8d5514',rows.length,'No active approved Slot. Pending approval and Drop Slot subcounts may overlap when a replacement Slot is pending.')}${sign('=')}${card('slot-ready','Slotted FID',counts['slot-ready'],'#2563eb',rows.length,'FID has an active, Sales Ops approved Slot.')}`:''}</div>
+    ${ctlReady?`<div class="fid-origin-pre">${relation('=','origin-pre')}</div><div class="fid-slot-sum" aria-label="Column totals: ${slotKeys.map(key=>fidStatusNames[key]).join(' + ')} = Slotted FID">${slotKeys.map(axis).join('')}${slotKeys.slice(1).map((_,index)=>relation('+','origin-pre',`left:${(index+1)*100/slotKeys.length}%;top:50%`)).join('')}</div>
+    <div class="fid-origin-post">${relation('=','origin-post')}</div><div class="fid-breakdown" aria-label="Row totals: ${postKeys.map(key=>fidStatusNames[key]).join(' + ')} = Slotted FID">${postKeys.map(axis).join('')}${postKeys.slice(1).map((_,index)=>relation('+','origin-post',`left:50%;top:${(index+1)*100/postKeys.length}%`)).join('')}</div>
+    <div class="fid-row-equals">${postKeys.map(key=>relation('=','post:'+key)).join('')}</div><div class="fid-col-equals">${slotKeys.map(key=>relation('=','slot:'+key)).join('')}</div>
+    <div class="fid-matrix" aria-label="Pre-slot Risk × Post-slot Risk matrix"><div class="fid-matrix-grid">${cells.join('')}</div><svg class="fid-risk-outline" viewBox="0 0 ${slotKeys.length*100} ${postKeys.length*100}" preserveAspectRatio="none" aria-hidden="true"><path d="${outline.join('')}"/></svg>${selectionOutline}${cellOperators.join('')}<button class="fid-risk-label" style="right:calc(${riskLabelOffset}% + 14px)" type="button" data-fid-region="risk-fid" data-fid-value="risk-fid" aria-pressed="${fidStatusSelected('risk-fid')}" title="Risk FID = Late Slot ∪ Late CTL ∪ Late NSR&#10;Risk FID / Slotted FID = ${number(counts['risk-fid'])} / ${number(counts['slot-ready'])} = ${riskPercent}%"><span>Risk FID · ${number(counts['risk-fid'])}</span><span class="fid-percent">${riskPercent}%</span></button></div>
+    <div class="fid-pre-axis" data-fid-axis="pre" title="Pre: was the Slot submitted on time?"><span>Pre-slot Risk</span></div><div class="fid-post-axis" data-fid-axis="post" title="Post: any Late CTL or Late NSR in the delivery risk window?"><span>Post-slot Risk</span></div>
+    `:''}</div></div>
+    ${!ctlReady?'<div class="fid-waiting" role="status">Load a CTL source to determine Slot Completion.</div>':!store.meta.nsr?'<div class="fid-waiting" role="status">Load NSR data to complete the CTL/NSR classification.</div>':''}`,drivers=`<div class="section-head"><h2>Risk Drivers</h2><span class="badge">Drivers can overlap</span></div><div class="signal-strip">${[...riskCounts].map(([label,{count,fids}])=>`<button class="signal" ${label==='Pending NSR'?'data-nsr-lifecycle="open"':pendingCtlTypes[label]?`data-ctl-status="workflow" data-ctl-types="${pendingCtlTypes[label].join(',')}" data-group-value="${escapeHtml(label)}"${taskFilterValues('ctl','workflow').length?'':' disabled'}`:`data-group-path="riskType" data-group-value="${escapeHtml(label)}"`} aria-pressed="${label==='Pending NSR'?taskFilterSelected('nsr','workflow'):pendingCtlTypes[label]?taskFilterSelected('ctl','workflow',pendingCtlTypes[label]):(filterValues.riskType||[]).includes(label)}" title="${escapeHtml(pretty(label,'riskType'))} = ${count} ${label==='Pending NSR'?'pending NSR':pendingCtlTypes[label]?'in-work CTL documents':'distinct FIDs'}${label.startsWith('Pending ')?' across '+fids+' distinct FID':''}"><b>${number(count)}</b> ${escapeHtml(pretty(label,'riskType'))}${label.startsWith('Pending ')?' <small>| in '+number(fids)+' FID</small>':''}</button>`).join('')||'<span class="muted">No risk drivers in this selection</span>'}</div>`,signals=`<button class="signal" data-nce-signal${store.meta.nce?'':' hidden'}><b>${number(m.nceFids)}</b>FIDs with NCE / FA</button>`;
+  if(updateMarks){
+    const scroll=target.querySelector('.fid-flow').scrollLeft;
+    target.querySelector('.fid-overview').innerHTML=overview;
+    target.querySelector('.fid-flow').scrollLeft=scroll;
+    target.querySelector('.fid-risk-drivers').innerHTML=drivers;
+    target.querySelector('[data-nce-signal]').parentElement.innerHTML=signals;
+  }else target.innerHTML=`<section class="card fid-overview">${overview}</section><section class="card fid-risk-drivers">${drivers}</section>${pivotHtml('fid',current.fids.length,'FIDs',target)}<div class="signal-strip">${signals}</div><section class="card"><div class="section-head detail-head"><h2>FID Details</h2><div id="fidMarkFilter" class="signal-strip mark-filter" role="group" aria-label="FID Mark"></div></div><div id="portfolioTable"></div></section>`;
+  renderPivots('fidPivots',current.fids,[['quarter','Calendar Quarter','fQuarter','#4679cf'],['customer','FID Customer','fCustomer','#b44771'],['account','Account','fAccount','#347d50'],['businessUnit','Business Unit','fBusinessUnit','#8251bb'],['system','System Description','fSystem','#14869a']],'FIDs',updateMarks);
+  table('portfolioTable',portfolioColumns,current.fids,{file:'FID_Portfolio',fid:true,markFilter:'fid',defaultSort:'FID',ascending:false,frozen:['FID'],exportRows:fidDetailRows,copyRows:fidCopyRows,widths:{FID:80,'FID Status & Risks':175,Note:220}},updateMarks);
+}
+const ctlColumns=[['CTL',ctl=>ctl.number||ctl.id,(value,ctl)=>ctl.number?`<a class="fc-link" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=CRM_SRQM_RFC&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(ctl.number)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`:escapeHtml(value)],['FID',ctl=>ctl.fidId,fidLink],
+  ['Stage',ctl=>ctlStageName(ctl.stage),value=>value?`<span class="status-pill ${value.startsWith('0-')?'stop':value==='15-Completed'?'terminal':value==='1-Originator'?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
+  ['Change',ctl=>ctl.change],['Created Date',ctl=>ctl.created],
+  ['Elapsed Days',ctl=>taskGroup(ctlStageName(ctl.stage),true)==='workflow'&&ctl.created?(nsrRecords.dateNumber(nsrData.localDate(new Date()))-nsrRecords.dateNumber(ctl.created))/86400000:''],
+  ['Sales Ops Approval',ctl=>ctl.approved],['Config Frz',ctl=>ctl.configFrz],['Initiator',ctl=>ctl.initiator],['Customer',ctl=>ctl.customer],['Quote ID',ctl=>ctl.quote],['NSR Reference',ctl=>ctl.nsrReferences.join(', ')],['Root Cause',ctl=>ctl.rootCause],['CTL Notes',ctl=>ctl.notes],['Sub Reason',ctl=>ctl.subReason]
+];
+function renderChanges(target,updateMarks=false){
+  updateMarks=updateMarks&&tables.has('ctlTable');
+  const selected=filterValues['ctl.stage']||[],filters=queryFilters();if(filters.ctl)delete filters.ctl.stage;
+  const pendingOnly=filterValues.signal?.includes('pending-ctl'),rows=pendingOnly?current.ctls.filter(ctl=>ctl.pending):current.ctls,overviewRows=(selected.length?graph.query(filters,'ctls'):current.ctls).filter(ctl=>!pendingOnly||ctl.pending);
+  const groups={completed:0,workflow:0,originator:0,rejected:0,cancelled:0,unknown:0};for(const ctl of overviewRows)groups[taskGroup(ctlStageName(ctl.stage),true)]++;
+  const terms=[['completed','Completed',overviewColors.completed],['workflow','In work',overviewColors.workflow],['originator','Originator',overviewColors.originator],['rejected','Rejected',overviewColors.rejected],['cancelled','Cancelled',overviewColors.cancelled],['unknown','Stage unknown',overviewColors.unknown]].filter(([group])=>group!=='unknown'||groups.unknown||taskFilterSelected('ctl','unknown'));
+  const overview=`<div class="section-head"><h2>CTL Overview</h2><span class="badge">${selected.length?number(rows.length)+' / '+number(overviewRows.length)+' selected CTL':number(rows.length)+' filtered CTL'}</span></div><div class="ctl-flow" style="--ctl-terms:${terms.length}" aria-label="Total CTL = ${terms.map(([,label])=>label).join(' + ')}">${taskOverview('ctl',terms,groups,overviewRows.length)}</div>`;
+  if(updateMarks)target.querySelector('.ctl-overview').innerHTML=overview;
+  else target.innerHTML=`<section class="card ctl-overview">${overview}</section>${pivotHtml('ctl',rows.length,'CTL',target)}<section class="card"><div class="section-head detail-head"><h2>CTL Details</h2></div><div id="ctlTable"></div></section>`;
+  renderPivots('ctlPivots',rows,[['quarter','Calendar Quarter','fQuarter','#7950a1'],['stage','CTL Stage','fCtlStage','#9468bc'],['customer','Customer','fCtlCustomer','#b491cf']],'CTL',updateMarks);
+  table('ctlTable',ctlColumns,rows,{file:pendingOnly?'Pending_CTL':'CTL_Details',defaultSort:'CTL',ascending:false,widths:{CTL:115,FID:85,Stage:145,Change:105,'Created Date':130,'Elapsed Days':130,'Sales Ops Approval':170,'Config Frz':115,Initiator:155,Customer:185,'Quote ID':120,'NSR Reference':180,'Root Cause':300,'CTL Notes':300,'Sub Reason':190}},updateMarks);
+}
+function recordMark(kind,number){const config=markKinds[kind];return config.ignored.has(number)?'ignore':config.important.has(number)?'important':''}
+function currentMarks(kind){const config=markKinds[kind];return Object.fromEntries([...config.ignored,...config.important].sort().map(number=>[number,recordMark(kind,number)]))}
+function markSymbol(mark){return mark==='ignore'?'⊘':mark==='important'?'★':''}
+function markButton(kind,number){
+  const value=recordMark(kind,number),label=value==='ignore'?'⊘ Ignore':value==='important'?'★ Star':'Normal',next=value==='ignore'?'★ Star':value==='important'?'Normal':'⊘ Ignore';
+  return `<button type="button" class="record-mark-toggle${kind==='nsr'?' nsr-mark-toggle':''}" data-mark-id="${escapeHtml(number)}" data-ignore-${kind}="${escapeHtml(number)}" data-${kind}-mark="${value}" data-record-mark="${value}" aria-label="${escapeHtml(number)}: ${label}; next ${next}" title="${label} → ${next}\nClick to cycle: Normal → ⊘ Ignore → ★ Star → Normal">${value==='ignore'?'<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="4.5"/><path d="M3 9 9 3"/></svg>':value==='important'?'<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M6 1 7.55 4.3 11 4.8 8.5 7.3 9.1 11 6 9.2 2.9 11 3.5 7.3 1 4.8 4.45 4.3Z"/></svg>':''}</button>`;
+}
+function markColumn(kind){return ['Mark',row=>recordMark(kind,kind==='fid'?row.id:row.number),(_,row)=>markButton(kind,kind==='fid'?row.id:row.number)]}
+function markListHtml(kind){
+  const config=markKinds[kind],prefix=config.prefix;
+  return `<section class="card" id="ignored${prefix}s"><div class="section-head"><h2>Marked ${config.plural}</h2><button type="button" class="btn blue small" data-save-${kind}-marks>Save</button></div><div class="nsr-mark-editors"><div class="ag-box"><label for="fcIgnored${prefix}s">⊘ Ignore</label><textarea id="fcIgnored${prefix}s" data-${kind}-marks="ignore" rows="8" spellcheck="false" placeholder="One ${config.label} per line"></textarea></div><div class="ag-box"><label for="fcImportant${prefix}s">★ Star</label><textarea id="fcImportant${prefix}s" data-${kind}-marks="important" rows="8" spellcheck="false" placeholder="One ${config.label} per line"></textarea></div></div><div id="${config.status}" class="statistics-state" role="status"></div></section>`;
+}
+const markNsrColumn=markColumn('nsr');
+const nsrColumns=[
+  ['NSR#',nsr=>nsr.number,value=>`<button class="fc-link" data-cycle-nsr="${escapeHtml(value)}" title="Query Cycle Time">${escapeHtml(value)}</button>`],
+  ['NSR Title',nsr=>nsr.title],['Task Status',nsr=>nsr.taskStatus,value=>value?`<span class="status-pill ${value==='15-Completed'?'terminal':value.startsWith('0-')?'stop':value.startsWith('Unmapped')?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
+  ['NSR Type',nsr=>nsr.type],['Impacted Sub System',nsr=>nsr.subsystem],['Initiator',nsr=>nsr.initiator],['FID',nsr=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).join(', '),(_,nsr)=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).map(fidLink).join(', ')||'—'],
+  ['Primary Product',nsr=>nsr.product],
+  ['NSR → CTL',nsr=>lifecycleNames[nsr.lifecycle]||nsr.lifecycle,(_,nsr)=>pill(lifecycleNames[nsr.lifecycle]||nsr.lifecycle,nsr.ignored?'ignore':nsr.lifecycle==='completed-unlinked'?'alert':['completed-5d','implemented'].includes(nsr.lifecycle)?'clear':nsr.lifecycle==='ctl-pending'?'pending':'info')],
+  ['CTL references',nsr=>(nsr.links||[]).map(link=>link.ctlNumber+(link.kind==='reference'?' ('+link.fidId+')':'')).join(', ')],
+  ['Customer',nsr=>nsr.customer],['NSR Org',nsr=>nsr.org],['Sales Rep',nsr=>nsr.record['Sales Rep']],['Sales Ops',nsr=>nsr.record['Sales Ops']],['Technical Contact',nsr=>nsr.record['Technical Contact']],
+  ['Submit Date',nsr=>nsr.submitted],['NSR Request',nsr=>nsr.record['NSR Request']],['Temp Id#',nsr=>nsr.tempId]
+];
+function nsrCopyRows(rows,columns=nsrColumns){return nsrDetailRows(rows,columns.filter(([label])=>label!=='Mark'))}
+function markedDetailRows(kind,rows,columns){return rows.map(row=>Object.fromEntries(columns.map(([label,get])=>[label,label==='Mark'?markSymbol(recordMark(kind,kind==='fid'?row.id:row.number)):get(row)??''])))}
+function nsrDetailRows(rows,columns=[markNsrColumn,...nsrColumns]){return markedDetailRows('nsr',rows,columns)}
+function fidDetailRows(rows,columns=portfolioColumns){return markedDetailRows('fid',rows,columns)}
+function fidCopyRows(rows,columns=portfolioColumns){return fidDetailRows(rows,columns.filter(([label])=>label!=='Mark'))}
+function renderNsrDetail(name,rows,options={},updateMarks=false,changedNsr=''){
+  const columns=[markNsrColumn,...nsrColumns],widths={'Task Status':225,'NSR#':80,FID:80,'NSR Org':96};
+  if(name==='fidNsrTable'){columns.splice(2,0,...columns.splice(columns.findIndex(([label])=>label==='NSR → CTL'),2));widths['NSR → CTL']=150}
+  table(name,columns,rows,{file:'NSR_Detail',cycle:true,nsr:true,exportRows:nsrDetailRows,copyRows:nsrCopyRows,defaultSort:'FID',ascending:false,frozen:['NSR#'],widths,...options},updateMarks,changedNsr);
+}
+function highlightLinkedHistory(name,record){
+  const state=tables.get(name);if(!state?.ready)return;
+  const key=name==='fidCtlTable'?'ctlId':'nsrId',linked=new Set(record?.links?.map(link=>link[key]));
+  for(const row of state.grid.getRows())row.getElement().classList.toggle('nsr-ctl-match',linked.has(state.rows[row.getIndex()].id));
+}
+function pivotHtml(kind,count,unit,target){return `<details class="card interactive-pivot"${target.querySelector('.interactive-pivot')?.open===false?'':' open'}><summary class="section-head"><h2>Interactive Pivot<span class="pivot-toggle" aria-hidden="true" title="Expand / collapse Interactive Pivot"></span></h2><span class="badge">${number(count)} filtered ${unit}</span></summary><div id="${kind}Pivots" class="nsr-pivots${kind==='ctl'?' ctl-pivots':''}"></div></details>`}
+function renderPivots(name,rows,pivots,unit,updateMarks=false){
+  const target=id(name);
+  if(updateMarks)target.previousElementSibling.querySelector('.badge').textContent=number(rows.length)+' filtered '+unit;
+  pivots.forEach(([path,label,filter,color],index)=>{
+    const counts=new Map();rows.forEach(row=>{const value=row[path]||'[Unknown]';counts.set(value,(counts.get(value)||0)+1)});
+    const entries=[...counts].sort((a,b)=>path==='taskStatus'?nsrRecords.compareStatus(a[0],b[0]):path==='stage'?compareCtlStages(a[0],b[0]):path==='quarter'?Number(a[0]==='[Unknown]')-Number(b[0]==='[Unknown]')||nsrRecords.periodRank(a[0])-nsrRecords.periodRank(b[0])||a[0].localeCompare(b[0]):b[1]-a[1]||a[0].localeCompare(b[0])),max=Math.max(1,...counts.values());
+    const content=entries.map(([value,count])=>`<div class="pivot-row"><span class="pivot-label" title="${escapeHtml(path==='stage'?ctlStageName(value):value)}">${escapeHtml(path==='stage'?ctlStageName(value):value)}</span><span class="pivot-bar"><i style="width:${100*count/max}%;--bar:${color}"></i></span><button class="pivot-count" data-pivot-filter="${filter}" data-pivot-value="${escapeHtml(value)}" title="Filter ${escapeHtml(value)}">${number(count)}</button></div>`).join('')||'<span class="muted">No matching '+unit+'</span>';
+    if(updateMarks){const card=target.children[index],list=card.querySelector('.pivot-list'),scroll=list.scrollTop;card.querySelector('.pivot-head span').textContent=counts.size+' values';list.innerHTML=content;list.scrollTop=scroll}
+    else target.insertAdjacentHTML('beforeend',`<section class="pivot-card"><div class="pivot-head"><h3>${label}</h3><span>${counts.size} values</span></div><div class="pivot-list">${content}</div></section>`);
+  });
+}
+function renderNsrs(target,updateMarks=false,changedNsr=''){
+  const rows=current.nsrs,selected=filterValues['nsr.taskStatus']||[],filters=queryFilters(),previous=tables.get('nsrTable');if(filters.nsr)delete filters.nsr.taskStatus;
+  const sameRows=updateMarks&&previous&&rows.length===previous.rows.length&&rows.every((row,index)=>{const before=previous.rows[index];return row.number===before.number&&row.record===before.record&&row.taskStatus===before.taskStatus&&row.fidId===before.fidId&&row.matchedFidIds?.join()===before.matchedFidIds?.join()});
+  const overviewRows=selected.length?graph.query(filters,'nsrs'):rows,groups={workflow:0,completed:0,rejected:0,cancelled:0},stageCounts={'completed-5d':0,'completed-unlinked':0,'ctl-pending':0,'implemented':0,'ctl-unavailable':0};
+  overviewRows.forEach(nsr=>{const group=taskGroup(nsr.taskStatus);groups[group]++;if(group==='completed')stageCounts[Object.hasOwn(stageCounts,nsr.taskLifecycle)?nsr.taskLifecycle:'ctl-unavailable']++});
+  const terms=[['completed','Completed',overviewColors.completed],['workflow','In workflow',overviewColors.workflow],['rejected','Rejected',overviewColors.rejected],['cancelled','Cancelled',overviewColors.cancelled]];
+  const completedStages=[['completed-unlinked','alert','#a62a49','Completed NSR → no matching CTL in loaded data'],['ctl-pending','pending','#8a5c0c','Linked CTL → awaiting Sales Ops approval'],['implemented','approved',overviewColors.completed,'Linked CTL → Sales Ops approved'],['completed-5d','approved',overviewColors.completed,'Completed D-prefix (5D) NSR → no CTL required']];
+  const showCompleted=groups.completed||selected.some(value=>value==='15-Completed'||Object.hasOwn(nsrCompletedTasks,value)),unknown=stageCounts['ctl-unavailable'];
+  const completedEquation=`${groups.completed} = ${completedStages.map(([key])=>stageCounts[key]).join(' + ')}${unknown?' + '+unknown+' unknown':''}`;
+  const overview=`${overviewHead('nsr',rows.length,overviewRows.length,selected.length)}<div class="nsr-flow${showCompleted?' has-completed':''}"><div class="nsr-equation" aria-label="Total NSR = ${terms.map(([,label])=>label).join(' + ')}">${taskOverview('nsr',terms,groups,overviewRows.length)}</div>
+  ${showCompleted?`<div class="nsr-breakdown" role="group" aria-label="Completed NSR breakdown"><span class="nsr-completed-arrow" title="${escapeHtml(completedEquation)}" aria-hidden="true"></span><span class="math-sign nsr-breakdown-equals" aria-hidden="true">=</span><div class="nsr-stage-sum"><span class="nsr-stage-spacer" aria-hidden="true"></span>${completedStages.map(([key,kind,color,tip],index)=>{const count=stageCounts[key],active=taskFilterSelected('nsr',key),percent=groups.completed?(100*count/groups.completed).toFixed(1):'0.0';return (index?'<span class="math-sign" aria-hidden="true">+</span>':'')+`<button class="nsr-kpi nsr-stage ${kind}" style="--kpi-color:${color}" type="button" data-nsr-lifecycle="${key}" data-count="${count}" aria-pressed="${active}"${!count&&!active?' disabled':''} title="${escapeHtml(`${count} / ${groups.completed} = ${percent}%\n${tip}`)}"><small>${lifecycleNames[key]}</small><b>${number(count)}</b><span>${percent}% of Completed NSRs</span></button>`}).join('')}${unknown?`<span class="math-sign" aria-hidden="true">+</span><span class="nsr-kpi nsr-stage unknown" style="--kpi-color:#52647d" data-count="${unknown}" role="status" title="CTL sources are not loaded or approval status is missing. View these records under 15-Completed."><small>CTL status unknown</small><b>${number(unknown)}</b><span>${groups.completed?(100*unknown/groups.completed).toFixed(1):'0.0'}% of Completed NSRs</span></span>`:''}</div></div>`:''}</div>`;
+  if(updateMarks)target.querySelector('.nsr-overview').innerHTML=overview;
+  else target.innerHTML=`<section class="card nsr-overview">${overview}</section>${pivotHtml('nsr',rows.length,'NSRs',target)}<section class="card"><div class="section-head detail-head"><h2>NSR Details</h2><div id="nsrMarkFilter" class="signal-strip mark-filter" role="group" aria-label="NSR Mark"></div></div><div id="nsrTable"></div></section>`;
+  const pivots=[['taskStatus','Task Status','fNsrTaskStatus','var(--nsr-ink)'],['subsystem','Impacted Sub System','fNsrSubsystem','var(--nsr-ink)'],['type','NSR Type','fNsrType','var(--nsr-ink)'],['product','Primary Product','fNsrProduct','var(--nsr-ink)'],['org','NSR Org','fNsrOrg','var(--nsr-ink)'],['customer','Customer','fNsrCustomer','var(--nsr-ink)']];
+  if(!sameRows)renderPivots('nsrPivots',rows,pivots,'NSRs',updateMarks);
+  renderNsrDetail('nsrTable',rows,{markFilter:'nsr'},updateMarks,sameRows?changedNsr:'');
+}
+const summaryDimensions=[['quarter','Quarter'],['account','Account'],['customer','FID Customer'],['owner','Owner']];
+const summaryMetricDefs=[
+  ['Slot Completion%','slotted','fid','slot','slot-ready'],['Pre-slot Stability%','stableSlot','slotted','slot','stable-slot'],['Post-slot Stability%','stablePost','slotted','post','stable-ctl'],
+  ['FID','fid','','fcid'],['Risk FID%','riskFid','slotted','slot','risk-fid'],['No Late Flags%','noLate','slotted','post','risk-free'],
+  ['NSR','nsr','','nsr'],['In work NSR','open','','nsr'],['Completed NSR','completed','','nsr'],['Cancelled/Rejected NSR','discardedNsr','','nsr'],['Completed NSR but no CTL','unlinked','','linked'],
+  ['CTL','ctl','','ctl'],['Submitted CTL','submitted','','ctl'],['Completed CTL','ctlCompleted','','ctl'],['Draft CTL','draft','','ctl'],['Cancelled/Rejected CTL','discardedCtl','','ctl'],['Pending Config CTL','pending','','ctl'],['Pending Pull/Push CTL','pendingPullPush','','ctl']
+];
+let summaryGroup='quarter',summaryPreviousGroup='quarter',summarySelected=['slotted','stableSlot','stablePost','fid','nsr','ctl'],summarySort={key:'',dir:-1},summaryCache={},summaryReport=[];
+function summaryGroups(path){
+  const groups=new Map(),fidMetrics=summaryMetricDefs.filter(([,,,,state])=>state),entry=name=>{
+    name=name||'[Unknown]';if(!groups.has(name))groups.set(name,{name,...Object.fromEntries(summaryMetricDefs.map(([,key])=>[key,0]))});return groups.get(name);
+  };
+  for(const node of current.fids){
+    const row=entry(node[path]);row.fid++;
+    for(const [,key,,,state]of fidMetrics)row[key]+=node.portfolioStates.includes(state);
+  }
+  for(const nsr of current.nsrs){
+    const fids=nsr.matchedFidIds||nsr.fidIds,groupName=fid=>graph.fids.get(fid)?.[path]||(path==='account'?nsr.account:'')||'[Unknown]';
+    const names=new Set(path==='owner'?[nsr.initiator||'[Unknown]']:fids.length?fids.map(groupName):[path==='account'?nsr.account||'[Unknown]':'[Unknown]']),status=taskGroup(nsr.taskStatus);
+    for(const name of names){
+      const row=entry(name);row.nsr++;row.open+=status==='workflow';row.completed+=status==='completed';row.discardedNsr+=status==='cancelled'||status==='rejected';
+      row.unlinked+=nsr.taskLifecycle==='completed-unlinked'&&(path==='owner'||!fids.length||fids.some(fid=>groupName(fid)===name&&nsr.implementationByFid[fid]==='completed-unlinked'));
+    }
+  }
+  for(const ctl of current.ctls){
+    const row=entry(path==='owner'?ctl.initiator:graph.fids.get(ctl.fidId)?.[path]);row.ctl++;row.pending+=ctl.pending;row.pendingPullPush+=ctl.pendingPullPush;
+    if(ctl.statusKind==='completed')row.ctlCompleted++;else if(ctl.statusKind==='discarded')row.discardedCtl++;else if(ctl.status==='Submitted')row.submitted++;else if(ctl.status==='Draft')row.draft++;
+  }
+  return [...groups.values()].sort((a,b)=>Number(a.name==='[Unknown]')-Number(b.name==='[Unknown]')||(path==='owner'?b.riskFid-a.riskFid||b.fid-a.fid||b.nsr-a.nsr||b.ctl-a.ctl:path==='quarter'?nsrRecords.periodRank(a.name)-nsrRecords.periodRank(b.name):0)||tableCollator.compare(a.name,b.name));
+}
+function renderSummaryMetrics(target){
+  if(!id('summaryChart')){
+    target.innerHTML=`<section class="card"><div class="section-head"><div class="summary-heading overview-tools"><h2>Summary Metrics</h2><span id="summaryCount" class="badge" aria-live="polite"></span>${ignoredToggle('summary')}</div><div class="btnrow"><button class="btn light small" data-summary-export="copy">Copy</button><button class="btn light small" data-summary-export="xlsx">Export XLSX</button></div></div><div class="summary-controls"><div class="fc-filter"><label for="summaryGroup">Group by</label><select id="summaryGroup"></select></div><div class="fc-filter"><label for="summaryMetrics">Metrics</label><select id="summaryMetrics" multiple>${summaryMetricDefs.map(([label,key])=>`<option value="${key}"${summarySelected.includes(key)?' selected':''}>${label}</option>`).join('')}</select></div></div><div id="summaryChart" class="summary-chart" aria-live="polite"></div><div id="summaryLegend" class="summary-legend" hidden>FID by Owner · NSR / CTL by Initiator.</div></section>`;
+    jQuery(id('summaryMetrics')).chosen({width:'100%',search_contains:true,hide_results_on_select:false,display_selected_options:false,placeholder_text_multiple:'Select metrics'});
+    jQuery('#summaryGroup,#summaryMetrics').on('change',event=>{if(event.target.id==='summaryGroup'){summaryGroup=event.target.value;if(summaryGroup!=='owner')summaryPreviousGroup=summaryGroup}else summarySelected=[...event.target.selectedOptions].map(option=>option.value);renderSummaryMetrics(target)});
+  }
+  id('summaryGroup').innerHTML=summaryDimensions.filter(([value])=>value!=='owner'||summaryGroup==='owner').map(([value,label])=>`<option value="${value}"${value===summaryGroup?' selected':''}>${label}</option>`).join('');
+  id('summaryLegend').hidden=summaryGroup!=='owner';
+  const chart=id('summaryChart');summaryReport=[];
+  if(!summarySelected.includes(summarySort.key))summarySort.key='';
+  for(const button of target.querySelectorAll('[data-summary-export]'))button.disabled=true;
+  if(!summarySelected.length){chart.innerHTML='<div class="summary-empty">Select at least one metric.</div>';id('summaryCount').textContent='';return}
+  if(summaryCache.revision!==revision||summaryCache.group!==summaryGroup)summaryCache={revision,group:summaryGroup,rows:summaryGroups(summaryGroup)};
+  const rows=summaryCache.rows.slice(),ctlReady=Boolean(store.meta.ctl||store.meta.ctlNsr),ready={fcid:!!store.meta.fcid,ctl:ctlReady,nsr:!!store.meta.nsr,slot:!!store.meta.fcid&&ctlReady,post:!!store.meta.fcid&&ctlReady&&!!store.meta.nsr,linked:ctlReady&&!!store.meta.nsr};
+  id('summaryCount').textContent=rows.length+' groups';
+  if(!rows.length){chart.innerHTML='<div class="summary-empty">No matching records.</div>';return}
+  const metrics=summaryMetricDefs.filter(([,key])=>summarySelected.includes(key)),dimension=summaryDimensions.find(([key])=>key===summaryGroup)[1];
+  const sortMetric=metrics.find(([,key])=>key===summarySort.key);
+  if(sortMetric&&ready[sortMetric[3]]){
+    const [,key,base]=sortMetric;
+    rows.sort((a,b)=>{
+      const left=base?(a[base]?a[key]/a[base]:null):a[key],right=base?(b[base]?b[key]/b[base]:null):b[key];
+      return Number(left===null)-Number(right===null)||(left===null||right===null?0:summarySort.dir*(left-right));
+    });
+  }
+  summaryReport=[['Metric',...rows.map(row=>row.name)]];
+  for(const [label,key,base,source,countState]of metrics){
+    summaryReport.push([label,...rows.map(row=>ready[source]&&(!base||row[base]>0)?(base?row[key]/row[base]:row[key]):'—')]);
+    if(base)summaryReport.push([fidStatusNames[countState],...rows.map(row=>ready[source]?row[key]:'—')]);
+  }
+  for(const button of target.querySelectorAll('[data-summary-export]'))button.disabled=false;
+  const content=metrics.map(([label,key,base,source])=>{
+    const max=base?100:Math.max(1,...rows.map(row=>row[key]));
+    const cells=rows.map(row=>{
+      const available=ready[source]&&(!base||row[base]>0),value=available?(base?100*row[key]/row[base]:row[key]):null,display=value===null?'—':base?value.toFixed(1)+'%':number(value);
+      const tip=!ready[source]?'Required source data is not loaded.':base?label+' = '+row[key]+'/'+row[base]+' = '+display:label+' = '+display;
+      return `<td title="${escapeHtml(row.name+' · '+tip)}"><div class="summary-plot${available?'':' unavailable'}" style="--bar:${value===null?0:64*value/max}px" role="img" aria-label="${escapeHtml(row.name+' · '+tip)}"><i class="summary-bar" aria-hidden="true"></i><span class="summary-value">${display}</span></div></td>`;
+    }).join('');
+    return `<tr data-summary-metric="${key}" data-summary-source="${source}"><th scope="row" aria-sort="${summarySort.key===key?(summarySort.dir===1?'ascending':'descending'):'none'}"><button type="button" class="fc-link" data-summary-sort="${key}" title="Sort groups by ${label}">${label} ${summarySort.key===key?(summarySort.dir===1?'↑':'↓'):'↕'}</button></th>${cells}</tr>`;
+  }).join('');
+  chart.innerHTML=`<table class="summary-table" style="min-width:${180+110*rows.length}px" aria-label="Summary Metrics by ${dimension}"><colgroup><col style="width:180px">${rows.map(()=>'<col>').join('')}</colgroup><thead><tr><th scope="col">Metric</th>${rows.map(row=>`<th scope="col">${escapeHtml(row.name)}</th>`).join('')}</tr></thead><tbody>${content}</tbody></table>`;
+}
+const nceColumns=[['NCE',row=>row.number],['State',row=>row.status],['Title',row=>row.title],['Impact',row=>row.impact],['Opened',row=>row.opened],['Damage Group',row=>row.damageGroup],['Damage Code',row=>row.damageCode],['Part Number',row=>row.partNumber],['Part Description',row=>row.partDescription]];
+
+const tableCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
+const columnPopup=id('columnFilterPopup'),columnInput=columnPopup.querySelector('input');
+// Hidden tabs keep their measured size, so showing an unchanged table does not rebuild its rows.
+const tableResize=new ResizeObserver(entries=>{for(const {target} of entries){const state=tables.get(target.dataset.tableName);if(!state?.ready||!target.clientWidth||!target.clientHeight)continue;const size=target.clientWidth+':'+target.clientHeight;if(size!==state.size){state.size=size;state.grid.redraw()}}});
+function orderTableColumns(definitions,columns,order,nsrHistory=false){
+  if(nsrHistory){const leading=['NSR → CTL','CTL references'];order=[...leading,...(order||columns.map(([label])=>label)).filter(label=>!leading.includes(label))]}
+  if(!Array.isArray(order))return definitions;
+  const rank=new Map(order.map((label,index)=>[label,index])),label=column=>columns[Number(column.field.slice(1))][0];
+  const movable=new Set(definitions.filter(column=>!column.frozen&&rank.has(label(column)))),sorted=[...movable].sort((a,b)=>rank.get(label(a))-rank.get(label(b)));let index=0;
+  return definitions.map(column=>movable.has(column)?sorted[index++]:column);
+}
+function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
+  // Tabulator deep-clones row data; keep the full graph records in state.rows.
+  const previous=tables.get(name),dataRow=(row,index)=>{const values=columns.map(([,get])=>get(row)??'');return {id:index,search:values.join('\0').toLowerCase(),...Object.fromEntries(values.map((value,index)=>['c'+index,value]))}};
+  if(previous?.ready&&updateMarks){
+    const wrap=previous.grid.element,active=document.activeElement,focused=wrap.contains(active)?active.dataset.markId||active.dataset.noteFid:'',focusSelector=active.matches('[data-mark-id]')?'[data-mark-id]':'[data-note-fid]';previous.rows=rows;previous.columns=columns;previous.options=options;wrap.setAttribute('aria-busy','true');
+    const index=changedNsr?rows.findIndex(row=>(options.fid?row.id:row.number)===changedNsr):-1,updated=index>=0?previous.grid.updateData([dataRow(rows[index],index)]):previous.grid.replaceData(rows.map(dataRow));
+    return updated.then(()=>{
+      if(index>=0){if(previous.local.search||previous.local.marks?.length||previous.local.headerFilters?.length)previous.grid.refreshFilter();else paintMarkFilter(previous);const sorters=previous.grid.getSorters();if(sorters.some(sorter=>['NSR → CTL','Note'].includes(columns[Number(sorter.field.slice(1))]?.[0])))previous.grid.setSort(sorters.map(sorter=>({column:sorter.field,dir:sorter.dir})))}
+      wrap.setAttribute('aria-busy','false');if(focused)[...wrap.querySelectorAll(focusSelector)].find(button=>(button.dataset.markId||button.dataset.noteFid)===focused)?.focus({preventScroll:true});
+    });
+  }
+  if(previous){tableResize.unobserve(previous.grid.element);previous.grid.destroy()}
+  const local=localTables.get(name)||{search:'',marks:[],sort:options.defaultSort?columns.findIndex(([label])=>label===options.defaultSort):-1,ascending:options.ascending??true},orderKey=name==='fidCtlTable'?'ctlTable':name==='fidNsrTable'?'nsrTable':name,state={name,columns,rows,options,local,orderKey};
+  if(name==='fidCtlTable'&&!id('fidDetail').open)local.showPullPush=false;
+  tables.set(name,state);localTables.set(name,local);
+  const host=id(name),autoHeight=Boolean(host.closest('.fid-dialog'));if(autoHeight)local.headerFilters=[];host.innerHTML=`<div class="fc-table-shell"><div class="table-toolbar">${autoHeight?`<div class="btnrow"><h2>${escapeHtml(options.title)} (<span data-table-count></span>)</h2>${name==='fidCtlTable'?`<button type="button" class="fc-link" data-toggle-pull-push aria-pressed="${Boolean(local.showPullPush)}">${local.showPullPush?'Hide':'Show'} Pull/Push</button>`:''}</div>`:`<div class="toolbar-left"><input type="search" data-table-search="${name}" aria-label="Search ${options.file||name}" placeholder="Search this result…" value="${escapeHtml(local.search)}"><span class="table-count" data-table-count></span></div>`}${autoHeight?'':`<div class="column-filter-bar"></div>`}<div class="toolbar-right${autoHeight?' btnrow':''}"><button class="btn light small" data-table-copy="${name}">Copy</button>${autoHeight?'':`<button class="btn light small" data-table-export="${name}">Export XLSX</button>`}${options.cycle?`<button class="btn blue small" data-table-cycle="${name}">Cycle Time</button>`:''}</div></div><div class="fc-table-wrap" data-table-name="${name}" aria-label="${escapeHtml(options.file||name)}" aria-busy="true"></div></div>`;
+  const wrap=host.querySelector('.fc-table-wrap');wrap.classList.toggle('column-filters',!autoHeight);
+  const data=rows.map(dataRow),widths={...options.widths};
+  if(options.fid){
+    const measure=document.createElement('canvas').getContext('2d'),font=getComputedStyle(wrap).fontFamily;
+    for(const [index,[label]]of columns.entries()){
+      if(label==='Mark'||widths[label]!==undefined)continue;
+      measure.font='600 12px '+font;let width=measure.measureText(label).width+44+(label==='FID Owner'?19:0);
+      measure.font='13px '+font;
+      for(const value of new Set(data.map(item=>String(item['c'+index])))){
+        width=Math.max(width,measure.measureText(value).width+20);if(width>=220)break;
+      }
+      widths[label]=Math.ceil(Math.max(75,Math.min(220,width)));
+    }
+  }
+  state.search=autoHeight?'':local.search.trim().toLowerCase();const filter=item=>(!state.search||item.search.includes(state.search))&&(name!=='fidCtlTable'||local.showPullPush||!['pull','push'].includes(state.rows[item.id].changeKey))&&(!local.marks?.length||local.marks.includes(recordMark(options.markFilter,options.markFilter==='fid'?state.rows[item.id].id:state.rows[item.id].number)||'normal'));
+  const columnDefs=columns.map(([label,,render],index)=>({title:label==='Mark'?'':label,titleFormatter:autoHeight||label==='Mark'?undefined:columnHeader,field:'c'+index,frozen:index===0||(options.frozen||[]).includes(label),minWidth:label==='Mark'?36:75,headerSort:label!=='Mark',headerFilter:autoHeight||label==='Mark'?false:'input',headerFilterParams:{elementAttributes:{'aria-label':'Filter '+label}},cellClick:name==='portfolioTable'&&label==='FID Status & Risks'?(_event,cell)=>showFid(state.rows[cell.getRow().getIndex()].id):undefined,hozAlign:label==='Mark'?'center':'left',headerHozAlign:label==='Mark'?'center':'left',width:widths[label]??(label==='Mark'?36:label==='Task Status'?275:/Title|Summary|Documents|Sample|File|Reason|Description|Action/.test(label)?320:/Owner|Initiator|Candidate|Customer|Product/.test(label)?185:/^Pre$|^Post$|NSR → CTL|Application/.test(label)?180:Math.max(110,Math.min(240,label.length*7+28))),sorter:(a,b)=>label==='Stage'?compareCtlStages(a,b):/Quarter|Period/.test(label)?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||tableCollator.compare(String(a),String(b)):typeof a==='number'&&typeof b==='number'?a-b:tableCollator.compare(String(a),String(b)),formatter:cell=>{const value=cell.getValue();cell.getElement().title=label==='Mark'?'':String(value);return '<span class="cell-content">'+(render?render(value,state.rows[cell.getRow().getIndex()]):escapeHtml(value)||'—')+'</span>'}}));
+  state.grid=new Tabulator(wrap,{data,autoResize:false,movableColumns:true,height:autoHeight?false:Math.min(620,Math.max(105,rows.length*34+68)),rowHeight:34,renderVertical:autoHeight?'basic':'virtual',renderVerticalBuffer:200,columnDefaults:{resizable:'header',headerFilterFunc:'like',headerFilterPlaceholder:'Filter…'},layout:'fitDataFill',placeholder:'',dataLoader:false,initialFilter:filter,initialHeaderFilter:local.headerFilters||[],initialSort:local.sort>=0?[{column:'c'+local.sort,dir:local.ascending?'asc':'desc'}]:[],rowFormatter:row=>{const element=row.getElement(),data=row.getData();element.dataset.rowIndex=row.getIndex();if(state.options.rowRisk)element.dataset.fidRisk=state.options.rowRisk(state.rows[row.getIndex()]);if(options.nsr||options.fid){const mark=recordMark(options.nsr?'nsr':'fid',options.nsr?state.rows[data.id].number:state.rows[data.id].id);element.dataset.recordMark=mark;if(options.nsr)element.dataset.nsrMark=mark;else element.dataset.fidMark=mark;}if(name==='nsrTable'){element.dataset.fidBand=data.fidBand;element.dataset.fidStart=data.fidStart}},columns:orderTableColumns(columnDefs,columns,tableOrders[orderKey],name==='fidNsrTable')});
+  state.grid.on('tableDestroyed',()=>{if(columnPopup.column?.getTable()===state.grid)columnPopup.hidePopover()});
+  state.grid.on('columnMoved',()=>{
+    if(state.ordering)return;
+    const order=state.grid.getColumns().map(column=>columns[Number(column.getField().slice(1))][0]).filter(label=>name!=='fidNsrTable'||!['NSR → CTL','CTL references'].includes(label));let index=0;
+    const base=tableOrders[orderKey]||(name==='fidNsrTable'?['Mark',...nsrColumns.map(([label])=>label)]:[]),merged=base.map(label=>order.includes(label)?order[index++]:label);merged.push(...order.slice(index));tableOrders[orderKey]=merged;
+    try{GM_setValue(TABLE_ORDERS_KEY,JSON.stringify(tableOrders))}catch(error){toast('Could not save column order: '+error.message)}
+    for(const target of tables.values())if(target.ready&&target.orderKey===orderKey&&(target!==state||name==='fidNsrTable')){
+      target.ordering=true;
+      try{orderTableColumns(target.grid.getColumns().map(column=>column.getDefinition()),target.columns,merged,target.name==='fidNsrTable').forEach((column,index)=>{const current=target.grid.getColumns()[index];if(!column.frozen&&current.getField()!==column.field)target.grid.moveColumn(column.field,current.getField(),false)})}
+      finally{target.ordering=false}
+    }
+  });
+  state.grid.on('dataFiltered',(_filters,rows)=>{local.headerFilters=state.grid.getHeaderFilters();if(!autoHeight)paintColumnFilters(state);host.querySelector('[data-table-count]').textContent=number(rows.length)+(autoHeight?'':' rows');paintMarkFilter(state)});
+  state.grid.on('dataSorted',(sorters,rows)=>{
+    if(sorters.length){local.sort=Number(sorters[0].field.slice(1));local.ascending=sorters[0].dir==='asc'}
+    if(name!=='nsrTable')return;const fidSorted=sorters.length===1&&columns[local.sort]?.[0]==='FID';wrap.classList.toggle('fid-sorted',fidSorted);if(!fidSorted)return;
+    // Keep bands on row data so sorting does not create DOM for offscreen rows.
+    let previous,band=0;const bands=new Map();for(const row of rows){const data=row.getData(),fid=data[sorters[0].field],start=previous!==undefined&&fid!==previous;if(start)band=1-band;data.fidBand=String(band);data.fidStart=String(start);bands.set(row.getIndex(),data);previous=fid}
+    for(const element of wrap.querySelectorAll('.tabulator-row[data-row-index]')){const data=bands.get(Number(element.dataset.rowIndex));if(data){element.dataset.fidBand=data.fidBand;element.dataset.fidStart=data.fidStart}}
+  });
+  state.grid.on('tableBuilt',()=>state.grid.getColumns().forEach(column=>{const element=column.getElement();element.tabIndex=0;element.title=column.getDefinition().title}));
+  if(name==='fidNsrTable'||name==='fidCtlTable'){
+    const linkedTable=name==='fidNsrTable'?'fidCtlTable':'fidNsrTable';
+    state.grid.on('rowMouseEnter',(_event,row)=>highlightLinkedHistory(linkedTable,state.rows[row.getIndex()]));
+    state.grid.on('rowMouseLeave',()=>highlightLinkedHistory(linkedTable));
+  }
+  state.grid.on('dataProcessed',()=>{state.ready=true;state.size=wrap.clientWidth+':'+wrap.clientHeight;wrap.setAttribute('aria-busy','false')});tableResize.observe(wrap);
+}
+function columnHeader(cell){
+  const column=cell.getColumn(),title=column.getDefinition().title,header=document.createElement('span');header.className='column-heading';
+  header.innerHTML='<span>'+escapeHtml(title)+(title==='FID Owner'?inferenceHelp(ownerHint):'')+'</span><button type="button" class="column-funnel" popovertarget="columnFilterPopup" aria-label="Filter '+escapeHtml(title)+'" aria-haspopup="dialog" aria-pressed="false" title="Filter '+escapeHtml(title)+'"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z"/></svg></button>';
+  const button=header.lastElementChild;button.onmousedown=event=>event.stopPropagation();
+  button.onclick=event=>{event.stopPropagation();columnPopup.hidePopover();columnPopup.column=column;columnPopup.querySelector('label>span').textContent=title;columnInput.value=column.getHeaderFilterValue()??''};return header;
+}
+function paintColumnFilters(state){
+  const filters=state.local.headerFilters,key=JSON.stringify(filters);if(state.columnFilterKey===key)return;state.columnFilterKey=key;
+  const host=id(state.name),active=new Map(filters.map(filter=>[filter.field,filter.value]));
+  for(const column of state.grid.getColumns()){
+    const button=column.getElement().querySelector('.column-funnel');if(!button)continue;const selected=active.has(column.getField());button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.title='Filter '+column.getDefinition().title+(selected?': '+active.get(column.getField()):'');
+  }
+  host.querySelector('.column-filter-bar').innerHTML=filters.map(({field,value})=>{const text=escapeHtml(state.grid.getColumn(field).getDefinition().title+': '+value);return '<button type="button" class="pill info" data-column-remove="'+state.name+'" data-field="'+field+'" title="'+text+'" aria-label="Remove filter '+text+'">'+text+' ×</button>'}).join('')+(filters.length?'<button type="button" class="fc-link" data-column-clear="'+state.name+'">Clear</button>':'');
+}
+function tableResult(state){return state.grid.getRows('active').map(row=>state.rows[row.getIndex()])}
+function paintTable(state){state.search=state.local.search.trim().toLowerCase();state.grid.refreshFilter()}
+
+
+function exportTableRows(state,copy=false){const rows=tableResult(state),columns=state.grid.getColumns().filter(column=>column.isVisible()).map(column=>state.columns[Number(column.getField().slice(1))]),format=copy?state.options.copyRows:state.options.exportRows;return format?format(rows,columns):rows.map(row=>Object.fromEntries(columns.map(([label,get])=>[label,get(row)??''])))}
+function exportWorkbook(filename,sheets,rowFormats={}){
+  try{
+    const workbook=XLSX.utils.book_new();
+    for(const [name,rows]of Object.entries(sheets)){
+      const matrix=Array.isArray(rows[0]),sheet=matrix?XLSX.utils.aoa_to_sheet(rows):XLSX.utils.json_to_sheet(rows);
+      if(matrix)for(let row=1;row<rows.length;row++){
+        const format=rowFormats[rows[row][0]];if(!format)continue;
+        for(let column=1;column<rows[row].length;column++){const cell=sheet[XLSX.utils.encode_cell({r:row,c:column})];if(cell?.t==='n')cell.z=format}
+      }
+      XLSX.utils.book_append_sheet(workbook,sheet,name.slice(0,31));
+    }
+    XLSX.writeFile(workbook,filename+'.xlsx');
+  }
+  catch(error){toast('Export failed: '+error.message)}
+}
+async function copyRows(rows){const matrix=Array.isArray(rows[0]),fields=matrix?[]:[...new Set(rows.flatMap(Object.keys))],content=(matrix?rows:[fields,...rows.map(row=>fields.map(key=>row[key]??''))]).map(row=>row.map(value=>(/[\r\n\t"]/.test(String(value))?'"'+String(value).replace(/"/g,'""')+'"':String(value))).join('\t')).join('\r\n');try{if(navigator.clipboard&&unsafeWindow.isSecureContext)await navigator.clipboard.writeText(content);else GM_setClipboard(content,'text');toast(number(rows.length-(matrix?1:0))+' rows copied')}catch(error){toast('Copy failed: '+error.message)}}
+function renderRules(target,updateMarks=false){
+  const excluded=graph.query({...queryFilters(),excluded:true},'fids'),reasons=new Map();for(const node of excluded)reasons.set(node.excludedReason,(reasons.get(node.excludedReason)||0)+1);
+  if(!updateMarks)target.innerHTML=`<div class="btnrow" style="justify-content:flex-end"><button class="btn light small" data-import-settings>Import Settings</button><button class="btn light small" data-export-settings>Export Settings</button><input id="fcSettingsFile" type="file" accept=".json,application/json" hidden></div><details class="card"><summary>Excluded Commit FIDs · ${number(excluded.length)}</summary><div class="signal-strip" style="margin-top:10px">${[...reasons].map(([reason,count])=>`<span class="signal"><b>${number(count)}</b>${escapeHtml(reason)}</span>`).join('')}</div><div id="excludedTable"></div></details><div class="marked-settings">${markListHtml('nsr')}${markListHtml('fid')}</div><section class="card" id="fabAccountMapping"><div class="section-head"><h2>Fab / Account Mapping</h2><div class="btnrow"><button class="btn blue small" data-save-mapping>Save</button><button class="btn light small" data-reset-mapping>Restore Defaults</button></div></div><p class="muted">Use Fab names and FID / NSR Customer names. Exact names take priority over * wildcards.</p><div id="agNotice"></div><div id="agGrid" class="ag-grid"></div></section>`;
+  table('excludedTable',[['FID',node=>node.id,fidLink],['Reason',node=>node.excludedReason],['System',node=>node.system],['Account',node=>node.account],['Calendar Quarter',node=>node.quarter]],excluded,{file:'Excluded_Commit_FIDs'},updateMarks);
+  for(const [kind,config]of Object.entries(markKinds))for(const textarea of target.querySelectorAll(`[data-${kind}-marks]`)){const mark=textarea.dataset[kind+'Marks'];textarea.value=markDrafts[kind]?.[mark]??[...(mark==='ignore'?config.ignored:config.important)].sort(tableCollator.compare).reverse().join('\n')}
+  if(!updateMarks)paintMapping();
+}
+function paintMapping(){if(!id('agGrid'))return;const mapping=mappingDraft||accountMapping.getMap(),status=accountMapping.getStatus();id('agGrid').innerHTML=Object.entries(mapping).map(([group,fabs],index)=>`<div class="ag-box"><label for="ag-${index}">${escapeHtml(group)}</label><textarea id="ag-${index}" data-account-group="${escapeHtml(group)}">${escapeHtml(fabs)}</textarea></div>`).join('');id('agNotice').hidden=!(status.notice||status.error);id('agNotice').className='ag-notice';id('agNotice').textContent=status.error||status.notice}
+function setRecordMark(kind,number){
+  const mark=recordMark(kind,number),next=mark==='ignore'?'important':mark==='important'?'':'ignore',marks=currentMarks(kind);if(next)marks[number]=next;else delete marks[number];
+  const result=saveMarks(kind,marks);if(!result.ok){toast('Could not save '+kind.toUpperCase()+' mark: '+result.error);return}
+  const started=performance.now();modelRevision++;
+  if(kind==='nsr'){graph.setNsrMark(number,next);applyFilters(true,number)}
+  else{graph.setFidMark(number,next);if(includeIgnored)refreshFidPersonal(number);else applyFilters(true)}
+  store.buildMs=performance.now()-started;
+}
+function saveMarks(kind,marks,persist=true){
+  const config=markKinds[kind];if(persist)try{GM_setValue(config.key,JSON.stringify(marks))}catch(error){return {ok:false,error:error.message}}
+  config.ignored.clear();config.important.clear();for(const [number,mark]of Object.entries(marks))(mark==='ignore'?config.ignored:config.important).add(number);
+  return {ok:true};
+}
+function saveMarkLists(kind){
+  const config=markKinds[kind],lists=Object.fromEntries([...document.querySelectorAll(`[data-${kind}-marks]`)].map(textarea=>[textarea.dataset[kind+'Marks'],new Set(textarea.value.toUpperCase().split(/[\s,;|，；]+/).filter(Boolean))]));
+  const invalid=[...lists.ignore,...lists.important].filter(number=>!config.pattern.test(number)),overlap=[...lists.ignore].filter(number=>lists.important.has(number)),status=id(config.status);
+  status.className='statistics-state';status.textContent='';
+  if(invalid.length||overlap.length){status.className+=' error';status.textContent=invalid.length?'Invalid '+config.label+': '+[...new Set(invalid)].join(', '):config.label+' appears in both lists: '+overlap.join(', ');return}
+  const marks=Object.fromEntries(Object.entries(lists).flatMap(([mark,numbers])=>[...numbers].map(number=>[number,mark]))),result=saveMarks(kind,marks);
+  if(!result.ok){status.className+=' error';status.textContent='Could not save: '+result.error;return}
+  markDrafts[kind]=null;
+  if(kind==='nsr'){for(const nsr of graph.nsrs)graph.setNsrMark(nsr.number,recordMark(kind,nsr.number))}else{for(const node of graph.fids.values())graph.setFidMark(node.id,recordMark(kind,node.id))}
+  applyFilters(true);
+  id(config.status).textContent='Saved';
+}
+function paintMarkFilter(state){
+  const kind=state.options.markFilter;if(!kind)return;
+  const host=id(kind+'MarkFilter'),selected=state.local.marks||[],counts={all:0,normal:0,ignore:0,important:0};
+  for(const {id:index,search}of state.grid.searchData(state.grid.getHeaderFilters()))if(!state.search||search.includes(state.search)){const record=state.rows[index];counts.all++;counts[recordMark(kind,kind==='fid'?record.id:record.number)||'normal']++}
+  if(!host.children.length)host.innerHTML=['all','important','ignore','normal'].map(mark=>{
+    const label=mark==='important'?'★ ':mark==='ignore'?'⊘ ':markLabels[mark]+' (';
+    return `<button type="button" class="signal ${mark}" data-table-mark-filter="${state.name}" data-mark="${mark}" title="${markLabels[mark]}">${label}<b></b>${mark==='all'||mark==='normal'?')':''}</button>`;
+  }).join('');
+  for(const button of host.children){const mark=button.dataset.mark;button.querySelector('b').textContent=number(counts[mark]);button.dataset.count=counts[mark];button.setAttribute('aria-label',markLabels[mark]+' ('+number(counts[mark])+')');button.setAttribute('aria-pressed',String(mark==='all'?!selected.length:selected.includes(mark)))}
+}
+function paintFidPersonal(fid){
+  const dialog=id('fidDetail');if(dialog.dataset.fid!==fid||!id('fidPersonalMark'))return;
+  const focused=document.activeElement.dataset.ignoreFid===fid,note=fidNotes[fid]||'';id('fidPersonalMark').innerHTML=markButton('fid',fid);
+  const panel=id('fidNotePanel');if(!panel.querySelector('form'))panel.innerHTML=`<button type="button" class="fid-note-view" data-note-fid="${escapeHtml(fid)}" aria-label="Edit note for FID ${escapeHtml(fid)}"><span class="fid-note-title" role="heading" aria-level="2">Note</span><span class="fid-note-text${note?'':' muted'}">${escapeHtml(note||'No note')}</span></button>`;
+  if(focused)id('fidPersonalMark').querySelector('button').focus({preventScroll:true});
+}
+function refreshFidPersonal(fid){
+  const state=tables.get('portfolioTable'),update=state?.rows.some(node=>node.id===fid)?table('portfolioTable',portfolioColumns,state.rows,state.options,true,fid):null;
+  paintFidPersonal(fid);return update;
+}
+function editFidNote(fid,anchor){
+  const dialog=id('fidNoteDialog'),panel=anchor.closest('#fidNotePanel'),host=panel||dialog,rect=anchor.getBoundingClientRect();host.dataset.fid=fid;
+  host.innerHTML=`<form id="fidNoteForm"><div class="section-head"><h2 id="fidNoteTitle">${panel?'Note':'Note · FID '+escapeHtml(fid)}</h2></div><textarea id="fidNoteText" rows="8" aria-label="Note" placeholder="Write a note…" spellcheck="false">${escapeHtml(fidNotes[fid]||'')}</textarea><div id="fidNoteStatus" class="statistics-state" role="status"></div><div class="fc-note-actions"><button class="btn light" type="button" data-cancel-fid-note>Cancel</button><button class="btn blue" type="submit">Save</button></div></form>`;
+  if(!panel){
+    if(!dialog.open)dialog.showModal();
+    const box=dialog.getBoundingClientRect(),save=dialog.querySelector('button[type="submit"]').getBoundingClientRect();
+    const left=rect.left+rect.width/2-(save.left-box.left+save.width/2),top=rect.top+rect.height/2-(save.top-box.top+save.height/2);
+    dialog.style.left=Math.max(8,Math.min(left,innerWidth-box.width-8))+'px';
+    dialog.style.top=Math.max(8,Math.min(top,innerHeight-box.height-8))+'px';
+  }
+  id('fidNoteText').focus({preventScroll:true});
+}
+function closeFidNote(){
+  const host=id('fidNoteForm').parentElement,fid=host.dataset.fid;if(host.id==='fidNoteDialog')host.close();host.replaceChildren();if(host.id==='fidNotePanel')paintFidPersonal(fid);
+  const target=id('fidDetail').open?id('fidDetail'):id('portfolioTable');[...target.querySelectorAll('[data-note-fid]')].find(button=>button.dataset.noteFid===fid)?.focus({preventScroll:true});
+}
+async function saveFidNote(){
+  const fid=id('fidNoteForm').parentElement.dataset.fid,note=id('fidNoteText').value,next={...fidNotes};if(note.trim())next[fid]=note;else delete next[fid];
+  try{GM_setValue(FID_NOTES_KEY,JSON.stringify(next))}catch(error){id('fidNoteStatus').className='statistics-state error';id('fidNoteStatus').textContent='Could not save: '+error.message;return}
+  fidNotes=next;await refreshFidPersonal(fid);closeFidNote();
+}
+function showFid(fid,updateMarks=false,changedNsr=''){
+  const node=graph.fids.get(fid);if(!node)return;const dialog=id('fidDetail');if(dialog.dataset.fid!==fid)['fidNsrTable','fidCtlTable','fidNceTable'].forEach(name=>localTables.delete(name));
+  const updateDetail=updateMarks&&dialog.dataset.fid===fid&&tables.has('fidNsrTable');dialog.dataset.fid=fid;
+  const lateNsrIds=new Set(node.post.nsrs.map(nsr=>nsr.number)),lateCtlIds=new Set(node.post.ctls.map(ctl=>ctl.id));
+  const riskLabels={'On time':'Stable Slot','Pre late risk':'Late Slot','Post config risk':'Late CTL','No post risk':'Stable CTL/NSR'};
+  const summary=`<div class="fid-dialog-grid">${[
+    ['Slot',node.slot.state.replace(/^./,letter=>letter.toUpperCase())],['Commit: Field',node.commit],['Account',node.account],['Business Unit',node.businessUnit],
+    ['System Description',node.system],['FID Description',node.fidDescription],['Customer',node.customer],['Fab Name',node.fab],
+    ['Calendar Quarter',node.quarter],['Sales Ops RD',node.rd],['MCSD',node.mcsd],['Customer Request Date',node.crd],
+    ['FID Owner',node.owner],['Slot Initiator',node.slot.initiator],['Sales Admin',node.salesAdmin]
+  ].map(([label,value])=>`<div class="fid-detail-value${label==='Slot'&&node.portfolioStates.includes('no-slot')?' no-slot':''}"${label==='FID Owner'?` title="${escapeHtml(ownerTip(node))}"`:label.startsWith('Sales Admin')?' title="Unique Pull / Push CTL votes; ties remain unknown"':''}><small>${label}${label==='FID Owner'?inferenceHelp(ownerHint):label==='Sales Admin'?inferenceHelp(salesAdminHint):''}</small>${escapeHtml(value||'[Unknown]')}</div>`).join('')}</div><div class="fid-evidence">${[['Pre-slot',node.pre],['Post-slot',node.post]].map(([name,risk])=>`<div class="notice ${name==='Pre-slot'&&node.portfolioStates.includes('no-slot')?'no-slot':risk.state}"><b>${escapeHtml(name+': '+(riskLabels[risk.label]||risk.label.replace(/^(?:Pre|Post) /i,'')))}</b><p>${escapeHtml(risk.reason)}</p><p class="muted">${escapeHtml([risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:''].filter(Boolean).join(' · '))}</p></div>`).join('')}</div>`;
+  if(updateDetail)id('fidSummary').innerHTML=summary;
+  else dialog.innerHTML=`<div class="section-head"><div><h1 id="fidDetailTitle"><span id="fidPersonalMark" class="fid-personal-mark"></span>FID ${escapeHtml(fid)} <a class="fid-action" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=BT111_OPPT&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(fid)}" target="_blank" rel="noopener noreferrer">CRM ↗</a><span id="fidHeaderStatus" class="fid-header-status" role="group" aria-label="FID Status &amp; Risks"></span></h1><span class="muted">${node.inPopulation?'Commit portfolio':'Observed in source data'}</span></div><a class="fid-action" href="#" data-export-fid="${escapeHtml(fid)}">Export FID 360°</a><button class="fid-close" type="button" data-close-fid aria-label="Close FID 360" title="Close">×</button></div><div id="fidSummary">${summary}</div><section id="fidNotePanel" class="fid-note-panel"></section><div id="fidNsrTable"></div><div id="fidCtlTable"></div><div id="fidNceTable"></div>`;
+  id('fidHeaderStatus').innerHTML=fidDetailStatus(node).map(([label,kind,tip])=>pill(label,kind,tip)).join('');
+  paintFidPersonal(fid);
+  renderNsrDetail('fidNsrTable',node.nsrs,{title:'📋 NSR History',file:'FID_'+fid+'_NSR',defaultSort:'Submit Date',rowRisk:nsr=>lateNsrIds.has(nsr.number)?'late-nsr':nsr.eligible&&nsr.lifecycle==='open'?'pending-nsr':''},updateDetail,changedNsr);
+  if(!updateDetail){table('fidCtlTable',ctlColumns.filter(([label])=>label!=='FID'),node.ctls,{title:'🔄 Slot / CTL History',file:'FID_'+fid+'_CTL',rowRisk:ctl=>node.pre.state==='risk'&&node.slot.active?.id===ctl.id?'late-slot':lateCtlIds.has(ctl.id)?'late-ctl':ctl.pending?'pending-config':ctl.pendingPullPush?'pending-pull-push':'',widths:{CTL:105,Stage:140,Change:90,'Created Date':115,'Elapsed Days':110,'Sales Ops Approval':135,'Config Frz':100,Initiator:135,Customer:160,'Quote ID':105,'NSR Reference':150,'Root Cause':180,'CTL Notes':220,'Sub Reason':160}});table('fidNceTable',nceColumns,node.nces,{title:'🔎 NCE / FA History',file:'FID_'+fid+'_NCE',widths:{NCE:90,State:80,Title:140,Impact:75,Opened:95,'Damage Group':95,'Damage Code':90,'Part Number':105,'Part Description':140}})}
+  if(!dialog.open)dialog.showModal();
+}
+function exportFid(fid){
+  const node=graph.fids.get(fid),summary=fidDetailRows([node])[0],elapsedDays=ctlColumns.find(([label])=>label==='Elapsed Days')[1];
+  summary['Fab Name']=node.fab;summary['Business Unit']=node.businessUnit;summary['Sales Admin']=node.salesAdmin;summary['Owner rule']='Slot-derived Account membership → Slot / Config CTL counts → tied candidates\' NSR counts (all eligible CTL counts are 0: NSR fallback within Account) → current Slot submitter';
+  summary['Pending NSR']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open').length;summary['Late NSR']=node.post.nsrs.length;summary['Completed 5D NSR']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-5d').length;summary['Completed NSR but no CTL']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-unlinked').length;
+  exportWorkbook('FID_'+fid,{FID:[summary],NSR:exportTableRows(tables.get('fidNsrTable')),NSR_Source:node.nsrs.flatMap(nsr=>nsr.rows||[]),CTL:node.ctls.flatMap(ctl=>{const days=elapsedDays(ctl);return (ctl.rows||ctl.rawRows||[]).map(row=>({...row,'Elapsed Days':days}))}),NCE:node.nces.flatMap(nce=>nce.rows||nce.rawRows||[]),FID_Source:node.rawRows||[node.record]})
+}
+function exportSettings(){
+  try{
+    const settings={format:'ToolkitKyra Settings',version:1,nsrMarks:currentMarks('nsr'),fidMarks:currentMarks('fid'),fidNotes,accountMapping:accountMapping.getMap()};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(settings,null,2)],{type:'application/json;charset=utf-8'})),anchor=document.createElement('a');
+    anchor.href=url;anchor.download='ToolkitKyra_Settings_'+nsrData.localDate(new Date())+'.json';document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(error){toast('Could not export settings: '+error.message)}
+}
+async function importSettings(file){
+  try{
+    const settings=JSON.parse(await file.text()),isMap=value=>value&&typeof value==='object'&&!Array.isArray(value);
+    if(!isMap(settings)||settings.format!=='ToolkitKyra Settings'||settings.version!==1||!['nsrMarks','fidMarks','fidNotes','accountMapping'].every(name=>isMap(settings[name])))throw new Error('Invalid ToolkitKyra settings file.');
+    for(const kind of ['nsr','fid'])if(Object.entries(settings[kind+'Marks']).some(([number,mark])=>!markKinds[kind].pattern.test(number)||!['ignore','important'].includes(mark)))throw new Error('Invalid '+kind.toUpperCase()+' marks.');
+    if(Object.entries(settings.fidNotes).some(([fid,note])=>!markKinds.fid.pattern.test(fid)||typeof note!=='string'))throw new Error('Invalid FID notes.');
+    const notes=Object.fromEntries(Object.entries(settings.fidNotes).filter(([,note])=>note.trim()).map(([fid,note])=>[fid,note.replace(/\r\n?/g,'\n')]));
+    const mapping=accountMapping.normalize(settings.accountMapping),values={
+      [NSR_MARKS_KEY]:JSON.stringify(settings.nsrMarks),[FID_MARKS_KEY]:JSON.stringify(settings.fidMarks),[FID_NOTES_KEY]:JSON.stringify(notes),
+      [accountMapping.key]:JSON.stringify({base:accountMapping.defaults,mapping})
+    };
+    const previous=Object.fromEntries(Object.keys(values).map(key=>[key,GM_getValue(key,null)])),written=[];
+    try{for(const [key,value]of Object.entries(values)){GM_setValue(key,value);written.push(key)}}
+    catch(error){for(const key of written.reverse())GM_setValue(key,previous[key]);throw error}
+    for(const kind of ['nsr','fid']){saveMarks(kind,settings[kind+'Marks'],false);markDrafts[kind]=null}
+    fidNotes=notes;mappingDraft=null;accountMapping.reload();recalculate();toast('Settings imported');
+  }catch(error){toast('Could not import settings: '+error.message)}
+}
+function showFidEquation(event){
+  const target=event.target.closest('[data-fid-status],[data-fid-cell],[data-fid-region],[data-fid-axis]');if(!target)return;
+  if(target.contains(event.relatedTarget))return;
+  const leaving=event.type==='pointerout'||event.type==='focusout',key=target.dataset.fidStatus||target.dataset.fidRegion;
+  for(const element of id('view-portfolio').querySelectorAll('.fid-relation-sign.is-visible'))element.classList.remove('is-visible');
+  if(leaving)return;
+  let equations=[];
+  if(target.dataset.fidCell)equations=['post:'+target.dataset.matrixPost];
+  else if(target.dataset.fidAxis)equations=['origin-'+target.dataset.fidAxis];
+  else if(key==='slot-ready')equations=['origin-pre','origin-post'];
+  else if(['stable-slot','late-slot','slot-date-unknown'].includes(key))equations=['slot:'+key];
+  else if(['stable-ctl','late-ctl-nsr','ctl-unknown'].includes(key))equations=['post:'+key];
+  else if(key==='risk-fid')equations=[key];
+  for(const element of id('view-portfolio').querySelectorAll('[data-fid-equation]'))element.classList.toggle('is-visible',element.dataset.fidEquation.split(' ').some(equation=>equations.includes(equation)));
+}
+for(const name of ['pointerover','pointerout','focusin','focusout'])id('view-portfolio').addEventListener(name,showFidEquation);
+const inferenceTooltip=document.createElement('div');inferenceTooltip.className='inference-tooltip';inferenceTooltip.setAttribute('role','tooltip');inferenceTooltip.popover='manual';document.body.append(inferenceTooltip);
+document.addEventListener('pointerover',event=>{
+  const help=event.target.closest('.inference-help');if(!help)return;
+  inferenceTooltip.textContent=help.getAttribute('aria-label');inferenceTooltip.showPopover();
+  const rect=help.getBoundingClientRect();
+  inferenceTooltip.style.left=Math.max(8,Math.min(rect.left,innerWidth-inferenceTooltip.offsetWidth-8))+'px';
+  inferenceTooltip.style.top=Math.max(8,Math.min(rect.bottom+7,innerHeight-inferenceTooltip.offsetHeight-8))+'px';
+});
+document.addEventListener('pointerout',event=>{if(event.target.closest('.inference-help'))inferenceTooltip.hidePopover()});
+// Keep Chosen focus from scrolling an option away between mouse down and mouse up.
+document.addEventListener('mousedown',event=>{const option=event.target.closest('.side .chosen-results .active-result');if(event.button!==0||!option)return;option.closest('.chosen-container').querySelector('.chosen-search-input')?.focus({preventScroll:true});event.preventDefault()},true);
+document.addEventListener('click',event=>{
+  const label=event.target.closest('.fc-filter-head>label[for]');if(label&&id(label.htmlFor)?.multiple&&jQuery.fn.chosen){event.preventDefault();jQuery(id(label.htmlFor)).trigger('chosen:open');return}
+  document.querySelectorAll('.fc-source-help[open]').forEach(help=>{if(!help.contains(event.target))help.open=false});const button=event.target.closest('button,a[data-export-fid]');if(!button)return;
+  if(button.id==='fcToggleSide'){
+    const expanded=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(expanded));
+    if(sidebarAnimation){sidebarAnimation.reverse();return}
+    if(expanded)document.body.classList.remove('side-collapsed');
+    const finish=()=>{document.body.classList.toggle('side-collapsed',button.getAttribute('aria-expanded')==='false');sidebarAnimation=null};
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches)finish();
+    else{sidebarAnimation=document.querySelector('.side').animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:'translateX(-8px)'}],{duration:150,easing:'ease-out',direction:expanded?'reverse':'normal'});sidebarAnimation.onfinish=finish}
+    return;
+  }
+  if(button.dataset.locateFilter){
+    if(id('fcToggleSide').getAttribute('aria-expanded')==='false')id('fcToggleSide').click();
+    let target=id(button.dataset.locateFilter).closest('.fc-filter');if(target.hidden)target=document.querySelector('.filter-head');
+    target.scrollIntoView({block:'center',behavior:'instant'});target.tabIndex=-1;target.focus({preventScroll:true});
+    target.animate([{backgroundColor:'#fff0ad',boxShadow:'0 0 0 3px #efb647'},{}],{duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:600,easing:'ease-out'});return;
+  }
+  if(button.dataset.importSource){id('fcFile-'+button.dataset.importSource).click();return}
+  if(button.dataset.sourceAction){const action=button.dataset.sourceAction;if(action==='bobj-update')loadBobj(true);else if(action==='ctl-bobj-update')loadBobj(true,'ctl');else if(action==='nsr-open'){setNsrRange(nsrRange);id('fcNsrDialog').showModal()}return}
+  if(button.hasAttribute('data-nce-signal')){filterValues.signal=['nce'];applyFilters();return}
+  if(button.dataset.noteFid){editFidNote(button.dataset.noteFid,button);return}
+  if(button.hasAttribute('data-cancel-fid-note')){closeFidNote();return}
+  if(button.dataset.tableMarkFilter){const state=tables.get(button.dataset.tableMarkFilter),mark=button.dataset.mark;state.local.marks=mark==='all'?[]:[mark];paintTable(state);return}
+  if(button.dataset.ignoreNsr||button.dataset.ignoreFid){setRecordMark(button.dataset.ignoreFid?'fid':'nsr',button.dataset.ignoreFid||button.dataset.ignoreNsr);return}
+  if(button.dataset.view){showView(button.dataset.view);return}
+  if(button.dataset.fid){showFid(button.dataset.fid);return}
+  if(button.hasAttribute('data-mapping-rule')){showView('rules');id('fabAccountMapping').scrollIntoView({block:'start'});return}
+  if(button.hasAttribute('data-close-fid')){id('fidDetail').close();return}
+  if(button.hasAttribute('data-toggle-pull-push')){
+    const state=tables.get('fidCtlTable');state.local.showPullPush=!state.local.showPullPush;button.textContent=(state.local.showPullPush?'Hide':'Show')+' Pull/Push';button.setAttribute('aria-pressed',String(state.local.showPullPush));paintTable(state);
+    // Filtering already rendered the new height; a second resize layout would reset column widths.
+    const wrap=state.grid.element;state.size=wrap.clientWidth+':'+wrap.clientHeight;return;
+  }
+  if(button.dataset.exportFid){event.preventDefault();exportFid(button.dataset.exportFid);return}
+  if(button.hasAttribute('data-reset-ctl-type')){changeFilter('ctl.change',[...defaultCtlTypes]);return}
+  if(button.hasAttribute('data-reset-quarter')){changeFilter('quarter',defaultQuarters());return}
+  if(button.dataset.clearFilter||button.dataset.selectAll){const name=button.dataset.clearFilter||button.dataset.selectAll,definition=filterDefs.find(def=>def[0]===name);const values=button.dataset.selectAll?[...id(name).options].map(option=>option.value).filter(value=>name!=='fNsrTaskStatus'||!Object.hasOwn(nsrCompletedTasks,value)):[];changeFilter(definition[2],values);return}
+  if(button.dataset.fidCell||button.dataset.fidStatus||button.dataset.fidRegion){
+    const key=button.dataset.fidStatus||button.dataset.fidRegion;
+    if(key==='all'){changeFilter({fidStatus:[],signal:(filterValues.signal||[]).filter(value=>!fidCauseKeys.includes(value))});return}
+    selectFidStatus(button.dataset.fidValue||button.dataset.fidCell);return;
+  }
+  if(button.dataset.ctlStatus){selectTaskFilter('ctl',button.dataset.ctlStatus,button.dataset.ctlTypes?.split(','));return}
+  if(button.dataset.nsrGroup||button.dataset.nsrLifecycle){const key=button.dataset.nsrLifecycle||button.dataset.nsrGroup;selectTaskFilter('nsr',key==='open'?'workflow':key);return}
+  if(button.dataset.ctlPeriod){changeFilter('ctl.created',ctlDateRange(button.dataset.ctlPeriod));return}
+  if(button.dataset.nsrYear){const year=button.dataset.nsrYear;changeFilter('nsr.submitted',[year+'-01-01',year+'-12-31']);return}
+  if(button.dataset.fidYear){const values=[...id('fQuarter').options].map(option=>option.value).filter(value=>quarterYear(value)===button.dataset.fidYear),selected=filterValues.quarter||[],add=values.some(value=>!selected.includes(value));changeFilter('quarter',add?[...new Set([...selected,...values])]:selected.filter(value=>!values.includes(value)));return}
+  if(button.dataset.groupPath){const path=button.dataset.groupPath,value=button.dataset.groupValue,selected=filterValues[path]||[];changeFilter(path,selected.includes(value)?selected.filter(item=>item!==value):[...selected,value]);return}
+  if(button.dataset.pivotFilter){const path=filterDefs.find(def=>def[0]===button.dataset.pivotFilter)[2];changeFilter(path,[button.dataset.pivotValue]);return}
+
+  if(button.dataset.cycleNsr){
+    if(!unsafeWindow.confirm(`Query Cycle Time and Workflow for NSR ${button.dataset.cycleNsr}?`))return;
+    if(id('fidDetail').open)id('fidDetail').close();showView('cycle');cycle.query([button.dataset.cycleNsr]);return;
+  }
+  if(button.dataset.tableCycle){const state=tables.get(button.dataset.tableCycle),rows=tableResult(state);if(id('fidDetail').open)id('fidDetail').close();showView('cycle');cycle.query(rows.map(row=>row.number));return}
+  if(button.dataset.columnClear){tables.get(button.dataset.columnClear).grid.clearHeaderFilter();return}
+  if(button.dataset.columnRemove){tables.get(button.dataset.columnRemove).grid.setHeaderFilterValue(button.dataset.field,'');return}
+  if(button.dataset.tableCopy){copyRows(exportTableRows(tables.get(button.dataset.tableCopy),true));return}
+  if(button.dataset.summarySort){
+    const key=button.dataset.summarySort;summarySort={key,dir:summarySort.key===key?-summarySort.dir:-1};renderSummaryMetrics(id('view-summary'));
+    id('summaryChart').querySelector('[data-summary-sort="'+key+'"]').focus({preventScroll:true});return;
+  }
+  if(button.dataset.summaryExport){
+    const percentMetrics=summaryMetricDefs.filter(([,,base])=>base).map(([label])=>label);
+    if(button.dataset.summaryExport==='copy')copyRows(summaryReport.map(([label,...values])=>[label,...values.map(value=>typeof value==='number'&&percentMetrics.includes(label)?(100*value).toFixed(1)+'%':value)]));
+    else exportWorkbook('Summary_Metrics_'+summaryGroup,{Metrics:summaryReport},Object.fromEntries(percentMetrics.map(label=>[label,'0.0%'])));
+    return;
+  }
+  if(button.dataset.tableExport){const state=tables.get(button.dataset.tableExport);exportWorkbook(state.options.file,{Detail:exportTableRows(state),...(state.options.cycle?{Source_Rows:tableResult(state).flatMap(nsr=>nsr.rows||nsr.rawRows||[])}:{})});return}
+  if(button.hasAttribute('data-clear-search')){id('fSearch').value='';applyFilters();return}
+  if(button.hasAttribute('data-clear-signal')){delete filterValues.signal;applyFilters();return}
+  if(button.hasAttribute('data-toast-close')){id('fcToast').hidden=true;return}
+  if(button.hasAttribute('data-save-nsr-marks')||button.hasAttribute('data-save-fid-marks')){saveMarkLists(button.hasAttribute('data-save-fid-marks')?'fid':'nsr');return}
+  if(button.hasAttribute('data-save-mapping')){const value=Object.fromEntries([...document.querySelectorAll('[data-account-group]')].map(textarea=>[textarea.dataset.accountGroup,textarea.value])),result=accountMapping.save(value);if(result.ok){mappingDraft=null;recalculate();toast('Account mapping saved')}else{const notice=id('agNotice');notice.hidden=false;notice.textContent=result.error}return}
+  if(button.hasAttribute('data-reset-mapping')){if(!unsafeWindow.confirm('Restore the default Fab / Account mapping?'))return;const result=accountMapping.reset();if(result.ok){mappingDraft=null;recalculate()}else toast(result.error);return}
+  if(button.hasAttribute('data-import-settings')){id('fcSettingsFile').click();return}
+  if(button.hasAttribute('data-export-settings')){exportSettings();return}
+  if(button.id==='fcRefresh')restoreSources(true);else if(button.id==='fcReset'){includeIgnored=true;clearTimeout(searchTimer);for(const key of Object.keys(filterValues))delete filterValues[key];id('fSearch').value='';for(const local of localTables.values()){local.search='';local.scroll=0;local.marks=[];local.headerFilters=[]}for(const state of tables.values())if(state.ready)state.grid.clearHeaderFilter();buildFilters();applyFilters()}
+});
+document.addEventListener('keydown',event=>{
+  if(event.ctrlKey&&event.shiftKey&&event.altKey&&event.code==='KeyD'){
+    event.preventDefault();if(event.repeat||document.querySelector('[data-view="summary"]').hidden)return;
+    summaryGroup=summaryGroup==='owner'?summaryPreviousGroup:'owner';rendered.delete('summary');showView('summary');return;
+  }
+  if((event.key==='Enter'||event.key===' ')&&event.target.matches('.fc-table-wrap .tabulator-col')){event.preventDefault();event.target.click()}
+  if(event.key==='Escape')document.querySelectorAll('.fc-source-help[open]').forEach(help=>help.open=false);
+});
+document.addEventListener('input',event=>{const kind=event.target.dataset.nsrMarks?'nsr':event.target.dataset.fidMarks?'fid':'';if(kind){markDrafts[kind]=Object.fromEntries([...document.querySelectorAll(`[data-${kind}-marks]`)].map(textarea=>[textarea.dataset[kind+'Marks'],textarea.value]));id(markKinds[kind].status).textContent=''}if(event.target.dataset.accountGroup){mappingDraft??=accountMapping.getMap();mappingDraft[event.target.dataset.accountGroup]=event.target.value}if(event.target.dataset.tableSearch){const state=tables.get(event.target.dataset.tableSearch);state.local.search=event.target.value;paintTable(state)}});
+document.addEventListener('change',event=>{
+  const input=event.target;
+  if(input.dataset.excludeIgnored){
+    const view=input.dataset.excludeIgnored,focused=document.activeElement===input;includeIgnored=!input.checked;applyFilters(true);
+    if(focused)id('view-'+view).querySelector('[data-exclude-ignored]').focus({preventScroll:true});
+  }else if(input.id==='fcSettingsFile'&&input.files?.[0]){importSettings(input.files[0]);input.value=''}else if(input.dataset.sourceFile&&input.files?.[0])importSource(input.files[0],input.dataset.sourceFile);
+});
+filterDefs.forEach(([name,,path])=>{if(dateFilters.includes(path)){id(name).addEventListener('change',event=>{const [from,to]=id(name).querySelectorAll('input');from.setCustomValidity('');to.setCustomValidity('');if(from.value&&to.value&&from.value>to.value){event.target.setCustomValidity('From date must not be later than To date.');event.target.reportValidity();return}changeFilter(path,from.value||to.value?[from.value,to.value]:[])});return}const position=()=>requestAnimationFrame(()=>positionFilterChoices(id(name)));jQuery(id(name)).on('change',(event,change)=>{const values=[...id(name).selectedOptions].map(option=>option.value);if(path==='riskType'||path==='fidStatus'||path==='nsr.taskStatus'||path.startsWith('ctl.'))changeFilter(path,path==='fidStatus'?fidSelection.groups[change?.selected]||values:values);else{filterValues[path]=values;applyFilters()}position()}).on('chosen:showing_dropdown',position);if(jQuery.fn.chosen)jQuery(id(name)).chosen({width:'100%',search_contains:true,hide_results_on_select:false,placeholder_text_multiple:'All',display_selected_options:false})});
+columnPopup.onsubmit=columnPopup.onreset=event=>{
+  event.preventDefault();const column=columnPopup.column,value=event.type==='reset'?'':columnInput.value;
+  if(column&&value!==(column.getHeaderFilterValue()??''))column.setHeaderFilterValue(value);columnPopup.hidePopover();
+};
+columnPopup.ontoggle=event=>{if(event.newState==='open')columnInput.select();else columnPopup.column=null};
+document.addEventListener('scroll',event=>{if(columnPopup.column&&!columnPopup.contains(event.target))columnPopup.hidePopover()},true);window.addEventListener('resize',()=>columnPopup.hidePopover());
+id('fidDetail').addEventListener('close',()=>{id('fidNotePanel')?.querySelector('form')?.remove();highlightLinkedHistory('fidCtlTable');highlightLinkedHistory('fidNsrTable')});
+id('fidNoteDialog').addEventListener('close',()=>id('fidNoteDialog').replaceChildren());
+document.addEventListener('submit',event=>{if(event.target.id==='fidNoteForm'){event.preventDefault();saveFidNote()}});
+id('fSearch').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(applyFilters,180)});
+id('fidLookup').addEventListener('submit',event=>{event.preventDefault();showFid(id('fFid360').value.trim())});
+id('fcNsrFrom').addEventListener('input',()=>id('fcNsrTo').min=id('fcNsrFrom').value);id('fcNsrCancel').addEventListener('click',()=>id('fcNsrDialog').close());id('fcNsrForm').addEventListener('submit',event=>{event.preventDefault();if(store.busy.has('nsr'))return;id('fcNsrDialog').close();loadSharedNsr(false)});
+
+function normalizeNsrRows(rows){return rows.map(raw=>{const row=nsrRecords.canonicalRow(raw);row['REF FCID']||=text(raw['Reference FID']??raw.FID);row['Submit Date']=sourceDate(row['Submit Date'])||row['Submit Date'];return {...raw,...row,'Reference Fcid':row['REF FCID'],'Workflow Status':raw['Workflow Status']||row['NSR Status']||row['Task Name'],'Task Status':nsrRecords.deriveTaskStatus(row)}}).filter(row=>row['Reference Fcid']||row['NSR#'])}
 function sourceDate(value){
   if(value instanceof Date&&!isNaN(value))return nsrData.localDate(value);
   const input=text(value);let iso='';
@@ -2677,22 +3347,18 @@ function sourceRange(rows,key,meta){
   if(key==='nsr'&&sourceDate(meta.from)&&sourceDate(meta.to))return {dateFrom:meta.from,dateTo:meta.to,dateField:'NSR query range'};
   const config=SOURCE_DATES[key];if(!config)return {};
   let dateFrom='',dateTo='';
-  for(const row of rows){const date=config.fields.map(field=>sourceDate(row[field])).find(Boolean);if(!date)continue; if(!dateFrom||date<dateFrom)dateFrom=date;if(!dateTo||date>dateTo)dateTo=date;}
+  for(const row of rows){let date='';for(const field of config.fields){date=sourceDate(row[field]);if(date)break}if(!date)continue; if(!dateFrom||date<dateFrom)dateFrom=date;if(!dateTo||date>dateTo)dateTo=date;}
   return {dateFrom,dateTo,dateField:config.label};
 }
 function sourceMessage(key,message,kind='ok',transport=false){
-  store.messages[key]={message,kind};const target=id('fcSource-'+key),meta=store.meta[key]; const hasRange=kind==='ok'&&meta?.dateFrom&&meta?.dateTo;
-  let label=meta?(SOURCE_DATES[key]?(hasRange?`${meta.dateFrom} ~ ${meta.dateTo}`:'Loaded · no dates'):meta.rows.toLocaleString()+(meta.rows===1?' row':' rows')):'Not loaded';
-  if(kind==='loading')label=/updat/i.test(message)?'Updating…':'Loading…'; else if(kind==='error'){if(/^Loaded;/.test(message))label='Cache not saved'; else if(/^Import failed:/.test(message))label='Import failed'; else label=meta?'Update failed':'Unavailable';}
-  target.textContent=label;target.title=kind==='error'?message:hasRange?'Data range · '+meta.dateField:message; target.className='fc-source-state '+kind+(hasRange?' has-range':'');
-  target.setAttribute('aria-label',kind==='error'?message:label);target.tabIndex=kind==='error'?0:-1;
-  if(BOBJ_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=kind!=='error'||!transport;if(help.hidden)help.open=false;}
+  const target=id('fcSource-'+key),meta=store.meta[key],hasRange=Boolean(meta?.dateFrom&&meta?.dateTo);
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-3);const stale=hasRange&&meta.dateTo<=nsrData.localDate(cutoff);
+  const label=kind==='loading'?(/updat/i.test(message)?'Updating…':'Loading…'):meta?(hasRange?meta.dateFrom+' ~ '+meta.dateTo:'Loaded · no dates'):'Unavailable';
+  target.textContent=label;target.className='fc-source-state '+(kind==='loading'?'loading':meta?'ok':'')+(hasRange?' has-range':'')+(kind!=='loading'&&stale?' stale':'')+(kind==='error'?' error':'');target.title=kind==='error'?message:hasRange?'Data range · '+meta.dateField:message;target.setAttribute('aria-label',label);target.tabIndex=kind==='error'?0:-1;
+  if(BOBJ_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=kind!=='error'||!transport;if(help.hidden)help.open=false}
 }
 function actionMessage(message){id('fcActionStatus').textContent=message}
-function sourceMeta(key){
-  const meta=store.meta[key];
-  id('fcMeta-'+key).textContent=meta?(meta.kind==='github'?sources[key].label:text(meta.file).split(/[\\/]/).pop()):'';
-}
+function sourceMeta(key){const meta=store.meta[key],target=id('fcMeta-'+key);target.textContent=meta?text(meta.file).split(/[\\/]/).pop():'';target.title=meta?.file||'';id('fcSourceCount').textContent=Object.keys(store.meta).length+' / 5'}
 function sourceBusy(key,on){
   on?store.busy.add(key):store.busy.delete(key); document.querySelectorAll(`[data-source-file="${key}"]`).forEach(input=>input.disabled=on); id('fcImport-'+key).disabled=on;
   const actions=key==='fcid'?['bobj-update']:key==='ctl'?['ctl-bobj-update']:key==='nsr'?['nsr-open']:[]; actions.forEach(action=>document.querySelectorAll(`[data-source-action="${action}"]`).forEach(button=>button.disabled=on));
@@ -2700,26 +3366,17 @@ function sourceBusy(key,on){
   id('fcRefresh').disabled=store.refreshing||store.busy.size>0;
 }
 function startSource(key){store.controllers[key]?.abort();store.runs[key]=(store.runs[key]||0)+1;sourceBusy(key,true);return store.runs[key];}
-async function applySource(key,rows,meta){
-  store.raw[key]=rows;store.meta[key]={...meta,...sourceRange(rows,key,meta),rows:rows.length,savedAt:meta.savedAt||Date.now()}; sourceMessage(key,'Loaded');sourceMeta(key);recalculate();
-}
-function sourceCsvText(bytes){
-  const data=new Uint8Array(bytes);let content;
-  if(data[0]===255&&data[1]===254)content=new TextDecoder('utf-16le').decode(data);
-  else if(data[0]===254&&data[1]===255)content=new TextDecoder('utf-16be').decode(data); else{try{content=new TextDecoder('utf-8',{fatal:true}).decode(data)}catch(_){content=new TextDecoder('gb18030').decode(data)}}
-  content=content.replace(/^\uFEFF/,''); const header=content.split(/\r?\n/,1)[0],delimiter=header.includes('\t')?'\t':header.split(';').length>header.split(',').length?';':',';
-  if(delimiter===',')return content;
-  const rows=[];let row=[],value='',quoted=false;
-  for(let index=0;index<content.length;index++){
-    const char=content[index],next=content[index+1];
-    if(char==='"'&&quoted&&next==='"'){value+='"';index++}
-    else if(char==='"')quoted=!quoted; else if(char===delimiter&&!quoted){row.push(value);value=''} else if((char==='\r'||char==='\n')&&!quoted){if(row.length||value){row.push(value);rows.push(row);row=[];value=''} if(char==='\r'&&next==='\n')index++;}else value+=char;
+async function applySource(key,rows,meta,render=true){
+  if(['ctl','ctlNsr'].includes(key)&&!store.meta.ctl&&!store.meta.ctlNsr)filterValues['ctl.change']=[...defaultCtlTypes];
+  if(key==='fcid'&&id('workspaceNav').querySelector('[data-view="portfolio"]').hidden){
+    filterValues.quarter=defaultQuarters();
+    id('workspaceNav').querySelectorAll('[data-view]').forEach(button=>button.hidden=false);
+    showView('portfolio');
   }
-  if(quoted)throw new Error('CSV contains an unclosed quoted value.');
-  if(row.length||value){row.push(value);rows.push(row)}
-  return rows.map(cells=>cells.map(cell=>'"'+cell.replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  store.raw[key]=rows;store.meta[key]={...meta,...sourceRange(rows,key,meta),rows:rows.length,savedAt:meta.savedAt||Date.now()};store.dirty=true;sourceMessage(key,'Loaded');sourceMeta(key);if(render&&!store.refreshing)recalculate();
 }
-async function readSourceFile(file,key){if(!file.name.toLowerCase().endsWith('.csv'))return report.readFile(file,key); const content=sourceCsvText(await file.arrayBuffer()); return report.readFile({name:file.name,text:async()=>content},key);}
+
+
 function downloadHostedArchive(){
   return new Promise((resolve,reject)=>{
     GM_xmlhttpRequest({
@@ -2729,20 +3386,26 @@ function downloadHostedArchive(){
     });
   });
 }
-async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES)){
+async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES),force=false){
   const runs=Object.fromEntries(keys.map(key=>[key,startSource(key)]));keys.forEach(key=>sourceMessage(key,'Loading data…','loading'));
-  let archivePassword='';
-  const failed=key=>{if(runs[key]===store.runs[key])sourceMessage(key,(archivePassword?'Data could not be loaded.':'SAP access failed. Sign in to Fiori.')+(store.meta[key]?' Previous data retained.':' Retry or import a file.'),'error');};
+  const cacheKey=CACHE_PREFIX+'archive',today=nsrData.localDate(new Date());
+  let archivePassword='',cache=null,valid=true,stage='SAP access';
+  const failed=(key,error)=>{valid=false;if(runs[key]===store.runs[key])sourceMessage(key,stage+' failed: '+(error.userMessage||error.message)+'\n'+(archivePassword?'':'Sign in to Fiori. ')+(store.meta[key]?'Previous data retained.':key==='ctlNsr'?'Retry or append a file.':'Retry or import a file.'),'error');};
   try{
     const response=await unsafeWindow.fetch(HOSTED_PASSWORD_URL,{credentials:'same-origin',cache:'no-store',signal:unsafeWindow.AbortSignal.timeout(30000),headers:{Accept:'application/atom+xml,application/xml,text/xml'}});
-    if(!response.ok||(response.headers.get('Content-Type')||'').toLowerCase().includes('text/html'))throw new Error('SAP access failed.');
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    if((response.headers.get('Content-Type')||'').toLowerCase().includes('text/html'))throw new Error('SAP returned a sign-in page.');
     const doc=new DOMParser().parseFromString(await response.text(),'application/xml');
     if(doc.getElementsByTagName('parsererror').length)throw new Error('SAP returned invalid XML.');
     const properties=[...doc.getElementsByTagNameNS('*','properties')].find(node=>node.getElementsByTagNameNS('*','Userid')[0]?.textContent.trim()==='LONGKY');
     archivePassword=properties?.getElementsByTagNameNS('*','FullName')[0]?.textContent.replace(/\s+/g,'')||'';
     if(!archivePassword)throw new Error('SAP returned no password.');
     if(keys.every(key=>runs[key]!==store.runs[key]))return;
-    let bytes=await downloadHostedArchive();if(keys.every(key=>runs[key]!==store.runs[key]))return;
+    cache=force?null:await nsrData.readDataset(cacheKey).catch(()=>null);
+    if(cache?.day!==today||!cache.bytes?.byteLength)cache=null;
+    stage='GitHub download';
+    const archive=cache?.bytes||await downloadHostedArchive();let bytes=archive;if(keys.every(key=>runs[key]!==store.runs[key]))return;
+    stage='Archive decryption';
     if(typeof zip==='undefined')throw new Error('Data reader is unavailable. Import a file manually.');
     // Keep report filenames inside the encrypted outer ZIP.
     const outer=new zip.ZipReader(new zip.Uint8ArrayReader(new Uint8Array(bytes)),{useWebWorkers:false});
@@ -2751,35 +3414,39 @@ async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES)){
       if(!entry)throw new Error('The data file is missing.');
       bytes=await entry.getData(new zip.Uint8ArrayWriter(),{password:archivePassword,checkSignature:true});
     }finally{await outer.close()}
+    stage='Archive contents';
     const reader=new zip.ZipReader(new zip.Uint8ArrayReader(new Uint8Array(bytes)),{useWebWorkers:false});
     try{
       const entries=await reader.getEntries();
       for(const key of keys){
         if(runs[key]!==store.runs[key])continue;
         try{
+          stage='Read '+sources[key].label;
           const entry=entries.find(item=>!item.directory&&item.filename.split(/[\\/]/).pop().toLowerCase().startsWith(HOSTED_SOURCE_PREFIXES[key]));
           if(!entry)throw new Error('The data file is missing.');
           const filename=entry.filename.split(/[\\/]/).pop();
-          const data=await entry.getData(new zip.Uint8ArrayWriter(),{checkSignature:true}),parsed=await readSourceFile(new File([data],filename),key);
+          const data=await entry.getData(new zip.Uint8ArrayWriter(),{checkSignature:true}),parsed=await report.readFile(new File([data],filename),key);
           if(runs[key]!==store.runs[key])continue;
-          const {rows,...recognition}=parsed;await applySource(key,rows,{file:sources[key].label,kind:'github',...recognition});
-        }catch(error){failed(key)}
+          const {rows,...recognition}=parsed;await applySource(key,rows,{file:filename,kind:'github',...recognition},false);
+        }catch(error){failed(key,error)}
       }
     }finally{await reader.close()}
-  }catch(error){keys.forEach(failed)}finally{keys.forEach(key=>{if(runs[key]===store.runs[key])sourceBusy(key,false)})}
+    if(cache&&!valid)throw new Error('Cached archive is invalid.');
+    if(!cache&&valid&&keys.every(key=>runs[key]===store.runs[key]))await nsrData.writeDataset({key:cacheKey,day:today,bytes:archive}).catch(()=>{});
+  }catch(error){if(cache&&keys.every(key=>runs[key]===store.runs[key]))await loadHostedSources(keys,true);else keys.forEach(key=>failed(key,error))}finally{if(store.dirty&&!store.refreshing)recalculate();keys.forEach(key=>{if(runs[key]===store.runs[key])sourceBusy(key,false)})}
 }
 async function importSource(file,key){
   const run=startSource(key);sourceMessage(key,'Reading '+file.name+'…','loading');
   try{
-    let parsed,range={};
-    if(file.name.toLowerCase().endsWith('.json')&&key==='nsr'){
-      const cache=JSON.parse(await file.text());if(!Array.isArray(cache.rows))throw new Error('This JSON does not contain NSR cache rows.');
-      parsed={rows:normalizeNsrRows(cache.rows),sheet:'NSR cache',fields:Object.keys(sources.nsr.fields)};
-      if(nsrData.validSapDate(cache.from)&&nsrData.validSapDate(cache.to))range={from:cache.from,to:cache.to};
-    }else parsed=await readSourceFile(file,key);
+    const parsed=await report.readFile(file,key);let range={};
+    if(key==='nsr'){parsed.rows=normalizeNsrRows(parsed.rows);if(nsrData.validSapDate(parsed.from)&&nsrData.validSapDate(parsed.to))range={from:parsed.from,to:parsed.to};delete parsed.from;delete parsed.to}
     if(run!==store.runs[key])return;
+    if(key==='ctlNsr'){
+      const appendedIds=new Set(parsed.rows.map(row=>text(row['CTL ID'])).filter(Boolean));
+      parsed.rows=[...store.raw[key].filter(row=>!appendedIds.has(text(row['CTL ID']))),...parsed.rows];
+    }
     const {rows,...recognition}=parsed;await applySource(key,rows,{file:file.name,kind:'file',...recognition,...range});
-  }catch(error){if(run===store.runs[key]){const message=error.userMessage?error.message+'\n\n'+error.userMessage:error.message;sourceMessage(key,'Import failed: '+message+(store.meta[key]?' Previous data retained.':''),'error')}}finally{if(run===store.runs[key]){sourceBusy(key,false);
+  }catch(error){if(run===store.runs[key])sourceMessage(key,(key==='ctlNsr'?'Append':'Import')+' failed: '+(error.userMessage||error.message)+(store.meta[key]?' Previous data retained.':''),'error')}finally{if(run===store.runs[key]){sourceBusy(key,false);
     id('fcFile-'+key).value=''}}
 }
 async function loadBobj(update=false,key='fcid'){
@@ -2801,6 +3468,11 @@ async function loadBobj(update=false,key='fcid'){
     sourceMessage(key,'Reading BOBJ in the background…','loading'); const bytes=Uint8Array.from(atob(result.contentBase64),character=>character.charCodeAt(0)),parsed=await report.readWorkbook(bytes.buffer,key);
     if(run!==store.runs[key])return;
     const {rows,...recognition}=parsed;await applySource(key,rows,{file:status.outputPath,kind:'bridge',...recognition});
+    if(!update){
+      const data=await bridgeFileRequest('stat',{path:status.outputPath},10000),modified=Number(data.entries?.[0]?.lastModified)||0;
+      const date=modified>0?nsrData.localDate(new Date(modified)):'';
+      if(date&&date<nsrData.localDate(new Date())&&unsafeWindow.confirm(`${sources[key].label} data is not up to date (last updated: ${date}). Update now? This may take 2-3 minutes.`))setTimeout(()=>document.querySelector(`[data-source-action="${key==='ctl'?'ctl-bobj-update':'bobj-update'}"]`).click(),0);
+    }
   }catch(error){if(run===store.runs[key])sourceMessage(key,error.message+(store.meta[key]&&!error.transport?' Previous data retained.':''),'error',error.transport)}
   finally{if(run===store.runs[key])sourceBusy(key,false)}
 }
@@ -2832,569 +3504,817 @@ async function restoreSources(reset=false){
   try{
     const keys=Object.keys(sources);
     if(reset){
-      keys.forEach(key=>{store.runs[key]=(store.runs[key]||0)+1;store.raw[key]=[];delete store.meta[key]; sourceMessage(key,'Not loaded','');sourceMeta(key);sourceBusy(key,true);id('fcFile-'+key).value='';}); setNsrRange(nsrData.sapRange());store.pages={};actionMessage('');
+      keys.forEach(key=>{store.runs[key]=(store.runs[key]||0)+1;store.raw[key]=[];delete store.meta[key]; sourceMessage(key,'Not loaded','');sourceMeta(key);sourceBusy(key,true);id('fcFile-'+key).value='';}); setNsrRange(nsrData.sapRange());actionMessage('');
         recalculate();
     }
     // Manual imports are page-local; discard source caches left by earlier versions.
     try{await nsrData.deleteDatasets(keys.map(key=>CACHE_PREFIX+key))} catch(error){if(reset)actionMessage('Local source cache could not be reset. '+error.message)} finally{if(reset)keys.forEach(key=>sourceBusy(key,false))}
-    recalculate();
     if(store.meta.nsr?.from)setNsrRange({from:store.meta.nsr.from,to:store.meta.nsr.to});
     const loads=[];
     for(const key of Object.keys(BOBJ_SOURCES))if(!store.busy.has(key))loads.push(loadBobj(false,key));
-    const hostedKeys=Object.keys(HOSTED_SOURCE_PREFIXES).filter(key=>!store.busy.has(key));if(hostedKeys.length)loads.push(loadHostedSources(hostedKeys));
+    const hostedKeys=Object.keys(HOSTED_SOURCE_PREFIXES).filter(key=>!store.busy.has(key));if(hostedKeys.length)loads.push(loadHostedSources(hostedKeys,reset));
     if(!store.busy.has('nsr')&&(!store.meta.nsr||store.meta.nsr.kind==='sap'))loads.push(loadSharedNsr());
+    // Keep per-source progress visible; rebuild the graph once the whole load settles.
     await Promise.all(loads);
-  }finally{store.refreshing=false;refresh.disabled=store.busy.size>0;refresh.textContent='Refresh'}
+  }finally{store.refreshing=false;refresh.disabled=store.busy.size>0;refresh.textContent='Refresh';if(store.dirty||reset)recalculate()}
 }
 
 
-function quarterYear(value){const match=text(value).match(/^Q(?:Mar|Jun|Sep|Dec)'(\d{2}|\d{4})$/i);return match?(match[1].length===2?'20'+match[1]:match[1]):''}
-function toggleQuarterYear(year){const options=[...id('fQuarter').options].filter(option=>quarterYear(option.value)===year),selectAll=options.some(option=>!option.selected); options.forEach(option=>option.selected=selectAll);report.syncChosen('fQuarter');report.applyFilters();
-  paintQuarterYears();}
-function paintQuarterYears(){
-  document.querySelectorAll('[data-quarter-year]').forEach(button=>{
-    const options=[...id('fQuarter').options].filter(option=>quarterYear(option.value)===button.dataset.quarterYear),count=options.filter(option=>option.selected).length,all=options.length>0&&count===options.length; button.disabled=!options.length;button.classList.toggle('active',
-      all);button.classList.toggle('partial',count>0&&!all);button.setAttribute('aria-pressed',String(all));
-  });
-}
-document.addEventListener('click',event=>{
-  document.querySelectorAll('.fc-source-help[open]').forEach(help=>{if(!help.contains(event.target))help.open=false});
-  const label=event.target.closest('.fc-filter>label[for]');if(label&&label.htmlFor!=='fSearch'){event.preventDefault();jQuery(id(label.htmlFor)).trigger('chosen:open');return}
-  const button=event.target.closest('button');if(!button)return;
-  if(button.dataset.importSource){id('fcFile-'+button.dataset.importSource).click();return}
-  if(button.dataset.quarterYear){toggleQuarterYear(button.dataset.quarterYear);return}
-  if(button.dataset.clearFilter){report.clearSelection(button.dataset.clearFilter);paintQuarterYears();return}
-  if(button.dataset.selectAll){report.selectAll(button.dataset.selectAll);paintQuarterYears();return}
-  if(button.dataset.sourceAction){const action=button.dataset.sourceAction; if(action==='bobj-update')loadBobj(true); else if(action==='ctl-bobj-update')loadBobj(true,'ctl');
-    else if(action==='nsr-open'){setNsrRange(nsrRange);id('fcNsrDialog').showModal()}return;}
-  if(button.id==='fcRefresh')restoreSources(true); else if(button.id==='fcReset'){report.resetFilters();paintQuarterYears()}
-});
-document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.fc-source-help[open]').forEach(help=>help.open=false)});
-id('fcNsrFrom').addEventListener('input',()=>{id('fcNsrTo').min=id('fcNsrFrom').value});
-id('fcNsrCancel').addEventListener('click',()=>id('fcNsrDialog').close());
-id('fcNsrForm').addEventListener('submit',event=>{event.preventDefault();if(store.busy.has('nsr'))return;id('fcNsrDialog').close();loadSharedNsr(false)});
-document.addEventListener('change',event=>{const input=event.target;if(input.dataset.sourceFile&&input.files?.[0])importSource(input.files[0],input.dataset.sourceFile)}); id('fSearch').addEventListener('input',()=>report.applyFilters());
-filterDefs.forEach(([name])=>{jQuery(id(name)).on('change',()=>{report.applyFilters();paintQuarterYears()}); if(jQuery.fn.chosen){jQuery(id(name)).chosen({width:'100%',search_contains:true,hide_results_on_select:false,placeholder_text_multiple:'All',display_selected_options:false});
-  report.registerChosen(name)}});
-// Source initialization is deliberately separate from the original report engine.
 setNsrRange(nsrRange);recalculate();restoreSources();
+}
 
-function createReferenceReport(){
-  // The supplied HTML governs every metric, rule, term, view and export below.
-  // Deviating from that reference requires the user's confirmation.
-  const window={XLSX,jQuery,alert:message=>unsafeWindow.alert(message),confirm:message=>unsafeWindow.confirm(message)}; const alert=window.alert;
-  const {loadStatus,fQuarter,fAccount,fCustomer,fRisk,fSearch,filterContextCard,filterContextBadge,filterContextMini,pageExecutive,kPop,kPre,kPost,kRisk,kSlotReady,kNSRWatch,kNSRImpact,funnel,heatmap,driverBars,watchTbl,pageStability,projectionMini,stabilityTbl,
-    pageSlot,kSlotMcsd,kSlotNoMcsd,kNoSlotCtl,slotTbl,pageDrivers,driverCards,riskDriverDetail,riskTbl,pageNSR,openNsrPopulation,nsrTbl,pageQuarter,quarterTbl,quarterSourceTbl,pageFCID,fcidInput,fcidBasic,fcidAction,fcidTbl,pageMapping,loadTbl,overlapTbl,mappingTbl,pageUAT,uatTbl,
-    pageRules,rulesTbl,agNotice,agGrid}=Object.fromEntries([...document.querySelectorAll('[id]')].map(element=>[element.id,element]));
-// BEGIN FCID REPORT ENGINE
-const cfg={fcid:{label:'FCID Database',sheet:'Sheet1',key:'FID',commit:'Commit: Field',slotFlag:'Flag: Slotted',quarter:'Time: Calendar Quarter',account:'Account Group',fab:'Fab Name',customer:'Customer',product:'Primary Product',system:'System Description',
-  quote:'Active Quote Number',targetShip:'Date: Target Ship',ship:'Date: Mfg Commit Ship',rd:'Date: Sales Ops Request Date (RD)'},ctl:{label:'CTL Report',sheet:'CTL BOBJ',key:'Opportunity ID',ctlId:'CTL ID',change:'Change Cat',status:'Status',mcsd:'MCSD @ Current',srd:'SRD @ Current',
-  srdSops:'SRD @ SOPs Approval',sops:'1st SOps Appr Dt',summary:'Change Summary',mfg:'Mfg Upgrade Type'},ctlNsr:{label:'CTL-NSR List',sheet:'export',key:'FCID',ctlId:'CTL ID',change:'Change Type',status:'CTL Status',mcsd:'MCSD',srd:'Sales Ops RD',fieldCrd:'Field CRD',
-  sops:'Sales Ops Approval Date',quote:'Quote Number',sourceQuote:'Source Quote',summary:'Change Summary',stage:'Stage',mfg:'Mfg Upgrade Type'},nsr:{label:'NSR Log', sheet:'Whole list', key:'Reference Fcid', nsr:'NSR#', status:'NSR Status', workflow:'Workflow Status',
-  customer:'Customer', product:'Primary Product', title:'NSR Title', lt:'NSR LT'},nce:{label:'NCE / FA Review', sheet:'Export', key:'FCID', nce:'NCe #', state:'NCe State', impact:'Impact', title:'Title', customer:'Customer', openDate:'Open Date', damageGroup:'Damage Group',
-  damageCode:'Damage Code', partNumber:'Part_Number', partDescription:'Part_Description'}};
-const raw={fcid:[],ctl:[],ctlNsr:[],nsr:[],nce:[]};let meta={},M={rows:[],excluded:[],risks:[],idx:{},originalCommit:0,fcidAudit:{rawCommitRows:0,validCommitRows:0,invalidFidRows:0,distinctCommitFcids:0,duplicateFcidGroups:0,duplicateRowsRemoved:0,fabSegmentPreferred:0}};
-const AG0={"AT1":(`Analog Foundries (CUMEC)\nASMC - Fab 3\nBYD Semiconductor Chengdu*\nCansemi*\nChina Resources Microelectronics\nChongqing SIMIC Semiconductor Limited\nCR Micro*\nCR Runan Technologies (Chongqing)\nCSMC - Fab *\nGalaxycore *\nGTA Semico` +
-  `nductor\nGuangzhou Cansemi*\nGuangzhou Zen Semiconductor\nHangzhou Fullsemi Technology\nHangzhou Hesheng MicroElectronics\nHangzhou Power Innovation Microelectron\nHH - Fab *\nHikstor Technology\nHuBei Sanan Optoelectronics co.ltd\nHun` +
-  `an Jiechuwei Semiconductor Technology\nHunan Sanan Semiconductor\nInnostar Semiconductor - *\nIRay Technology Hefei\nJiangsu Advanced Memory (AMS)\nJiangSu Nexic Technology\nJie Jie Microelectronics (Nan Tong) Tech\nJinan BYD Semicondu` +
-  `ctor\nMaxscend Microelectronics Company\nResources West Microelectronics (RWME)\nRunpeng Semiconductor (Shenzhen)\nSanan-ST Microelectronics\nShanghai Dingtai Jiangxin Tech.\nShanghai GTX Semiconductor*\nShanghai Huayaoxin Semi (Foreca` +
-  `st Only)\nShanghai Integrated Circuit *\nShanghai Optoelectronic Science\nSkysilicon Co. (China Resources Micro>)\nStarPower Technologies\nSunny OmniLight*\nSwaysure Technology*\nTI - Chengdu\nUMC - HJTC Fab 1\nUnion Semiconductor (Hef` +
-  `ei) Co.,Ltd\nWUYUAN\nXi'an Longwei Semiconductor\nXiamen ITRI/USC\nYOFC Advanced Semiconductor\nZhejiang ChipRight Semiconductor\nZheJiang HiChip Micro Tech\nZhejiang ICsprout Semiconductor\nZhejiang Xinsheng Semiconductor\nZhuzhou CRR` +
-  `C Times Electric\nZing Semiconductor Corporation`),
-    "AT2":(`BEMC\nGoerPixel\nGuangdong Ziyue Semiconductor (Forecast)\nJi Guang Semiconductor (Shaoxing) Corp.\nMRDI\nNingbo Semiconductor\nPST*\nPXW Semiconductor\nQuanxin Integrated Circuit Mfg-QXIC\nRong Semiconductor*\nSEC Chip*\nSemicon Manuf` +
-  ` Oriental*\nShenzhen Pengxinxu Technology Co., Ltd\nShenzhen Pensun Technology Co., Ltd\nShenzhen Qili Tech\nSiEn (Qingdao)*\nSilex Microsystems Beijing Co\nSMBC B3\nSMEC Shaoxing*\nSMIC*\nUNT*\nYDMT\nYongxin*\nZhuhai Hengqin Jointed F` +
-  `oundry Semicon`),"AT3":(`ANHUI JUHE MICROELECTRONICS*\nASP Tech (Chengdu)\nBeijing Jidian Holding*\nChangxin*\nChengdu High-tech Jin Science & Tech\nCHJS (Chengdu High-tech Jin Science)\nChongqing lnnoevsic Electronics\nCXMT Fab2*\nDongguan Guangmao Technology` +
-  `*\nGuangdong 3D-Semi\nHangzhou HFC Semiconductor\nHefei Xinjing\nHFC Semiconductor Corporation\nInnoscience (Suzhou) Semiconductor\nInnotron Memory Co.*\nJiangsu Silicon Integrity (Forecast Only\nNexchip Semiconductor\nNexmemory Techno` +
-  `logy Co., Ltd.\nUSC - Xiamen 12X\nWuhan Chuxing Technology\nWuhan HSMC\nWuhan Xinxin Semi Mfg Co. Ltd*\nXinlian Microelectronics\nYangtze Advanced Memory*\nYMTC*\nZhe Jiang Super Dimension Semiconductor`),"Hynix":"SK hynix - *","Intel":"Intel - China F68*",
-    "OSAT":(`Amkor - Assembly & Test (Shanghai)\nAnhui Semi Integr Display Technology\nATX*\nBeijing H.F.I. Elect*\nBeijing ICLink Technology (ForecastOnly)\nBeijing Xinli Technology Innovation*\nBOE Technology*\nChengdu ECHINT Technology Co.,Ltd\n` +
-  `DSHX (Shanghai) Corp.\nForehope*\nGreat Bay Chiplet*\nHefei Payton Storage (Forecast Only)\nHsingchen Technology*\nHuaian Imaging (HiDM)\nHuatian Tech*\nHubei Yangtze*\nHuizhou Biwin Storage Technology(FCOnly)\nInnosemi*\nJCET*\nJiangs` +
-  `u Silicon Integrity\nJiangyin Changdian Advanced Pkg (JCAP)\nKore Semiconductor 200MM\nKunming BOE Display\nLuxshare*\nNatural-Integration Advanced\nNCAP*\nNingbo TRS Microelectronics\nQuliang Electronics*\nShan Dong Qi Xin Mems Corp\n` +
-  `Shanghai Echip Semiconductor\nShanghai Xianfang Semiconductor\nShanghai Xinyuan Innovation Center\nShenzhen Qili Tech F-PJT (Forecast Only)\nSJ Semi - Jiangyin*\nSky Chip Inter Tech (Forecast Only)\nSPIL Suzhou\nSuzhou TF-AMD Semicondu` +
-  `ctor\nTF AMD Microelectronics (Penang)\nTianfu Xinglong Lake Laboratory\n*Tongfu*\nUNISEM CHENGDU (Forecast Only)\nWuhu Micro Display Intelligent Technolog\nXiamen Sky Semiconductor Technology\nYibu Semiconductor Co., LTD\nYongjiang La` +
-  `b*\nYunnan Invensight Optoelectronics\nZhejiang Hexin Integrated Circuit (FC)\nZhejiang ICTruth Semiconductor\nZiyi Microelectronics Ltd.`),"Samsung":"Samsung - *","Training Center":"Lam - Shanghai Training Center","TSMC":"TSMC - *"};let AG={...AG0},AGI=new Map,AGP=[];
-const demo={fcid:[{'FID':'257020','Commit: Field':'Commit','Flag: Slotted':'Y','Time: Calendar Quarter':"QMar'26",'Account Group':'AT3',Customer:'Dongguan Guangmao','Primary Product':'CoronusHP','System Description':'System','Date: Target Ship':'11/20/2026',
-  'Date: Sales Ops Request Date (RD)':'11/20/2026'},{'FID':'233525','Commit: Field':'Commit','Flag: Slotted':'#','Time: Calendar Quarter':"QSep'26",'Account Group':'AT3',Customer:'Nexchip','Primary Product':'E4/Kiyox3','System Description':'System','Date: Target Ship':'',
-  'Date: Sales Ops Request Date (RD)':'11/05/2026'},{'FID':'250544','Commit: Field':'Commit','Flag: Slotted':'Y','Time: Calendar Quarter':"QSep'26",'Account Group':'AT1',Customer:'SK hynix','Primary Product':'EXT_AHM','System Description':'System','Date: Target Ship':'08/28/2026',
-  'Date: Sales Ops Request Date (RD)':'08/28/2026','Date: Mfg Commit Ship':'06/12/2026'},{'FID':'999001','Commit: Field':'Commit','Flag: Slotted':'Y','Time: Calendar Quarter':"QSep'26",'Account Group':'AT1',Customer:'Demo','Primary Product':'SW',
-  'System Description':'KIYOFXE SW-UPGRADE','Date: Target Ship':'09/01/2026'}],ctl:[{'Opportunity ID':'257020','CTL ID':'8000295092','Change Cat':'Slot','Status':'Completed','SRD @ Current':'11/20/2026','SRD @ SOPs Approval':'11/20/2026','1st SOps Appr Dt':'06/01/2026',
-  'Change Summary':'Slot CTL'},{'Opportunity ID':'250544','CTL ID':'8000222454','Change Cat':'Slot','Status':'Completed','MCSD @ Current':'06/12/2026','SRD @ SOPs Approval':'08/28/2026','1st SOps Appr Dt':'01/10/2026','Change Summary':'Slot CTL'}],ctlNsr:[{FCID:'257020',
-  'CTL ID':'8000295092','Change Type':'Slot','CTL Status':'Completed','Sales Ops RD':'11/20/2026','Sales Ops Approval Date':'06/01/2026'},{FCID:'250544','CTL ID':'8000222454','Change Type':'Slot','CTL Status':'Completed','MCSD':'06/12/2026','Sales Ops RD':'08/28/2026',
-  'Sales Ops Approval Date':'01/10/2026'}],nsr:[{'Reference Fcid':'233525','NSR#':'N304262','NSR Status':'PENDING WITH DESIGN ENGINEERING','Workflow Status':'Pending','NSR Title':'Nexchip Etch sys'}],nce:[]};
-function clean(v){let s=String(v??'').trim();s=s.replace(/\.0$/,'');return (s===''||s==='#'||s.toLowerCase()==='nan'||s==='Not assigned')?'':s}function norm(s){return String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'')}function get(row,names){for(const n of names){if(row&&
-  Object.prototype.hasOwnProperty.call(row,n))return clean(row[n])}let keys=Object.keys(row||{});for(const n of names){let nn=norm(n);let k=keys.find(k=>norm(k)===nn)||keys.find(k=>norm(k).includes(nn)||nn.includes(norm(k)));
-  if(k)return clean(row[k])}return ''}
-function toDate(v){
-  const s=clean(v);if(!s)return null;let date;
-  // Exports contain calendar dates: preserve the same local date for Excel and CSV.
-  if(/^\d{5}(?:\.\d+)?$/.test(s)){
-    const serialDate=new Date((Math.floor(Number(s))-25569)*86400000);
-    date=new Date(serialDate.getUTCFullYear(),serialDate.getUTCMonth(),serialDate.getUTCDate());
-  }else{
-    const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/);
-    date=iso?new Date(Number(iso[1]),Number(iso[2])-1,Number(iso[3])):new Date(s);
+// Source parsing is independent of dashboard state and does not change source records.
+function createFidSourceReaders(sources){
+  const weights={
+    fcid:{fid:[40,1],commit:[20,1],calendarQuarter:[10,0],customer:[5,0],system:[5,0],targetShip:[5,0],rd:[5,0],account:[5,0]},
+    ctl:{fid:[35,1],number:[25,1],change:[10,0],mcsd:[5,0],srd:[5,0],approved:[5,0],summary:[5,0]},
+    ctlNsr:{fid:[35,1],number:[25,1],change:[10,0],mcsd:[5,0],srd:[5,0],approved:[5,0],stage:[5,0]},
+    nsr:{number:[70,1],status:[10,0],task:[10,0],title:[10,0]},
+    nce:{fid:[35,1],number:[30,1],state:[10,0],impact:[10,0],title:[5,0],opened:[5,0],damageGroup:[3,0],damageCode:[2,0]}
+  };
+
+  function clean(value){let valueText=String(value??'').replace(/^\uFEFF/,'').trim().replace(/\.0$/,'');return !valueText||valueText==='#'||valueText.toLowerCase()==='nan'||valueText==='Not assigned'?'':valueText;}
+  function norm(value){return String(value??'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+
+  const profiles=Object.fromEntries(Object.entries(sources).map(([key,source])=>{
+    const fields=Object.entries(source.fields).map(([name,field])=>({label:field.label,aliases:field.aliases.map(norm),weight:weights[key]?.[name]?.[0]||0,required:Boolean(weights[key]?.[name]?.[1])}));
+    return [key,{label:source.label,sheet:source.sheet,fields,key:source.fields.fid.label,number:source.fields.number?.label,minimum:65}];
+  }));
+  function profileFor(key){const profile=profiles[key];if(!profile)throw new Error('Unknown data source: '+key);return profile;}
+
+  function scoreSourceHeader(values,key){
+    const profile=profileFor(key),headers=new Set((values||[]).map(norm).filter(Boolean)),missing=[];let score=0;
+    profile.fields.forEach(field=>{if(field.aliases.some(alias=>headers.has(alias)))score+=field.weight;else if(field.required)missing.push(field.label);});
+    return {score,missing,requiredOk:!missing.length};
   }
-  if(isNaN(date))return null;date.setHours(0,0,0,0);return date;
-}
-function weeks(a,b){
-  if(!a||!b)return null;
-  // Count calendar days in UTC so daylight-saving changes cannot add or remove hours.
-  return (Date.UTC(b.getFullYear(),b.getMonth(),b.getDate())-Date.UTC(a.getFullYear(),a.getMonth(),a.getDate()))/604800000;
-}
-function qFromDate(d){if(!d)return '';let y=String(d.getFullYear()).slice(-2),m=d.getMonth()+1;return (m<=3?'QMar':m<=6?'QJun':m<=9?'QSep':'QDec')+"'"+y}function upper(v){return clean(v).toUpperCase()}function pct(a,b){return b?(a/b*100).toFixed(1)+
-  '%':'0.0%'}function uniq(a){return [...new Set(a.filter(x=>x!==''&&x!==undefined&&x!==null))]}
-const AGK='fcid.ag.v1',AGO=['AT1','AT2','AT3','OSAT','Hynix','Intel','Samsung','Training Center','TSMC'];
-function agKey(v){return upper(v).replace(/\s+/g,' ')}
-function agRx(s){return new RegExp('^'+s.split('*').map(x=>x.replace(/[.*+?^$(){}|[\]\\]/g,c=>'\\'+c)).join('.*')+'$','i')}
-function normAg(x){
-    let o={},seen=new Map,dups=[];
-    Object.entries(x||{}).forEach(([g,s])=>{g=clean(g);if(!g)return; let keep=[]; uniq(String(s??'').split(/\r?\n/).map(clean)).forEach(f=>{let k=agKey(f),old=seen.get(k);if(!k)return; if(old&&old!==g)dups.push(f+' ('+old+' / '+g+')'); else if(!old){seen.set(k,g);keep.push(f)}});
-      o[g]=keep.join('\n');});
-    return {o,dups}
-}
-function setAg(x,warn=1){
-    let r=normAg(x);
-    if(r.dups.length){if(warn)alert('Duplicate Fab mappings found:\n\n'+r.dups.slice(0,12).join('\n')+'\n\nEach Fab must belong to only one Account Group.'); return false;}
-    AG=r.o;AGI=new Map;AGP=[]; Object.entries(AG).forEach(([g,s])=>s.split('\n').forEach(f=>{let k=agKey(f);if(!k)return; if(f.includes('*'))AGP.push([agRx(f),g,f.replace(/\*/g,'').length]); else AGI.set(k,g);})); AGP.sort((a,b)=>b[2]-a[2]); return true
-}
-function accountOf(r){let a=get(r,[cfg.fcid.account]); if(a&&!/^(NOT ASSIGNED|#?N\/A|NA|NULL|UNKNOWN|0|00:00:00|#(?:VALUE!|REF!|NAME\?|NUM!|DIV\/0!|NULL!))$/i.test(a))return a; let f=get(r,[cfg.fcid.fab]),m=AGI.get(agKey(f)),p; if(!m&&(p=AGP.find(x=>x[0].test(f))))m=p[1]; return m||
-  '[Undefined]';}
-function readAg(){let o={};document.querySelectorAll('#agGrid textarea').forEach(t=>o[t.dataset.g]=t.value);return o}
-function renderAg(){agGrid.innerHTML=Object.entries(AG).sort((a,b)=>(AGO.indexOf(a[0])+1||99)-(AGO.indexOf(b[0])+1||99)).map(([g,s])=>`<div class="agBox"><label>`+escHtml(g)+`</label><textarea data-g="`+escHtml(g)+'" spellcheck="false">'+escHtml(s)+`</textarea></div>`).join('')}
-function agEntries(mapping){
-    if(!mapping||typeof mapping!=='object'||Array.isArray(mapping)||Object.values(mapping).some(value=>typeof value!=='string'))throw Error('Invalid Fab mapping');
-    const normalized=normAg(mapping);if(normalized.dups.length)throw Error('Duplicate Fab mappings');
-    return new Map(Object.entries(normalized.o).flatMap(([group,value])=>value.split('\n').filter(Boolean).map(fab=>[agKey(fab),{fab,group}])));
-}
-function mergeAg(base,saved){
-    const before=agEntries(base),user=agEntries(saved),current=agEntries(AG0),merged=Object.fromEntries(Object.keys(AG0).map(group=>[group,[]])),conflicts=[];
-    // Compare ownership per Fab, so reordering lines or changing case is not an edit.
-    new Set([...current.keys(),...user.keys(),...before.keys()]).forEach(key=>{
-        const original=before.get(key),custom=user.get(key),latest=current.get(key),edited=custom?.group!==original?.group;
-        if(edited&&latest?.group!==original?.group&&custom?.group!==latest?.group)
-            conflicts.push((custom||latest||original).fab+': saved '+(custom?.group||'[Unmapped]')+'; updated default '+(latest?.group||'[Unmapped]'));
-        const chosen=edited?custom:latest;if(chosen)(merged[chosen.group]??=[]).push(chosen.fab);
+  function betterHeader(candidate,previous){return !previous||Number(candidate.requiredOk)>Number(previous.requiredOk)||(candidate.requiredOk===previous.requiredOk&&candidate.score>previous.score);}
+  function bestHeaderFromMatrix(matrix,key,startRow=0){
+    let best=null;(matrix||[]).slice(0,50).forEach((values,index)=>{const candidate={...scoreSourceHeader(values,key),headerRow:startRow+index};if(betterHeader(candidate,best))best=candidate;});
+    return best||{score:0,missing:profileFor(key).fields.filter(field=>field.required).map(field=>field.label),requiredOk:false,headerRow:startRow};
+  }
+  function sourceScoreError(key,candidate){const error=new Error(profileFor(key).label+': check file headers'+(candidate?.missing?.length?' ('+candidate.missing.join(', ')+')':''));error.code='LOW_SOURCE_SCORE';error.userMessage=error.message;return error;}
+  function validateSourceCandidate(key,candidate){if(!candidate||!candidate.requiredOk||candidate.score<profileFor(key).minimum)throw sourceScoreError(key,candidate);return candidate;}
+  function detectWorkbookSource(workbook,key){
+    const profile=profileFor(key),candidates=[];
+    (workbook.SheetNames||[]).forEach((sheetName,sheetOrder)=>{
+      const sheet=workbook.Sheets[sheetName];if(!sheet||!sheet['!ref'])return;
+      const fullRange=XLSX.utils.decode_range(sheet['!ref']),previewRange={s:{r:fullRange.s.r,c:fullRange.s.c},e:{r:Math.min(fullRange.e.r,fullRange.s.r+49),c:fullRange.e.c}};
+      const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',blankrows:true,raw:false,range:previewRange}),best=bestHeaderFromMatrix(matrix,key,fullRange.s.r);
+      candidates.push({...best,sheet:sheetName,dataRows:Math.max(0,fullRange.e.r-best.headerRow),configured:sheetName===profile.sheet,sheetOrder});
     });
-    return {mapping:Object.fromEntries(Object.entries(merged).map(([group,fabs])=>[group,fabs.join('\n')])),conflicts};
-}
-function storeAg(base=AG0,mapping=AG){
-    try{GM_setValue(AGK,JSON.stringify({base,mapping}))}catch(e){console.warn('Tampermonkey settings unavailable',e);return false}
-    try{const storage=persistentStore();storage?.removeItem(AGK);storage?.removeItem('toolkitKyra.fcid.accounts.v1')}catch(e){/* saved in Tampermonkey; old website data can remain */}
-    return true
-}
-function loadAg(){
-    try{
-        const saved=GM_getValue(AGK,null),candidates=saved===null?[readPersistent(AGK,null),readPersistent('toolkitKyra.fcid.accounts.v1',null)]:[saved];
-        for(const value of candidates){
-            try{
-                const data=typeof value==='string'?JSON.parse(value):value,base=data?.base||null,user=data?.mapping||data;
-                const result=base?mergeAg(base,user):{mapping:user,conflicts:[]};if(!base)agEntries(user);
-                if(!setAg(result.mapping,0))continue;
-                const notice=base?(result.conflicts.length?'Updated defaults conflict with your saved mapping. Saved assignments are kept for now. Review the mappings below, then click Save to confirm, or Restore Defaults.\n\n'+result.conflicts.join('\n'):''):
-                    'This saved mapping has no update baseline. Review it and click Save to keep it, or Restore Defaults to use the latest defaults.';
-                if(notice){agNotice.textContent=notice;agNotice.hidden=false;requestAnimationFrame(()=>jumpToSection('Rules','fabAccountMapping'))}
-                // Keep the original baseline until conflicts are explicitly confirmed.
-                if(saved===null)storeAg(base,user);else if(base&&!notice&&JSON.stringify(base)!==JSON.stringify(AG0))storeAg();
-                return;
-            }catch(e){/* try the next legacy setting */}
-        }
-    }catch(e){console.warn('Tampermonkey settings unavailable',e)}
-    setAg(AG0,0)
-}
-function restoreAg(){setAg(AG0,0);renderAg();recalculate();if(storeAg())agNotice.hidden=true;else alert('Default settings could not be saved in Tampermonkey. Please try again.')}
-function saveAg(btn){
-    if(!setAg(readAg()))return false;
-    recalculate();
-    if(!storeAg()){alert('Settings could not be saved in Tampermonkey. Please try again.');return false}
-    agNotice.hidden=true;
-    if(btn){clearTimeout(btn._st);btn.textContent='Saved';btn._st=setTimeout(()=>btn.textContent='Save',1200)}
-    return true
-}
-function csvParse(str){let rows=[],row=[],v='',q=false;for(let i=0;i<str.length;i++){let c=str[i],n=str[i+1];if(c==='"'&&q&&n==='"'){v+='"';i++}else if(c==='"'){q=!q}else if(c===','&&!q){row.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(row.length||v){row.push(v);rows.push(row);
-  row=[];v=''}if(c==='\r'&&n==='\n')i++}else v+=c}if(row.length||v){row.push(v);rows.push(row)}let h=(rows.shift()||[]).map(x=>clean(x));return rows.filter(r=>r.some(x=>clean(x))).map(r=>Object.fromEntries(h.map((k,i)=>[k,clean(r[i])])))}
-const SP={
-fcid:{m:65,k:cfg.fcid.key,f:[[cfg.fcid.key,40,1,'FCID','Field ID'],[cfg.fcid.commit,20,1,'Commit Field','Field Commit','Commit Status'],[cfg.fcid.quarter,10,0,'Calendar Quarter','Cal Quarter','Quarter'],[cfg.fcid.customer,5,0,'Customer Name','End Customer'],[cfg.fcid.system,5,0,
-  'System Desc','System'],[cfg.fcid.targetShip,5,0,'Target Ship Date','Target Ship'],[cfg.fcid.rd,5,0,'Sales Ops Request Date','Sales Ops RD','RD'],[cfg.fcid.account,5,0,'Account Team','Sales Territory','AT'],[cfg.fcid.product,5,0,'Product','Product Name','FID Description'],
-  [cfg.fcid.fab,0,0,'Fab'],[cfg.fcid.slotFlag,0,0,'Flag Slotted','Slotted Flag','Slot Flag'],[cfg.fcid.ship,0,0,'Mfg Commit Ship','Manufacturing Commit Ship Date','MCSD'],[cfg.fcid.quote,0,0,'Quote Number','Active Quote']]},
-ctl:{m:65,k:cfg.ctl.key,f:[[cfg.ctl.key,35,1],[cfg.ctl.ctlId,25,1,'CTL#'],[cfg.ctl.change,10,0,'Change Category'],[cfg.ctl.status,10,0,'CTL Status'],[cfg.ctl.mcsd,5,0,'Current MCSD','MCSD'],[cfg.ctl.srd,5,0,'Current SRD','Sales Ops RD','SRD'],[cfg.ctl.sops,5,0,
-  'Sales Ops Approval Date','SOPS Approval Date'],[cfg.ctl.summary,5,0,'Summary'],[cfg.ctl.srdSops,0,0,'SRD at SOPs Approval'],[cfg.ctl.mfg,0,0,'Manufacturing Upgrade Type']]},
-ctlNsr:{m:65,k:cfg.ctlNsr.key,f:[[cfg.ctlNsr.key,35,1,'FID'],[cfg.ctlNsr.ctlId,25,1,'CTL#'],[cfg.ctlNsr.change,10,0,'CTL Change Type'],[cfg.ctlNsr.status,10,0,'Status'],[cfg.ctlNsr.mcsd,5,0,'MCSD @ Current'],[cfg.ctlNsr.srd,5,0,'SRD','SRD @ Current'],[cfg.ctlNsr.sops,5,0,
-  '1st SOps Appr Dt'],[cfg.ctlNsr.stage,5,0,'CTL Stage'],[cfg.ctlNsr.fieldCrd,0,0,'CRD'],[cfg.ctlNsr.quote,0,0,'Quote ID'],[cfg.ctlNsr.sourceQuote,0,0,'Source Quote Number'],[cfg.ctlNsr.summary,0,0,'Summary'],[cfg.ctlNsr.mfg,0,0,'Manufacturing Upgrade Type']]},
-nsr:{m:65,k:cfg.nsr.key,f:[[cfg.nsr.key,35,1,'Reference FID','FCID'],[cfg.nsr.nsr,30,1,'NSR Number'],[cfg.nsr.status,10,0,'Status'],[cfg.nsr.workflow,10,0,'Workflow'],[cfg.nsr.title,10,0,'Task Name','Title'],[cfg.nsr.lt,5,0,'Lead Time','LT'],[cfg.nsr.customer,0,0,'Customer Name'],
-  [cfg.nsr.product,0,0,'Product']]},
-nce:{m:65,k:cfg.nce.key,f:[[cfg.nce.key,35,1,'FID'],[cfg.nce.nce,30,1,'NCE Number'],[cfg.nce.state,10,0,'State','Status'],[cfg.nce.impact,10,0,'NCE Impact'],[cfg.nce.title,5,0,'NCE Title'],[cfg.nce.openDate,5,0,'Opened Date','Creation Date'],[cfg.nce.damageGroup,3],
-  [cfg.nce.damageCode,2],[cfg.nce.partNumber,0],[cfg.nce.partDescription,0],[cfg.nce.customer,0,0,'Customer Name']]}}
-function aliasesFor(f){return uniq([f[0],...f.slice(3)])}
-function exactAliasKey(row,aliases){let keys=Object.keys(row||{}),wanted=new Set(aliases.map(norm).filter(Boolean));return keys.find(key=>wanted.has(norm(key)))||''}
-function scoreSourceHeader(values,k){let p=SP[k],headers=new Set((values||[]).map(norm).filter(Boolean)),score=0,missing=[];p.f.forEach(f=>{let hit=aliasesFor(f).some(a=>headers.has(norm(a)));if(hit)score+=f[1];else if(f[2])missing.push(f[0])});return {score,missing,
-  requiredOk:!missing.length}}
-function betterHeader(a,b){if(!b)return true;return Number(a.requiredOk)>Number(b.requiredOk)||(a.requiredOk===b.requiredOk&&a.score>b.score)}
-function bestHeaderFromMatrix(matrix,k,startRow=0){let best=null;(matrix||[]).slice(0,50).forEach((values,index)=>{let scored=scoreSourceHeader(values,k),candidate={...scored,headerRow:startRow+index};if(betterHeader(candidate,best))best=candidate});return best||{score:0,
-  missing:SP[k].f.filter(x=>x[2]).map(x=>x[0]),requiredOk:false,headerRow:startRow}}
-function sourceScoreError(k,candidate){let label=cfg[k].label,sheet=candidate?.sheet||'Not identified',score=candidate?.score||0,missing=(candidate?.missing||[]).join(', ')||'None';let err=new Error(label+' recognition score is too low: '+score+'/100');err.code='LOW_SOURCE_SCORE';
-  err.userMessage='File type validation failed!\n\nUpload slot: '+label+'\nBest candidate sheet: '+sheet+'\nHighest score: '+score+'/100\nMissing required fields: '+missing+
-  '\n\nThe wrong file may have been selected, or the header may not be within the first 50 rows. Please check the file and try again.';return err}
-function validateSourceCandidate(k,candidate){if(!candidate||!candidate.requiredOk||candidate.score<SP[k].m)throw sourceScoreError(k,candidate);return candidate}
-function detectWorkbookSource(wb,k){let candidates=[];wb.SheetNames.forEach((sheetName,sheetOrder)=>{let ws=wb.Sheets[sheetName];if(!ws||!ws['!ref'])return;let fullRange=XLSX.utils.decode_range(ws['!ref']),previewRange={s:{r:fullRange.s.r,c:fullRange.s.c},e:{r:Math.min(fullRange.e.r,
-  fullRange.s.r+49),c:fullRange.e.c}},matrix=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',blankrows:true,raw:false,range:previewRange}),best=bestHeaderFromMatrix(matrix,k,fullRange.s.r);candidates.push({...best,sheet:sheetName,dataRows:Math.max(0,fullRange.e.r-best.headerRow),
-  configured:sheetName===cfg[k].sheet,sheetOrder})});candidates.sort((a,b)=>Number(b.requiredOk)-Number(a.requiredOk)||b.score-a.score||b.dataRows-a.dataRows||Number(b.configured)-Number(a.configured)||a.sheetOrder-b.sheetOrder);return validateSourceCandidate(k,candidates[0])}
-function csvToMatrix(str){let rows=[],row=[],value='',quoted=false;for(let i=0;i<str.length;i++){let char=str[i],next=str[i+1];if(char==='"'&&quoted&&next==='"'){value+='"';i++}else if(char==='"'){quoted=!quoted}else if(char===','&&!quoted){row.push(value);value=''}else if((char===
-  '\n'||char==='\r')&&!quoted){if(row.length||value){row.push(value);rows.push(row);row=[];value=''}if(char==='\r'&&next==='\n')i++}else value+=char}if(row.length||value){row.push(value);rows.push(row)}return rows}
-function rowsFromMatrix(matrix,headerRow){let headers=(matrix[headerRow]||[]).map(clean);return matrix.slice(headerRow+1).filter(row=>row.some(value=>clean(value))).map(row=>Object.fromEntries(headers.map((header,index)=>[header,clean(row[index])])))}
-function canonicalizeSourceRows(rows,k){let p=SP[k];return rows.map(source=>{let row={...source};p.f.forEach(f=>{if(clean(row[f[0]]))return;let key=exactAliasKey(source,aliasesFor(f));if(key)row[f[0]]=source[key]});return row}).filter(row=>clean(row[p.k]))}
-async function loadFile(e,k){let f=e.target.files[0],pm=meta[k],dm=dataMode,done=false;if(!f)return;try{let ext=f.name.split('.').pop().toLowerCase(),rows,candidate;if(ext==='csv'){let matrix=csvToMatrix(await f.text());candidate=validateSourceCandidate(k,
-  {...bestHeaderFromMatrix(matrix,k,0),sheet:'CSV',dataRows:matrix.length});rows=rowsFromMatrix(matrix,candidate.headerRow)}else{if(!window.XLSX)throw new Error('XLSX parser not loaded');let wb=XLSX.read(await f.arrayBuffer(),{type:'array'});candidate=detectWorkbookSource(wb,k);rows=
-  XLSX.utils.sheet_to_json(wb.Sheets[candidate.sheet],{defval:'',range:candidate.headerRow})}let normalized=canonicalizeSourceRows(rows,k);if(!normalized.length)throw sourceScoreError(k,{...candidate,score:0,missing:[SP[k].k]});raw[k]=normalized;meta[k]={file:f.name,
-  sheet:candidate.sheet,headerRow:candidate.headerRow+1,rows:raw[k].length,score:candidate.score,mode:'header score '+candidate.score+'/100 | row '+(candidate.headerRow+1)};if(dm==='demo'&&meta[k]!==pm){let rr=raw[k],mm=meta[k];Object.keys(raw).forEach(x=>raw[x]=[]);raw[k]=rr;meta={};
-  meta[k]=mm;dataMode='live'}setStatus();done=true;recalculate()}catch(err){if(!done)e.target.value='';if(err.code==='LOW_SOURCE_SCORE')window.alert(err.userMessage);loadStatus.innerHTML=`<b>`+(done?'Calculation failed after loading: ':'Load failed: ')+escHtml(f.name)+`</b><br>`+
-  escHtml(err.message)}}
-function setStatus(){loadStatus.innerHTML=Object.keys(cfg).map(k=>`<b>`+escHtml(cfg[k].label)+`</b>: `+(meta[k]?escHtml(meta[k].file)+' | sheet: '+escHtml(meta[k].sheet)+' | rows: '+meta[k].rows+' | '+escHtml(meta[k].mode):'not loaded')).join(`<br>`)}
-function loadDemo(){document.querySelectorAll('.upload input[type=file]').forEach(x=>x.value='');dataMode='demo';Object.keys(demo).forEach(k=>{raw[k]=JSON.parse(JSON.stringify(demo[k]));meta[k]={file:'demo '+k,sheet:cfg[k].sheet,rows:raw[k].length,score:100,mode:'demo'}});setStatus();
-  recalculate()}
-function indexBy(rows,key){let m=new Map();rows.forEach(r=>{let id=clean(get(r,[key]));if(!id)return;if(!m.has(id))m.set(id,[]);m.get(id).push(r)});return m}function isCommit(r){return upper(get(r,[cfg.fcid.commit]))==='COMMIT'}
-const invalidFcidKeys=new Set(['NOFID','NOFCID','NA','NULL','UNKNOWN','NOTASSIGNED']);
-function isValidFcidKey(value){let key=norm(clean(value)).toUpperCase();return Boolean(key)&&!invalidFcidKeys.has(key)}
-function hasAssignedFabSegment(row){let value=upper(get(row,['Fab Segment','Fab_Segment']));return Boolean(value)&&value!=='NOT ASSIGNED'}
-function prepareCommitFcids(rows){let selected=new Map(),audit={rawCommitRows:0,validCommitRows:0,invalidFidRows:0,distinctCommitFcids:0,duplicateFcidGroups:0,duplicateRowsRemoved:0,fabSegmentPreferred:0};for(const row of rows){if(!isCommit(row))continue;audit.rawCommitRows++;
-  let fid=get(row,[cfg.fcid.key]);if(!isValidFcidKey(fid)){audit.invalidFidRows++;continue}audit.validCommitRows++;let entry=selected.get(fid);if(!entry){selected.set(fid,{row,preferred:null,count:1});continue}audit.duplicateRowsRemoved++;entry.count++;if(entry.count===
-  2){audit.duplicateFcidGroups++;entry.preferred=hasAssignedFabSegment(entry.row)}if(!entry.preferred&&hasAssignedFabSegment(row)){entry.row=row;entry.preferred=true;audit.fabSegmentPreferred++}}let prepared=[];selected.forEach(entry=>prepared.push(entry.row));
-  audit.distinctCommitFcids=prepared.length;return {rows:prepared,audit}}
-function exclusionReason(row){let s=upper(get(row,[cfg.fcid.system]));if(/NCFUPG/.test(s))return 'NCFUPG';if((s.includes('SW')&&(s.includes('UPG')||s.includes('UPGRADE'))))return 'SW-UPGRADE';if(/SOFTWARE/.test(s))return 'Software';
-  if(/CUST[_ ]?BUS[_ ]?FLEX/.test(s))return 'Cust_Bus_Flex';if(/CUST[_ ]?INCENTIVE/.test(s))return 'Cust_Incentive';return ''}function rowText(r){return Object.values(r||{}).join(' ')}function isDropSlotCtl(r,src){
-    let change = norm(get(r,[src === "ctl" ? cfg.ctl.change : cfg.ctlNsr.change, "Change Type", "Change Cat"])); let status = upper(get(r,[src === "ctl" ? cfg.ctl.status : cfg.ctlNsr.status, "Status", "CTL Status"]));
-    if(status.includes("REJECT") || status.includes("CANCEL"))return false;
-    return change === 'dropslot' || change === 'drop' || status.includes("DROP");
-}function isSlotCtl(r,src){
-    let change = norm(get(r,[src === "ctl" ? cfg.ctl.change : cfg.ctlNsr.change, "Change Type", "Change Cat"])); let status = upper(get(r,[src === "ctl" ? cfg.ctl.status : cfg.ctlNsr.status, "Status", "CTL Status"]));
-    if(status.includes("DROP") || status.includes("REJECT") || status.includes("CANCEL"))return false;
-    return change === 'slot';
-}function isConfigCtl(r,src){let change=upper(get(r,[src==='ctl'?cfg.ctl.change:cfg.ctlNsr.change,'Change Type','Change Cat']));let text=rowText(r).toUpperCase();let status=upper(get(r,[src==='ctl'?cfg.ctl.status:cfg.ctlNsr.status,'Status','CTL Status']));if(['REJECTED','CANCELLED',
-  'CANCELED'].includes(status))return false;let docLocal=/DOC ONLY|LOCAL NSR|LNSR/.test(text);return (change.includes('CONFIG')||/CONFIG CHG|CUSTOMER CONFIG|PG CONFIG|GOPS CONFIG/.test(text))&&!docLocal}function firstDate(row,names){for(const n of names){let d=toDate(get(row,[n]));
-  if(d)return d}return null}function slotSubmitDate(r,src){return firstDate(r,src==='ctl'?[cfg.ctl.sops,'Sales Ops Approval Date','Create Date','Creation Date']:[cfg.ctlNsr.sops,'Sales Ops Approval Date','Create Date'])}function srdAtSlot(r,src){return firstDate(r,src===
-  'ctl'?[cfg.ctl.srdSops,cfg.ctl.srd,'Sales Ops RD','SRD @ Current']:[cfg.ctlNsr.srd,cfg.ctlNsr.fieldCrd,'SRD','Sales Ops RD'])}function thresholdWeeks(base,slotRow){let t=(get(slotRow,[cfg.ctl.mfg,cfg.ctlNsr.mfg,'Mfg Upgrade Type'])||get(base,['Mfg Upgrade Type'])||'').toUpperCase();
-  if(!t||t.includes('NOT ASSIGNED'))return 20;if(t.includes('NO LABOR'))return 12;if(t.includes('LABOR')||t.includes('ROUTER'))return 20;return 20}
-function getQuarterFromMcsd(mcsd){
-    const date=new Date(mcsd),year=date.getFullYear(),endMonth=Math.floor(date.getMonth()/3)*3+3,cutoff=new Date(year,endMonth,0);
-    // The quarter ends on its last Friday, inclusive; later MCSD dates belong to the next quarter.
-    cutoff.setDate(cutoff.getDate()-(cutoff.getDay()+2)%7); const carried=date.getMonth()===cutoff.getMonth()&&date.getDate()>cutoff.getDate(); return {quarter:qFromDate(carried?new Date(year,endMonth,1):date),adjustment:carried?'Quarter End Carry-Over':''};
-}
-function deriveQuarter(base,mcsd){
-    let cal = get(base,[cfg.fcid.quarter]);
-    if(mcsd){let result = getQuarterFromMcsd(mcsd); return {quarter: result.quarter, source: "MCSD", adjustment: result.adjustment};}
-    let target = firstDate(base,[cfg.fcid.targetShip]);
-    if(target){let tq = qFromDate(target); if(tq !== cal){return {quarter: tq, source: "Target Ship", adjustment: ""};} return {quarter: cal, source: "Calendar Quarter", adjustment: ""};}
-    let rd = firstDate(base,[cfg.fcid.rd]);
-    if(rd){return {quarter: qFromDate(rd), source: "Sales Ops RD", adjustment: ""};}
-    return {quarter: cal, source: "Calendar Quarter", adjustment: ""};
-}
-let initiatorIndex=new Map;
-function initiatorsOf(fid){return initiatorIndex.get(fid)||['[Undefined]']}
-function initiatorValue(record){
-  const key=exactAliasKey(record,['Initiator','Initiated By','Requester','Created By']),name=key?clean(record[key]):'';
-  return /^(undefined|\[undefined\]|null|n\/a)$/i.test(name)?'':name;
-}
-function primaryInitiator(actions){
-  const documents=new Map,counts=new Map;
-  for(const [document,name] of actions){
-    if(!name)continue;
-    const previous=documents.get(document);
-    if(previous&&norm(previous)!==norm(name))return '';
-    documents.set(document,name);
+    candidates.sort((a,b)=>Number(b.requiredOk)-Number(a.requiredOk)||b.score-a.score||b.dataRows-a.dataRows||Number(b.configured)-Number(a.configured)||a.sheetOrder-b.sheetOrder);
+    return validateSourceCandidate(key,candidates[0]);
   }
-  for(const name of documents.values()){
-    const key=norm(name),entry=counts.get(key)||{name,count:0};entry.count++;counts.set(key,entry);
+  function canonicalize(rows,key){const profile=profileFor(key),headers=new Map(Object.keys(rows[0]||{}).map(name=>[norm(name),name])),columns=profile.fields.map(field=>[field.label,field.aliases.map(alias=>headers.get(alias)).find(Boolean)]);return rows.map(source=>{const row={...source};for(const [label,alias] of columns)if(!clean(row[label])&&alias)row[label]=source[alias];return row}).filter(row=>clean(row[profile.key])||(key==='nsr'&&clean(row[profile.number])));}
+  function parseWorkbook(bytes,key){
+    const workbook=XLSX.read(bytes,{type:'array'}),candidate=detectWorkbookSource(workbook,key),rows=canonicalize(XLSX.utils.sheet_to_json(workbook.Sheets[candidate.sheet],{defval:'',range:candidate.headerRow}),key);
+    return {rows,sheet:candidate.sheet,headerRow:candidate.headerRow+1,score:candidate.score,fields:Object.keys(rows[0])};
   }
-  let highest=0,owner='';
-  for(const {name,count} of counts.values()){
-    if(count>highest){highest=count;owner=name}else if(count===highest)owner='';
-  }
-  return owner;
-}
-function recalculate(){
-  M.idx={ctl:indexBy(raw.ctl,cfg.ctl.key),ctlNsr:indexBy(raw.ctlNsr,cfg.ctlNsr.key),nsr:indexBy(raw.nsr,cfg.nsr.key),nce:indexBy(raw.nce,cfg.nce.key)};
-  const nsrNames=new Map,accountNames=new Map;
-  for(const name of raw.nsr.map(initiatorValue))if(name&&!/^[A-Z0-9]+$/.test(name)&&!nsrNames.has(norm(name)))nsrNames.set(norm(name),name);
-  // Learn aliases only from single-initiator FCIDs, corroborated by other FCIDs without conflicts.
-  for(const [fid,records] of M.idx.ctlNsr){
-    const accounts=uniq(records.map(record=>norm(initiatorValue(record))));
-    const names=uniq((M.idx.nsr.get(fid)||[]).map(record=>nsrNames.get(norm(initiatorValue(record)))));
-    if(accounts.length!==1||names.length!==1)continue;
-    const account=accounts[0],name=names[0],previous=accountNames.get(account);
-    accountNames.set(account,{name:previous&&previous.name!==name?'':name,count:(previous?.count||0)+1});
-  }
-  const nameOf=name=>{
-    const key=norm(name),match=accountNames.get(key);
-    return nsrNames.get(key)||(match?.count>1?match.name:'')||(/^[a-z0-9]+$/i.test(name)?'':name);
-  };
-  initiatorIndex=new Map;
-  const fids=new Set([...M.idx.ctl.keys(),...M.idx.ctlNsr.keys(),...M.idx.nsr.keys()]);
-  for(const fid of fids){
-    const ctls=[...(M.idx.ctlNsr.get(fid)||[]),...(M.idx.ctl.get(fid)||[])];
-    const actions=[...ctls.map((record,index)=>['ctl:'+(get(record,['CTL ID','CTL#'])||'row:'+index),initiatorValue(record)]),
-      ...(M.idx.nsr.get(fid)||[]).map((record,index)=>['nsr:'+(nsrNumber(record)||'row:'+index),initiatorValue(record)])];
-    // Keep unmapped accounts distinct while counting; only the final owner may become Undefined.
-    const owner=primaryInitiator(actions.map(([document,name])=>[document,nameOf(name)||name]));
-    const name=nameOf(owner);if(name)initiatorIndex.set(fid,[name]);
-  }
-  let prepared=prepareCommitFcids(raw.fcid),commit=prepared.rows;M.fcidAudit=prepared.audit;M.originalCommit=
-  prepared.audit.rawCommitRows;M.excluded=[];let base=[];commit.forEach(b=>{let reason=exclusionReason(b);if(reason){M.excluded.push({fid:get(b,[cfg.fcid.key]),quarter:get(b,[cfg.fcid.quarter]),account:accountOf(b),customer:get(b,[cfg.fcid.customer]),product:get(b,[cfg.fcid.product]),
-  system:get(b,[cfg.fcid.system]),excludedReason:reason});}else base.push(b)});let rows=[],risks=[];base.forEach(b=>{let fid=get(b,[cfg.fcid.key]);let ctls=M.idx.ctl.get(fid)||[],bridges=M.idx.ctlNsr.get(fid)||[];let mc=firstDate(b,[cfg.fcid.ship])||
-  firstDate((ctls.find(r=>firstDate(r,[cfg.ctl.mcsd]))||{}),[cfg.ctl.mcsd])||firstDate((bridges.find(r=>firstDate(r,[cfg.ctlNsr.mcsd]))||{}),[cfg.ctlNsr.mcsd]);let q=deriveQuarter(b,mc);let rd=firstDate(b,[cfg.fcid.rd]);let target=firstDate(b,[cfg.fcid.targetShip]);
-  let slotEvents = [...ctls.map(r=>({r,src:"ctl"})), ...bridges.map(r=>({r,src:"ctlNsr"}))] .filter(x => isSlotCtl(x.r,x.src) || isDropSlotCtl(x.r,x.src));
-slotEvents.sort((a,b)=>{
-    let da = slotSubmitDate(a.r,a.src) || firstDate(a.r,["Last Modified Date", "Modified Date", "Create Date", "Creation Date"]) || new Date(0); let db = slotSubmitDate(b.r,b.src) || firstDate(b.r,["Last Modified Date", "Modified Date", "Create Date", "Creation Date"]) || new Date(0);
-    return db - da;
-});
-let currentSlotEvent = slotEvents[0]; let currentSlotDropped = currentSlotEvent && isDropSlotCtl(currentSlotEvent.r,currentSlotEvent.src); let effectiveSlot = currentSlotEvent && !currentSlotDropped && isSlotCtl(currentSlotEvent.r,currentSlotEvent.src) ? currentSlotEvent : null;
-let hasSlot = Boolean(effectiveSlot); let slotState = currentSlotDropped ? "Dropped Slot" : (hasSlot ? "Active Slot" : "No Slot");let preStatus='No Slot CTL',preWeeks=null,threshold=20,slotId='',ctlSrd='';if(effectiveSlot){let sDate=slotSubmitDate(effectiveSlot.r,effectiveSlot.src),
-  srd=srdAtSlot(effectiveSlot.r,effectiveSlot.src)||rd;ctlSrd=srd?srd.toLocaleDateString():'';threshold=thresholdWeeks(b,effectiveSlot.r);preWeeks=weeks(sDate,srd);preStatus=(preWeeks!==null&&preWeeks>=threshold)?'On Time':'Pre Late Risk';slotId=get(effectiveSlot.r,[cfg.ctl.ctlId,
-  cfg.ctlNsr.ctlId,'CTL ID'])}if(currentSlotDropped){preStatus = "No Slot CTL"; slotId = get(currentSlotEvent.r, [cfg.ctl.ctlId, cfg.ctlNsr.ctlId, "CTL ID"]);}let configRows=[...ctls.map(r=>({r,src:'ctl'})),...bridges.map(r=>({r,src:'ctlNsr'}))].filter(x=>isConfigCtl(x.r,x.src));
-  let postRiskRows=configRows.filter(x=>{let d=slotSubmitDate(x.r,x.src),w=weeks(d,mc);return d&&mc&&w!==null&&w>=0&&w<=20});let postStatus= postRiskRows.length ? 'Post Config CTL Risk' : (mc ? 'Projected Stable' : 'Projected Stable + MCSD Pending');
-let pendingNsr =
-(M.idx.nsr.get(fid) || []) .filter(n => {
-    let status = (get(n,[cfg.nsr.status]) + ' ' + get(n,[cfg.nsr.workflow])).toUpperCase();
-    // Closed NSR
-    if(status.includes('COMPLETED') || status.includes('REJECTED') || status.includes('CANCELLED') || status.includes('CANCELED')){return false;}
-    // Everything else is considered Open NSR
-    return true;
-});let watchNsr = pendingNsr.filter(n=>{let nsrNo = nsrNumber(n).toUpperCase(); return !nsrNo.startsWith('D');}); let nces = M.idx.nce.get(fid) || [];let row={fid,quarter:q.quarter,quarterSource:q.source,quarterAdjustment:q.adjustment || '',calendarQuarter:get(b,
-  [cfg.fcid.quarter]),targetShip:target?target.toLocaleDateString():'',rd:rd?rd.toLocaleDateString():'',mcsd:mc?mc.toLocaleDateString():'',ctlSrd,slotState,account:accountOf(b),customer:get(b,[cfg.fcid.customer]),product:get(b,[cfg.fcid.product]),system:get(b,[cfg.fcid.system]),
-  hasSlot,slotId,preStatus,preWeeks:preWeeks===null?'':preWeeks.toFixed(1), weeksToPreStability: preWeeks===null ? '' : Math.round(preWeeks),
-weeksToPostStability: mc ? Math.round(weeks(new Date(), mc)) : '', threshold, postStatus,postRiskCtl:postRiskRows.map(x=>get(x.r,[cfg.ctl.ctlId,cfg.ctlNsr.ctlId,'CTL ID'])).join(', '),pendingNsr: pendingNsr.length, watchNsrCount: watchNsr.length,
-openNsrTitle: pendingNsr.map(x => get(x,[cfg.nsr.title])), openNsrNumbers: pendingNsr.map(nsrNumber),openNsrStatus: pendingNsr.map(x => get(x,[cfg.nsr.workflow])),nce:nces.length};rows.push(row);function push(type,priority,
-  msg){risks.push({fid,quarter:row.quarter,quarterSource:row.quarterSource,account:row.account,rowCustomer:row.customer,product:row.product,type,priority,msg})}if(preStatus==='No Slot CTL')push('No Slot CTL','P1','No valid Slot CTL found.');if(preStatus===
-  'Pre Late Risk')push('Pre Late Risk','P1','Slot CTL submitted '+row.preWeeks+' weeks before RD/SRD. Threshold is '+threshold+' weeks.');if(!mc&&hasSlot)push('MCSD Pending','P2','Valid slot exists but MCSD is blank.');if(postRiskRows.length)push('Post Config CTL Risk','P1',
-  'Qualifying config CTL submitted inside 20-week MCSD window: '+row.postRiskCtl);if(watchNsr.length)push('NSR Appeal Watch','P3','Pending NSR may become appeal/watch driver.');if(nces.length)push('OOBQ / NCE Signal','P3','Matched NCE / FA quality signal found.');});M.rows=rows;
-  M.risks=risks;sanitizeModel();buildFilters();renderAll()}
-function selected(id){return [...document.getElementById(id).selectedOptions].map(o=>o.value)}function matchMulti(v,a){return !a.length||a.includes(v)}
-function matchesSearch(row,term){
-  if(!term||Object.values(row).join(' ').toLowerCase().includes(term))return true;
-  return ['ctl','ctlNsr'].some(source=>(M.idx[source]?.get(row.fid)||[]).some(record=>get(record,[cfg[source].ctlId]).toLowerCase().includes(term)))||
-    (M.idx.nsr?.get(row.fid)||[]).some(record=>nsrNumber(record).toLowerCase().includes(term));
-}
-function filteredRows(source=M.rows){let i=selected('fInitiator'),q=selected('fQuarter'),a=selected('fAccount'),c=selected('fCustomer'),s=(fSearch.value||'').toLowerCase();
-  return source.filter(r=>(!i.length||initiatorsOf(r.fid).some(name=>i.includes(name)))&&matchMulti(r.quarter,q)&&matchMulti(r.account,a)&&matchMulti(r.customer,c)&&matchesSearch(r,s))}function filteredRisks(){let t=selected('fRisk'),ids=new Set(filteredRows().map(r=>r.fid));
-  return M.risks.filter(r=>ids.has(r.fid)&&matchMulti(r.type,t))}
-const chOn=new Set;
-function chSync(id){if(chOn.has(id))jQuery(document.getElementById(id)).trigger('chosen:updated')}
-function fill(id,arr,compareFn){let el=document.getElementById(id),cur=selected(id),values=uniq(arr).filter(x=>x);compareFn?values.sort(compareFn):values.sort();el.innerHTML=values.map(x=>`<option>`+escHtml(x)+`</option>`).join('');[...el.options].forEach(o=>o.selected=cur.includes(o.value));
-  chSync(id)}
-function quarterTimeComparator(a,b){return quarterSortValue(a)-quarterSortValue(b)||String(a).localeCompare(String(b))}
-function buildFilters(){fill('fInitiator',[...M.rows,...M.excluded].flatMap(r=>initiatorsOf(r.fid)));fill('fQuarter',M.rows.map(r=>r.quarter),quarterTimeComparator);fill('fAccount',M.rows.map(r=>r.account));fill('fCustomer',M.rows.map(r=>r.customer))}
-function selSet(id,on,run=1){[...document.getElementById(id).options].forEach(o=>o.selected=on);chSync(id);if(run)applyFilters()}function selectAll(id){selSet(id,true)}function clearSel(id){selSet(id,false)}function resetFilters(){['fInitiator','fQuarter','fAccount','fCustomer',
-  'fRisk'].forEach(id=>selSet(id,false,0));fSearch.value='';applyFilters()}function h(a){return `<thead><tr>`+a.map(x=>`<th>`+x+`</th>`).join('')+`</tr></thead><tbody>`}function tr(a){return `<tr>`+a.map(x=>`<td>`+String(x??'')+`</td>`).join('')+
-  `</tr>`}function pill(v){let cls=/P1|Risk|No Slot/.test(v)?'bad':/P2|Pending|Late/.test(v)?'warnp':/Stable|On Time|Yes/.test(v)?'ok':/P3|Watch|NCE/.test(v)?'purplep':'info';return '<span class="pill '+cls+'">'+v+`</span>`}
-function renderAll(){applyFilters();renderMapping();renderRules();renderUAT()}
-function labelSel(id,all){let a=selected(id);return a.length?a.length+' '+all+' selected':'All '+all}
-function quarterSortValue(q){let m=String(q||"").match(/(QMar|QJun|QSep|QDec)'(\d+)/);return m?+m[2]*10+{QMar:1,QJun:2,QSep:3,QDec:4}[m[1]]:999999}
-function riskCounts(){let rows=filteredRows(),ids=new Set(rows.map(r=>r.fid)),rks=filteredRisks().filter(r=>ids.has(r.fid)),types=['Pre Late Risk','No Slot CTL','Post Config CTL Risk','MCSD Pending','NSR Appeal Watch','OOBQ / NCE Signal'];return types.map(t=>[t,
-  uniq(rks.filter(r=>r.type===t).map(r=>r.fid)).length,t.includes('Post')||t.includes('No Slot')?'#dc2626':t.includes('MCSD')?'#f59e0b':t.includes('NCE')?'#7c3aed':'#2563eb'])}function renderExcludeBars(){let counts={};M.excluded.forEach(x=>counts[x.excludedReason]=
-  (counts[x.excludedReason]||0)+1);let max=Math.max(1,...Object.values(counts));excludeBars.innerHTML=Object.entries(counts).map(x=>`<div class="barRow"><b>`+x[0]+`</b><div class="bar"><span style="width:`+(x[1]/max*100)+`%;background:#dc2626"></span></div><strong>`+x[1]+
-  `</strong></div>`).join('')||`<div class="small">No exclusions detected.</div>`}
-function renderRules(){rulesTbl.innerHTML=h(['Rule','Description'])+[['Quarter Governance','Priority: MCSD -> Target Ship -> Sales Ops RD -> Calendar Quarter.'],['Quarter Source','All rows retain Quarter Source traceability.'],['Population',
-  'Commit FCIDs only; exclude NCFUPG, Software, SW-UPGRADE, Cust_Bus_Flex.'],['FCID Deduplication','One Commit row per valid FCID; prefer the first row with an assigned Fab Segment, otherwise keep the first row.'],['Account Group',
-  'Retain a valid source Account Group; use exact or wildcard Fab mapping only when the source value is missing.'],['Pre-Slot Projection','Slot CTL submit date compared with RD / SRD at slot.'],['Post-Slot Projection','Config CTL inside 20-week MCSD window.'],['Filters',
-  'Initiator, Quarter, Account, Customer, and Risk Type use multi-select logic.'],['Export','All exports use current filtered population.']].map(r=>tr(r)).join('')+`</tbody>`}
-function renderUAT(){uatTbl.innerHTML=h(['UAT','Condition','Expected','Current Support'])+[['UAT-09','MCSD blank; Calendar Q = QSep; Target Ship = Nov 20','Quarter = QDec; Source = Target Ship','Supported'],['UAT-10','MCSD blank; Target Ship blank; RD = Nov 05',
-  'Quarter = QDec; Source = Sales Ops RD','Supported'],['UAT-11','MCSD = Jan 15 2027','Quarter = QMar 27; Source = MCSD','Supported'],['UAT-12','System Description contains SW-UPGRADE','Excluded; reason = SW-UPGRADE','Supported'],['UAT-13','Multi-select AT1 + AT3',
-  'All KPI recalc on combined population','Supported'],['UAT-14','Duplicate Commit rows for one FCID','One FCID retained; assigned Fab Segment is preferred','Supported'],['UAT-15','FID is blank, NO_FID, N/A, NULL, or UNKNOWN','Excluded before governance calculation',
-  'Supported']].map(r=>tr(r)).join('')+`</tbody>`}
-function escHtml(v){return String(v ?? '') .replace(/&/g,'&amp;') .replace(/</g,'&lt;') .replace(/>/g,'&gt;') .replace(/"/g,'&quot;') .replace(/'/g,'&#39;');}
-function isOpenNsrRecord(n){let status = (get(n,[cfg.nsr.status]) + ' ' + get(n,[cfg.nsr.workflow])).toUpperCase(); if(status.includes('COMPLETED') || status.includes('REJECTED') || status.includes('CANCELLED') || status.includes('CANCELED')){return false;} return true;}
-function nsrWorkflow(n){return get(n,[cfg.nsr.workflow]) || get(n,[cfg.nsr.status]);}
-function nsrTitle(n){return get(n,[cfg.nsr.title, 'NSR Title', 'Task Name']);}
-function nsrNumber(n){let key=exactAliasKey(n,[cfg.nsr.nsr,'NSR #','NSR Number','NSR No']);return key?clean(n[key]):'';}
-function nceTitle(n){return get(n,[cfg.nce.title,'Title']);}
-function nceState(n){return get(n,[cfg.nce.state,'NCe State']);}
-function nceImpact(n){return get(n,[cfg.nce.impact,'Impact']);}
-function nceOpenDate(n){return get(n,[cfg.nce.openDate,'Open Date']);}
-function nceAccuracyType(n){let group = get(n,[cfg.nce.damageGroup,'Damage Group']); let code = get(n,[cfg.nce.damageCode,'Damage Code']); if(group && code) return group + ' / ' + code; return group || code || 'Config Accuracy Issue';}
-function ncePartNumber(n){return get(n,[cfg.nce.partNumber,'Part_Number','Part Number']);}
-function ncePartDescription(n){return get(n,[cfg.nce.partDescription,'Part_Description','Part Description']);}
-function renderNsrCards(records,emptyText){
-    if(!records.length){return `<div class="small">`+escHtml(emptyText)+`</div>`;}
-    return records.map(n=>{
-        let no = nsrNumber(n) || '-'; let title = nsrTitle(n) || '-'; let workflow = nsrWorkflow(n) || '-';
-        return (`\n<div class="mini" style="margin-bottom:10px">\n<small>${escHtml(no)}</small>\n<b style="font-size:14px;display:block;white-space:normal;line-height:1.35">\n${escHtml(title)}` +
-  `\n</b>\n<div class="small">\n${escHtml(workflow)}\n</div>\n</div>\n`);
-    }).join('');
-}
-function renderAccuracyCards(records){
-    if(!records.length){return `<div class="small">No historical configuration accuracy issues found for this FCID.</div>`;}
-    return records.map(n=>{
-        let date = nceOpenDate(n) || '-'; let impact = nceImpact(n) || '-'; let state = nceState(n) || '-'; let title = nceTitle(n) || '-'; let accuracyType = nceAccuracyType(n) || '-'; let pn = ncePartNumber(n) || '-'; let desc = (ncePartDescription(n) || '-') .slice(0,80);
-        return (`\n<div class="mini" style="margin-bottom:10px">\n<small>${escHtml(date)} | ${escHtml(impact)} | ${escHtml(state)}` +
-  `</small>\n<b style="font-size:14px;display:block;white-space:normal;line-height:1.35">\n${escHtml(title)}` +
-  `\n</b>\n<div class="small" style="margin-top:6px">\n<b>Accuracy Type:</b> ${escHtml(accuracyType)}\n<br>\n<b>Part Number:</b> ${escHtml(pn)}` +
-  `\n<br>\n<b>Part Description:</b> ${escHtml(desc)}\n</div>\n</div>\n`);
-    }).join('');
-}
-function fileSuffix(){let q=selected('fQuarter').join('_')||'AllQ',a=selected('fAccount').join('_')||'AllAcct',c=selected('fCustomer').join('_')||'AllCust';return (q+'_'+a+'_'+c).replace(/[^a-z0-9_'-]/ig,'_').slice(0,120)}
-function exportWorkbook(name,sheets){
-  if(!window.XLSX){alert('XLSX library not available. Please save source files as CSV or enable CDN.');return}
-  const wb=XLSX.utils.book_new();
-  Object.entries(sheets).forEach(([sheet,rows])=>{
-    const data=rows.length?rows.map(row=>Object.fromEntries(Object.entries(row).map(([key,value])=>[key==='openNsrNumbers'?'NSR#':key,Array.isArray(value)?value.join('\n'):value]))):[{Notice:'No data'}];
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(data),sheet.slice(0,31));
-  });
-  XLSX.writeFile(wb,name+'.xlsx');
-}
-/* Data readiness and confidence layer */
-let dataMode='demo';
-const readyRules={
-    population:{required:['fcid'],minimumAll:['fcid']}, core:{required:['fcid','ctl','ctlNsr'],minimumAll:['fcid'],minimumAny:['ctl','ctlNsr']}, risk:{required:['fcid','ctl','ctlNsr','nsr','nce'],minimumAll:['fcid'],minimumAny:['ctl','ctlNsr','nsr','nce']},
-    nsr:{required:['fcid','nsr'],minimumAll:['fcid','nsr']}, nce:{required:['fcid','nce'],minimumAll:['fcid','nce']}
-};
-const coreRisks=['Pre Late Risk','No Slot CTL','Post Config CTL Risk','MCSD Pending']; const sourceNames={fcid:'FCID Database',ctl:'CTL Report',ctlNsr:'CTL-NSR List',nsr:'NSR Log',nce:'NCE / FA Review'};
-function loaded(k){return Boolean(meta[k])&&(dataMode==='demo'||meta[k].mode!=='demo')}
-function ready(key){
-    let rule=readyRules[key];
-    if(dataMode==='demo')return {key,level:'demo',missing:[],label:'Demo Data'};
-    let missing=rule.required.filter(k=>!loaded(k)); let minimumAll=(rule.minimumAll||[]).every(loaded); let minimumAny=!rule.minimumAny||(rule.minimumAny||[]).some(loaded);
-    if(!minimumAll||!minimumAny)return {key,level:'unavailable',missing,label:'Waiting for data'};
-    if(missing.length)return {key,level:'partial',missing,label:'Provisional'};
-    return {key,level:'complete',missing:[],label:'Complete'};
-}
-function missingText(state){return state.missing.map(k=>sourceNames[k]).join(', ')}
-function readyText(state){if(state.level==='complete')return 'Required sources are complete.'; if(state.level==='demo')return 'Demo data only.'; if(state.level==='partial')return 'Provisional; missing '+missingText(state)+'.'; return 'Unavailable; load '+missingText(state)+'.';}
-function metric(value,stateOrKey){let state=typeof stateOrKey==='string'?ready(stateOrKey):stateOrKey;if(state.level==='unavailable')return '—';return String(value)}
-function readyPill(state){let cls=state.level==='complete'?'ok':state.level==='partial'?'warnp':state.level==='demo'?'purplep':'info';return '<span class="pill '+cls+'">'+escHtml(state.label)+`</span>`}
-function readyMini(label,value,key){let state=ready(key);return '<div class="mini" title="'+escHtml(readyText(state))+`"><small>`+escHtml(label)+`</small><b>`+escHtml(metric(value,state))+`</b><div class="small" style="margin-top:5px">`+readyPill(state)+`</div></div>`}
-function setMetric(id,value,key){let el=document.getElementById(id);if(!el)return;let state=ready(key),description=readyText(state);el.innerText=metric(value,state);el.title=description;let note=document.getElementById(id+'Readiness');if(!note){note=document.createElement('div');
-  note.id=id+'Readiness';note.className='small';note.style.margin='3px 0 5px';el.insertAdjacentElement('afterend',note)}note.innerHTML=readyPill(state);note.title=description}
-function sanitizeModel(){
-    let coreEvidence=dataMode==='demo'||loaded('ctl')||loaded('ctlNsr');
-    if(!coreEvidence){
-        M.rows.forEach(row=>{row.hasSlot=null;row.slotState='Unavailable';row.preStatus='Unavailable';row.postStatus='Unavailable';row.preWeeks='';row.weeksToPreStability='';row.weeksToPostStability='';row.slotId='';row.ctlSrd='';row.postRiskCtl=''});
-        M.risks=M.risks.filter(r=>!coreRisks.includes(r.type));
-    }
-    if(!loaded('nsr')){M.rows.forEach(row=>{row.pendingNsr=null;row.watchNsrCount=null;row.openNsrTitle=[];row.openNsrNumbers=[];row.openNsrStatus=[]});M.risks=M.risks.filter(r=>r.type!=='NSR Appeal Watch')}
-    if(!loaded('nce')){M.rows.forEach(row=>{row.nce=null});M.risks=M.risks.filter(r=>r.type!=='OOBQ / NCE Signal')}
-}
-function filteredMetrics(){let rows=filteredRows(),ids=new Set(rows.map(r=>r.fid)),risks=filteredRisks().filter(r=>ids.has(r.fid)),pop=rows.length,preOk=rows.filter(r=>r.preStatus==='On Time').length,postOk=rows.filter(r=>r.postStatus==='Projected Stable').length,
-  slotReady=rows.filter(r=>r.hasSlot===true).length;return {pop,preOk,postOk,slotReady,preRisk:uniq(risks.filter(r=>['No Slot CTL','Pre Late Risk'].includes(r.type)).map(r=>r.fid)).length,postRisk:uniq(risks.filter(r=>r.type==='Post Config CTL Risk').map(r=>r.fid)).length,
-  riskFcid:uniq(risks.map(r=>r.fid)).length,slotMcsd:rows.filter(r=>r.hasSlot===true&&r.mcsd).length,slotNoMcsd:rows.filter(r=>r.hasSlot===true&&!r.mcsd).length,noSlotCtl:rows.filter(r=>r.preStatus==='No Slot CTL').length,rows,risks}}
-function renderFilterContext(){let m=filteredMetrics();filterContextBadge.innerText=[labelSel('fInitiator','Initiators'),labelSel('fQuarter','Quarters'),labelSel('fAccount','Accounts'),labelSel('fCustomer','Customers'),labelSel('fRisk','Risks')].join(' | ');filterContextMini.innerHTML=[readyMini('Current Population',
-  m.pop,'population'),readyMini('Projected Pre-Slot',pct(m.preOk,m.pop),'core'),readyMini('Projected Post-Slot',pct(m.postOk,m.pop),'core'),readyMini('Slot Readiness',pct(m.slotReady,m.pop),'core'),readyMini('Pre Risk FCID',m.preRisk,'core'),readyMini('Post Risk FCID',m.postRisk,
-  'core'),readyMini('Slot + No MCSD',m.slotNoMcsd,'core'),readyMini('No Slot CTL',m.noSlotCtl,'core')].join('')}
-function renderFunnel(){let m=filteredMetrics(),items=[['Governance Population',m.pop,'population','baseline'],['Slot Ready',m.slotReady,'core','baseline'],['Pre On Time',m.preOk,'core',pct(m.preOk,m.pop)],['Post Stable',m.postOk,'core',pct(m.postOk,m.pop)],['Risk Free',
-  m.pop-m.riskFcid,'risk',pct(m.pop-m.riskFcid,m.pop)]];funnel.innerHTML=items.map(x=>{let s=ready(x[2]);return '<div class="step" title="'+escHtml(readyText(s))+`"><small>`+x[0]+`</small><b>`+escHtml(metric(x[1],s))+`</b><span class="small">`+escHtml(metric(x[3],s))+`</span><div>`+
-  readyPill(s)+`</div></div>`}).join(`<div class="arrow">›</div>`)}
-function annotateTable(id,key){let table=document.getElementById(id);if(!table)return;let state=ready(key);if(table.caption)table.deleteCaption();if(state.level==='complete')return;let caption=table.createCaption();caption.style.cssText=
-  'caption-side:top;text-align:left;padding:9px 10px;font-weight:800;background:'+(state.level==='partial'?'#fffbeb':state.level==='demo'?'#f5f3ff':'#eff6ff')+';color:#334155';caption.innerHTML=(state.level==='unavailable'?'— ':'')+escHtml(readyText(state));if(state.level===
-  'unavailable'){let tbody=table.tBodies[0]||table.createTBody(),cols=table.tHead?.rows[0]?.cells.length||1;tbody.innerHTML=`<tr><td colspan="`+cols+'" class="small">— '+escHtml(readyText(state))+`</td></tr>`}}
-function renderNsrTable(){let rows=filteredRows().filter(r=>r.pendingNsr>0);nsrTbl.innerHTML=h(['FCID','Quarter','Customer','Product','Open NSR Count','NSR Title','NSR Status','NSR#'])+rows.map(r=>tr([r.fid,r.quarter,r.customer,r.product,r.pendingNsr,r.openNsrTitle.join(`<br>`),
-  r.openNsrStatus.join(`<br>`),r.openNsrNumbers.join(`<br>`)])).join('')+`</tbody>`;annotateTable('nsrTbl','nsr')}
-function renderQuarterReady(){
-    let rows=filteredRows(),risks=filteredRisks(),ids=new Set(rows.map(r=>r.fid));risks=risks.filter(r=>ids.has(r.fid));let qsum={},sourceRows={},state=ready('core');
-    rows.forEach(r=>{let q=r.quarter||'(blank)';qsum[q]=qsum[q]||{q,pop:0,slotMcsd:0,slotNoMcsd:0,preOk:0,postOk:0,preRisk:[],postRisk:[]};qsum[q].pop++;if(r.hasSlot===true&&r.mcsd)qsum[q].slotMcsd++;if(r.hasSlot===true&&!r.mcsd)qsum[q].slotNoMcsd++;if(r.preStatus===
-      'On Time')qsum[q].preOk++;if(r.postStatus==='Projected Stable')qsum[q].postOk++;let sourceKey=q+'|'+r.quarterSource;sourceRows[sourceKey]=sourceRows[sourceKey]||{Quarter:q,QuarterSource:r.quarterSource,Count:0};sourceRows[sourceKey].Count++});
-    risks.forEach(r=>{let q=r.quarter||'(blank)';if(!qsum[q])return;if(['No Slot CTL','Pre Late Risk'].includes(r.type))qsum[q].preRisk.push(r.fid);if(r.type==='Post Config CTL Risk')qsum[q].postRisk.push(r.fid)});
-    quarterTbl.innerHTML=h(['Quarter','Population','Slot + MCSD','Slot + No MCSD','Projected Pre-Slot','Projected Post-Slot','Pre Risk FCID','Post Risk FCID'])+Object.values(qsum).sort((a,b)=>quarterSortValue(a.q)-quarterSortValue(b.q)).map(x=>tr([x.q,metric(x.pop,state),
-      metric(x.slotMcsd,state),metric(x.slotNoMcsd,state),metric(pct(x.preOk,x.pop),state),metric(pct(x.postOk,x.pop),state),metric(uniq(x.preRisk).length,state),metric(uniq(x.postRisk).length,state)])).join('')+`</tbody>`;
-    quarterSourceTbl.innerHTML=h(['Quarter','Quarter Source','FCID Count'])+Object.values(sourceRows).map(x=>tr([x.Quarter,x.QuarterSource,metric(x.Count,state)])).join('')+`</tbody>`; let m=filteredMetrics();projectionMini.innerHTML=[readyMini('Population',m.pop,'population'),
-      readyMini('Pre On Time',m.preOk+' / '+m.pop,'core'),readyMini('Post Stable',m.postOk+' / '+m.pop,'core'),readyMini('Slot Readiness',m.slotReady+' / '+m.pop,'core')].join('');
-}
-function renderTables(){let rows=filteredRows(),risks=filteredRisks(),ids=new Set(rows.map(r=>r.fid));risks=risks.filter(r=>ids.has(r.fid));watchTbl.innerHTML=h(['Priority','FCID','Quarter','Quarter Source','Account','Customer','Product','Risk','Message'])+
-  risks.filter(r=>r.priority==='P1').map(r=>tr([pill(r.priority),r.fid,r.quarter,r.quarterSource,r.account||'',r.rowCustomer,r.product,pill(r.type),r.msg])).join('')+`</tbody>`;stabilityTbl.innerHTML=h(['FCID','Quarter','Target Ship','RD','MCSD','Account','Customer','Product',
-  'Slot CTL','Weeks to Pre-Stability','Pre Status','Weeks to Post-Stability','Post Status','Config CTL Risk'])+rows.map(r=>tr([r.fid,r.quarter,r.targetShip,r.rd,r.mcsd,r.account,r.customer,r.product,r.slotId,r.weeksToPreStability,pill(r.preStatus),r.weeksToPostStability,
-  pill(r.postStatus),r.postRiskCtl])).join('')+`</tbody>`;slotTbl.innerHTML=h(['FCID','Quarter','Source','Adjustment','Account','Customer','Product','Slot State','Slot Ready','Slot CTL','MCSD','RD','CTL SRD','Pre Status'])+rows.map(r=>tr([r.fid,r.quarter,r.quarterSource,
-  r.quarterAdjustment||'',r.account||'',r.customer,r.product,r.slotState||'',r.hasSlot?'Y':'N',r.slotId,r.mcsd,r.rd,r.ctlSrd,pill(r.preStatus)])).join('')+`</tbody>`;riskTbl.innerHTML=h(['Priority','FCID','Quarter','Source','Account','Customer','Product','Risk Type','Message'])+
-  risks.map(r=>tr([pill(r.priority),r.fid,r.quarter,r.quarterSource,r.account||'',r.rowCustomer,r.product,pill(r.type),r.msg])).join('')+`</tbody>`;renderQuarterReady();[['watchTbl','core'],['stabilityTbl','core'],['slotTbl','core'],['riskTbl','risk'],['quarterTbl','core'],
-  ['quarterSourceTbl','core']].forEach(x=>annotateTable(...x))}
-function renderHeat(){let state=ready('core'),rows=filteredRows();if(state.level==='unavailable'){heatmap.innerHTML=`<div class="head" style="grid-column:1/-1">— `+escHtml(readyText(state))+`</div>`;return}let qs=uniq(rows.map(r=>r.quarter)).sort((a,
-  b)=>quarterSortValue(a)-quarterSortValue(b)).slice(0,5);while(qs.length<5)qs.push('-');let html=(state.level!=='complete'?`<div class="head" style="grid-column:1/-1">`+escHtml(readyText(state))+`</div>`:'')+`<div class="head">Metric</div>`+qs.map(q=>`<div class="head">`+q+
-  `</div>`).join('');[['Pre Projection','pre'],['Post Projection','post'],['Slot Readiness','slot'],['MCSD Pending','pending']].forEach(m=>{html+=`<div class="head">`+m[0]+`</div>`;qs.forEach(q=>{if(q==='-'){html+=`<div class="head">-</div>`;return}let rr=rows.filter(r=>r.quarter===
-  q),den=Math.max(1,rr.length),val=0;if(m[1]==='pre')val=rr.filter(r=>r.preStatus==='On Time').length/den*100;if(m[1]==='post')val=rr.filter(r=>r.postStatus==='Projected Stable').length/den*100;if(m[1]==='slot')val=rr.filter(r=>r.hasSlot===true).length/den*100;if(m[1]==='pending')val=
-  rr.filter(r=>r.hasSlot===true&&!r.mcsd).length/den*100;let cls=m[1]==='pending'?(val<=5?'g':val<=10?'y':'r'):(val>=95?'g':val>=90?'y':'r');html+='<div class="'+cls+'">'+escHtml(metric(val.toFixed(1)+'%',state))+`</div>`})});heatmap.innerHTML=html}
-function riskReady(type){if(coreRisks.includes(type))return ready('core');if(type==='NSR Appeal Watch')return ready('nsr');return ready('nce')}
-function renderDriverBars(){let items=riskCounts(),max=Math.max(1,...items.map(x=>x[1]));driverBars.innerHTML=items.map(x=>{let s=riskReady(x[0]),w=s.level==='unavailable'?0:x[1]/max*100;return '<div class="barRow" title="'+escHtml(readyText(s))+`"><b>`+x[0]+
-  `</b><div class="bar"><span style="width:`+w+'%;background:'+x[2]+`"></span></div><strong>`+escHtml(metric(x[1],s))+`</strong></div>`}).join('')}
-function renderDriverCards(){driverCards.innerHTML=riskCounts().map(x=>{let s=riskReady(x[0]),status=s.level==='unavailable'?'Waiting':s.level==='partial'?'Provisional':s.level==='demo'?'Demo':x[1]?'Open':'Clear',cls=s.level==='unavailable'?'info':s.level===
-  'partial'?'warnp':s.level==='demo'?'purplep':x[1]?'warnp':'ok';return '<div class="card" title="'+escHtml(readyText(s))+`"><h3>`+x[0]+`</h3><div style="font-size:28px;font-weight:900;color:`+x[2]+'">'+escHtml(metric(x[1],s))+`</div><span class="pill `+cls+'">'+status+
-  `</span></div>`}).join('')}
-function renderFcid360(){let rows=filteredRows();if(!rows.length){fcidBasic.innerHTML='';fcidAction.innerHTML=metric('No FCID','population');fcidTbl.innerHTML='';return}if(!fcidInput.value||!rows.some(x=>x.fid===clean(fcidInput.value)))fcidInput.value=rows[0].fid;
-  let fid=clean(fcidInput.value),r=rows.find(x=>x.fid===fid)||rows[0],nsrRecords=M.idx.nsr.get(r.fid)||[],openNsrs=nsrRecords.filter(isOpenNsrRecord),historicalNsrs=nsrRecords.filter(n=>!isOpenNsrRecord(n)),nceRecords=M.idx.nce.get(r.fid)||[],
-  historicalAccuracy=nceRecords.filter(n=>{let state=nceState(n).toUpperCase();return state.includes('CLOSED')||state.includes('CANCEL')}),basic=[['FCID',r.fid,'population'],['Quarter',r.quarter,'core'],['Customer',r.customer,'population'],['Product',r.product,'population'],
-  ['Target Ship',r.targetShip||'-','population'],['MCSD',r.mcsd||'-','core'],['Slot State',r.slotState||'-','core'],['Pre Status',r.preStatus,'core'],['Post Status',r.postStatus,'core'],['Open NSR',openNsrs.length,'nsr'],['Historical Accuracy Issues',historicalAccuracy.length,'nce']];
-  fcidBasic.innerHTML=basic.map(x=>readyMini(x[0],x[1],x[2])).join('');let risks=filteredRisks().filter(x=>x.fid===r.fid),riskState=ready('risk');if(riskState.level==='unavailable')fcidAction.innerHTML='— '+escHtml(readyText(riskState));else{let warning=riskState.level===
-  'partial'?`<div class="warnbox">`+escHtml(readyText(riskState))+`</div>`:riskState.level==='demo'?`<div class="warnbox">Demo data only.</div>`:'';fcidAction.innerHTML=warning+(risks.length?`<b>Action focus:</b><br>`+risks.map(x=>'• '+escHtml(x.type)+': '+
-  escHtml(x.msg)).join(`<br>`):(riskState.level==='complete'?'No current early warning risk found for this FCID.':'No risk found in currently loaded sources; this is not a final result.'))}let nsrState=ready('nsr'),nceReady=ready('nce'),nsrUnavailable=`<div class="small">`+
-  escHtml(metric('',nsrState))+' '+escHtml(readyText(nsrState))+`</div>`,nceUnavailable=`<div class="small">`+escHtml(metric('',nceReady))+' '+escHtml(readyText(nceReady))+`</div>`;fcidTbl.innerHTML=
-  `<thead><tr><th style="width:22%">Section</th><th>Details</th></tr></thead><tbody><tr><td><b>Open NSR (`+escHtml(metric(openNsrs.length,nsrState))+`)</b></td><td>`+(nsrState.level==='unavailable'?nsrUnavailable:renderNsrCards(openNsrs,'No open NSR found for this FCID.'))+
-  `</td></tr>`+(nsrState.level!=='unavailable'&&historicalNsrs.length?`<tr><td><b>Historical NSR (`+historicalNsrs.length+`)</b></td><td>`+renderNsrCards(historicalNsrs,'')+`</td></tr>`:'')+`<tr><td><b>Configuration Accuracy History (`+escHtml(metric(historicalAccuracy.length,
-  nceReady))+`)</b></td><td>`+(nceReady.level==='unavailable'?nceUnavailable:renderAccuracyCards(historicalAccuracy))+`</td></tr></tbody>`}
-function renderMapping(){let popState=ready('population'),a=M.fcidAudit||{};loadTbl.innerHTML=h(['Source','Readiness','Expected Sheet','Actual Sheet','Score','Rows','Key Field','Unique Key'])+Object.keys(cfg).map(k=>{let isLoaded=loaded(k),status=dataMode===
-  'demo'?'Demo':isLoaded?'Loaded':'Missing',uniqueCount=isLoaded?(k==='fcid'?(a.distinctCommitFcids||0):(M.idx[k]?.size||0)):'—';return tr([cfg[k].label,pill(status),cfg[k].sheet,meta[k]?.sheet||'-',meta[k]?.score!==undefined?meta[k].score+'/100':'-',isLoaded?raw[k].length:'—',
-  cfg[k].key,uniqueCount])}).join('')+`</tbody>`;overlapTbl.innerHTML=h(['Diagnostic','Value','Note'])+tr(['Quarter source engine','MCSD -> Target Ship -> RD -> Calendar Quarter','MCSD cutoff: last Friday (inclusive)'])+tr(['Raw Commit Rows',metric(a.rawCommitRows||0,popState),
-  'Before FCID validation and deduplication'])+tr(['Invalid FID Rows',metric(a.invalidFidRows||0,popState),'Blank and placeholder FIDs removed'])+tr(['Valid Commit Rows',metric(a.validCommitRows||0,popState),'Before FCID deduplication'])+tr(['Distinct Commit FCIDs',
-  metric(a.distinctCommitFcids||0,popState),'One retained row per FCID'])+tr(['Duplicate FCID Groups',metric(a.duplicateFcidGroups||0,popState),'FCIDs with multiple Commit rows'])+tr(['Duplicate Rows Removed',metric(a.duplicateRowsRemoved||0,popState),
-  'Not processed by downstream calculations'])+tr(['Fab Segment Preferred',metric(a.fabSegmentPreferred||0,popState),'Assigned Fab Segment replaced an earlier unassigned row'])+tr(['Excluded',metric(M.excluded.length,popState),'System Description exclusions'])+
-  tr(['Effective Population',metric(M.rows.length,popState),'Distinct FCIDs after exclusions'])+`</tbody>`;mappingTbl.innerHTML=h(['Standard Field','FCID Database','CTL Report','CTL-NSR List','NSR Log','NCE / FA'])+[['Unified FCID','FID','Opportunity ID','FCID','Reference Fcid',
-  'FCID'],['Quarter Engine','Calendar Quarter, Target Ship, RD','MCSD','MCSD','Not primary','Not primary'],['Pre Anchor','RD fallback','SRD at slot reference','Sales Ops RD reference','Not primary','Not primary'],['Post Anchor','Date: Mfg Commit Ship fallback','MCSD @ Current','MCSD',
-  'Not primary','Not primary'],['Exclusion','System Description','Not primary','Not primary','Not primary','Not primary']].map(r=>tr(r)).join('')+`</tbody>`}
-function applyFilters(){let m=filteredMetrics(),n=m.rows.reduce((s,r)=>s+(r.watchNsrCount||0),0),i=uniq(m.rows.filter(r=>r.watchNsrCount>0).map(r=>r.fid)).length;[['kPop',m.pop,'population'],['kPre',pct(m.preOk,m.pop),'core'],['kPost',pct(m.postOk,m.pop),'core'],['kRisk',m.riskFcid,
-  'risk'],['kSlotReady',m.slotReady+' / '+m.pop+' ('+pct(m.slotReady,m.pop)+')','core'],['kNSRWatch',n,'nsr'],['kNSRImpact',i,'nsr'],['kSlotMcsd',m.slotMcsd,'core'],['kSlotNoMcsd',m.slotNoMcsd,'core'],['kNoSlotCtl',m.noSlotCtl,'core']].forEach(x=>setMetric(...x));
-  renderFilterContext();renderFunnel();renderTables();renderNsrTable();renderHeat();renderDriverBars();renderDriverCards();renderFcid360()}
-function tableRows(type){let rows=filteredRows(),risks=filteredRisks(),ids=new Set(rows.map(r=>r.fid));risks=risks.filter(r=>ids.has(r.fid));if(['population','stability','slot'].includes(type))return rows;if(type==='excluded')return filteredRows(M.excluded);if(type==='risk')return risks;if(type===
-  'watch')return risks.filter(r=>r.priority==='P1');if(type==='fcid360')return rows.filter(r=>r.fid===clean(fcidInput.value));if(type==='quarter'){let out={};rows.forEach(r=>{let key=r.quarter+'|'+r.quarterSource,x=out[key]??={Quarter:r.quarter,QuarterSource:r.quarterSource,
-  Population:0,PreOnTime:0,PostStable:0,SlotReady:0};x.Population++;if(r.preStatus==='On Time')x.PreOnTime++;if(r.postStatus==='Projected Stable')x.PostStable++;if(r.hasSlot===true)x.SlotReady++});return Object.values(out)}return rows}
-function exportKey(type){if(['population','excluded'].includes(type))return 'population';if(type==='risk'||type==='fcid360')return 'risk';return 'core'}
-function allowExport(key){let state=ready(key);if(state.level==='unavailable'){window.alert('Export blocked. '+readyText(state));return false}if((state.level==='partial'||state.level==='demo')&&!window.confirm((state.level===
-  'partial'?'This export is provisional. ':'This export contains demo data. ')+readyText(state)+' Continue?'))return false;return true}
-function exportCurrent(type){let map={population:'Filtered_Population',excluded:'Excluded_Population',stability:'Stability_Detail',slot:'Slot_Governance',risk:'Risk_Drivers',quarter:'Quarter_Governance',watch:'Executive_Watchlist',fcid360:'FCID360'},key=exportKey(type);
-  if(!allowExport(key))return;exportWorkbook(map[type]+'_'+fileSuffix(),{[map[type]]:tableRows(type)})}
-function exportAll(){if(!allowExport('risk'))return;let m=filteredMetrics();exportWorkbook('V15_3_4_Governance_Report_'+fileSuffix(),{Executive_KPI:[{Population:m.pop,PopulationStatus:ready('population').label,PreSlot:pct(m.preOk,m.pop),PostSlot:pct(m.postOk,m.pop),
-  SlotReadiness:pct(m.slotReady,m.pop),CoreStatus:ready('core').label,RiskFCID:m.riskFcid,RiskStatus:ready('risk').label,OpenNSR:m.rows.reduce((s,r)=>s+(r.watchNsrCount||0),0),NSRStatus:ready('nsr').label}],Population:tableRows('population'),Excluded:tableRows('excluded'),
-  Watchlist:tableRows('watch'),Stability:tableRows('stability'),Slot:tableRows('slot'),Risk:tableRows('risk'),Quarter:tableRows('quarter'),FCID360:tableRows('fcid360')})}
-function showSectionFocus(t){clearTimeout(t._focusTimer);t.classList.remove('sectionFocusPulse');void t.offsetWidth;t.classList.add('sectionFocusPulse');t._focusTimer=setTimeout(()=>t.classList.remove('sectionFocusPulse'),5000)}
-function jumpToSection(page,targetId){let btn=document.querySelector('.tab[data-page="'+page+'"]');if(!btn)return;tabTo(page,btn);requestAnimationFrame(()=>{let target=document.getElementById(targetId);if(!target)return;target.scrollIntoView({behavior:'smooth',block:'start'});
-  showSectionFocus(target)})}
-function handleKpiJumpKey(event,page,targetId){if(event.key==='Enter'||event.key===' '||event.key==='Spacebar'){event.preventDefault();jumpToSection(page,targetId)}}
-function tabTo(n,btn){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));document.getElementById('page'+n).classList.remove('hidden')}
-// END FCID REPORT ENGINE
-
-  // Only the original demo/Chosen startup is replaced by the authorized readers.
-  dataMode='live';loadAg();
-  renderAg();
-  function bindReferenceAction(key,eventName,handler){document.querySelectorAll('[data-reference-'+eventName+'="'+key+'"]').forEach(element=>element.addEventListener(eventName,function(event){if(handler.call(this,event)===false)event.preventDefault()}));}
-  bindReferenceAction('0','click',function(event){tabTo('Executive',this)}); bindReferenceAction('1','click',function(event){tabTo('Stability',this)}); bindReferenceAction('2','click',function(event){tabTo('Slot',this)});
-  bindReferenceAction('3','click',function(event){tabTo('Drivers',this)}); bindReferenceAction('4','click',function(event){tabTo('NSR',this)}); bindReferenceAction('5','click',function(event){tabTo('Quarter',this)});
-  bindReferenceAction('6','click',function(event){tabTo('FCID',this)}); bindReferenceAction('7','click',function(event){tabTo('Mapping',this)}); bindReferenceAction('8','click',function(event){tabTo('UAT',this)}); bindReferenceAction('9','click',function(event){tabTo('Rules',this)});
-  bindReferenceAction('10','click',function(event){exportCurrent('population')}); bindReferenceAction('11','click',function(event){exportCurrent('excluded')}); bindReferenceAction('12','click',function(event){exportCurrent('stability')});
-  bindReferenceAction('13','click',function(event){exportCurrent('slot')}); bindReferenceAction('14','click',function(event){exportCurrent('risk')}); bindReferenceAction('15','click',function(event){exportCurrent('quarter')});
-  bindReferenceAction('16','click',function(event){exportAll()}); bindReferenceAction('17','click',function(event){jumpToSection('Drivers','riskDriverDetail')}); bindReferenceAction('18','keydown',function(event){handleKpiJumpKey(event,'Drivers','riskDriverDetail')});
-  bindReferenceAction('19','click',function(event){jumpToSection('NSR','openNsrPopulation')}); bindReferenceAction('20','keydown',function(event){handleKpiJumpKey(event,'NSR','openNsrPopulation')}); bindReferenceAction('21','click',function(event){renderFcid360()});
-  bindReferenceAction('22','click',function(event){exportCurrent('fcid360')}); bindReferenceAction('23','click',function(event){saveAg(this)});
-  bindReferenceAction('26','click',function(event){restoreAg()}); bindReferenceAction('28','click',function(event){jumpToSection('Rules','fabAccountMapping')}); let reader=null,readSequence=0;const pendingReads=new Map();
+  let reader=null,readSequence=0;const pendingReads=new Map();
   function readWorkbook(bytes,key){
+    profileFor(key);
+    // The normal userscript path always uses the shared resource-backed worker.
+    if(typeof createWorkbookWorker!=='function')return Promise.resolve().then(()=>parseWorkbook(bytes,key));
     if(!reader){
-      // The worker calls the reference's own header scoring and canonicalization.
-      const functions=[clean,norm,uniq,aliasesFor,exactAliasKey,scoreSourceHeader,betterHeader,bestHeaderFromMatrix,sourceScoreError,validateSourceCandidate,detectWorkbookSource,canonicalizeSourceRows];
-      const code=`const cfg=${JSON.stringify(cfg)},SP=${JSON.stringify(SP)};`+functions.map(fn=>fn.toString()).join('\n')+
-        `;self.onmessage=event=>{const {id,bytes,key}=event.data;try{const wb=XLSX.read(bytes,{type:'array'}),candidate=detectWorkbookSource(wb,key);`+
-        `const rows=canonicalizeSourceRows(XLSX.utils.sheet_to_json(wb.Sheets[candidate.sheet],{defval:'',range:candidate.headerRow}),key);`+
-        `if(!rows.length)throw sourceScoreError(key,{...candidate,score:0,missing:[SP[key].k]});`+
-        `self.postMessage({id,ok:true,rows,sheet:candidate.sheet,headerRow:candidate.headerRow+1,score:candidate.score,fields:Object.keys(rows[0])})}`+
-        `catch(error){self.postMessage({id,ok:false,message:error.message,code:error.code,userMessage:error.userMessage})}}`;
+      const functions=[clean,norm,profileFor,scoreSourceHeader,betterHeader,bestHeaderFromMatrix,sourceScoreError,validateSourceCandidate,detectWorkbookSource,canonicalize,parseWorkbook];
+      const code='const profiles='+JSON.stringify(profiles)+';\n'+functions.map(fn=>fn.toString()).join('\n')+';self.onmessage=event=>{const {id,bytes,key}=event.data;try{self.postMessage({id,ok:true,...parseWorkbook(bytes,key)})}catch(error){self.postMessage({id,ok:false,message:error.message,code:error.code,userMessage:error.userMessage})}};';
       reader=createWorkbookWorker(code);
-      reader.onmessage=event=>{const result=event.data,waiting=pendingReads.get(result.id);if(!waiting)return;pendingReads.delete(result.id);if(result.ok){const {id,ok,...parsed}=result;waiting.resolve(parsed)}else waiting.reject(Object.assign(new Error(result.message),
-        {code:result.code,userMessage:result.userMessage}))};
-      reader.onerror=event=>{pendingReads.forEach(waiting=>waiting.reject(new Error(event.message||'Workbook reader failed.')));pendingReads.clear();reader.terminate();reader=null};
+      reader.onmessage=event=>{const result=event.data,waiting=pendingReads.get(result.id);if(!waiting)return;pendingReads.delete(result.id);if(result.ok){const {id,ok,...parsed}=result;waiting.resolve(parsed);}else waiting.reject(Object.assign(new Error(result.message),{code:result.code,userMessage:result.userMessage}));};
+      reader.onerror=event=>{pendingReads.forEach(waiting=>waiting.reject(new Error(event.message||'Workbook reader failed.')));pendingReads.clear();reader.terminate();reader=null;};
     }
-    return new Promise((resolve,reject)=>{const id=++readSequence;pendingReads.set(id,{resolve,reject});reader.postMessage({id,bytes,key},[bytes])});
+    return new Promise((resolve,reject)=>{const id=++readSequence,buffer=ArrayBuffer.isView(bytes)?bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength):bytes;pendingReads.set(id,{resolve,reject});try{reader.postMessage({id,bytes:buffer,key},[buffer]);}catch(error){pendingReads.delete(id);reject(error);}});
   }
+  function csvToMatrix(content,delimiter){
+    const rows=[];let row=[],value='',quoted=false;
+    for(let index=0;index<content.length;index++){
+      const character=content[index],next=content[index+1];
+      if(character==='"'&&quoted&&next==='"'){value+='"';index++;}else if(character==='"')quoted=!quoted;
+      else if(character===delimiter&&!quoted){row.push(value);value='';}
+      else if((character==='\r'||character==='\n')&&!quoted){if(row.length||value){row.push(value);rows.push(row);row=[];value='';}if(character==='\r'&&next==='\n')index++;}else value+=character;
+    }
+    if(quoted)throw new Error('CSV contains an unclosed quoted value.');
+    if(row.length||value){row.push(value);rows.push(row);}return rows;
+  }
+  function rowsFromMatrix(matrix,headerRow){const headers=(matrix[headerRow]||[]).map(clean);return matrix.slice(headerRow+1).filter(row=>row.some(value=>clean(value))).map(row=>Object.fromEntries(headers.map((header,index)=>[header,row[index]??''])));}
+  function decodeText(buffer){const bytes=new Uint8Array(buffer);if(bytes[0]===255&&bytes[1]===254)return new TextDecoder('utf-16le').decode(bytes);if(bytes[0]===254&&bytes[1]===255)return new TextDecoder('utf-16be').decode(bytes);try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch(_){return new TextDecoder('gb18030').decode(bytes)}}
+  function csvDelimiter(text){const probe=text.split(/\r?\n/).slice(0,50);return [',','\t',';','|'].map(delimiter=>{let score=0;for(const line of probe){let quoted=false;for(const char of line){if(char==='"')quoted=!quoted;else if(char===delimiter&&!quoted)score++}}return {delimiter,score}}).sort((a,b)=>b.score-a.score)[0].delimiter}
   async function readFile(file,key){
-    const ext=file.name.split('.').pop().toLowerCase();
-    if(ext!=='csv'){if(!['xlsx','xls','xlsm'].includes(ext))throw new Error('Use an Excel or CSV file.');return readWorkbook(await file.arrayBuffer(),key)}
-    const matrix=csvToMatrix(await file.text()),candidate=validateSourceCandidate(key,{...bestHeaderFromMatrix(matrix,key,0),sheet:'CSV',dataRows:matrix.length}),rows=canonicalizeSourceRows(rowsFromMatrix(matrix,candidate.headerRow),key);
-    if(!rows.length)throw sourceScoreError(key,{...candidate,score:0,missing:[SP[key].k]});
-    return {rows,sheet:'CSV',headerRow:candidate.headerRow+1,score:candidate.score,fields:Object.keys(rows[0])};
+    const extension=file.name.split('.').pop().toLowerCase();
+    if(extension==='json'&&key==='nsr'){const cache=JSON.parse(decodeText(await file.arrayBuffer()));if(!Array.isArray(cache.rows))throw new Error('No NSR cache rows.');return {rows:cache.rows,sheet:'NSR cache',from:cache.from,to:cache.to,savedAt:cache.savedAt}}
+    if(extension!=='csv'){if(!['xlsx','xls','xlsm'].includes(extension))throw new Error('Use Excel, CSV or NSR JSON.');return readWorkbook(await file.arrayBuffer(),key)}
+    const content=(typeof file.arrayBuffer==='function'?decodeText(await file.arrayBuffer()):await file.text()).replace(/^\uFEFF/,''),matrix=csvToMatrix(content,csvDelimiter(content)),candidate=validateSourceCandidate(key,{...bestHeaderFromMatrix(matrix,key),sheet:'CSV',dataRows:matrix.length}),rows=canonicalize(rowsFromMatrix(matrix,candidate.headerRow),key);
+    return {rows,sheet:'CSV',headerRow:candidate.headerRow+1,score:candidate.score,fields:Object.keys(rows[0]||{})};
   }
-  return {
-    setSources(rows,metadata){Object.keys(raw).forEach(key=>raw[key]=rows[key]);meta=Object.fromEntries(Object.entries(metadata).map(([key,value])=>[key,{...value,mode:value.kind||'live'}]));dataMode='live';recalculate()}, applyFilters,resetFilters,selectAll,clearSelection:clearSel,
-      syncChosen:chSync,registerChosen:name=>chOn.add(name), canonicalize:canonicalizeSourceRows,readWorkbook,readFile, snapshot:()=>({raw,meta,M,metrics:filteredMetrics(),ready:readyRules,accounts:AG}),tableRows
-  };
+  return {readFile,readWorkbook};
 }
+
+// Storage-compatible Fab mapping; UI and conflict navigation remain with the caller.
+function createFidAccountMapping(){
+  const defaults={
+    "AT1":`
+*Alpha & Omega Semi*
+*Hua Hong*
+*Huahong*
+*Huali*
+ADVANCED SEMICONDUCTOR MANUFAC
+Analog Foundries (CUMEC)
+ASMC*
+BYD*Semiconductor*
+Cansemi*
+China Resources Microelectronics
+Chongqing SIMIC Semiconductor*
+CR Micro*
+CR Runan Technolog*
+CSMC*
+CSR Zhuzhou
+Dingtai Jiangxin Tec
+Galaxycore*
+GTA Semiconductor*
+Guangzhou Cansemi*
+Guangzhou Zen Semico*
+Hangzhou Fullsemi*
+Hangzhou Hesheng*
+Hangzhou Power Innovation Microelectron
+HH - Fab *
+HH Grace
+Hikstor Technology
+Hubei Sanan Optoelectronics*
+Hunan Jiechuwei Semiconductor*
+Hunan Sanan Semicon*
+Innostar Semi*
+IRay Technology*
+Jiangsu Advanced Memory (AMS)
+Jiangsu Nexic*
+Jie Jie Microelectro*
+Jiechuwei
+Jinan BYD Semiconduc*
+Maxscend Microelectr*
+Resources West Micro*
+Runpeng Semicon*
+Sanan-ST Microelectronics
+Shanghai Dingtai Jiangxin Tech*
+Shanghai GTX Semicon*
+Shanghai Huayaoxin*
+Shanghai IC
+Shanghai Integrated Circuit *
+Shanghai Optoelectro*
+Skysilicon Co. (China Resources Micro>)
+SST Microelectronics
+StarPower Technolog*
+Sunny Omn*light*
+Swaysure Technology*
+TI - Chengdu
+UMC - HJTC Fab 1
+Union Semiconductor*
+Wuyuan*
+Xi'an Longwei Semico*
+YOFC Advanced Semi*
+Zhejiang ChipRight*
+Zhejiang Hichip Micr*
+Zhejiang Hikstor*
+Zhejiang ICsprout Semiconductor
+Zhejiang Xinsheng Semiconductor
+Zhuzhou CRRC Times Electric
+Zing Semiconductor*`,
+    "AT2":`
+Beijing Electronics*
+Beijing Hongsheng Ro
+Beijing Yandong Micr
+BEMC
+GoerPixel
+Guangdong Ziyue Semi*
+Hong Kong Microelec
+HSRX
+Ji Guang Semiconduct*
+Jinan GoerPixel Tech*
+MRDI
+Ningbo Semiconductor
+PST*
+PXW Semiconductor
+Quanxin Integrated Circuit Mfg-QXIC
+Rong Semiconductor*
+SEC Chip*
+Semicon Manuf Oriental*
+Semiconductor Manufacturing*
+Shanghai Xin Gang In
+Shenzhen Pengxinxu Technology Co., Ltd
+Shenzhen Pensun Technology Co*
+Shenzhen Qili Tech
+SiEn*Qingdao*
+Silex*
+Sinovate*
+SMBC B3
+SMEC*
+SMIC*
+United Nova Technology*
+UNT*
+XGIC
+YDMT
+Yongxin*
+Z*hai Hengqin Jointe*`,
+    "AT3":`
+*HuiXinLongGuan*
+Anhui Juhe*
+ASP Tech*
+Beijing Jidian Holding*
+Changxin*
+Chengdu Hi*tech Jin*
+CHJS (Chengdu High-tech Jin Science)
+Chongqing lnnoevsic*
+CXMT Fab2*
+Dongguan Guangmao*
+Hangzhou HFC Semicon*
+He*fei Xinjing*
+Hefei Jingyi Semicon*
+Hefei Semiri Tech*
+HFC Semiconductor Corporation
+Innoscience*
+Innotron*
+Jiangsu Silicon Integrity (Forecast Only
+Nexchip Semi*
+Nexmemory Technology*
+UNIM Intelligent Mem*
+UNITED MICROELECTRONICS CORPOR
+USC - Xiamen 12X
+Wuhan Chuxing Techno*
+Wuhan HSMC
+Wuhan Xinxin Semi*
+Xiamen ITRI/USC
+Xinlian Micro*
+XMC
+Yangtze Advanced Mem*
+YMTC*
+Zhe Jiang Super Dim*`,
+    "Hynix":`
+SK hynix*`,
+    "Intel":`
+Intel - China F68*
+INTEL SEMI STG TECH (DL)`,
+    "OSAT":`
+*Tongfu*
+*TRS Microelectronics
+Amkor*
+Anhui Semi Integr Display Technology
+ATX*
+Beijing H*F*I*Elect*
+Beijing ICLink Tech*
+Beijing Xinli Tech*
+BOE Technology*
+Chengdu ECHINT Techn*
+Chipmore*Tech*
+DSHX*Shanghai*
+Forehope*
+Great*Bay Chipl*
+Guangdong 3D-Semi*
+He*fei Payton Storag*
+Hsingchen Technology*
+Huaian Imag*
+Huatian Tech*
+Hubei Hsinghui Inte*
+Hubei Yangtze*
+Huizhou Biwin Storage Technology(FCOnly)
+Innosemi*
+JCET*
+Jiangsu Silicon Inte*
+Jiangyin Changdian A*
+Kore Semiconductor*
+Kunming BOE Display
+Luxshare*
+Natural-Integration Advanced
+NCAP*
+Quliang Electronics*
+Shan Dong Qi Xin Mems Corp
+Shanghai Echip Semiconductor*
+Shanghai Xianfang Semiconductor
+Shanghai Xinyuan Inn*
+Shenzhen Qili Tech F-PJT (Forecast Only)
+Sidtek Anhui Semicon
+SILICONWARE TECHNOLOGY (SUZHOU
+SJ Semi*
+Sky Chip Inter*
+SPIL*
+Suzhou TF-AMD Semiconductor
+TF AMD Micr*
+Tianfu Xinglong Lake*
+Unisem*
+Wuhu Micro*Display*
+Xiamen Sky Semicond*
+Yibu Semiconductor*
+Yongjiang Lab*
+Yunnan Invensight Optoelectronics
+Zhejiang Hexin Integ*
+Zhejiang ICTruth*
+Zhuhai Tiancheng Adv
+Ziyi Microelectronics*`,
+    "Samsung":`
+Samsung*`,
+    "Training Center":`
+Lam - Shanghai Training Center
+Lam Research
+LAM RESEARCH INTERNATIONAL SDN`,
+    "TSMC":`
+TSMC - *`
+  };
+  const key='fcid.ag.v1',legacyKey='toolkitKyra.fcid.accounts.v1';let mapping={...defaults},notice='',conflicts=[],error='';
+  let matchName=()=>'';
+  function clean(value){let text=String(value??'').trim().replace(/\.0$/,'');return !text||text==='#'||text.toLowerCase()==='nan'||text==='Not assigned'?'':text;}
+  function fabKey(value){return clean(value).toUpperCase().replace(/\s+/g,' ');}
+  function normalize(value){
+    if(!value||typeof value!=='object'||Array.isArray(value)||Object.values(value).some(entry=>typeof entry!=='string'))throw new Error('Invalid Fab mapping');
+    const result={},seen=new Map(),duplicates=[];
+    Object.entries(value).forEach(([group,lines])=>{
+      group=clean(group);if(!group)return;const keep=[];
+      [...new Set(lines.split(/\r?\n/).map(clean).filter(Boolean))].forEach(fab=>{const normalized=fabKey(fab),previous=seen.get(normalized);if(previous&&previous!==group)duplicates.push(fab+' ('+previous+' / '+group+')');else if(!previous){seen.set(normalized,group);keep.push(fab);}});result[group]=keep.join('\n');
+    });
+    if(duplicates.length)throw new Error('Duplicate Fab mappings found:\n\n'+duplicates.slice(0,12).join('\n')+'\n\nEach Fab must belong to only one Account Group.');return result;
+  }
+  function entries(value){return new Map(Object.entries(normalize(value)).flatMap(([group,lines])=>lines.split('\n').filter(Boolean).map(fab=>[fabKey(fab),{fab,group}])));}
+  function merge(base,saved){
+    const before=entries(base),user=entries(saved),current=entries(defaults),merged=Object.fromEntries(Object.keys(defaults).map(group=>[group,[]])),found=[];
+    new Set([...current.keys(),...user.keys(),...before.keys()]).forEach(fab=>{
+      const original=before.get(fab),custom=user.get(fab),latest=current.get(fab),edited=custom?.group!==original?.group;
+      if(edited&&latest?.group!==original?.group&&custom?.group!==latest?.group)found.push((custom||latest||original).fab+': saved '+(custom?.group||'[Unmapped]')+'; updated default '+(latest?.group||'[Unmapped]'));
+      const chosen=edited?custom:latest;if(chosen)(merged[chosen.group]??=[]).push(chosen.fab);
+    });
+    const next=Object.fromEntries(Object.entries(merged).map(([group,fabs])=>[group,fabs.join('\n')])),savedMap=normalize(saved),savedMatch=matcher(savedMap),nextMatch=matcher(next);
+    // A broader default must not silently restore a name or rule the user removed.
+    const restored=[...before].filter(([key,{fab}])=>!user.has(key)&&nextMatch(fab)&&savedMatch(fab)!==nextMatch(fab));
+    if(restored.length){found.push(...restored.map(([,entry])=>entry.fab+': saved '+(savedMatch(entry.fab)||'[Unmapped]')+'; updated default '+nextMatch(entry.fab)));return {mapping:savedMap,conflicts:found}}
+    return {mapping:next,conflicts:found};
+  }
+  function websiteStorage(){try{return typeof persistentStore==='function'?persistentStore():unsafeWindow.localStorage;}catch(_){try{return localStorage;}catch(__){return null;}}}
+  function readLegacy(name){try{return websiteStorage()?.getItem(name)??null;}catch(_){return null;}}
+  function persist(base,value){
+    try{GM_setValue(key,JSON.stringify({base,mapping:value}));}catch(problem){error=problem.message||String(problem);return false;}
+    // Only these two superseded mapping keys belong to this migration.
+    try{const storage=websiteStorage();storage?.removeItem(key);storage?.removeItem(legacyKey);}catch(_){/* GM copy is already saved. */}return true;
+  }
+  function matcher(value){
+    const exact=new Map(),patterns=[],matches=new Map();
+    Object.entries(value).forEach(([group,lines])=>lines.split('\n').filter(Boolean).forEach(fab=>{
+      if(fab.includes('*'))patterns.push({expression:new RegExp('^'+fab.split('*').map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('.*')+'$','i'),group,length:fab.replace(/\*/g,'').length});else exact.set(fabKey(fab),group);
+    }));patterns.sort((a,b)=>b.length-a.length);
+    return fab=>{
+      const name=clean(fab);
+      if(!matches.has(name))matches.set(name,exact.get(fabKey(fab))||patterns.find(pattern=>pattern.expression.test(name))?.group||'');
+      return matches.get(name);
+    };
+  }
+  function install(value){mapping=normalize(value);matchName=matcher(mapping)}
+  function getStatus(){return {notice,conflicts:[...conflicts],error};}
+  function result(ok){return {ok,map:{...mapping},...getStatus()};}
+  function reload(){
+    notice='';conflicts=[];error='';install(defaults);
+    try{
+      const saved=GM_getValue(key,null),candidates=saved===null?[readLegacy(key),readLegacy(legacyKey)]:[saved];
+      for(const candidate of candidates){
+        if(candidate===null||candidate===undefined)continue;
+        try{
+          const data=typeof candidate==='string'?JSON.parse(candidate):candidate,base=data?.base||null,user=data?.mapping||data,merged=base?merge(base,user):{mapping:normalize(user),conflicts:[]};
+          install(merged.mapping);conflicts=merged.conflicts;
+          notice=base?(conflicts.length?'Updated defaults conflict with your saved mapping. Saved assignments are kept for now. Review the mappings below, then click Save to confirm, or Restore Defaults.\n\n'+conflicts.join('\n'):''):'This saved mapping has no update baseline. Review it and click Save to keep it, or Restore Defaults to use the latest defaults.';
+          // Unresolved conflicts retain the old baseline until explicit Save or Reset.
+          if(saved===null)persist(base,user);else if(base&&!notice&&JSON.stringify(base)!==JSON.stringify(defaults))persist(defaults,mapping);
+          return result(true);
+        }catch(_){/* Try the next valid legacy record without overwriting malformed data. */}
+      }
+    }catch(problem){error=problem.message||String(problem);}return result(!error);
+  }
+  function save(value){
+    error='';let next;try{next=normalize(value);}catch(problem){error=problem.message||String(problem);return result(false);}
+    if(!persist(defaults,next))return result(false);install(next);notice='';conflicts=[];return result(true);
+  }
+  function reset(){return save(defaults);}
+  reload();
+  return {key,defaults:{...defaults},getMap:()=>({...mapping}),getStatus,match:fab=>matchName(fab),normalize,save,reset,reload};
+}
+
+function createFidGraph(raw, options = {}) {
+  const sourceKeys = ['fcid','ctl','ctlNsr','nsr','nce'];
+  const input = Object.fromEntries(sourceKeys.map(key => [key, Array.isArray(raw?.[key]) ? raw[key] : []]));
+  const cleanedValues=new Map();
+  const clean = value => {
+    if(cleanedValues.has(value))return cleanedValues.get(value);
+    const text = String(value ?? '').trim();
+    const result=/^(?:#|nan|not assigned|null|undefined|\[undefined\]|n\/a)$/i.test(text) ? '' : text;cleanedValues.set(value,result);return result;
+  };
+  const norm = value => String(value ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const textKey = value => clean(value).toLowerCase();
+  const headerIndexes=new WeakMap(),headerSchemas=new Map(),aliasKeys=new Map();
+  const field = (row, names) => {
+    if (!row) return '';
+    for (const name of names) if (Object.hasOwn(row,name)) {const value=clean(row[name]);if(value)return value;}
+    let headers=headerIndexes.get(row);if(!headers){const keys=Object.keys(row),schema=keys.join('\0');headers=headerSchemas.get(schema);if(!headers){headers=new Map();for(const key of keys){const canonical=norm(key),variants=headers.get(canonical)||[];variants.push(key);headers.set(canonical,variants)}headerSchemas.set(schema,headers)}headerIndexes.set(row,headers)}
+    for(const name of names){if(!aliasKeys.has(name))aliasKeys.set(name,norm(name));for(const key of headers.get(aliasKeys.get(name))||[]){const value=clean(row[key]);if(value)return value}}
+    return '';
+  };
+  const validFid = value => { const id = clean(value); return id && !['NOFID','NOFCID','NA','NULL','UNKNOWN','NOTASSIGNED'].includes(norm(id).toUpperCase()) ? id : ''; };
+  const loaded = Object.fromEntries(sourceKeys.map(key => [key, options.loadedSources ? (Array.isArray(options.loadedSources) ? options.loadedSources.includes(key) : !!options.loadedSources[key]) : input[key].length > 0]));
+  const ownerPolicy='majority';
+  const effectivePolicy='approved';
+  const riskPolicy='approved';
+  const postNsrPolicy='open-today';
+  const ignoredNsrs = new Set(Array.from(options.ignoredNsrs||[],value=>clean(value).toUpperCase())),importantNsrs = new Set(Array.from(options.importantNsrs||[],value=>clean(value).toUpperCase()));
+  const parsedDates=new Map(),isoDates=new Map();
+  const date = value => {
+    const text = clean(value); if (!text) return null;
+    if(parsedDates.has(text))return parsedDates.get(text);
+    let result;
+    if (value instanceof Date) result = new Date(value.getFullYear(), value.getMonth(), value.getDate());
+    else if (/^\d{5}(?:\.\d+)?$/.test(text)) { const serial = new Date((Math.floor(Number(text)) - 25569) * 86400000); result = new Date(serial.getUTCFullYear(), serial.getUTCMonth(), serial.getUTCDate()); }
+    else { const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/); result = iso ? new Date(Number(iso[1]), Number(iso[2])-1, Number(iso[3])) : new Date(text); }
+    const parts=text.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/),us=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s.*)?$/);
+    if (Number.isNaN(result.getTime())||parts&&(result.getFullYear()!==Number(parts[1])||result.getMonth()!==Number(parts[2])-1||result.getDate()!==Number(parts[3]))||us&&(result.getFullYear()!==Number(us[3])||result.getMonth()!==Number(us[1])-1||result.getDate()!==Number(us[2]))) {parsedDates.set(text,null);return null;}
+    result.setHours(0,0,0,0); parsedDates.set(text,result);return result;
+  };
+  const iso = value => {const key=clean(value);if(isoDates.has(key))return isoDates.get(key);const day = date(value),result=day ? [day.getFullYear(),String(day.getMonth()+1).padStart(2,'0'),String(day.getDate()).padStart(2,'0')].join('-') : '';isoDates.set(key,result);return result;};
+  const today=iso(options.today||new Date());
+  const firstDate = (row, names) => { for (const name of names) { const day = iso(field(row,[name])); if (day) return {date:day,field:name}; } return {date:'',field:''}; };
+  const weeks = (from, to) => { const a = date(from), b = date(to); return a && b ? (Date.UTC(b.getFullYear(),b.getMonth(),b.getDate()) - Date.UTC(a.getFullYear(),a.getMonth(),a.getDate())) / 604800000 : null; };
+  const personNames=new Map(),learnedAliases=new Map(),aliasEvidence=new Map();
+  const person = value => {
+    const name=clean(value),map=options.personMap;if(!name)return '';
+    if(map instanceof Map){const explicit=map.get(name)||map.get(norm(name));if(explicit)return clean(explicit)}
+    else if(map){const key=Object.keys(map).find(key=>norm(key)===norm(name));if(key)return clean(map[key])||name}
+    return learnedAliases.get(norm(name))||personNames.get(norm(name))||name.replace(/\s+/g,' ');
+  };
+  const initiator = record => person(field(record,['Initiator','Initiated By','Requester','Created By']));
+  const discarded = status => /REJECT|CANCEL/.test(String(status).toUpperCase());
+  const completed = status => /\bCOMPLETED\b/i.test(status);
+  const nsrStatus=nsr=>[nsr.status,nsr.task,nsr.taskStatus].filter(Boolean).join(' ');
+  const nsrNamesByFid=new Map(),authorsByFid=new Map(),knownUserIds=new Set(),aliasCandidates=new Map();
+  for(const source of ['ctl','ctlNsr'])for(const row of input[source]){
+    const account=field(row,['Initiator','Created By','Initiated By','Requester']),change=norm(field(row,['Change Cat','Change Type','Change Category']));
+    if(!account)continue;if(/^[A-Z0-9_]+$/i.test(account))knownUserIds.add(norm(account));
+    if(change&&change!=='slot'&&change!=='config')continue;
+    const fid=validFid(field(row,['Opportunity ID','FCID','FID']));if(!fid)continue;
+    const accounts=authorsByFid.get(fid)||new Set();accounts.add(norm(account));authorsByFid.set(fid,accounts);
+  }
+  for(const row of input.nsr){
+    if(!field(row,['NSR#','NSR Number','Nsrnum']))continue;
+    const name=field(row,['Initiator','Initiated By','Requester']),fid=validFid(field(row,['Reference Fcid','REF FCID','Reference FID','FCID','FID']));
+    if(name&&!/^[A-Z0-9]+$/.test(name)&&!(!/\s/.test(name)&&knownUserIds.has(norm(name)))){personNames.set(norm(name),name.replace(/\s+/g,' '));if(fid){const names=nsrNamesByFid.get(fid)||new Set();names.add(norm(name));nsrNamesByFid.set(fid,names)}}
+  }
+  let observation=0;
+  for(const [fid,accounts] of authorsByFid){
+    const names=nsrNamesByFid.get(fid);if(accounts.size!==1||names?.size!==1)continue;
+    const account=[...accounts][0];if(!knownUserIds.has(account))continue;
+    const name=[...names][0],candidates=aliasCandidates.get(account)||new Map(),candidate=candidates.get(name)||{name,fids:[],last:0};
+    candidate.fids.push(fid);candidate.last=++observation;candidates.set(name,candidate);aliasCandidates.set(account,candidates);
+  }
+  for(const [account,candidates] of aliasCandidates){
+    // Each FID counts once. Most frequent name wins; a tie uses the last observation.
+    const ranked=[...candidates.values()].sort((a,b)=>b.fids.length-a.fids.length||b.last-a.last),winner=ranked[0];if(winner.fids.length<2)continue;
+    const name=personNames.get(winner.name);learnedAliases.set(account,name);
+    aliasEvidence.set(account,{account,name,fids:winner.fids,aliases:ranked.filter(candidate=>candidate.fids.length>=2&&candidate.fids.length*3>=winner.fids.length).map(candidate=>personNames.get(candidate.name)),alternatives:ranked.slice(1).map(candidate=>({name:personNames.get(candidate.name),fids:candidate.fids}))});
+  }
+  // Merge recurring name variants without renaming another account's primary name.
+  const primaryNames=new Set([...learnedAliases.values()].map(norm));
+  for(const evidence of aliasEvidence.values())for(const alias of evidence.aliases)if(!primaryNames.has(norm(alias))||norm(alias)===norm(evidence.name))personNames.set(norm(alias),evidence.name);
+  const mergeRows = rows => {
+    const result = {};
+    for (const row of rows) for (const [key,value] of Object.entries(row)) if (!clean(result[key]) && clean(value)) result[key] = value;
+    return result;
+  };
+  const unique = values => [...new Set(values.filter(Boolean))];
+  const accountMap=options.accountMap||{},accountEntries=accountMap instanceof Map?[...accountMap]:Object.entries(accountMap);
+  const accountOf = record => {
+    const explicit = field(record,['Account Group','Account Team','Sales Territory','AT']);
+    if (explicit && !/^(?:0|00:00:00|#(?:VALUE!|REF!|NAME\?|NUM!|DIV\/0!|NULL!))$/i.test(explicit)) return explicit;
+    // Fab rules are more specific; fall back to the source Customer only when no Fab rule matches.
+    for(const name of unique([field(record,['Fab Name','Fab']),field(record,['Customer','Customer Name','End Customer'])])){
+      if(typeof accountMap==='function'){const account=clean(accountMap(name,record));if(account)return account;continue}
+      const matches=[];
+      for(const [account,patterns]of accountEntries)for(const pattern of Array.isArray(patterns)?patterns:String(patterns).split(/\r?\n/)){
+        const text=clean(pattern);if(!text)continue;
+        const expression=new RegExp('^'+text.split('*').map(part=>part.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('.*')+'$','i');
+        if(expression.test(name))matches.push({account,specificity:text.replace(/\*/g,'').length,exact:!text.includes('*')});
+      }
+      matches.sort((a,b)=>Number(b.exact)-Number(a.exact)||b.specificity-a.specificity);
+      if(matches.length)return matches[0].account;
+    }
+    return '';
+  };
+  const exclusion = record => {
+    const system = field(record,['System Description','System Desc','System']).toUpperCase();
+    return /NCFUPG/.test(system) ? 'NCFUPG' : /SW/.test(system)&&/UPG|UPGRADE/.test(system) ? 'SW-UPGRADE' : /SOFTWARE/.test(system) ? 'Software' : /CUST[_ ]?BUS[_ ]?FLEX/.test(system) ? 'Cust_Bus_Flex' : /CUST[_ ]?INCENTIVE/.test(system) ? 'Cust_Incentive' : '';
+  };
+  const fids = new Map(), ctls = [], nsrs = [], nces = [];
+  const orphans = {nsrs:[],ctls:[],nces:[],unmatchedNsrs:[]};
+  const ensureFid = id => {
+    if (!id) return null;
+    if (!fids.has(id)) fids.set(id,{id,fidMark:['ignore','important'].includes(options.fidMarks?.[id])?options.fidMarks[id]:'normal',record:{},rawRows:[],sources:[],hasNativeRecord:false,inPopulation:false,excludedReason:'',account:'',businessUnit:'',customer:'',system:'',fidDescription:'',commit:'',quote:'',quarter:'',mcsd:'',rd:'',crd:'',targetShip:'',ctls:[],nsrs:[],nces:[],slot:null,owner:'',ownerEvidence:null,salesAdmin:'',salesAdminEvidence:null,pre:null,post:null,risks:[],category:'review'});
+    return fids.get(id);
+  };
+  const sourceFidRows = new Map();
+  for (const row of input.fcid) {
+    const id = validFid(field(row,['FID','FCID','Field ID']));
+    if (!id) continue;
+    if (!sourceFidRows.has(id)) sourceFidRows.set(id,[]); sourceFidRows.get(id).push(row);
+  }
+  for (const [id,rows] of sourceFidRows) {
+    const node = ensureFid(id), commits = rows.filter(row=>field(row,['Commit: Field','Commit Field','Field Commit','Commit Status']).toUpperCase()==='COMMIT'), candidates = commits.length ? commits : rows;
+    const selected = candidates.find(row=>field(row,['Fab Segment','Fab_Segment'])) || candidates[0];
+    node.record = {...selected}; node.rawRows = [...rows]; node.hasNativeRecord = true; node.sources.push('fcid');
+    if (commits.length) {
+      node.excludedReason = exclusion(selected); node.inPopulation = !node.excludedReason;
+    }
+  }
+  const ctlGroups = new Map();
+  for (const source of ['ctl','ctlNsr']) for (let index=0;index<input[source].length;index++) {
+    const row=input[source][index], number=field(row,['CTL ID','CTL#']), key=number || '__'+source+'-row-'+index;
+    if (!ctlGroups.has(key)) ctlGroups.set(key,[]); ctlGroups.get(key).push({source,row,index});
+  }
+    const ctlValueFields=Object.entries({
+      fidId:['Opportunity ID','FCID','FID'],change:['Change Cat','Change Type','Change Category'],initiator:['Initiator','Created By','Initiated By','Requester'],businessUnit:['Business Unit','BU'],
+      summary:['Change Summary','Summary'],created:['Creation Date','Create Date'],approved:['1st SOps Appr Dt','Sales Ops Approval Date','SOPS Approval Date'],mcsd:['MCSD @ Current','MCSD'],
+      srd:['SRD @ Current','Sales Ops RD','SRD'],srdApproval:['SRD @ SOPs Approval'],fieldCrd:['Field CRD','CRD @ Current','CRD'],mfg:['Mfg Upgrade Type','Manufacturing Upgrade Type'],stage:['Stage','CTL Stage'],quote:['Quote ID','Quote Number'],sourceQuote:['Source Quote','Source Quote Number'],
+      customer:['Customer group 2','Customer','Customer Name','End Customer'],configFrz:['Config Frz@Current','Config Frz','Config Frozen Date','Config Freeze Date'],rootCause:['Root Cause','Root Cause of Late Change']
+    });
+  const ctlDateFields=['created','approved','mcsd','srd','srdApproval','fieldCrd','configFrz'];
+  for (const [key,entries] of ctlGroups) {
+    const rows = entries.map(entry=>entry.row), read = names => { for (const entry of entries) { const value=field(entry.row,names); if (value) return value; } return ''; };
+
+    const reference=entries.find(entry=>entry.source==='ctlNsr')?.row;
+    const ctl={id:key,number:read(['CTL ID','CTL#']),record:rows.length===1?rows[0]:mergeRows(rows),rows,rawRows:rows,sources:unique(entries.map(entry=>entry.source)),conflicts:[],links:[],notes:field(reference,['Notes','CTL Notes'])||read(['Notes','CTL Notes']),subReason:field(reference,['Sub Reason'])||read(['Sub Reason'])};
+    for (const [name,names] of ctlValueFields) {
+      ctl[name]=read(names);
+      if(entries.length>1){const alternatives=unique(entries.map(entry=>field(entry.row,names)).filter(Boolean)),comparison=alternatives.map(value=>ctlDateFields.includes(name)?iso(value)||textKey(value):textKey(value));if(unique(comparison).length>1)ctl.conflicts.push({field:name,values:alternatives})}
+    }
+    ctl.fidId=validFid(ctl.fidId); ctl.initiator=person(ctl.initiator); for(const name of ctlDateFields)ctl[name]=iso(ctl[name]);
+    // Every CTL source uses Stage; Status columns remain only in the original source rows.
+    const stage=String(ctl.stage||'').trim().replace(/^\d+\s*-\s*/,'').toLowerCase();
+    ctl.status=stage&&stage!=='[unknown]'?({completed:'Completed',cancelled:'Cancelled',canceled:'Cancelled',rejected:'Rejected',originator:'Draft'})[stage]||'Submitted':'';
+    ctl.changeKey=norm(ctl.change); ctl.statusKind=ctl.status==='Completed'?'completed':['Cancelled','Rejected'].includes(ctl.status)?'discarded':'pending';
+    ctl.pending=['slot','config'].includes(ctl.changeKey)&&ctl.status==='Submitted';
+    ctl.pendingPullPush=['pull','push'].includes(ctl.changeKey)&&ctl.status==='Submitted';
+    ctl.effective=ctl.riskEligible=ctl.applied=ctl.statusKind!=='discarded'&&!!ctl.approved;
+    ctl.eventDate=ctl.approved;ctl.eventDateField=ctl.approved?'Sales Ops Approval Date':'';ctl.effectiveDate=ctl.riskDate=ctl.applied?ctl.approved:'';
+    const ctlText=Object.values(entries[0].row).join(' ').toUpperCase();
+    ctl.isSlot=ctl.changeKey==='slot'; ctl.isDrop=ctl.changeKey==='dropslot'||ctl.changeKey==='drop';
+    ctl.isConfig=ctl.changeKey.includes('config')&&!/DOC ONLY|LOCAL NSR|LNSR/.test(ctlText);
+    ctls.push(ctl);
+    const node=ensureFid(ctl.fidId); if (node) { node.ctls.push(ctl); node.sources=unique([...node.sources,...ctl.sources]); } else orphans.ctls.push(ctl);
+  }
+  const nsrValues=(record,number)=>({
+    account:accountOf(record),status:field(record,['NSR Status','NsrWorkflowStatus','Workflow Status','Status']),initiator:initiator(record),
+    title:field(record,['NSR Title','Title','NsrTitle']),type:field(record,['NSR Type','Type']),org:field(record,['NSR Org','Org','NsrOrg']),product:field(record,['Primary Product','Product','PrimaryProd']),customer:field(record,['Customer','Customer Name']),subsystem:field(record,['Impacted Sub System','Impacted Subsystem','Sub System','Subsystem']),submitted:iso(field(record,['Submit Date','Submitted Date','Submission Date','SubmitDate'])),tempId:field(record,['Temp Id#','Temp ID','TempId']),task:field(record,['Task Name','Task','Workflow Task']),taskStatus:field(record,['Task Status']),
+    searchText:[number,...Object.values(record)].join(' ').toLowerCase()
+  });
+  const nsrGroups = new Map();
+  for (let index=0;index<input.nsr.length;index++) {
+    const row=input.nsr[index], number=field(row,['NSR#','NSR Number','Nsrnum']).toUpperCase(), key=number||'__nsr-row-'+index;
+    if (!nsrGroups.has(key)) nsrGroups.set(key,[]); nsrGroups.get(key).push(row);
+  }
+  for (const [key,rows] of nsrGroups) {
+    const record=mergeRows(rows), number=field(record,['NSR#','NSR Number','Nsrnum']).toUpperCase(), fidIds=unique(rows.map(row=>validFid(field(row,['Reference Fcid','REF FCID','Reference FID','FCID','FID','RefFcid']))));
+    const nsr={id:key,number,fidId:fidIds[0]||'',fidIds,record,rows,rawRows:rows,...nsrValues(record,number),eligible:!!number,linkAssessmentAvailable:loaded.ctl||loaded.ctlNsr,linkAssessmentProvenance:loaded.ctl&&loaded.ctlNsr?'both':loaded.ctl?'ctl':loaded.ctlNsr?'ctlNsr-partial':'unavailable',workflow:field(record,['Workflow Status','NSR Status','NsrWorkflowStatus']),links:[]};
+    nsr.ignored=ignoredNsrs.has(nsr.number);nsr.important=!nsr.ignored&&importantNsrs.has(nsr.number);
+    nsr.observations=rows.length<2?[]:rows.map(record=>({record,...nsrValues(record,number),fidId:validFid(field(record,['Reference Fcid','REF FCID','Reference FID','FCID','FID','RefFcid']))}));
+    nsrs.push(nsr);
+    if (nsr.fidIds.length) {
+      let unmatched=false;
+      for(const fidId of nsr.fidIds) {const node=ensureFid(fidId);node.nsrs.push(nsr);node.sources=unique([...node.sources,'nsr']);if(!node.hasNativeRecord)unmatched=true;}
+      if(unmatched)orphans.unmatchedNsrs.push(nsr);
+    } else orphans.nsrs.push(nsr);
+  }
+  for (let index=0;index<input.nce.length;index++) {
+    const record=input.nce[index], id=field(record,['NCe #','NCE Number'])||'__nce-row-'+index, fidId=validFid(field(record,['FCID','FID']));
+    const nce={id,number:field(record,['NCe #','NCE Number']),fidId,record,rows:[record],status:field(record,['NCe State','State','Status']),impact:field(record,['Impact','NCE Impact']),title:field(record,['Title','NCE Title']),customer:field(record,['Customer','Customer Name']),opened:iso(field(record,['Open Date','Opened Date','Creation Date'])),damageGroup:field(record,['Damage Group']),damageCode:field(record,['Damage Code']),partNumber:field(record,['Part_Number','Part Number']),partDescription:field(record,['Part_Description','Part Description'])};
+    nces.push(nce); const node=ensureFid(fidId); if (node) { node.nces.push(nce); node.sources=unique([...node.sources,'nce']); } else orphans.nces.push(nce);
+  }
+  const nsrByNumber=new Map(nsrs.filter(nsr=>nsr.number).map(nsr=>[nsr.number,nsr]));
+  const tokenPattern=/(?<![A-Z0-9])([NDL]\d{5,8})(?![A-Z0-9])/gi;
+  for (const ctl of ctls) {
+    const tokens=new Map();
+    for (const row of ctl.rows) for (const name of ['Change Summary','Summary','Root Cause','Root Cause of Late Change','Notes']) {
+      const value=field(row,[name]); if (!value) continue;
+      for (const match of value.matchAll(tokenPattern)) { const number=match[1].toUpperCase(); if (!tokens.has(number)) tokens.set(number,new Set()); tokens.get(number).add(name); }
+    }
+    ctl.nsrReferences=[...tokens.keys()];
+    for (const [number,fields] of tokens) {
+      const nsr=nsrByNumber.get(number); if (!nsr) continue;
+      const kind=ctl.fidId && nsr.fidIds.includes(ctl.fidId) ? 'direct':'reference';
+      const link={ctlId:ctl.id,ctlNumber:ctl.number,nsrId:nsr.id,nsrNumber:nsr.number,fidId:ctl.fidId,nsrFidId:nsr.fidId,kind,fields:[...fields],effective:ctl.effective,applied:ctl.applied,status:ctl.status,statusKind:ctl.statusKind};
+      ctl.links.push(link); nsr.links.push(link);
+    }
+  }
+  const linkedLifecycle=links=>!links.length?'completed-unlinked':links.some(link=>link.applied)?'implemented':links.some(link=>clean(link.status))?'ctl-pending':'ctl-unavailable';
+  function refreshNsrLifecycle(nsr) {
+    nsr.implementationByFid=Object.fromEntries(nsr.fidIds.map(fidId=>[fidId,observationLifecycle(nsr,nsr,fidId)]));
+    nsr.lifecycle=observationLifecycle(nsr,nsr);
+  }
+  nsrs.forEach(refreshNsrLifecycle);
+  const tally = actions => {
+    const counts=new Map(); for (const action of actions) if (action.name) { const key=textKey(action.name), entry=counts.get(key)||{name:action.name,count:0,documents:[]}; entry.count++; entry.documents.push({id:action.id,source:action.source}); counts.set(key,entry); }
+    return [...counts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+  };
+  // Slot authors establish Account membership; approval and current Slot state do not change who authored an operation.
+  const accountPeople=new Map();
+  for(const node of fids.values())node.account=accountOf(node.record);
+  const nsrAccount=(observation,fidId=observation.fidId)=>fids.get(fidId)?.account||observation.account||'';
+  for(const nsr of nsrs)nsr.accounts=[...new Set((nsr.observations.length?nsr.observations:[nsr]).map(observation=>nsrAccount(observation)))];
+  for(const ctl of ctls){
+    const account=fids.get(ctl.fidId)?.account;
+    if(!ctl.isSlot||!ctl.initiator||!account)continue;
+    const key=textKey(account),people=accountPeople.get(key)||new Map();people.set(textKey(ctl.initiator),ctl.initiator);accountPeople.set(key,people);
+  }
+  const inferOwner = node => {
+    const people=accountPeople.get(textKey(node.account))||new Map();
+    const nsrActions=node.nsrs.filter(nsr=>nsr.eligible&&nsr.initiator).map(nsr=>({id:nsr.id,name:nsr.initiator,source:'nsr'}));
+    const ctlActions=node.ctls.filter(ctl=>ctl.initiator&&(ctl.isSlot||ctl.changeKey==='config')).map(ctl=>({id:ctl.id,name:ctl.initiator,source:'ctl'}));
+    const eligible=action=>people.has(textKey(action.name)),actions=[...ctlActions,...nsrActions];
+    // All Account members tie at zero when no eligible CTL votes exist; use their local NSR counts.
+    const nsrCandidates=tally(nsrActions.filter(eligible)),ctlCandidates=tally(ctlActions.filter(eligible)),candidates=ctlCandidates.length?ctlCandidates:nsrCandidates;
+    const tied=candidates.length>1&&candidates[0].count===candidates[1].count,tiedCandidates=tied?candidates.filter(candidate=>candidate.count===candidates[0].count):[];
+    let tieBreaker='',tieBreakerSource='';
+    if(tied){
+      const ranked=tiedCandidates.map(candidate=>({name:candidate.name,count:nsrCandidates.find(nsr=>textKey(nsr.name)===textKey(candidate.name))?.count||0})).sort((a,b)=>b.count-a.count);
+      const finalists=ranked.filter(candidate=>candidate.count===ranked[0].count);
+      if(finalists.length===1){tieBreaker=finalists[0].name;tieBreakerSource='nsr-tiebreaker'}
+      else if(finalists.some(candidate=>textKey(candidate.name)===textKey(node.slot.initiator))){tieBreaker=node.slot.initiator;tieBreakerSource='slot-tiebreaker'}
+    }
+    const owner=tied?tieBreaker:candidates[0]?.name||'';
+    return {owner,evidence:{policy:ownerPolicy,inferred:true,account:node.account,accountPeople:[...people.values()],source:!people.size?'account-unavailable':!candidates.length?'no-eligible-votes':tied?tieBreakerSource||'unresolved-tie':ctlCandidates.length?'ctl':'nsr-fallback',confidence:!owner?'unknown':!ctlCandidates.length||tieBreakerSource==='nsr-tiebreaker'?'medium':'low',candidates,nsrCandidates,ctlCandidates,tied,tiedCandidates,tieBreaker,documents:candidates.reduce((sum,candidate)=>sum+candidate.count,0),excludedCandidates:tally(actions.filter(action=>!eligible(action))),aliases:[...aliasEvidence.values()].filter(evidence=>candidates.some(candidate=>candidate.name===evidence.name))}};
+  };
+  function refreshFid(node) {
+    node.risks=[];
+    node.nsrs=node.nsrs.map(nsr=>{
+      nsr=nsrByNumber.get(nsr.number)||nsr;
+      if(!nsr.observations.length)return nsr;
+      const observation=nsr.observations.find(observation=>observation.fidId===node.id);
+      return observation?{...nsr,...observation,fidId:node.id,lifecycle:nsr.implementationByFid[node.id]||nsr.lifecycle,globalLifecycle:nsr.lifecycle}:nsr;
+    });
+    const record=node.record, nativeMcsd=firstDate(record,['Date: Mfg Commit Ship','Mfg Commit Ship','Manufacturing Commit Ship Date','MCSD']);
+    node.customer=field(record,['Customer','Customer Name','End Customer'])||node.nsrs.find(nsr=>nsr.customer)?.customer||'';
+    node.system=field(record,['System Description','System Desc','System']); node.quote=field(record,['Active Quote Number','Quote Number','Active Quote']);
+    node.fab=field(record,['Fab Name','Fab']); node.fidDescription=field(record,['FID Description']); node.commit=field(record,['Commit: Field','Commit Field','Field Commit','Commit Status']); node.crd=firstDate(record,['Date: Customer Request','Customer Request Date']).date;
+    node.businessUnit=field(record,['Business Unit','BU'])||node.ctls.find(ctl=>ctl.businessUnit)?.businessUnit||'';
+    node.quarter=field(record,['Time: Calendar Quarter','Calendar Quarter','Cal Quarter','Quarter']); node.mcsd=nativeMcsd.date||node.ctls.find(ctl=>ctl.mcsd)?.mcsd||'';
+    node.rd=firstDate(record,['Date: Sales Ops Request Date (RD)','Sales Ops Request Date','Sales Ops RD','RD']).date; node.targetShip=firstDate(record,['Date: Target Ship','Target Ship Date','Target Ship']).date;
+    const events=node.ctls.filter(ctl=>(ctl.isSlot||ctl.isDrop)&&ctl.effective).sort((a,b)=>(b.eventDate||'').localeCompare(a.eventDate||''));
+    const current=events[0]||null,active=current?.isSlot?current:null,pending=node.ctls.filter(ctl=>(ctl.isSlot||ctl.isDrop)&&ctl.statusKind!=='discarded'&&!ctl.effective);
+    const slotReady=loaded.ctl||loaded.ctlNsr;
+    node.slot={active,current,pending,riskCurrent:current,riskActive:active,state:!slotReady?'unknown':current?.isDrop?'dropped':active?'active':'none',initiator:active?.initiator||'',number:active?.number||current?.number||'',quarter:node.quarter,effectivePolicy,riskPolicy,sourceReady:slotReady};
+    const ownership=inferOwner(node); node.owner=ownership.owner; node.ownerEvidence=ownership.evidence;
+    const salesAdminActions=node.ctls.filter(ctl=>ctl.initiator&&(ctl.changeKey==='pull'||ctl.changeKey==='push')).map(ctl=>({id:ctl.id,name:ctl.initiator,source:'ctl'})),salesAdminCandidates=tally(salesAdminActions);
+    const salesAdminTied=salesAdminCandidates.length>1&&salesAdminCandidates[0].count===salesAdminCandidates[1].count;
+    node.salesAdmin=salesAdminTied?'':salesAdminCandidates[0]?.name||'';node.salesAdminEvidence={candidates:salesAdminCandidates,tied:salesAdminTied,documents:salesAdminActions.length};
+    const mfg=(active?.mfg||field(record,['Mfg Upgrade Type','Manufacturing Upgrade Type'])).toUpperCase(),threshold=mfg.includes('NO LABOR')?12:20;
+    const referenceDate=active?.srdApproval||active?.srd||active?.fieldCrd||node.rd,referenceField=active?.srdApproval?'SRD @ SOPs Approval':active?.srd?'Sales Ops RD':active?.fieldCrd?'Field CRD':node.rd?'Date: Sales Ops Request Date (RD)':'';
+    const preWeeks=weeks(active?.eventDate,referenceDate);
+    node.pre={state:'unknown',label:'Pre risk unknown',weeks:preWeeks,threshold,reason:'CTL source not loaded.',eventDate:active?.eventDate||'',eventDateField:active?.eventDateField||'',referenceDate:referenceDate||'',referenceField,created:active?.created||'',approved:active?.approved||'',ctlId:active?.id||'',policy:riskPolicy};
+    if (slotReady&&!active) Object.assign(node.pre,{state:'risk',label:current?.isDrop?'Dropped slot':'No Slot CTL',reason:current?.isDrop?'Latest approved slot event is Drop Slot.':'No approved Slot CTL found.'});
+    else if (active&&preWeeks===null) Object.assign(node.pre,{reason:'Slot RD / SRD missing.'});
+    else if (active) Object.assign(node.pre,{state:preWeeks>=threshold?'clear':'risk',label:preWeeks>=threshold?'On time':'Pre late risk',reason:`Slot ${preWeeks>=threshold?'submitted on time':'submitted too late'}; (RD / SRD − approved Slot effective date) / 7 = ${preWeeks.toFixed(1)} weeks; threshold ${threshold} weeks.`});
+    const postReference=node.mcsd||active?.srd||node.rd||referenceDate,postReferenceField=node.mcsd?'MCSD':active?.srd?'Sales Ops RD':node.rd?'Date: Sales Ops Request Date (RD)':referenceField;
+    const configs=slotReady?node.ctls.filter(ctl=>ctl.isConfig&&ctl.riskEligible):[],qualifying=configs.filter(ctl=>{const span=weeks(ctl.eventDate,postReference);return span!==null&&span<20;});
+    const pendingConfigs=node.ctls.filter(ctl=>ctl.isConfig&&ctl.statusKind!=='discarded'&&!ctl.effective);
+    const nsrWeeks=weeks(today,postReference),qualifyingNsrs=loaded.nsr&&nsrWeeks!==null&&nsrWeeks<20?node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open'):[];
+    const nsrEvidence=qualifyingNsrs.map(nsr=>({nsr,eventDate:today,dateBasis:'today',weeks:nsrWeeks}));
+    node.post={state:'unknown',label:'Post risk unknown',weeks:null,threshold:20,reason:!slotReady?'CTL not loaded.':!loaded.nsr?'NSR not loaded.':!postReference?'MCSD / SRD missing.':'',eventDate:qualifying[0]?.eventDate||nsrEvidence[0]?.eventDate||'',referenceDate:postReference||'',referenceField:postReferenceField,created:qualifying[0]?.created||'',approved:qualifying[0]?.approved||'',ctlIds:qualifying.map(ctl=>ctl.id),ctls:qualifying,nsrs:qualifyingNsrs,nsrEvidence,unlinkedNsrs:[],pending:pendingConfigs,policy:riskPolicy,postNsrPolicy};
+    if (postReference&&(qualifying.length||qualifyingNsrs.length)) Object.assign(node.post,{state:'risk',label:qualifying.length?'Post config risk':'Late NSR',weeks:weeks(node.post.eventDate,postReference),reason:`(${postReferenceField} − ${qualifying.length?'Sales Ops approval':'today'}) / 7 < 20 weeks; overdue events are included.`});
+    else if (slotReady&&loaded.nsr&&postReference) Object.assign(node.post,{state:'clear',label:'No post risk',reason:'No approved Config Change or pending NSR within 20 weeks of '+postReferenceField+'.'});
+    node.portfolioStatus=qualifying.length?'late-ctl':!loaded.nsr?'ctl-unknown':qualifyingNsrs.length?'open-nsr':node.post.state==='clear'?'stable-ctl':'ctl-unknown';
+    node.portfolioStates=!slotReady?['slot-unknown']:!active?['no-slot']:['slot-ready',node.pre.state==='clear'?'stable-slot':node.pre.state==='risk'?'late-slot':'slot-date-unknown',node.portfolioStatus];
+    node.portfolioCell=slotReady&&active?node.portfolioStates[1]+'|'+(['late-ctl','open-nsr'].includes(node.portfolioStatus)?'late-ctl-nsr':node.portfolioStatus):node.portfolioStates[0];
+    if(slotReady&&!active){
+      if(pending.some(ctl=>ctl.isSlot))node.portfolioStates.push('slot-pending');
+      if(current?.isDrop)node.portfolioStates.push('slot-dropped');
+    }
+    if(slotReady&&active){
+      node.portfolioStates.push(fidRiskAssessment(node.portfolioCell));
+      if(!node.mcsd)node.portfolioStates.push('slot-no-mcsd');
+    }
+    if (node.pre.state==='risk') node.risks.push({type:'pre',label:node.pre.label,reason:node.pre.reason});
+    if(node.post.ctls.length)node.risks.push({type:'post',label:'Post config risk',reason:node.post.reason});
+    if(qualifyingNsrs.length)node.risks.push({type:'post',label:'Late NSR',count:qualifyingNsrs.length,reason:'In-work NSR with <20 weeks to '+postReferenceField+', including overdue.'});
+    const open=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open');
+    if (open.length) node.risks.push({type:'nsr',label:'Pending NSR',count:open.length});
+    const pendingCtls=node.ctls.filter(ctl=>ctl.pending);
+    if(pendingCtls.length)node.risks.push({type:'ctl',label:'Pending Config CTL',count:pendingCtls.length});
+    const pendingPullPushCtls=node.ctls.filter(ctl=>ctl.pendingPullPush);
+    if(pendingPullPushCtls.length)node.risks.push({type:'ctl',label:'Pending Pull/Push CTL',count:pendingPullPushCtls.length});
+    if(node.slot.active&&!node.mcsd)node.risks.push({type:'mcsd',label:'MCSD pending',reason:'Approved Slot without MCSD.'});
+    node.weeksToMcsd=node.mcsd?Math.round(weeks(today,node.mcsd)):'';
+    if (node.nces.length) node.risks.push({type:'nce',label:'NCE / FA signal',count:node.nces.length});
+    node.category=node.pre.state==='risk'||node.post.state==='risk'?'risk':node.pre.state==='unknown'||node.post.state==='unknown'?'review':'clear';
+    node.entitySearchText=[node.id,node.account,node.businessUnit,node.customer,node.system,node.owner,node.salesAdmin,node.quote,...Object.values(record),...node.ctls.flatMap(ctl=>[ctl.number,ctl.summary,ctl.initiator]),...node.nces.flatMap(nce=>[nce.number,nce.title])].join(' ').toLowerCase();
+  }
+  for(const node of fids.values())refreshFid(node);
+  for(const ctl of ctls){const node=fids.get(ctl.fidId);ctl.quarter=node?.quarter||'';if(!ctl.customer)ctl.customer=field(node?.record||{},['Customer','Customer Name','End Customer'])}
+  function setNsrMark(number,mark) {
+    const nsr=nsrByNumber.get(number);if(!nsr)return false;
+    nsr.ignored=mark==='ignore';nsr.important=mark==='important';
+    for(const fidId of nsr.fidIds){const row=fids.get(fidId).nsrs.find(row=>row.number===number);if(row)Object.assign(row,{ignored:nsr.ignored,important:nsr.important})}
+    return true;
+  }
+  function setFidMark(id,mark){const node=fids.get(id);if(!node)return false;node.fidMark=['ignore','important'].includes(mark)?mark:'normal';return true}
+  const observedPopulation=[...fids.values()],population=observedPopulation.filter(node=>node.inPopulation);
+  const values = value => value===undefined||value===null||value===''?[]:(Array.isArray(value)?value:[value]).map(clean);
+  const match = (actual, expected) => { if(expected===undefined||expected===null||expected===''||Array.isArray(expected)&&!expected.length)return true;const selected=values(expected); return !selected.length||selected.some(value=>value==='[Unknown]'?!clean(actual):textKey(actual)===textKey(value)); };
+  const hasPredicates = object => !!object&&Object.values(object).some(value=>values(value).length);
+  const searchMatch = (text, search) => {
+    const term=clean(search).toLowerCase(); if (!term) return true;
+    const terms=term.split(/[\s,;|/]+/).filter(Boolean),idOnly=terms.length>1&&terms.every(part=>/^(?:\d{5,10}|[ndl]\d{5,8})$/i.test(part));
+    return idOnly?terms.some(part=>text.includes(part)):text.includes(term);
+  };
+  function observationLifecycle(nsr,observation,fidId=''){
+    const status=nsrStatus(observation);
+    if(discarded(status))return 'discarded';if(!completed(status))return 'open';if(nsr.number.startsWith('D'))return 'completed-5d';if(!nsr.linkAssessmentAvailable)return 'ctl-unavailable';
+    const links=nsr.links.filter(link=>link.kind==='direct'&&(!fidId||link.fidId===fidId)&&link.statusKind!=='discarded');return linkedLifecycle(links);
+  }
+  const matchDateRange=(actual,range)=>{const from=iso(range.from),to=iso(range.to);return (!from&&!to)||!!actual&&(!from||actual>=from)&&(!to||actual<=to)};
+  const matchObservation=(nsr,observation,filters={},fidId='')=>{
+    if(fidId&&observation.fidId!==fidId)return false;
+    return Object.entries(filters).every(([key,expected])=>{
+      if(!values(expected).length)return true;
+      if(key==='search')return searchMatch(observation.searchText,expected);
+      if(key==='submitted')return matchDateRange(observation.submitted,expected);
+      if(key==='taskStatus')return values(expected).some(value=>value.startsWith('15-Completed|')?observation.taskStatus==='15-Completed'&&observationLifecycle(nsr,observation,fidId)===value.split('|')[1]:match(observation.taskStatus,value));
+      if(key==='lifecycle'){
+        const lifecycle=observationLifecycle(nsr,observation,fidId);
+        return values(expected).some(value=>value==='important'?nsr.important:value==='ignore'?nsr.ignored:value==='ignore-completed'?nsr.ignored&&completed(nsrStatus(observation)):value==='completed'?lifecycle!=='open'&&lifecycle!=='discarded':value==='rejected'?/REJECT/i.test(nsrStatus(observation)):value==='cancelled'?/CANCEL/i.test(nsrStatus(observation)):match(lifecycle,value));
+      }
+      return match(key==='number'?nsr.number:observation[key],expected);
+    });
+  };
+  const matchNsr=(nsr,filters={},fidId='')=>nsr.eligible&&(nsr.observations.length?nsr.observations.some(observation=>matchObservation(nsr,observation,filters,fidId)):matchObservation(nsr,nsr,filters,fidId));
+  const matchCtl=(ctl,filters={})=>Object.entries(filters).every(([key,value])=>key==='created'&&value&&typeof value==='object'&&!Array.isArray(value)?matchDateRange(ctl.created,value):match(ctl[key],value));
+  const matchSignal=(node,signal)=>signal==='nce'?node.nces.length>0:signal==='pending-ctl'?node.ctls.some(ctl=>ctl.pending):signal==='open-nsr'?!!node.slot.active&&node.post.nsrs.length>0:['late-ctl','slot-no-mcsd','slot-pending','slot-dropped'].includes(signal)&&node.portfolioStates.includes(signal);
+  const isNsrRisk=label=>label==='Pending NSR'||label==='Late NSR'||label==='Open NSR'||label==='Post NSR risk';
+  function query(filters={},rowsOnly='') {
+    const includeIgnored=filters.includeIgnored!==false;let base=filters.excluded?observedPopulation.filter(node=>node.excludedReason):population;
+    if(!includeIgnored)base=base.filter(node=>node.fidMark!=='ignore');
+    const ctlRows=hasPredicates(filters.ctl)?ctls.filter(ctl=>matchCtl(ctl,filters.ctl)):ctls,ctlFids=ctlRows===ctls?null:new Set(ctlRows.map(ctl=>ctl.fidId));
+    const directKeys=['quarter','systemQuarter','account','customer','system','businessUnit','salesAdmin','owner','category','preState','postState','slotState','fidStatus','fidMark','signal','riskType'];
+    const hasFidPredicates=!!filters.excluded||directKeys.some(key=>key!=='account'&&values(filters[key]).length)||hasPredicates(filters.slot)||hasPredicates(filters.ctl);
+    const scalarKeys=directKeys.filter(key=>!['fidStatus','signal','riskType'].includes(key)&&values(filters[key]).length),fidStatuses=values(filters.fidStatus),signals=values(filters.signal),riskTypes=values(filters.riskType).map(label=>label==='Post NSR risk'?'Late NSR':label==='Open NSR'?'Pending NSR':label==='Pending CTL'?'Pending Config CTL':label),nsrRiskOnly=riskTypes.length>0&&riskTypes.every(isNsrRisk),hasNsrPredicates=hasPredicates(filters.nsr);
+    const search=clean(filters.search).toLowerCase(),tokens=search.split(/[\s,;|/]+/).filter(Boolean),idSearch=!!tokens.length&&tokens.every(token=>/^(?:\d{5,10}|[ndl]\d{5,8})$/i.test(token));
+    const entityMatch=node=>idSearch?tokens.some(token=>/^\d+$/.test(token)&&(node.id.toLowerCase()===token||node.ctls.some(ctl=>ctl.number.toLowerCase()===token))):node.entitySearchText.includes(search);
+    const nsrSearchMatch=(nsr,observation=nsr)=>!search||(idSearch?tokens.some(token=>nsr.number.toLowerCase()===token||nsr.number.replace(/^[NDL]/,'')===token):observation.searchText.includes(search));
+    const hasAccount=values(filters.account).length>0;
+    const observationMatches=(nsr,observation,fidId='')=>matchObservation(nsr,observation,filters.nsr||{},fidId)&&(!hasAccount||match(nsrAccount(observation,fidId||observation.fidId),filters.account));
+    const nsrDomainMatch=(nsr,fidId='')=>nsr.eligible&&(includeIgnored||!nsr.ignored)&&(nsr.observations.length?nsr.observations.some(observation=>observationMatches(nsr,observation,fidId)&&nsrSearchMatch(nsr,observation)):observationMatches(nsr,nsr,fidId)&&nsrSearchMatch(nsr));
+    const entityHits=search?new Set(observedPopulation.filter(entityMatch).map(node=>node.id)):null,entityHit=fidId=>!entityHits||entityHits.has(fidId);
+    const selectedFids=base.filter(node=>{
+      if(fidStatuses.length&&!fidStatuses.some(status=>status.startsWith('cause:')?matchSignal(node,status.slice(6)):status===node.portfolioCell||node.portfolioStates.includes(status)||node.portfolioCell.endsWith('|'+status)))return false;
+      for(const key of scalarKeys){const value=key==='preState'?node.pre.state:key==='postState'?node.post.state:key==='slotState'?node.slot.state:key==='systemQuarter'?node.quarter:node[key];if(!match(value,filters[key]))return false}
+      if(riskTypes.length&&!node.risks.some(risk=>riskTypes.includes(risk.label)))return false;
+      if(signals.length&&!signals.some(signal=>matchSignal(node,signal)))return false;
+      if(!entityHit(node.id)&&!node.nsrs.some(nsr=>nsrDomainMatch(nsr,node.id)))return false;
+      if (hasNsrPredicates&&!node.nsrs.some(nsr=>(includeIgnored||!nsr.ignored)&&matchNsr(nsr,filters.nsr,node.id))) return false;
+      if (hasPredicates(filters.slot)) { const slot=node.slot.active; if (!slot||!match(slot.initiator,filters.slot.initiator)||!match(node.quarter,filters.slot.quarter)||!match(slot.status,filters.slot.status)) return false; }
+      if (ctlFids&&!ctlFids.has(node.id)) return false;
+      return true;
+    });
+    // Overview-only queries skip unrelated projections and metric aggregation.
+    if(rowsOnly==='fids')return selectedFids;
+    const ids=new Set(selectedFids.map(node=>node.id));
+    if(rowsOnly==='ctls')return ctlRows.filter(ctl=>ids.has(ctl.fidId));
+    // NSR List is independent; explicit FID filters restrict it to matching Commit FIDs.
+    const selectedNsrs=[];
+    for(const nsr of nsrs) {
+      if(!nsr.eligible||!includeIgnored&&nsr.ignored)continue;
+      const matchedFidIds=nsr.fidIds.filter(fidId=>{
+        if(!includeIgnored&&fids.get(fidId)?.fidMark==='ignore')return false;
+        if(hasFidPredicates&&!ids.has(fidId))return false;
+        if(nsrRiskOnly){
+          const node=fids.get(fidId),riskNsrs=riskTypes.includes('Pending NSR')?node.nsrs:node.post.nsrs;
+          if(!riskNsrs.some(row=>row.number===nsr.number&&row.lifecycle==='open'))return false;
+        }
+        return entityHit(fidId)?(!hasNsrPredicates&&!hasAccount)||(nsr.observations.length?nsr.observations:[nsr]).some(observation=>observationMatches(nsr,observation,fidId)):nsrDomainMatch(nsr,fidId);
+      });
+      const orphan=!nsr.fidId&&!hasFidPredicates&&nsrDomainMatch(nsr);
+      if(!matchedFidIds.length&&!orphan)continue;
+      if(!nsr.observations.length){selectedNsrs.push({...nsr,taskLifecycle:observationLifecycle(nsr,nsr,nsr.fidId)});continue;}
+      const scopeLifecycles=unique(matchedFidIds.map(fidId=>nsr.implementationByFid[fidId]||nsr.lifecycle)),lifecycle=['open','discarded','completed-5d','completed-unlinked','ctl-pending','implemented','ctl-unavailable'].find(state=>scopeLifecycles.includes(state))||nsr.lifecycle;
+      const fidId=matchedFidIds[0]||nsr.fidId,observation=nsr.observations.find(observation=>observationMatches(nsr,observation,fidId)&&(entityHit(fidId)||nsrSearchMatch(nsr,observation)))||nsr.observations[0];
+      let taskLifecycle=observationLifecycle(nsr,observation,fidId);
+      if(scopeLifecycles.includes('completed-unlinked')&&!['open','discarded'].includes(taskLifecycle))taskLifecycle='completed-unlinked';
+      selectedNsrs.push({...nsr,...observation,fidId,lifecycle:hasNsrPredicates?taskLifecycle:lifecycle,taskLifecycle,globalLifecycle:nsr.lifecycle,matchedFidIds,scopeLifecycles});
+    }
+    if(rowsOnly==='nsrs')return selectedNsrs;
+    const selectedCtls=ctlRows.filter(ctl=>ids.has(ctl.fidId)),selectedNces=nces.filter(nce=>ids.has(nce.fidId));
+    const metrics={population:selectedFids.length,atRisk:0,needsReview:0,clear:0,preRisk:0,postRisk:0,bothRisk:0,openNsr:0,completed5dNsr:0,completedUnlinked:0,pendingCtl:0,pendingPullPushCtl:0,workflowPendingCtl:0,nceFids:0,nsr:selectedNsrs.length,ignoredNsr:0,importantNsr:0,ignoredCompletedNsr:0,implementedNsr:0,ctlPendingNsr:0,discardedNsr:0,ctlUnavailableNsr:0,orphanNsr:0,ctl:selectedCtls.length,nce:selectedNces.length,riskFid:0,riskFree:0,riskPending:0,slotNoMcsd:0};
+    const categoryMetrics={risk:'atRisk',review:'needsReview',clear:'clear'};
+    for(const node of selectedFids){
+      metrics[categoryMetrics[node.category]]++;
+      metrics.preRisk+=node.pre.state==='risk';metrics.postRisk+=node.post.state==='risk';metrics.bothRisk+=node.pre.state==='risk'&&node.post.state==='risk';metrics.nceFids+=node.nces.length>0;
+      metrics.riskFid+=node.portfolioStates.includes('risk-fid');metrics.riskFree+=node.portfolioStates.includes('risk-free');metrics.riskPending+=node.portfolioStates.includes('risk-unknown');metrics.slotNoMcsd+=node.portfolioStates.includes('slot-no-mcsd');
+    }
+    const lifecycleMetrics={open:'openNsr','completed-5d':'completed5dNsr','completed-unlinked':'completedUnlinked',implemented:'implementedNsr','ctl-pending':'ctlPendingNsr',discarded:'discardedNsr','ctl-unavailable':'ctlUnavailableNsr'};
+    for(const nsr of selectedNsrs){const metric=lifecycleMetrics[nsr.lifecycle];if(metric)metrics[metric]++;metrics.ignoredNsr+=nsr.ignored;metrics.ignoredCompletedNsr+=nsr.ignored&&completed(nsrStatus(nsr));metrics.importantNsr+=nsr.important;metrics.orphanNsr+=!nsr.fidId}
+    const pendingCtlFids=new Set(),pendingPullPushCtlFids=new Set();
+    for(const ctl of selectedCtls){metrics.pendingCtl+=ctl.pending;metrics.pendingPullPushCtl+=ctl.pendingPullPush;metrics.workflowPendingCtl+=ctl.status==='Submitted';if(ctl.pending)pendingCtlFids.add(ctl.fidId);if(ctl.pendingPullPush)pendingPullPushCtlFids.add(ctl.fidId)}
+    metrics.pendingCtlFids=pendingCtlFids.size;metrics.pendingPullPushCtlFids=pendingPullPushCtlFids.size;
+    return {fids:selectedFids,nsrs:selectedNsrs,ctls:selectedCtls,nces:selectedNces,metrics};
+  }
+  return {fids,population,observedPopulation,nsrs,ctls,nces,orphans,query,setNsrMark,setFidMark,isNsrRisk};
+}
+
+function fidRiskAssessment(cell){
+  return /late-slot|late-ctl-nsr/.test(cell)?'risk-fid':cell==='stable-slot|stable-ctl'?'risk-free':'risk-unknown';
 }
 
 // Shared SAP search and IndexedDB storage for the NSR and FCID dashboards.
@@ -3485,43 +4405,24 @@ async function deleteDatasets(keys){const db=await openNsrCache(); try{const tra
 return {fields:SOURCE_FIELDS,readNsrCache,writeNsrCache,localDate,sapRange,validSapDate,fetchSapRows,readDataset,writeDataset,deleteDatasets};
 }
 
-function runDashboard(){
-'use strict';
-
+function createNsrRecords(){
+const {fields:SOURCE_FIELDS}=createNsrDataService();
 const DETAIL_FIELDS=['NSR#','NSR Title','Task Status','NSR Type','Impacted Sub System','Initiator','REF FCID','NSR Org','Primary Product','Customer','Sales Rep','Sales Ops','Technical Contact','Submit Date','NSR Request','Temp Id#'];
-const DETAIL_WIDTHS=[76,190,144,82,102,94,78,64,120,150,90,90,108,84,96,90]; const LIVE_FIELDS=['Submit Date','Task Status','ECD','Approver Team','Assigned Approver','Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'];
-const CYCLE_DETAIL_FIELDS=DETAIL_FIELDS.filter(field=>field!=='NSR#'&&field!=='Initiator'&&!LIVE_FIELDS.includes(field));
-const CYCLE_FIELDS=['NSR#',...LIVE_FIELDS,...CYCLE_DETAIL_FIELDS.flatMap(field=>field==='NSR Type'?[field,'NSR Category']:field==='Customer'?[field,'Initiator']:[field])];
-const WF_FIELDS=['Task Name','Approver Status','Approver Team','Approver','Pending Days','Approved Date','Comments']; const WORKFLOW_EXPORT_FIELDS=['NSR#','Workflow Step',...WF_FIELDS];
-const CYCLE_WIDTHS=CYCLE_FIELDS.map(field=>({
-  'NSR#':78,'Submit Date':116,'Approver Team':125, 'Assigned Approver':130,'Pending Days':82,'Elapsed Days':82,'Cycle Time (ECD)':110,'Cycle Time (SOBi)':116,'NSR Title':190,'Task Status':144,'ECD':96, 'NSR Category':100,'Customer':150,'Primary Product':120,'Technical Contact':108,
-    'Impacted Sub System':104
-}[field]||92));
-const CYCLE_CONCURRENCY=8,CYCLE_WARN_AT=100,CYCLE_LIMIT=500; const WORKFLOW_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const NSR_DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const FIORI_DETAIL='/flp#ZNSR-display&/NsrDetail/';
-const pageFetch=(url,options)=>unsafeWindow.fetch(url,options);
-const {fields:SOURCE_FIELDS,readNsrCache,writeNsrCache,localDate,sapRange,validSapDate,fetchSapRows}=createNsrDataService((range,count)=>{setSourceStatus(`Loading SAP data…<br>${range.from} to ${range.to}${count?` · ${count.toLocaleString()} rows`:''}`,'loading');});
-const FILTERS=[
-  {id:'fInit',field:'Initiator',label:'Initiator',color:'#0f766e',filterOnly:true}, {id:'fStatus',field:'Task Status',label:'Task Status',color:'#2563eb'}, {id:'fDate',field:'Submit Period',label:'Submit Date',color:'#475569',filterOnly:true},
-  {id:'fSys',field:'Impacted Sub System',label:'Impacted Sub System',color:'#0891b2'}, {id:'fType',field:'NSR Type',label:'NSR Type',color:'#7c3aed'}, {id:'fProd',field:'Primary Product',label:'Primary Product',color:'#d97706'},
-  {id:'fOrg',field:'NSR Org',label:'NSR Org',color:'#16a34a'}, {id:'fCust',field:'Customer',label:'Customer',color:'#dc2626'}
-];
-const PIVOT_FILTERS=FILTERS.filter(f=>!f.filterOnly);
 const ALIASES={
   'Temp Id#':['Temp Id#','Temp ID','TempId','Temporary ID'], 'NSR#':['NSR#','NSR','NSR No','NSR Number','NSR ID'], 'NSR Status':['NSR Status','Status'], 'REF FCID':['REF FCID','Reference Fcid','Reference FCID','Ref FCID','FCID'], 'NSR Request':['NSR Request','Request','Request Type'],
   'Task Name':['Task Name','Task','Workflow Task'], 'NSR Title':['NSR Title','Title'], 'NSR Type':['NSR Type','Type'], 'Impacted Sub System':['Impacted Sub System','Impacted Subsystem','Sub System','Subsystem'], 'Initiator':['Initiator','Initiated By','Requester'],
   'Sales Rep':['Sales Rep','Sales Representative'], 'Sales Ops':['Sales Ops','Sales Operation','Sales Operations'], 'Technical Contact':['Technical Contact','Tech Contact'], 'Customer':['Customer','Customer Name','Account'],
   'Submit Date':['Submit Date','Submitted Date','Submission Date'], 'NSR Org':['NSR Org','NSR Organization','Organization','Org'], 'Primary Product':['Primary Product','Product','PrimaryProduct']
 };
-const TASK_STEPS={'CREATE NSR':1,'REQUEST REVIEW':2,'SAFETY REVIEW':5,'ESTIMATES':6,'COST REVIEW':7, 'PRICE CONFIRMATION':8,'DEMAND CONFIRMATION':9,'FINAL APPROVAL':10,'VC VALIDATION':11, 'ENGINEERING COMMIT AND DESIGN':12};
+const TASK_STATUS={
+  'CREATE NSR':'1-Create NSR','REQUEST REVIEW':'2-Request Review','SAFETY REVIEW':'5-Safety Review','ESTIMATES':'6-Estimates','COST REVIEW':'7-Cost Review',
+  'PRICE CONFIRMATION':'8-Price Confirmation','DEMAND CONFIRMATION':'9-Demand Confirmation','FINAL APPROVAL':'10-Final Approval','VC VALIDATION':'11-VC Validation','ENGINEERING COMMIT AND DESIGN':'12-Engineering Commit and Design'
+};
+const STATUS_TASK={'PENDING WITH INITIATOR':'1-Create NSR','PENDING WITH SAFETY':'5-Safety Review','PENDING WITH PGBD':'8-Price Confirmation','PENDING WITH POA PM':'11-VC Validation','PENDING WITH DESIGN ENGINEERING':'12-Engineering Commit and Design'};
 const collator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
-const state={rows:[],filtered:[],source:null,stats:null,sort:{field:'Submit Date',dir:'desc'},chosenReady:false,toastTimer:null,sourceRun:0,sourceAbort:null,cycleRows:[],cycleSort:{field:'NSR#',dir:'asc'},cycleAbort:null,cycleRun:0}; let sapRangeTrigger=null;
-
-const $id=id=>document.getElementById(id);
 const clean=v=>{if(v===null||v===undefined)return ''; if(v instanceof Date&&!isNaN(v))return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`; const s=String(v).replace(/^\uFEFF/,'').trim();
   return /^(nan|null|undefined)$/i.test(s)?'':s;};
-const upper=v=>clean(v).toUpperCase().replace(/\s+/g,' '); const normHeader=v=>clean(v).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,''); const esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const displayValue=v=>clean(v)||'（Blank）'; const pct=(a,b)=>b?`${(a/b*100).toFixed(1)}%`:'0.0%';
-
+const upper=v=>clean(v).toUpperCase().replace(/\s+/g,' '); const normHeader=v=>clean(v).toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'');
 function deriveTaskStatus(row){
   const task=upper(row['Task Name']),status=upper(row['NSR Status']);
   if(status.includes('CANCEL')||task==='CANCELLED')return '0-Cancelled';
@@ -3529,242 +4430,46 @@ function deriveTaskStatus(row){
   if(status.includes('COMPLET')||task==='COMPLETED')return '15-Completed';
   if(task==='INITIAL ASSESSMENT')return status==='PENDING WITH PRODUCT MANAGER'?'4-Initial Assessment':'3-Initial Assessment';
   if(task==='SOBI CREATE AND APPROVAL')return status==='PENDING WITH MFE'?'14-SOBI Create and Approval':'13-SOBI Create and Approval';
-  if(Object.prototype.hasOwnProperty.call(TASK_STEPS,task))return `${TASK_STEPS[task]}-${titleForTask(task)}`;
-  const uniqueByStatus={'PENDING WITH INITIATOR':'1-Create NSR','PENDING WITH SAFETY':'5-Safety Review', 'PENDING WITH PGBD':'8-Price Confirmation','PENDING WITH POA PM':'11-VC Validation', 'PENDING WITH DESIGN ENGINEERING':'12-Engineering Commit and Design'};
-  if(uniqueByStatus[status])return uniqueByStatus[status];
+  if(Object.hasOwn(TASK_STATUS,task))return TASK_STATUS[task];
+  if(STATUS_TASK[status])return STATUS_TASK[status];
   return `Unmapped · ${clean(row['Task Name'])||clean(row['NSR Status'])||'Blank task/status'}`;
 }
 
-function titleForTask(task){
-  const names={
-    'CREATE NSR':'Create NSR','REQUEST REVIEW':'Request Review','SAFETY REVIEW':'Safety Review','ESTIMATES':'Estimates', 'COST REVIEW':'Cost Review','PRICE CONFIRMATION':'Price Confirmation','DEMAND CONFIRMATION':'Demand Confirmation', 'FINAL APPROVAL':'Final Approval',
-      'VC VALIDATION':'VC Validation','ENGINEERING COMMIT AND DESIGN':'Engineering Commit and Design'
-  };
-  return names[task]||task;
-}
+
 
 function statusRank(v){const m=clean(v).match(/^(\d+)-/); if(!m)return [99,clean(v)]; return [Number(m[1]),clean(v)];}
 function compareStatus(a,b){const aa=statusRank(a),bb=statusRank(b); return aa[0]-bb[0]||collator.compare(aa[1],bb[1]);}
 function buildHeaderMap(headers){const byNorm=new Map(headers.map(h=>[normHeader(h),h])); const map={}; for(const field of SOURCE_FIELDS){const aliases=(ALIASES[field]||[field]).map(normHeader); map[field]=aliases.map(a=>byNorm.get(a)).find(Boolean)||'';} return map;}
 
+let cachedHeaders=null,cachedHeaderMap;
+function canonicalRow(raw,headerMap){if(!headerMap){const headers=Object.keys(raw),signature=headers.join('\0');if(signature!==cachedHeaders){cachedHeaders=signature;cachedHeaderMap=buildHeaderMap(headers)}headerMap=cachedHeaderMap}return Object.fromEntries(SOURCE_FIELDS.map(field=>[field,clean(raw[headerMap[field]])]))}
 function normalizeRows(rawRows){
   if(!rawRows.length)throw new Error('No data rows were found.');
   const headers=Object.keys(rawRows[0]||{}),headerMap=buildHeaderMap(headers);
   if(!headerMap['NSR#'])throw new Error('Required header “NSR#” was not found.');
   const map=new Map();let missingNsr=0,duplicates=0;
   rawRows.forEach(raw=>{
-    const row={}; SOURCE_FIELDS.forEach(field=>row[field]=clean(raw[headerMap[field]])); const nsr=row['NSR#'];
+    const row=canonicalRow(raw,headerMap),nsr=row['NSR#'];
     if(!nsr){missingNsr++;return}
     if(map.has(nsr)){duplicates++; const existing=map.get(nsr); SOURCE_FIELDS.forEach(field=>{if(!existing[field]&&row[field])existing[field]=row[field]});}else map.set(nsr,row);
   });
-  const rows=[...map.values()].map(row=>({...row,'Task Status':deriveTaskStatus(row),'Submit Period':submitPeriod(row['Submit Date'])})); const unmapped=rows.filter(r=>r['Task Status'].startsWith('Unmapped')).length;
+  const rows=[...map.values()].map(row=>({...row,'Task Status':deriveTaskStatus(row)})); const unmapped=rows.filter(r=>r['Task Status'].startsWith('Unmapped')).length;
   return {rows,stats:{inputRows:rawRows.length,validRows:rows.length,missingNsr,duplicates,unmapped}};
 }
 
-function countRecognizedHeaders(values){const norms=new Set(values.map(normHeader).filter(Boolean)); let score=0; for(const field of SOURCE_FIELDS){if((ALIASES[field]||[field]).some(a=>norms.has(normHeader(a))))score++;} const hasNsr=(ALIASES['NSR#']||
-  []).some(a=>norms.has(normHeader(a))); return {score,hasNsr};}
 
-function findHeader(matrix){
-  let best=null; matrix.slice(0,50).forEach((row,index)=>{const hit=countRecognizedHeaders(row||[]),candidate={index,score:hit.score,hasNsr:hit.hasNsr}; if(candidate.hasNsr&&(!best||candidate.score>best.score))best=candidate;});
-  if(!best)throw new Error('Required header “NSR#” was not found in the first 50 rows.');
-  return best;
-}
 
-function rowsFromMatrix(matrix,headerIndex){
-  const rawHeaders=(matrix[headerIndex]||[]).map((v,i)=>clean(v)||`Column ${i+1}`),seen={}; const headers=rawHeaders.map(h=>{seen[h]=(seen[h]||0)+1;return seen[h]===1?h:`${h}_${seen[h]}`});
-  return matrix.slice(headerIndex+1).filter(row=>(row||[]).some(v=>clean(v))).map(row=>{const out={};headers.forEach((h,i)=>out[h]=row[i]??'');return out;});
-}
 
-function delimiterScore(line,delimiter){let count=0,quoted=false; for(let i=0;i<line.length;i++){if(line[i]==='"')quoted=!quoted; else if(line[i]===delimiter&&!quoted)count++;} return count;}
 
-function parseDelimited(text){
-  text=String(text||'').replace(/^\uFEFF/,''); const probe=text.split(/\r?\n/).filter(Boolean).slice(0,8); const candidates=[',','\t',';','|']; const delimiter=candidates.map(d=>[d,probe.reduce((s,l)=>s+delimiterScore(l,d),0)]).sort((a,b)=>b[1]-a[1])[0][0]; const rows=[];let row=[],
-    value='',quoted=false;
-  for(let i=0;i<text.length;i++){
-    const c=text[i],next=text[i+1];
-    if(c==='"'&&quoted&&next==='"'){value+='"';i++}
-    else if(c==='"')quoted=!quoted; else if(c===delimiter&&!quoted){row.push(value);value=''} else if((c==='\r'||c==='\n')&&!quoted){if(c==='\r'&&next==='\n')i++; row.push(value);value=''; if(row.some(v=>clean(v)))rows.push(row); row=[];}else value+=c;
-  }
-  if(row.length||value){row.push(value);if(row.some(v=>clean(v)))rows.push(row)}
-  return rows;
-}
 
-function decodeText(buffer){const bytes=buffer instanceof Uint8Array?buffer:new Uint8Array(buffer); try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch(_){try{return new TextDecoder('gb18030').decode(bytes)}
-  catch(__){return new TextDecoder('windows-1252').decode(bytes)}}}
 
-async function parseFile(file){
-  const ext=(file.name.split('.').pop()||'').toLowerCase();
-  if(ext==='csv'){const matrix=parseDelimited(decodeText(await file.arrayBuffer())),header=findHeader(matrix); return {rawRows:rowsFromMatrix(matrix,header.index),sheet:'CSV',headerRow:header.index+1,score:header.score};}
-  if(!['xlsx','xls'].includes(ext))throw new Error('Please upload an .xlsx, .xls, or .csv file.');
-  if(!window.XLSX)throw new Error('The XLSX parser did not load. Check the network connection and try again.');
-  let wb;
-  try{wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true})}
-  catch(err){if(/encrypt|password|protected/i.test(String(err&&err.message||err)))throw new Error('Password-protected or encrypted Excel files are not supported. Save an unencrypted copy and upload it again.'); throw err;}
-  let best=null;
-  wb.SheetNames.forEach(sheet=>{
-    const ws=wb.Sheets[sheet];if(!ws||!ws['!ref'])return;
-    const range=XLSX.utils.decode_range(ws['!ref']);range.e.r=Math.min(range.e.r,49); const preview=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,range:XLSX.utils.encode_range(range)});
-    try{const hit=findHeader(preview),candidate={sheet,index:hit.index,score:hit.score}; if(!best||candidate.score>best.score)best=candidate;}catch(_){/* try next sheet */}
-  });
-  if(!best)throw new Error('No worksheet contains the required “NSR#” header.');
-  const matrix=XLSX.utils.sheet_to_json(wb.Sheets[best.sheet],{header:1,defval:'',raw:false}); return {rawRows:rowsFromMatrix(matrix,best.index),sheet:best.sheet,headerRow:best.index+1,score:best.score};
-}
 
-function openSapRange(){
-  const range=state.source&&state.source.isSap&&validSapDate(state.source.from)&&validSapDate(state.source.to)?{from:state.source.from,to:state.source.to}:sapRange(); const today=localDate(new Date()),from=$id('sapRangeFrom'),to=$id('sapRangeTo'); from.value=range.from;to.value=
-    range.to;from.max=today;to.max=today;$id('sapRangeError').textContent=''; sapRangeTrigger=document.activeElement;$id('sapRangeModal').hidden=false;document.body.classList.add('sap-range-open');from.focus();
-}
 
-function closeSapRange(){if($id('sapRangeModal').hidden)return;$id('sapRangeModal').hidden=true;document.body.classList.remove('sap-range-open');$id('sapRangeError').textContent=''; if(sapRangeTrigger&&sapRangeTrigger.isConnected)sapRangeTrigger.focus();sapRangeTrigger=null;}
 
-function selectedSapRange(){
-  const from=clean($id('sapRangeFrom').value),to=clean($id('sapRangeTo').value),today=localDate(new Date());let error='';
-  if(!validSapDate(from)||!validSapDate(to))error='Choose both From date and To date.'; else if(from>to)error='From date must be on or before To date.'; else if(to>today)error='To date cannot be after today.';
-  $id('sapRangeError').textContent=error;return error?null:{from,to};
-}
 
-function setLoading(on){const line=$id('loadingLine');line.className='loading-line'+(on?' on':' done'); if(!on)setTimeout(()=>line.className='loading-line',350);}
-function setSourceStatus(message,type='ok'){const el=$id('sourceStatus');el.className=`source-status ${type}`;el.innerHTML=message;}
 
-function commitRaw(rawRows,meta){
-  const normalized=normalizeRows(rawRows);state.rows=normalized.rows;state.stats=normalized.stats;state.source=meta; state.sort={field:'Submit Date',dir:'desc'};$id('globalSearch').value='';$id('tableSearch').value=''; buildFilterControls();applyFilters();
-  if(meta.isSap){
-    const savedAt=Number(meta.savedAt),savedLabel=Number.isFinite(savedAt)&&savedAt>0?new Date(savedAt).toLocaleString():'';
-    if(meta.fromCache){$id('heroSource').textContent=`SAP cache · ${meta.from} to ${meta.to}`; setSourceStatus(`Cached SAP data loaded · ${esc(meta.from)} to ${esc(meta.to)}${savedLabel?`<br>Saved ${esc(savedLabel)}`:''}`,'ok');}else{$id('heroSource').textContent=
-      `SAP live · ${meta.from} to ${meta.to}`; setSourceStatus(`SAP data loaded · ${esc(meta.from)} to ${esc(meta.to)}${meta.cacheSaved?' · cached locally':''}`,'ok');}
-  }else{
-    const s=state.stats,duplicates=s.duplicates+(meta.preprocessedDuplicates||0),details=[`${s.validRows.toLocaleString()} NSR#`,`${duplicates} duplicate${duplicates===1?'':'s'} consolidated`,`${s.unmapped} unmapped`]; $id('heroSource').textContent=meta.file;
-    setSourceStatus(`<b>${esc(meta.file)}</b><br>${esc(meta.sheet)} · header row ${meta.headerRow} · ${details.join(' · ')}`,'ok');
-  }
-}
 
-async function loadSapData(range=sapRange()){
-  const run=++state.sourceRun,controller=new unsafeWindow.AbortController();
-  if(state.sourceAbort)state.sourceAbort.abort();state.sourceAbort=controller; setLoading(true);setSourceStatus(`Loading SAP data…<br>${range.from} to ${range.to}`,'loading');
-  try{
-    $id('rawFile').value='';const result=await fetchSapRows(range,controller.signal);if(run!==state.sourceRun)return;
-    let savedAt=0,cacheError='';
-    try{savedAt=await writeNsrCache(result.rows,range,result.pages)}catch(error){cacheError=clean(error&&error.message)||'Local cache unavailable';console.warn('[Toolkit Kyra] Could not update the NSR cache.',error)}
-    if(run!==state.sourceRun)return;
-    commitRaw(result.rows,{file:'SAP live data',isSap:true,from:range.from,to:range.to,pages:result.pages,savedAt:savedAt,cacheSaved:Boolean(savedAt)});
-    if(cacheError)setSourceStatus(`SAP data loaded · ${esc(range.from)} to ${esc(range.to)}<br>${esc(cacheError)}; this page will fetch SAP again next time.`,'ok');
-    toast(`${state.rows.length.toLocaleString()} SAP NSR${state.rows.length===1?'':'s'} loaded.`);
-  }catch(err){if(run!==state.sourceRun)return; setSourceStatus(`<b>SAP data load failed</b><br>${esc(err.message)} Upload a raw data file to continue.`,'error');toast(err.message,true);}finally{if(run===state.sourceRun){state.sourceAbort=null;setLoading(false)}}
-}
 
-async function loadInitialNsrData(){
-  const run=++state.sourceRun;if(state.sourceAbort)state.sourceAbort.abort();state.sourceAbort=null; setLoading(true);setSourceStatus('Checking local NSR cache…','loading');
-  try{
-    const cached=await readNsrCache();if(run!==state.sourceRun)return;
-    if(cached){
-      $id('rawFile').value=''; commitRaw(cached.rows,{file:'SAP cached data',isSap:true,fromCache:true,from:cached.from,to:cached.to,pages:cached.pages,savedAt:cached.savedAt}); const today=localDate(new Date());
-      if(cached.to!==today)await loadSapData({from:cached.from,to:today}); else setLoading(false);
-      return;
-    }
-  }catch(error){console.warn('[Toolkit Kyra] Could not read the NSR cache; loading from SAP.',error)}
-  if(run===state.sourceRun)await loadSapData(sapRange());
-}
-
-async function handleUpload(event){
-  const file=event.target.files&&event.target.files[0];if(!file)return;
-  const run=++state.sourceRun;if(state.sourceAbort)state.sourceAbort.abort();state.sourceAbort=null; setLoading(true);setSourceStatus(`Reading <b>${esc(file.name)}</b>…`,'loading');
-  try{const parsed=await parseFile(file);if(run!==state.sourceRun)return; commitRaw(parsed.rawRows,{file:file.name,sheet:parsed.sheet,headerRow:parsed.headerRow,score:parsed.score});toast(`${file.name} loaded successfully.`);}catch(err){if(run!==state.sourceRun)return;
-    setSourceStatus(`<b>Load failed: ${esc(file.name)}</b><br>${esc(err.message)}`,'error');toast(err.message,true);event.target.value='';}finally{if(run===state.sourceRun)setLoading(false)}
-}
-
-function buildFilterControls(){
-  const host=$id('filterHost');
-  if(!host.children.length){
-    host.innerHTML=FILTERS.map(f=>`<div class="filter-group"><div class="filter-label"><label for="${f.id}">${esc(f.label)}</label><button type="button" data-clear-filter="${f.id}">Clear</button></div><select id="${f.id}" class="filter-select" multiple data-placeholder="All ${esc(f.label)}"></select>${f.field==='Task Status'?'<div class="quick-pick"><span>Quick select</span><button type="button" data-status="flow" aria-pressed="false">1–14 In workflow</button></div>':f.field==='Submit Period'?'<div id="dateYears" class="quick-pick"></div>':''}</div>`).join('');
-    host.addEventListener('click',e=>{const year=e.target.dataset.year;if(year){toggleYear(year);return} const id=e.target.dataset.clearFilter;if(id)clearFilter(id);}); host.addEventListener('change',e=>{if(e.target.matches('.filter-select'))applyFilters()});
-  }
-  FILTERS.forEach(f=>{
-    const select=$id(f.id);let values=[...new Set(state.rows.map(r=>r[f.field]))];
-    if(f.field==='Submit Period'){values.sort((a,b)=>collator.compare(b,a)); const years=[...new Set(values.map(periodYear).filter(Boolean))]; renderYears(years);}else values.sort(f.field==='Task Status'?compareStatus:collator.compare);
-    select.innerHTML=values.map(v=>`<option value="${esc(v)}">${esc(displayValue(v))}</option>`).join('');
-  });
-  initOrRefreshChosen();
-}
-
-function initOrRefreshChosen(){
-  if(window.jQuery&&jQuery.fn&&jQuery.fn.chosen){
-    FILTERS.forEach(f=>{const jq=jQuery(`#${f.id}`); if(jq.data('chosen'))jq.trigger('chosen:updated'); else jq.chosen({width:'100%',search_contains:true,hide_results_on_select:false,no_results_text:'No match'}); jq.off('change.nsrControlTower').on('change.nsrControlTower',
-      applyFilters);});
-    state.chosenReady=true;
-  }
-}
-
-function renderYears(years){const host=$id('dateYears');if(!host)return; host.innerHTML=years.length?`<span>Select year</span>${years.map(year=>`<button type="button" data-year="${esc(year)}" aria-pressed="false">${esc(year)}</button>`).join('')}`:'';}
-function toggleYear(year){const options=[...$id('fDate').options].filter(o=>periodYear(o.value)===year),selectAll=!options.length||options.some(o=>!o.selected); options.forEach(o=>o.selected=selectAll);syncSelect('fDate');applyFilters();}
-
-function paintYears(){
-  document.querySelectorAll('[data-year]').forEach(button=>{
-    const options=[...$id('fDate').options].filter(o=>periodYear(o.value)===button.dataset.year),selected=options.filter(o=>o.selected).length; button.classList.toggle('active',options.length>0&&selected===options.length);button.classList.toggle('partial',selected>0&&selected<
-      options.length);button.setAttribute('aria-pressed',selected===options.length?'true':'false');
-  });
-}
-
-function statusSet(group){const single={done:'15-Completed',rejected:'0-Rejected',cancelled:'0-Cancelled'}[group]; return [...$id('fStatus').options].filter(o=>{if(group!=='flow')return o.value===single;const n=statusRank(o.value)[0];return n>=1&&n<=14}).map(o=>o.value);}
-function toggleStatus(group){const select=$id('fStatus'),values=statusSet(group),selected=selectedValues('fStatus'); const same=values.length===selected.length&&values.every(v=>selected.includes(v)); [...select.options].forEach(o=>o.selected=!same&&values.includes(o.value));
-  syncSelect('fStatus');applyFilters();}
-
-function paintFlow(){
-  const button=document.querySelector('#filterHost [data-status="flow"]');if(!button)return;
-  const values=statusSet('flow'),selected=selectedValues('fStatus'),hits=selected.filter(v=>values.includes(v)).length; const active=values.length>0&&hits===values.length&&hits===selected.length; button.classList.toggle('active',active);button.classList.toggle('partial',hits>0&&
-    !active);button.setAttribute('aria-pressed',active?'true':'false');
-}
-
-function selectedValues(id){return [...$id(id).selectedOptions].map(o=>o.value)}
-function syncSelect(id){if(state.chosenReady)jQuery(`#${id}`).trigger('chosen:updated')}
-function clearFilter(id,render=true){[...$id(id).options].forEach(o=>o.selected=false);syncSelect(id);if(render)applyFilters();}
-
-function drillFilter(id,value,additive=false){
-  const select=$id(id); [...select.options].forEach(o=>o.selected=o.value===value||(additive&&o.selected)); syncSelect(id);applyFilters(); const f=FILTERS.find(x=>x.id===id);toast(`${f.label}: ${displayValue(value)}`);
-  $id('activeFilters').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function filterRows(){
-  const selections=Object.fromEntries(FILTERS.map(f=>[f.field,selectedValues(f.id)])); const query=clean($id('globalSearch').value).toLowerCase(); const tokens=query.split(/[\s,，;；、|/]+/).filter(Boolean);
-  const queries=tokens.length>1&&tokens.every(token=>/^[a-z]?\d+(?:[-_][a-z0-9]+)*$/.test(token))?tokens:[query];
-  return state.rows.filter(row=>{
-    if(!FILTERS.every(f=>!selections[f.field].length||selections[f.field].includes(row[f.field])))return false;
-    if(!query)return true;
-    return queries.some(term=>DETAIL_FIELDS.some(field=>clean(row[field]).toLowerCase().includes(term))||clean(row['NSR Status']).toLowerCase().includes(term)||clean(row['Task Name']).toLowerCase().includes(term));
-  });
-}
-
-function applyFilters(){state.filtered=filterRows(); paintYears();paintFlow();renderActiveFilters();renderKpis();renderPivots();renderTable();}
-
-function renderActiveFilters(){
-  const parts=[];
-  FILTERS.forEach(f=>selectedValues(f.id).forEach(v=>parts.push(`<span class="filter-chip"><span>${esc(f.label)}: ${esc(displayValue(v))}</span><button type="button" aria-label="Remove filter" data-remove-filter="${f.id}" data-remove-value="${esc(v)}">×</button></span>`)));
-  const q=clean($id('globalSearch').value);if(q)parts.push(`<span class="filter-chip"><span>Search: ${esc(q)}</span><button type="button" aria-label="Clear search" data-remove-search>×</button></span>`);
-  $id('activeFilters').innerHTML=parts.join('')||'<span class="all-chip">All NSRs are selected.</span>';
-}
-
-function renderKpis(){
-  const rows=state.filtered,total=rows.length;
-  const counts={
-    active:rows.filter(r=>{const n=statusRank(r['Task Status'])[0];return n>=1&&n<=14}).length, completed:rows.filter(r=>r['Task Status']==='15-Completed').length, rejected:rows.filter(r=>r['Task Status']==='0-Rejected').length,
-    cancelled:rows.filter(r=>r['Task Status']==='0-Cancelled').length
-  };
-  const items=[
-    ['Filtered NSR',total,'Current population','#0f766e'],['In workflow',counts.active,pct(counts.active,total),'#2563eb','flow'], ['Completed',counts.completed,pct(counts.completed,total),'#16a34a','done'],['Rejected',counts.rejected,pct(counts.rejected,total),'#dc2626','rejected'],
-    ['Cancelled',counts.cancelled,pct(counts.cancelled,total),'#64748b','cancelled']
-  ];
-  $id('kpis').innerHTML=items.map(x=>`<div class="kpi" style="--kpi-color:${x[3]}"><small>${x[0]}</small>${x[4]?`<button class="kpi-num" type="button" data-status="${x[4]}" title="Filter Task Status">${Number(x[1]).toLocaleString()}</button>`:`<strong>${Number(x[1]).toLocaleString()}</strong>`}<span>${x[2]}</span></div>`).join('');
-}
-
-function renderPivots(){
-  const rows=state.filtered,total=rows.length; $id('pivotContext').textContent=`${total.toLocaleString()} filtered NSR${total===1?'':'s'}`;
-  $id('pivotGrid').innerHTML=PIVOT_FILTERS.map(f=>{
-    const counts=new Map();rows.forEach(r=>counts.set(r[f.field],(counts.get(r[f.field])||0)+1)); let entries=[...counts.entries()]; entries.sort(f.field==='Task Status'?(a,b)=>compareStatus(a[0],b[0]):(a,b)=>b[1]-a[1]||collator.compare(a[0],b[0]));
-    const max=Math.max(1,...entries.map(x=>x[1]));
-    const list=entries.length?entries.map(([value,count])=>`<div class="pivot-row" title="${esc(displayValue(value))}"><span class="pivot-label">${esc(displayValue(value))}</span><span class="pivot-bar"><i style="width:${(count/ max*
-      100).toFixed(1)}%;--bar:${f.color}"></i></span><button class="pivot-count" type="button" data-drill-id="${f.id}" data-drill-value="${esc(value)}" title="Filter by ${esc(displayValue(value))}">${count}</button></div>`).join(''):'<div class="empty">No matching NSRs</div>';
-    return `<section class="pivot-card"><div class="pivot-head"><h3>${esc(f.label)}</h3><span>${counts.size} values · ${total.toLocaleString()} NSR</span></div><div class="pivot-list">${list}</div></section>`;
-  }).join('');
-}
 
 function dateNumber(value){
   const s=clean(value);if(!s)return Number.NEGATIVE_INFINITY;
@@ -3774,42 +4479,36 @@ function dateNumber(value){
   const n=Date.parse(s);return Number.isNaN(n)?Number.NEGATIVE_INFINITY:n;
 }
 
-function submitPeriod(value){const n=dateNumber(value);if(!Number.isFinite(n))return ''; const date=new Date(n);return `${date.getUTCFullYear()} Q${Math.floor(date.getUTCMonth()/3)+1}`;}
-function periodYear(value){const match=clean(value).match(/^(\d{4})\s+Q[1-4]$/);return match?match[1]:'';}
-function compareRows(a,b,field){if(field==='Task Status')return compareStatus(a[field],b[field]); if(field==='Submit Date')return dateNumber(a[field])-dateNumber(b[field]); return collator.compare(clean(a[field]),clean(b[field]));}
-function currentTableRows(){const q=clean($id('tableSearch').value).toLowerCase(); const rows=q?state.filtered.filter(r=>DETAIL_FIELDS.some(f=>clean(r[f]).toLowerCase().includes(q))):[...state.filtered]; const {field,dir}=state.sort; return rows.sort((a,b)=>compareRows(a,b,
-  field)*(dir==='asc'?1:-1));}
-function statusPill(value){const cls=value==='15-Completed'?'terminal':value.startsWith('0-')?'stop':value.startsWith('Unmapped')?'unknown':''; return `<span class="status-pill ${cls}">${esc(value)}</span>`;}
-
-function renderTable(){
-  const rows=currentTableRows(),sort=state.sort; const cols=`<colgroup>${DETAIL_WIDTHS.map(width=>`<col style="width:${width}px">`).join('')}</colgroup>`;
-  const head=`<thead><tr>${DETAIL_FIELDS.map(field=>`<th scope="col" title="${esc(field)}" data-sort="${esc(field)}" class="${sort.field===field?'sorted':''}" aria-sort="${sort.field===field?(sort.dir===
-    'asc'?'ascending':'descending'):'none'}">${esc(field)}<span class="sort-mark">${sort.field===field?(sort.dir==='asc'?'▲':'▼'):'↕'}</span></th>`).join('')}</tr></thead>`;
-  const body=rows.length?rows.map(row=>`<tr>${DETAIL_FIELDS.map(field=>`<td title="${esc(row[field])}">${field===
-    'Task Status'?statusPill(row[field]):esc(row[field])}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${DETAIL_FIELDS.length}"><div class="empty">No NSRs match the current filters.</div></td></tr>`;
-  $id('detailTable').innerHTML=cols+head+`<tbody>${body}</tbody>`; $id('rowCount').textContent=`${rows.length.toLocaleString()} shown · ${state.filtered.length.toLocaleString()} filtered`;
+function periodRank(value){let match=clean(value).match(/^(\d{4})\s+Q([1-4])$/);if(match)return Number(match[1])*10+Number(match[2]);
+  match=clean(value).match(/^Q(Mar|Jun|Sep|Dec)'(\d{2}|\d{4})$/i);return match?Number(match[2].length===2?'20'+match[2]:match[2])*10+({mar:1,jun:2,sep:3,dec:4}[match[1].toLowerCase()]):0;}
+function periodYear(value){const rank=periodRank(value);return rank?String(Math.floor(rank/10)):'';}
+return {detailFields:DETAIL_FIELDS,clean,upper,canonicalRow,normalizeRows,deriveTaskStatus,compareStatus,dateNumber,periodRank,periodYear};
 }
 
-function sortTable(field){if(state.sort.field===field)state.sort.dir=state.sort.dir==='asc'?'desc':'asc'; else state.sort={field,dir:field==='Submit Date'?'desc':'asc'}; renderTable();}
-function tsvValue(v){return clean(v).replace(/[\t\r\n]+/g,' ')}
-async function copyRows(){
-  const rows=currentTableRows(),text=[DETAIL_FIELDS.join('\t'),...rows.map(r=>DETAIL_FIELDS.map(f=>tsvValue(r[f])).join('\t'))].join('\r\n');
-  try{
-    if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(text);
-    else{const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(ta);ta.select(); if(!document.execCommand('copy'))throw new Error('Copy was blocked by the browser.');ta.remove();}
-    toast(`${rows.length.toLocaleString()} rows copied as tab-separated values.`);
-  }catch(err){toast(err.message||'Copy failed.',true)}
+function createNsrCycle(root=document,{getRows=null,onNotify=null}={}){
+const ownerDocument=root.ownerDocument||root,embedded=root!==ownerDocument,modalHost=embedded?root:ownerDocument.body;
+const {detailFields:DETAIL_FIELDS,clean,upper,dateNumber,compareStatus}=createNsrRecords();
+const LIVE_FIELDS=['Submit Date','Task Status','ECD','Approver Team','Assigned Approver','Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'];
+const CYCLE_DETAIL_FIELDS=DETAIL_FIELDS.filter(field=>field!=='NSR#'&&field!=='Initiator'&&!LIVE_FIELDS.includes(field)).flatMap(field=>field==='NSR Type'?[field,'NSR Category']:field==='Customer'?[field,'Initiator']:[field]);
+const FID_FIELDS=['REF FCID','Primary Product','NSR → CTL','CTL references','Customer','NSR Org','Sales Rep'],fidIndex=CYCLE_DETAIL_FIELDS.indexOf('REF FCID');
+const CYCLE_FIELDS=['NSR#',...LIVE_FIELDS,...CYCLE_DETAIL_FIELDS.slice(0,fidIndex),...FID_FIELDS,...CYCLE_DETAIL_FIELDS.slice(fidIndex).filter(field=>!FID_FIELDS.includes(field))];
+const WF_FIELDS=['Task Name','Approver Status','Approver Team','Approver','Pending Days','Approved Date','Comments']; const WORKFLOW_EXPORT_FIELDS=['NSR#','Workflow Step',...WF_FIELDS];
+const CYCLE_WIDTHS=CYCLE_FIELDS.map(field=>({
+  'NSR#':78,'Submit Date':116,'Approver Team':125, 'Assigned Approver':130,'Pending Days':82,'Elapsed Days':82,'Cycle Time (ECD)':110,'Cycle Time (SOBi)':116,'NSR Title':190,'Task Status':144,'ECD':96, 'NSR Category':100,'Customer':150,'Primary Product':120,'Technical Contact':108,
+    'Impacted Sub System':104,'NSR → CTL':180,'CTL references':180
+}[field]||92));
+const CYCLE_CONCURRENCY=8,CYCLE_WARN_AT=100,CYCLE_LIMIT=500; const WORKFLOW_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const NSR_DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const FIORI_DETAIL='/flp#ZNSR-display&/NsrDetail/';
+const pageFetch=(url,options)=>unsafeWindow.fetch(url,options);
+const collator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
+const state={rows:[],cycleRows:[],cycleSort:{field:'NSR#',dir:'asc'},cycleAbort:null,cycleRun:0,toastTimer:null};
+const $id=id=>root.querySelector('#'+id),esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tsvValue=v=>clean(v).replace(/[\t\r\n]+/g,' ');
+function statusPill(value){const cls=value==='15-Completed'?'terminal':value.startsWith('0-')?'stop':value.startsWith('Unmapped')?'unknown':'';return `<span class="status-pill ${cls}">${esc(value)}</span>`;}
+function toast(message,isError=false){
+  if(onNotify){onNotify(message,isError);return}
+  const el=$id('toast');if(!el)return;clearTimeout(state.toastTimer);el.textContent=message;el.className=`toast show${isError?' error':''}`;state.toastTimer=setTimeout(()=>el.className='toast',3000);
 }
-
-function toast(message,isError=false){const el=$id('toast');clearTimeout(state.toastTimer);el.textContent=message;el.className=`toast show${isError?' error':''}`; state.toastTimer=setTimeout(()=>el.className='toast',3000);}
-
 let wfTrigger=null,wfRows=[];
-
-function switchTab(name){
-  const cycle=name==='cycle'; $id('overviewTab').classList.toggle('active',!cycle);$id('cycleTab').classList.toggle('active',cycle); $id('overviewBtn').classList.toggle('active',!cycle);$id('cycleBtn').classList.toggle('active',cycle);
-  $id('overviewBtn').setAttribute('aria-selected',cycle?'false':'true');$id('cycleBtn').setAttribute('aria-selected',cycle?'true':'false'); unsafeWindow.scrollTo({top:0,behavior:'smooth'});
-}
-
 function parseNsrInput(text){
   const valid=[],invalid=[],seen=new Set(); String(text||'').split(/[\s,;|]+/).map(v=>v.trim()).filter(Boolean).forEach(token=>{const nsr=token.toUpperCase(); if(!/^[A-Z]\d{5,9}$/.test(nsr)){invalid.push(token);return} if(!seen.has(nsr)){seen.add(nsr);valid.push(nsr)}});
   return {valid,invalid};
@@ -3884,7 +4583,7 @@ async function fetchNsrEnrichment(tempId,signal){
 function mergeCycle(nsr,live,details){
   const detail=details.get(upper(nsr))||{},row={'NSR#':nsr,...live};
   if(!row['Submit Date'])row['Submit Date']=detail['Submit Date']||'';
-  DETAIL_FIELDS.forEach(field=>{if(field!=='NSR#'&&!LIVE_FIELDS.includes(field))row[field]=detail[field]||''}); row['Task Status']=detail['Task Status']||({COMPLETED:'15-Completed',CANCELLED:'0-Cancelled',REJECTED:'0-Rejected'}[row.__terminal]||''); row['ECD']=row.__ecd||'';
+  CYCLE_FIELDS.forEach(field=>{if(field!=='NSR#'&&field!=='NSR Category'&&!LIVE_FIELDS.includes(field))row[field]=detail[field]||''}); row['Task Status']=detail['Task Status']||({COMPLETED:'15-Completed',CANCELLED:'0-Cancelled',REJECTED:'0-Rejected'}[row.__terminal]||''); row['ECD']=row.__ecd||'';
   row['Elapsed Days']=row.__terminal||row.__completed?'':elapsedDays(row['Submit Date']); row['Cycle Time (ECD)']=row.__ecd?elapsedDays(row['Submit Date'],row.__ecd):''; row['Cycle Time (SOBi)']=row.__completed&&row.__completedAt?elapsedDays(row['Submit Date'],row.__completedAt):'';
   return row;
 }
@@ -3903,10 +4602,10 @@ async function runCycleLookup(nsrs){
   if(parsed.invalid.length)toast(`${parsed.invalid.length} invalid value${parsed.invalid.length===1?' was':'s were'} ignored.`,true);
   const total=parsed.valid.length;
   if(total>CYCLE_LIMIT){const message=`A maximum of ${CYCLE_LIMIT} NSRs can be queried at once. Reduce the list and try again.`;unsafeWindow.alert(message);setCycleProgress(0,0,message);return}
-  if(total>CYCLE_WARN_AT&&!unsafeWindow.confirm(`You are about to query ${total.toLocaleString()} NSRs from SAP. This may take some time. Continue?`)){setCycleProgress(0,0,`Query cancelled. ${total.toLocaleString()} NSRs were not sent to SAP.`);return;}
+  if(total>CYCLE_WARN_AT&&!unsafeWindow.confirm(`You are about to query ${total} NSRs from SAP. This may take some time. Continue?`)){setCycleProgress(0,0,`Query cancelled. ${total} NSRs were not sent to SAP.`);return;}
   if(state.cycleAbort)state.cycleAbort.abort();
-  const run=++state.cycleRun,controller=new unsafeWindow.AbortController();state.cycleAbort=controller;state.cycleRows=[]; const details=new Map(state.rows.map(row=>[upper(row['NSR#']),row])),results=new Array(total),workers=Math.min(CYCLE_CONCURRENCY,total);
-  let next=0,done=0,stoppedForAuth=false,lastPaint=0; setCycleBusy(true);setCycleProgress(0,total,`Starting ${total.toLocaleString()} live lookup${total===1?'':'s'} · up to ${workers} requests at once…`);renderCycleTable();
+  const run=++state.cycleRun,controller=new unsafeWindow.AbortController();state.cycleAbort=controller;state.cycleRows=[]; const details=new Map((getRows?getRows(parsed.valid):state.rows).map(row=>[upper(row['NSR#']),row])),results=new Array(total),workers=Math.min(CYCLE_CONCURRENCY,total);
+  let next=0,done=0,stoppedForAuth=false,lastPaint=0; setCycleBusy(true);setCycleProgress(0,total,`Starting ${total} live lookup${total===1?'':'s'} · up to ${workers} requests at once…`);renderCycleTable();
   async function worker(){
     while(!controller.signal.aborted&&run===state.cycleRun&&!stoppedForAuth){
       const index=next++;if(index>=total)return;
@@ -3920,16 +4619,16 @@ async function runCycleLookup(nsrs){
       if(categoryError)live.__categoryError=categoryError;
       if(run!==state.cycleRun)return;
       results[index]=mergeCycle(nsr,live,details);done++;state.cycleRows=results.filter(Boolean); const now=Date.now();if(now-lastPaint>200||done===total||stoppedForAuth){renderCycleTable();lastPaint=now}
-      if(!stoppedForAuth)setCycleProgress(done,total,`Queried ${done.toLocaleString()} of ${total.toLocaleString()} · up to ${workers} requests at once`);
+      if(!stoppedForAuth)setCycleProgress(done,total,`Queried ${done} of ${total} · up to ${workers} requests at once`);
     }
   }
   await Promise.all(Array.from({length:workers},()=>worker()));
   if(run!==state.cycleRun)return;
   state.cycleRows=results.filter(Boolean); const cancelled=controller.signal.aborted&&!stoppedForAuth,failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length; state.cycleAbort=null;setCycleBusy(false);renderCycleTable();
   if(stoppedForAuth){setCycleProgress(done,total,'Stopped because the Fiori session is unavailable. Return to Fiori, sign in, and run the query again.');toast('Fiori session unavailable.',true)}
-  else if(cancelled)setCycleProgress(done,total,`Cancelled after ${done.toLocaleString()} of ${total.toLocaleString()} lookups.`);
-  else{setCycleProgress(done,total,`${done.toLocaleString()} live lookup${done===1?'':'s'} completed${failed?` · ${failed.toLocaleString()} unavailable`:''}.`);
-    toast(`${done.toLocaleString()} cycle time row${done===1?'':'s'} loaded${failed?` · ${failed.toLocaleString()} unavailable`:''}.`,failed>0)}
+  else if(cancelled)setCycleProgress(done,total,`Cancelled after ${done} of ${total} lookups.`);
+  else{setCycleProgress(done,total,`${done} live lookup${done===1?'':'s'} completed${failed?` · ${failed} unavailable`:''}.`);
+    toast(`${done} cycle time row${done===1?'':'s'} loaded${failed?` · ${failed} unavailable`:''}.`,failed>0)}
 }
 
 function compareCycle(a,b,field){
@@ -3966,40 +4665,36 @@ function openWorkflow(nsr,trigger){
   const row=state.cycleRows.find(item=>upper(item['NSR#'])===upper(nsr)),stages=row&&Array.isArray(row.__workflow)?row.__workflow:[];
   if(!stages.length){toast('Workflow detail is unavailable for this NSR.',true);return}
   const head=`<thead><tr>${WF_FIELDS.map(field=>`<th scope="col">${esc(field)}</th>`).join('')}</tr></thead>`; const body=`<tbody>${stages.map(stage=>`<tr>${WF_FIELDS.map(field=>`<td>${esc(stage[field])}</td>`).join('')}</tr>`).join('')}</tbody>`;
-  $id('wfTitle').textContent=`${clean(nsr)} Workflow Detail`;$id('wfMeta').textContent=`${stages.length.toLocaleString()} workflow record${stages.length===1?'':'s'}`; $id('wfTable').innerHTML=head+body;wfRows=stages;wfTrigger=trigger||document.activeElement;$id('wfModal').hidden=
-    false;document.body.classList.add('wf-open');$id('wfClose').focus();
+  $id('wfTitle').textContent=`${clean(nsr)} Workflow Detail`;$id('wfMeta').textContent=`${stages.length} workflow record${stages.length===1?'':'s'}`; $id('wfTable').innerHTML=head+body;wfRows=stages;wfTrigger=trigger||ownerDocument.activeElement;$id('wfModal').hidden=
+    false;modalHost.classList.add('wf-open');$id('wfClose').focus();
 }
 
-function closeWorkflow(){if($id('wfModal').hidden)return;$id('wfModal').hidden=true;document.body.classList.remove('wf-open'); if(wfTrigger&&wfTrigger.isConnected)wfTrigger.focus();wfTrigger=null;wfRows=[];}
+function closeWorkflow(){if($id('wfModal').hidden)return;$id('wfModal').hidden=true;modalHost.classList.remove('wf-open'); if(wfTrigger&&wfTrigger.isConnected)wfTrigger.focus();wfTrigger=null;wfRows=[];}
 
 function renderCycleTable(){
   const rows=cycleRows(),sort=state.cycleSort; const cols=`<colgroup>${CYCLE_WIDTHS.map(width=>`<col style="width:${width}px">`).join('')}</colgroup>`;
-  const head=`<thead><tr>${CYCLE_FIELDS.map(field=>`<th scope="col" title="${esc(field)}" data-cycle-sort="${esc(field)}" class="${sort.field===field?'sorted':''}" aria-sort="${sort.field===field?(sort.dir===
-    'asc'?'ascending':'descending'):'none'}">${esc(field)}<span class="sort-mark">${sort.field===field?(sort.dir==='asc'?'▲':'▼'):'↕'}</span></th>`).join('')}</tr></thead>`;
+  const head=`<thead><tr>${CYCLE_FIELDS.map(field=>`<th scope="col" title="${esc(embedded&&field==='REF FCID'?'FID':field)}" data-cycle-sort="${esc(field)}" class="${sort.field===field?'sorted':''}" aria-sort="${sort.field===field?(sort.dir===
+    'asc'?'ascending':'descending'):'none'}">${esc(embedded&&field==='REF FCID'?'FID':field)}<span class="sort-mark">${sort.field===field?(sort.dir==='asc'?'▲':'▼'):'↕'}</span></th>`).join('')}</tr></thead>`;
   const body=rows.length?rows.map(row=>`<tr>${CYCLE_FIELDS.map(field=>`<td class="${cycleCellClass(row,field)}" title="${esc(row[field])}">${cycleCell(row,
     field)}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${CYCLE_FIELDS.length}"><div class="empty">No cycle time results yet.</div></td></tr>`;
   $id('cycleTable').innerHTML=cols+head+`<tbody>${body}</tbody>`; const failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length;
-  $id('cycleCount').textContent=`${rows.length.toLocaleString()} shown · ${state.cycleRows.length.toLocaleString()} queried${failed?` · ${failed.toLocaleString()} unavailable`:''}`; $id('copyCycleBtn').disabled=!rows.length;$id('exportCycleBtn').disabled=!rows.length;
+  $id('cycleCount').textContent=`${rows.length} shown · ${state.cycleRows.length} queried${failed?` · ${failed} unavailable`:''}`; $id('copyCycleBtn').disabled=!rows.length;$id('exportCycleBtn').disabled=!rows.length;
 }
 
 function sortCycle(field){if(state.cycleSort.field===field)state.cycleSort.dir=state.cycleSort.dir==='asc'?'desc':'asc'; else state.cycleSort={field,dir:field==='ECD'||field.includes('Date')?'desc':'asc'}; renderCycleTable();}
 
 async function writeClipboard(text){
   if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(text);
-  const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(ta);ta.select();
-  try{if(!document.execCommand('copy'))throw new Error('Copy was blocked by the browser.')}finally{ta.remove()}
+  const ta=ownerDocument.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:0';ownerDocument.body.appendChild(ta);ta.select();
+  try{if(!ownerDocument.execCommand('copy'))throw new Error('Copy was blocked by the browser.')}finally{ta.remove()}
 }
 
-async function copyWorkflow(){
-  if(!wfRows.length)return;
-  const text=[WF_FIELDS.join('\t'),...wfRows.map(row=>WF_FIELDS.map(field=>tsvValue(row[field])).join('\t'))].join('\r\n');
-  try{await writeClipboard(text);toast(`${wfRows.length.toLocaleString()} workflow record${wfRows.length===1?'':'s'} copied.`)}catch(err){toast(err.message||'Copy failed.',true)}
+async function copyCycleData(rows,fields,label){
+  const text=[fields.join('\t'),...rows.map(row=>fields.map(field=>tsvValue(row[field])).join('\t'))].join('\r\n');
+  try{await writeClipboard(text);toast(`${rows.length} ${label}${rows.length===1?'':'s'} copied.`)}catch(err){toast(err.message||'Copy failed.',true)}
 }
-
-async function copyCycleRows(){
-  const rows=cycleRows(),text=[CYCLE_FIELDS.join('\t'),...rows.map(row=>CYCLE_FIELDS.map(field=>tsvValue(row[field])).join('\t'))].join('\r\n');
-  try{await writeClipboard(text);toast(`${rows.length.toLocaleString()} cycle time row${rows.length===1?'':'s'} copied.`)}catch(err){toast(err.message||'Copy failed.',true)}
-}
+function copyWorkflow(){if(wfRows.length)return copyCycleData(wfRows,WF_FIELDS,'workflow record')}
+function copyCycleRows(){return copyCycleData(cycleRows(),CYCLE_FIELDS,'cycle time row')}
 
 function exportCycleRows(){
   const rows=cycleRows();if(!rows.length)return;
@@ -4009,35 +4704,27 @@ function exportCycleRows(){
   const workflowSheet=XLSX.utils.json_to_sheet(workflowData,{header:WORKFLOW_EXPORT_FIELDS}); sheet['!cols']=CYCLE_WIDTHS.map(width=>({wch:Math.max(10,Math.round(width/7))}));sheet['!autofilter']={ref:sheet['!ref']};
   workflowSheet['!cols']=[12,14,32,18,22,24,14,14,50].map(wch=>({wch}));workflowSheet['!autofilter']={ref:workflowSheet['!ref']}; const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,'NSR Cycle Time');XLSX.utils.book_append_sheet(book,workflowSheet,
     'Workflow Detail'); const now=new Date(),stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`; XLSX.writeFile(book,`NSR_Cycle_Time_${stamp}.xlsx`,{compression:true});
-    toast(`${rows.length.toLocaleString()} summary rows and ${workflowData.length.toLocaleString()} workflow records exported.`);
+    toast(`${rows.length} summary rows and ${workflowData.length} workflow records exported.`);
 }
 
-function sendDetailToCycle(){const nsrs=currentTableRows().map(row=>clean(row['NSR#'])).filter(Boolean);if(!nsrs.length){toast('No visible NSR Detail rows to query.',true);return} $id('cycleInput').value=nsrs.join('\n');switchTab('cycle');runCycleLookup(nsrs);}
-function bindEvents(){
-  const defaultRange=sapRange();$id('sapRangeDefault').textContent=`Default SAP range: ${defaultRange.from} to ${defaultRange.to}`; $id('rawFile').addEventListener('change',handleUpload); $id('sapRangeOpen').addEventListener('click',openSapRange);
-  $id('sapRangeForm').addEventListener('submit',(event)=>{event.preventDefault();const range=selectedSapRange();if(!range)return; closeSapRange();loadSapData(range);}); $id('sapRangeModal').addEventListener('click',e=>{if(e.target.closest('[data-sap-range-close]'))closeSapRange()});
-  $id('resetBtn').addEventListener('click',()=>{FILTERS.forEach(f=>clearFilter(f.id,false)); $id('globalSearch').value='';$id('tableSearch').value='';applyFilters();toast('All filters cleared.');}); $id('globalSearch').addEventListener('input',applyFilters);
-  $id('globalSearch').addEventListener('paste',event=>{const input=event.currentTarget,text=event.clipboardData.getData('text/plain'),normalized=text.replace(/\s+/g,' '); if(text===normalized)return; event.preventDefault();input.setRangeText(normalized,input.selectionStart,
-    input.selectionEnd,'end');applyFilters();});
-  $id('tableSearch').addEventListener('input',renderTable); $id('copyBtn').addEventListener('click',copyRows); $id('sendCycleBtn').addEventListener('click',sendDetailToCycle); $id('runCycleBtn').addEventListener('click',()=>runCycleLookup());
-  $id('cancelCycleBtn').addEventListener('click',()=>{if(!state.cycleAbort)return;state.cycleAbort.abort();$id('cycleStatus').textContent='Cancelling active requests…';}); $id('copyCycleBtn').addEventListener('click',copyCycleRows);
-  $id('exportCycleBtn').addEventListener('click',exportCycleRows); $id('cycleSearch').addEventListener('input',renderCycleTable); $id('cycleTable').addEventListener('click',e=>{const trigger=e.target.closest('[data-wf-nsr]');if(trigger)openWorkflow(trigger.dataset.wfNsr,trigger)});
-  $id('wfCopy').addEventListener('click',copyWorkflow); $id('wfModal').addEventListener('click',e=>{if(e.target.closest('[data-wf-close]'))closeWorkflow()});
-  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$id('sapRangeModal').hidden){closeSapRange();return}if(!$id('wfModal').hidden)closeWorkflow()});
-  document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));
-  document.addEventListener('click',e=>{
-    const status=e.target.closest('[data-status]');if(status){toggleStatus(status.dataset.status);return}
-    const drill=e.target.closest('[data-drill-id]');if(drill){drillFilter(drill.dataset.drillId,drill.dataset.drillValue,e.ctrlKey||e.metaKey);return}
-    const cycleTh=e.target.closest('th[data-cycle-sort]');if(cycleTh){sortCycle(cycleTh.dataset.cycleSort);return}
-    const th=e.target.closest('th[data-sort]');if(th){sortTable(th.dataset.sort);return}
-    const remove=e.target.closest('[data-remove-filter]');if(remove){const select=$id(remove.dataset.removeFilter);[...select.options].forEach(o=>{if(o.value===remove.dataset.removeValue)o.selected=false});syncSelect(select.id);applyFilters();return;}
-    if(e.target.closest('[data-remove-search]')||e.target.closest('[data-clear-search]')){$id('globalSearch').value='';applyFilters()}
-  });
+function cancel(){if(!state.cycleAbort)return;state.cycleAbort.abort();$id('cycleStatus').textContent='Cancelling active requests…';}
+const listeners=[];
+function bind(element,event,handler){element.addEventListener(event,handler);listeners.push([element,event,handler]);}
+bind($id('runCycleBtn'),'click',()=>runCycleLookup());bind($id('cancelCycleBtn'),'click',cancel);bind($id('copyCycleBtn'),'click',copyCycleRows);bind($id('exportCycleBtn'),'click',exportCycleRows);
+bind($id('cycleSearch'),'input',renderCycleTable);
+bind($id('cycleTable'),'click',event=>{const trigger=event.target.closest('[data-wf-nsr]');if(trigger){openWorkflow(trigger.dataset.wfNsr,trigger);return}const th=event.target.closest('th[data-cycle-sort]');if(th)sortCycle(th.dataset.cycleSort)});
+bind($id('wfCopy'),'click',copyWorkflow);bind($id('wfModal'),'click',event=>{if(event.target.closest('[data-wf-close]'))closeWorkflow()});
+bind(root,'keydown',event=>{if(event.key==='Escape'&&!$id('wfModal').hidden)closeWorkflow()});
+setCycleBusy(false);renderCycleTable();
+return {
+  setRows(rows){state.rows=Array.isArray(rows)?rows:[]},
+  query(nsrs,{run=true}={}){if(nsrs!==undefined)$id('cycleInput').value=Array.isArray(nsrs)?nsrs.join('\n'):String(nsrs);return run?runCycleLookup():parseNsrInput($id('cycleInput').value)},
+  snapshot:()=>({rows:state.cycleRows,busy:Boolean(state.cycleAbort)}),cancel,
+  destroy(){state.cycleRun++;if(state.cycleAbort)state.cycleAbort.abort();state.cycleAbort=null;setCycleBusy(false);clearTimeout(state.toastTimer);closeWorkflow();listeners.forEach(([element,event,handler])=>element.removeEventListener(event,handler));}
+};
 }
 
-bindEvents();renderCycleTable();loadInitialNsrData();
 
-}
 })();
 
 // ==================== MyLam · Filtered Document Summary ====================
@@ -4182,12 +4869,11 @@ async function readBomFile(file){
 }
 
 function analyzeBomMatches(boms,summaryRows){
-  const first=boms[0],second=boms[1]||null,firstOnly=new Set(),secondOnly=new Set(),scope=new Set();
-  if(second){first.materials.forEach((_value,key)=>{if(!second.materials.has(key)){firstOnly.add(key);scope.add(key)}}); second.materials.forEach((_value,key)=>{if(!first.materials.has(key)){secondOnly.add(key);scope.add(key)}});}else first.materials.forEach((_value,
-    key)=>scope.add(key));
+  const first=boms[0],second=boms[1]||null,firstOnly=new Set(),secondOnly=new Set();
+  if(second){for(const key of first.materials.keys())if(!second.materials.has(key))firstOnly.add(key);for(const key of second.materials.keys())if(!first.materials.has(key))secondOnly.add(key);}
   const documents=new Map(),matched=new Set();
   summaryRows.forEach(row=>{
-    const partNumber=normalizedBomPartNumber(row.partNumber),inFirst=second?firstOnly.has(partNumber):scope.has(partNumber),inSecond=Boolean(second&&secondOnly.has(partNumber));
+    const partNumber=normalizedBomPartNumber(row.partNumber),inFirst=second?firstOnly.has(partNumber):first.materials.has(partNumber),inSecond=Boolean(second&&secondOnly.has(partNumber));
     if(!partNumber||(!inFirst&&!inSecond))return;
     matched.add(partNumber);const key=row.articleId||row.url||`${row.documentNo}\n${row.title}`; let document=documents.get(key);
     if(!document){document={order:Number(row.documentIndex)||0,title:row.title||'',url:row.url||'',documentNo:row.documentNo||'',releaseDate:row.releaseDate||'',first:new Set(),second:new Set()};documents.set(key,document)}
@@ -4225,7 +4911,7 @@ function addTechArticlesSheet(workbook,summaryRows){
 }
 
 async function createDownloadWorkbook(boms,analysis,summaryRows){
-  if(typeof ExcelJS==='undefined'||!ExcelJS.Workbook)throw new Error('Excel workbook writer is unavailable. Refresh the page and try again.');
+  const ExcelJS=loadExcelJs();
   const workbook=new ExcelJS.Workbook();workbook.creator='Toolkit Kyra';workbook.company='Lam Research';workbook.created=new Date();
   if(analysis){
     const two=Boolean(analysis.second),columns=[['Title',60],['URL',46],['Document No.',18],['Release Date',16],...boms.map(bom=>[bomFileStem(bom.fileName),30])]; const worksheet=workbook.addWorksheet('Part Number Analysis',{views:[{state:'frozen',ySplit:1,showGridLines:false}]});
