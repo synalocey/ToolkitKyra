@@ -6,523 +6,307 @@
   <title data-en="ToolKit Guide">ToolKit 使用指南</title>
   <link rel="icon" type="image/svg+xml" sizes="any" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Ctext%20x%3D%2232%22%20y%3D%2252%22%20text-anchor%3D%22middle%22%20font-size%3D%2254%22%20font-family%3D%22Segoe%20UI%20Emoji%2C%20Apple%20Color%20Emoji%2C%20Noto%20Color%20Emoji%2C%20sans-serif%22%3E%F0%9F%93%96%3C%2Ftext%3E%3C%2Fsvg%3E">
   <style>
-    :root { color-scheme: light; font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color: #243336; background: #fff; --teal: #0f766e; --line: #e4e9e7; --muted: #667772; }
-    * { box-sizing: border-box; }
-    body { margin: 0; line-height: 1.75; }
-    [hidden] { display: none !important; }
-    a { color: var(--teal); }
-    button { font: inherit; }
-    h1, h2, h3, p { margin: 0; }
-    :focus-visible { outline: 3px solid #eab355; outline-offset: 4px; }
-    .site-header { border-bottom: 1px solid var(--line); background: #fff; }
-    .header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px 24px; max-width: 1280px; margin: auto; padding: 20px 32px 16px; }
-    .brand { display: inline-flex; align-items: center; gap: 18px; color: #193d36; font-size: 21px; font-weight: 700; text-decoration: none; letter-spacing: -.03em; }
-    .brand-icon { font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; font-size: 25px; font-style: normal; line-height: 1; }
-    .brand span { padding-left: 18px; border-left: 1px solid #d9e3df; color: var(--muted); font-size: 14px; font-weight: 400; letter-spacing: 0; }
-    .language-switch { min-height: 36px; padding: 5px 14px; border: 1px solid #d4dfda; border-radius: 7px; background: #fff; color: var(--teal); font-size: 13px; cursor: pointer; }
-    .language-switch:hover { background: #f4f8f6; }
-    .version-info { display: flex; align-items: center; flex-wrap: wrap; gap: 7px 16px; flex-basis: 100%; font-size: 12px; line-height: 1.6; }
-    .current-version { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
-    [data-toolkit-version] { color: #34483e; font-weight: 600; font-variant-numeric: tabular-nums; }
-    .version-status { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
-    .version-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #ce8d23; }
-    .version-status[data-state="current"] { color: #14804a; }
-    .version-status[data-state="current"]::before { background: #16945a; }
-    .version-status[data-state="update"] { color: #9a5b09; }
-    .auto-update-note { color: var(--muted); }
-    .update-link { font-weight: 600; text-underline-offset: 3px; }
-    .retry-version { padding: 0; border: 0; background: none; color: var(--teal); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-    .guide-gate { max-width: 650px; margin: 64px auto; padding: 32px; border: 1px solid var(--line); border-radius: 12px; }
-    .guide-gate h1 { font-size: 28px; line-height: 1.4; }
-    .guide-gate p { margin-top: 12px; color: var(--muted); }
-    .guide-actions, .tool-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-    .guide-actions { margin-top: 24px; }
-    .action, .next { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 8px 17px; border: 1px solid var(--teal); border-radius: 7px; font: inherit; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
-    .action { background: var(--teal); color: #fff; }
-    .action:hover { background: #0b655e; }
-    .next { background: #fff; color: var(--teal); }
-    .next:hover { background: #f1f7f4; }
-    .docs-layout { display: grid; grid-template-columns: 272px minmax(0, 1fr); gap: 48px; max-width: 1280px; margin: auto; padding: 36px 32px 64px; }
-    .sidebar { position: sticky; top: 28px; align-self: start; display: flex; flex-direction: column; min-height: 390px; max-height: calc(100dvh - 56px); padding: 6px 24px 0 0; border-right: 1px solid var(--line); }
-    .sidebar-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 0 10px; color: #53665d; font-size: 12px; font-weight: 600; }
-    .feature-count { color: #94a39b; font-size: 11px; font-weight: 400; }
-    .feature-nav { display: grid; gap: 5px; overflow-y: auto; padding: 3px; }
-    .doc-link { display: flex; align-items: center; gap: 9px; padding: 10px 10px; border-radius: 7px; color: #5a6b62; font-size: 14px; line-height: 1.5; text-decoration: none; }
-    .nav-icon { flex: 0 0 21px; font-family: "Segoe UI Emoji", sans-serif; font-size: 17px; line-height: 21px; }
-    .doc-link:hover { background: #f6f8f6; color: #243e31; }
-    .doc-link[aria-current="page"] { background: #eaf4ee; color: #096549; font-weight: 600; }
-    .doc-subnav { display: grid; gap: 2px; margin: 7px 0 15px 20px; padding-left: 15px; border-left: 1px solid #dce6df; }
-    .section-link { padding: 5px 0; color: #6a7b70; font-size: 12px; line-height: 1.6; text-decoration: none; }
-    .section-link:hover, .section-link[aria-current="location"] { color: #096549; }
-    .section-link[aria-current="location"] { font-weight: 600; }
-    .sidebar-footer { margin-top: auto; padding: 32px 12px 0; font-size: 12px; }
-    .sidebar-footer a { color: #6d7d73; text-decoration: none; }
-    .sidebar-footer a:hover { color: var(--teal); }
-    .nav-toggle { display: none; }
-    .doc-main { min-width: 0; max-width: 800px; padding-top: 2px; }
-    .doc-breadcrumb { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; color: #8a9891; font-size: 12px; }
-    .doc-breadcrumb span:last-child { color: #56695e; }
-    .doc-page { scroll-margin-top: 24px; }
-    .tool-title { margin-bottom: 18px; color: #1d3027; font-size: clamp(27px, 3.2vw, 36px); line-height: 1.3; font-weight: 650; letter-spacing: -.035em; }
-    .doc-description { max-width: 760px; padding: 15px 18px; border-radius: 8px; background: #f3effb; color: #51436b; font-size: 17px; font-weight: 500; line-height: 1.7; }
-    .doc-description > strong { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 650; }
-    .doc-description ul { margin: 0; padding-left: 20px; font-size: 16px; }
-    .doc-description li + li { margin-top: 8px; }
-    .tool-actions { margin: 24px 0 0; }
-    .doc-section { padding: 32px 0 36px; border-bottom: 1px solid var(--line); scroll-margin-top: 24px; }
-    .doc-section:first-of-type { margin-top: 28px; border-top: 1px solid var(--line); }
-    .doc-section h2 { margin-bottom: 20px; font-size: 22px; line-height: 1.4; font-weight: 600; letter-spacing: -.02em; }
-    .doc-section h3 { margin: 26px 0 10px; font-size: 16px; line-height: 1.5; font-weight: 600; }
-    .shot-step { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 8px; border: 2px solid #d83c32; border-radius: 50%; color: #d83c32; font-size: 12px; line-height: 1; font-weight: 600; vertical-align: 1px; }
-    #fcid-data { container-type: inline-size; }
-    #fcid-data .shot-step { border: 0; border-radius: 6px; background: #0f766e; color: #fff; }
-    .source-loading { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 5fr); align-items: start; gap: 28px; }
-    .source-loading .step-media { max-width: 338px; margin: 0; }
-    .source-loading-steps { display: grid; gap: 18px; min-width: 0; }
-    .source-loading-steps > div + div { padding-top: 18px; border-top: 1px solid var(--line); }
-    .source-loading-steps h3 { margin: 0 0 8px; }
-    .source-loading + .hint { margin-top: 20px; }
-    @container (max-width: 620px) { .source-loading { grid-template-columns: minmax(0, 1fr); } .source-loading .step-media { width: 100%; margin-inline: auto; } }
-    .shot-marks { fill: none; stroke: #d83c32; stroke-width: 3; }
-    .shot-marks > * { vector-effect: non-scaling-stroke; }
-    .shot-badge circle { fill: #fff; stroke: #d83c32; stroke-width: 3; vector-effect: non-scaling-stroke; }
-    .shot-badge text { fill: #d83c32; font: 700 26px "Segoe UI", Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
-    .doc-section p { font-size: 15px; }
-    .doc-section p + p { margin-top: 12px; }
-    .doc-section p + p.hint { margin-top: 2px; }
-    .doc-section strong { color: #263e32; font-weight: 600; }
-    .doc-section kbd { padding: 1px 5px; border: 1px solid #dce4df; border-radius: 4px; background: #f7f9f7; font: 12px "Segoe UI", sans-serif; }
-    .method-label { display: inline-block; margin-right: 9px; padding: 2px 8px; border-radius: 5px; background: #eaf4ee; color: #22654b; font-size: 12px; font-weight: 500; vertical-align: 1px; }
-    .guide-steps { display: grid; gap: 26px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
-    .guide-steps > li { position: relative; min-height: 30px; padding-left: 44px; counter-increment: step; font-size: 15px; }
-    .guide-steps > li::before { content: counter(step); position: absolute; top: -1px; left: 0; display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid #dbe7df; border-radius: 50%; background: #f6faf7; color: #46745c; font-size: 12px; font-weight: 600; }
-    .step-media { max-width: 760px; margin: 20px 0 0; }
-    .step-media img, .step-media svg { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; }
-    .image-zoom { display: block; cursor: zoom-in; }
-    html:has(.image-viewer[open]) { overflow: hidden; }
-    .image-viewer { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0; background: #111827; color: #fff; color-scheme: dark; }
-    .image-viewer[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
-    .image-viewer::backdrop { background: #111827; }
-    .image-viewer form { display: flex; justify-content: flex-end; gap: 8px; margin: 0; padding: 12px 18px; border-bottom: 1px solid #ffffff20; background: #172033; }
-    .image-viewer .next { min-width: 36px; min-height: 36px; padding: 5px 10px; border-color: #ffffff30; background: #ffffff0a; color: #fff; font-size: 14px; }
-    .image-viewer .next:hover { background: #ffffff20; }
-    .image-viewer button:disabled { opacity: .4; cursor: default; }
-    #image-preview { min-height: 0; padding: 24px; overflow: auto; overscroll-behavior: contain; }
-    #image-preview img, #image-preview svg { display: block; width: var(--preview-width); max-width: none; height: auto; margin: auto; }
-    .media-placeholder { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 112px; margin: 20px 0 0; padding: 20px; border: 1px dashed #cfdcd4; border-radius: 8px; background: #fafcfb; color: #7d8d82; }
-    .media-placeholder svg { flex: 0 0 25px; width: 25px; height: 25px; fill: none; stroke: #99afa1; stroke-width: 1.4; }
-    .media-placeholder strong { display: block; color: #667e6d; font-size: 13px; font-weight: 500; }
-    .media-placeholder small { display: block; margin-top: 2px; font-size: 12px; }
-    .illustration-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
-    .hint { color: var(--muted); font-size: 13px; }
-    .doc-section .hint { font-size: 13px; }
-    .tool-note { margin-top: 32px; padding: 14px 18px; border-left: 3px solid #c6dfcd; border-radius: 0 5px 5px 0; background: #f5f9f5; }
-    .installation-success { width: calc(100% - 64px); max-width: 1216px; margin: 24px auto 36px; padding: 24px 28px; border: 1px solid #a9caee; border-left: 5px solid #2874bb; border-radius: 12px; background: #eaf3ff; }
-    .installation-success h1 { color: #184f80; font-size: 27px; line-height: 1.4; }
-    .installation-success p { margin-top: 6px; color: #42658a; font-size: 14px; }
-    @media (max-width: 960px) { .docs-layout { grid-template-columns: 260px minmax(0, 1fr); gap: 28px; } .sidebar { padding-right: 18px; } }
-    @media (max-width: 720px) { .installation-success { width: calc(100% - 40px); margin-top: 20px; margin-bottom: 28px; padding: 20px; } }
-    @media (max-width: 720px) { .header-inner { padding: 18px 20px 14px; } .brand { font-size: 20px; gap: 12px; } .brand span { padding-left: 12px; font-size: 13px; } .version-info { gap: 6px 12px; } .auto-update-note { flex-basis: 100%; } .docs-layout { display: block; padding: 0 20px 40px; } .sidebar { position: static; min-height: 0; max-height: none; padding: 0; border-right: 0; border-bottom: 1px solid var(--line); } .sidebar-heading, .sidebar-footer { display: none; } .nav-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 52px; padding: 12px 0; border: 0; background: #fff; color: #51695a; font-size: 13px; cursor: pointer; } .nav-toggle svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; } .sidebar:not(.is-open) .feature-nav { display: none; } .sidebar.is-open .feature-nav { margin-bottom: 16px; } .doc-main { padding-top: 26px; } .doc-breadcrumb { margin-bottom: 18px; } .tool-title { font-size: 28px; } .guide-gate { margin: 32px 20px; padding: 24px; } .guide-steps > li { padding-left: 40px; } }
+    :root{color-scheme:light; font-family:"Segoe UI", "Microsoft YaHei", sans-serif; color:#243336; background:#fff; --teal:#0f766e; --line:#e4e9e7; --muted:#667772}
+    *{box-sizing:border-box}
+    body{margin:0; line-height:1.75}
+    [hidden]{display:none !important}
+    a{color:var(--teal)}
+    button{font:inherit}
+    h1, h2, h3, p{margin:0}
+    :focus-visible{outline:3px solid #eab355; outline-offset:4px}
+    header{border-bottom:1px solid var(--line); background:#fff}
+    .top{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px 24px; max-width:1280px; margin:auto; padding:20px 32px 16px}
+    .brand{display:inline-flex; align-items:center; gap:18px; color:#193d36; font-size:21px; font-weight:700; text-decoration:none; letter-spacing:-.03em}
+    .brand i{font-family:"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif; font-size:25px; font-style:normal; line-height:1}
+    .brand span{padding-left:18px; border-left:1px solid #d9e3df; color:var(--muted); font-size:14px; font-weight:400; letter-spacing:0}
+    .top-actions{display:flex; align-items:center; gap:12px; margin-left:auto}
+    .top-actions a{color:#6d7d73; font-size:13px; text-decoration:none; white-space:nowrap}
+    .top-actions a:hover{color:var(--teal)}
+    #lang{min-height:36px; padding:5px 14px; border:1px solid #d4dfda; border-radius:7px; background:#fff; color:var(--teal); font-size:13px; cursor:pointer}
+    #lang:hover{background:#f4f8f6}
+    #version{display:flex; align-items:center; flex-wrap:wrap; gap:7px 16px; flex-basis:100%; font-size:12px; line-height:1.6}
+    .current{display:inline-flex; align-items:center; gap:8px; color:var(--muted)}
+    #installed{color:#34483e; font-weight:600; font-variant-numeric:tabular-nums}
+    #status{display:inline-flex; align-items:center; gap:6px; color:var(--muted)}
+    #status::before{content:''; width:6px; height:6px; border-radius:50%; background:#ce8d23}
+    #status[data-state="current"]{color:#14804a}
+    #status[data-state="current"]::before{background:#16945a}
+    #status[data-state="update"]{color:#9a5b09}
+    #auto{color:var(--muted)}
+    #update{font-weight:600; text-underline-offset:3px}
+    #retry{padding:0; border:0; background:none; color:var(--teal); font-size:12px; text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+    .action{display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:8px 17px; border:1px solid var(--teal); border-radius:7px; background:var(--teal); color:#fff; font:inherit; font-size:14px; font-weight:600; text-decoration:none; cursor:pointer}
+    .action:hover{background:#0b655e}
+    #content{display:grid; grid-template-columns:304px minmax(0, 1fr); gap:48px; max-width:1280px; margin:auto; padding:36px 32px 64px}
+    #sidebar{position:sticky; top:28px; align-self:start; display:flex; flex-direction:column; min-height:390px; max-height:calc(100dvh - 56px); padding:6px 24px 0 0; border-right:1px solid var(--line)}
+    .nav-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; padding:0 10px; color:#53665d; font-size:12px; font-weight:600}
+    #count{color:#94a39b; font-size:11px; font-weight:400}
+    #nav{display:grid; gap:5px; overflow-y:auto; padding:3px}
+    .nav-link{display:flex; align-items:center; gap:9px; padding:10px 10px; border-radius:7px; color:#5a6b62; font-size:14px; line-height:1.5; text-decoration:none}
+    .nav-icon{flex:0 0 21px; font-family:"Segoe UI Emoji", sans-serif; font-size:17px; line-height:21px}
+    .nav-link:hover{background:#f6f8f6; color:#243e31}
+    .nav-link[aria-current="page"]{background:#eaf4ee; color:#096549; font-weight:600}
+    .subnav{display:grid; gap:1px; margin:6px 0 12px 20px; padding-left:15px; border-left:1px solid #dce6df}
+    .sub-link{padding:3px 0; color:#6a7b70; font-size:13px; line-height:1.6; text-decoration:none}
+    .sub-link:hover, .sub-link[aria-current="location"]{color:#096549}
+    .sub-link[aria-current="location"]{font-weight:600}
+    #toggle{display:none}
+    main{min-width:0; max-width:800px; padding-top:2px}
+    #heading{display:flex; align-items:center; gap:10px; margin-bottom:24px; color:#8a9891; font-size:12px}
+    #heading span:last-child{color:#56695e}
+    article{scroll-margin-top:24px}
+    @media (max-width:720px){#a-title .title-tracking{display:none}}
+    article h1{margin-bottom:18px; color:#1d3027; font-size:clamp(27px, 3.2vw, 36px); line-height:1.3; font-weight:650; letter-spacing:-.035em}
+    .intro{max-width:760px; padding:15px 18px; border-radius:8px; background:#f3effb; color:#51436b; font-size:17px; font-weight:500; line-height:1.7}
+    .intro > strong{display:block; margin-bottom:8px; font-size:15px; font-weight:650}
+    .intro ul{margin:0; padding-left:20px; font-size:16px}
+    .intro li + li{margin-top:8px}
+    .actions{display:flex; flex-wrap:wrap; gap:12px; margin:24px 0 0}
+    article section{padding:32px 0 36px; border-bottom:1px solid var(--line); scroll-margin-top:24px}
+    article section:first-of-type{margin-top:28px; border-top:1px solid var(--line)}
+    article section > h2{display:flex; align-items:baseline; justify-content:center; gap:14px; margin:4px 0 30px; color:#237c6c; font-size:25px; line-height:1.5; font-weight:600; letter-spacing:.02em; text-align:center}
+    article section > h2::before, article section > h2::after{content:'/'; flex:none; color:#55aa97; font-size:24px; font-style:italic; font-weight:400}
+    article section h3{margin:26px 0 10px; font-size:16px; line-height:1.5; font-weight:600}
+    #a1-2, #a1-3{container-type:inline-size}
+    .step{display:inline-grid; place-items:center; width:22px; height:22px; margin-right:8px; border-radius:6px; background:var(--source-color, var(--teal)); color:#fff; font-size:12px; line-height:1; font-weight:600; vertical-align:1px}
+    .source-1{--source-color:#376bd2}
+    .source-2{--source-color:#8152bf}
+    .source-3{--source-color:#a85c07}
+    .source-4{--source-color:#bf3d74}
+    .source-5{--source-color:#087e70}
+    .sources{display:grid; grid-template-columns:minmax(0, 3fr) minmax(0, 5fr); align-items:start; gap:28px}
+    .sources .media{max-width:338px; margin:0}
+    .source-list{display:grid; gap:18px; min-width:0}
+    .source-list > div + div{padding-top:18px; border-top:1px solid var(--line)}
+    .source-nsr{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 42%); align-items:start; gap:18px}
+    .source-nsr > .media{max-width:200px}
+    @container (max-width:620px){.sources{grid-template-columns:minmax(0, 1fr)} .sources .media{width:100%; margin-inline:auto}}
+    @container (max-width:480px){.source-nsr{grid-template-columns:minmax(0, 1fr); gap:12px} .source-nsr > .media{margin-inline:0}}
+    .topic{scroll-margin-top:24px}
+    .topic > h3{margin:32px 0 18px; color:#237c6c; font-size:20px; line-height:1.5; font-weight:650}
+    .num{margin-right:10px; color:#2b8b76; font-size:16px; font-style:italic; font-weight:600; line-height:1.4}
+    .topic > h3::after{content:''; display:block; height:4px; margin-top:7px; border-radius:4px; background:linear-gradient(90deg, #2b8b76 0 22%, #69bca4 22% 100%)}
+    .topic h4{margin:24px 0 10px; font-size:16px; line-height:1.5; font-weight:600}
+    .source-list h4{margin:0 0 8px}
+    .sub-link.category{margin-top:8px; color:#405c4d; font-size:14px; font-weight:600}
+    .sub-link.category:first-child{margin-top:0}
+    .sub-link.subsection{padding-left:12px}
+    article section p{font-size:15px}
+    article section p + p{margin-top:12px}
+    article section p + p.hint{margin-top:2px}
+    article section strong{color:#263e32; font-weight:600}
+    .guide-tab, .guide-label, .guide-button{display:inline-block; padding:0 .4em; border:1px solid var(--label-line, #d7e1e8); border-radius:5px; background:var(--label-bg, #fff); color:var(--label-ink, #0f4c67); font-size:.94em; line-height:1.5; white-space:nowrap}
+    .tab-fid, .label-metric{--label-ink:#2458a6; --label-bg:#eaf1ff; --label-line:#bed0ef}
+    .tab-ctl{--label-ink:#7950a1; --label-bg:#f3edfa; --label-line:#d2bee8}
+    .tab-nsr{--label-ink:#b13d53; --label-bg:#fceef1; --label-line:#e6b6c1}
+    .tab-cycle{--label-ink:#a85c07; --label-bg:#fff4e4; --label-line:#e6c79e}
+    .tab-summary{--label-ink:#3d805d; --label-bg:#edf7ef; --label-line:#c1dcc7}
+    .tab-settings{--label-ink:#1e52ad; --label-bg:#e4edff; --label-line:#c7d8f5}
+    .label-ignore{--label-ink:#667184; --label-bg:#edf0f4; --label-line:#a9b3c0}
+    .label-star{--label-ink:#b8324a; --label-bg:#fff1f3; --label-line:#d99aa5}
+    .label-scope{--label-ink:#758192; --label-bg:#f8fafc; --label-line:#dce2e9; font-weight:500}
+    .label-total{--label-ink:#344c6b; --label-line:#d6e1ed; border-top:2px solid #94a3b8}
+    .label-no-slot{--label-ink:#8d5514; --label-bg:#fff1cf; --label-line:#e4c381; border-top:2px solid #c58b2a}
+    .label-slotted{--label-ink:#2563eb; --label-line:#d6e1ed; border-top:2px solid #2563eb}
+    .status-risk{--label-ink:#a93049; --label-bg:#fff5f6; --label-line:#dc9eac}
+    .status-clear{--label-ink:#17683e; --label-bg:#eff9f3; --label-line:#bddfcb}
+    .status-completed{--label-ink:#16843f; --label-bg:#f1fbf5; --label-line:#bfddca}
+    .status-work{--label-ink:#2563eb; --label-bg:#eaf1ff; --label-line:#bed0ef}
+    .status-draft, .status-pending{--label-ink:#8a5c0c; --label-bg:#fff9ed; --label-line:#e6cf9e}
+    .status-rejected{--label-ink:#c42f48; --label-bg:#fff0f3; --label-line:#e8b5bf}
+    .status-cancelled{--label-ink:#52647d; --label-bg:#f3f5f8; --label-line:#cbd4df}
+    .status-alert{--label-ink:#992f49; --label-bg:#fff2f5; --label-line:#ecb0bf}
+    .guide-button{max-width:100%; white-space:normal; --label-ink:#354d6d; --label-bg:#edf1f6; --label-line:#ccd6e3}
+    .button-link{--label-ink:#215fbb; --label-bg:#fff; --label-line:#c5d2e5}
+    .button-primary{--label-ink:#fff; --label-bg:#2863d6; --label-line:#2863d6}
+    article section strong.guide-causes{display:inline-block; color:#64748b; font-size:.94em; font-weight:500; white-space:nowrap}
+    .guide-causes::before{content:''; display:inline-block; margin-right:5px; border-top:4px solid transparent; border-bottom:4px solid transparent; border-left:5px solid #8190a4}
+    #fid-360{margin-top:20px}
+    .method{display:inline-block; margin-right:9px; padding:2px 8px; border-radius:5px; background:#eaf4ee; color:#22654b; font-size:12px; font-weight:500; vertical-align:1px}
+    .media{max-width:760px; margin:20px 0 0}
+    .media img{display:block; width:100%; height:auto; border:1px solid var(--line); border-radius:8px}
+    [data-zoom]{display:block; cursor:zoom-in}
+    html:has(#viewer[open]){overflow:hidden}
+    #viewer{width:100vw; max-width:none; height:100dvh; max-height:none; margin:0; padding:0; border:0; border-radius:0; background:#111827; color:#fff; color-scheme:dark}
+    #viewer[open]{display:grid; grid-template-rows:auto minmax(0, 1fr)}
+    #viewer::backdrop{background:#111827}
+    #viewer form{display:flex; justify-content:flex-end; gap:8px; margin:0; padding:12px 18px; border-bottom:1px solid #ffffff20; background:#172033}
+    #viewer button{display:inline-flex; align-items:center; justify-content:center; min-width:36px; min-height:36px; padding:5px 10px; border:1px solid #ffffff30; border-radius:7px; background:#ffffff0a; color:#fff; font:inherit; font-size:14px; font-weight:600; cursor:pointer}
+    #viewer button:hover{background:#ffffff20}
+    #viewer button:disabled{opacity:.4; cursor:default}
+    #preview{min-height:0; padding:24px; overflow:auto; overscroll-behavior:contain}
+    #preview img{display:block; width:var(--preview-width); max-width:none; height:auto; margin:auto}
+    .hint{color:var(--muted); font-size:13px}
+    article section .hint{font-size:13px}
+    .notice{width:calc(100% - 64px); max-width:1216px; margin:24px auto 36px; padding:24px 28px; border:1px solid #a9caee; border-left:5px solid #2874bb; border-radius:12px; background:#eaf3ff}
+    .notice h1{color:#184f80; font-size:27px; line-height:1.4}
+    .notice p{margin-top:6px; color:#42658a; font-size:14px}
+    .warn{border-color:#e4c88c; border-left-color:#b77a18; background:#fff8e9}
+    .warn h1{color:#81550f}
+    .warn p, .warn a{color:#8b652c}
+    @media (max-width:960px){#content{grid-template-columns:292px minmax(0, 1fr); gap:28px} #sidebar{padding-right:18px}}
+    @media (max-width:720px){.notice{width:calc(100% - 40px); margin-top:20px; margin-bottom:28px; padding:20px} .top{padding:18px 20px 14px} .brand{font-size:20px; gap:12px} .brand span{padding-left:12px; font-size:13px} #version{gap:6px 12px} #auto{flex-basis:100%} #content{display:block; padding:0 20px 40px} #sidebar{position:static; min-height:0; max-height:none; padding:0; border-right:0; border-bottom:1px solid var(--line)} .nav-head{display:none} #toggle{display:flex; align-items:center; justify-content:space-between; width:100%; min-height:52px; padding:12px 0; border:0; background:#fff; color:#51695a; font-size:13px; cursor:pointer} #toggle svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6} #sidebar:not(.is-open) #nav{display:none} #sidebar.is-open #nav{margin-bottom:16px} main{padding-top:26px} #heading{margin-bottom:18px} article h1{font-size:28px}}
   </style>
 </head>
 <body>
-  <section class="installation-success" id="installation-success" role="status" hidden>
+  <section class="notice" id="success" role="status" hidden>
     <h1 data-en="ToolKit is ready">ToolKit 安装成功</h1>
     <p data-en="Explore ToolKit's main features below.">下面介绍了 ToolKit 的主要功能，欢迎了解。</p>
   </section>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="#nsr-guide"><i class="brand-icon" aria-hidden="true">📖</i>ToolKit <span data-en="Guide">使用指南</span></a>
-      <button class="language-switch" id="language-switch" type="button" lang="en" aria-label="Switch to English">English</button>
-      <div class="version-info" id="version-info" hidden>
-        <span class="current-version"><span data-en="Current version">当前版本</span><strong data-toolkit-version></strong></span>
-        <span class="version-status" id="version-status" role="status" aria-live="polite"></span>
-        <span class="auto-update-note" id="auto-update-note" hidden></span>
-        <a class="update-link" id="script-update" href="./ToolKit.user.js" target="_blank" rel="noopener" hidden data-en="Update manually ↗">手动更新 ↗</a>
-        <button class="retry-version" id="retry-version" type="button" hidden data-en="Retry">重试</button>
+  <section class="notice warn" id="warning" role="status">
+    <h1 data-en="ToolKit was not detected">未检测到 ToolKit</h1>
+    <p data-en="Please <a href=&quot;./&quot; data-lang>install or enable the latest script</a>.">请<a href="./" data-lang>安装或启用最新版脚本</a>。</p>
+  </section>
+  <header>
+    <div class="top">
+      <a class="brand" href="#a"><i aria-hidden="true">📖</i>ToolKit <span data-en="Guide">使用指南</span></a>
+      <div class="top-actions">
+        <a href="./" data-lang data-en="Install or reinstall ↗">安装与重装 ↗</a>
+        <button id="lang" type="button" lang="en" aria-label="Switch to English">English</button>
+      </div>
+      <div id="version" hidden>
+        <span class="current"><span data-en="Current version">当前版本</span><strong id="installed"></strong></span>
+        <span id="status" role="status" aria-live="polite"></span>
+        <span id="auto" hidden></span>
+        <a id="update" href="./ToolKit.user.js" target="_blank" rel="noopener" hidden data-en="Update manually ↗">手动更新 ↗</a>
+        <button id="retry" type="button" hidden data-en="Retry">重试</button>
       </div>
     </div>
   </header>
 
-  <!-- 共用英文矢量示意图；入口图复用同一场景，分别突出当前功能。 -->
-  <svg class="illustration-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-    <defs>
-      <filter id="menu-shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#203d30" flood-opacity=".13" /></filter>
-      <symbol id="media-slot-icon" viewBox="0 0 28 28"><rect x="3" y="4" width="22" height="20" rx="3" /><circle cx="10" cy="11" r="2" /><path d="m4 20 6-6 5 5 4-4 6 6" /></symbol>
-      <image id="lam-menu-logo" width="18" height="18" href="data:image/png;base64,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" />
-      <symbol id="browser-puzzle-icon" viewBox="0 0 24 24"><path d="M3 7h5V5a3 3 0 0 1 6 0v2h5v5h2a3 3 0 0 1 0 6h-2v4h-5v-2a3 3 0 0 0-6 0v2H3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" /></symbol>
-      <symbol id="toolkit-menu-scene" viewBox="0 0 720 392">
-        <rect width="720" height="392" fill="#fff" />
-        <path d="M0 0h720v29H0z" fill="#1276b5" />
-        <rect x="7" y="5" width="252" height="30" rx="6" fill="#fff" />
-        <use href="#lam-menu-logo" x="18" y="8" />
-        <text x="43" y="21" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#283e32">Home | Lam Research</text>
-        <g fill="none" stroke-width="1.1" stroke-linecap="round"><path d="m240 13 6 6m0-6-6 6" stroke="#596a60" /><path d="M273 13v8m-4-4h8M629 15h10m24-5h9v9h-9zm34 0 9 9m0-9-9 9" stroke="#fff" /></g>
-        <path d="M0 29h720v43H0z" fill="#fff" />
-        <path d="M0 72h720" stroke="#dbe3df" />
-        <g fill="none" stroke="#65756b" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 45h-9m4-4-4 4 4 4" /><path d="M47 41a6 6 0 1 0 2 7m-1-9 1 4-4-1" /></g>
-        <rect x="61" y="35" width="237" height="30" rx="15" fill="#fbfcfb" stroke="#d9e1dc" />
-        <g fill="none" stroke="#8b9690" stroke-width="1.1"><rect x="73" y="48" width="7" height="7" rx="1" /><path d="M75 48v-3a1.5 1.5 0 0 1 3 0v3" /></g>
-        <text x="89" y="54" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#59685f">https://www.lamresearch.com</text>
-        <g id="browser-tampermonkey-button"><rect x="314" y="34" width="34" height="34" rx="7" fill="#e7ece9" stroke="#6caa92" /><rect x="321" y="42" width="21" height="18" rx="4" fill="#30363a" /><circle cx="327" cy="51" r="3" fill="#fff" /><circle cx="335" cy="51" r="3" fill="#fff" /></g>
-        <g id="browser-extensions-button"><rect x="360" y="34" width="34" height="34" rx="7" fill="#e7ece9" stroke="#6caa92" /><use href="#browser-puzzle-icon" x="366" y="40" width="21" height="21" color="#4d5c53" /></g>
-        <g fill="none" stroke="#76857b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="m425 42 2.2 4.5 5 .7-3.6 3.5.8 5-4.4-2.4-4.4 2.4.8-5-3.6-3.5 5-.7z" /><path d="M456 42h15v14h-15zm5 0v14" /><circle cx="503" cy="46" r="4" /><path d="M496 57c0-7 14-7 14 0" /><path d="M681 43h17v14h-17zm11 0v14" /></g>
-        <g fill="#76857b"><circle cx="537" cy="50" r="1.2" /><circle cx="542" cy="50" r="1.2" /><circle cx="547" cy="50" r="1.2" /></g>
-        <rect x="578" y="37" width="70" height="27" rx="13.5" fill="#f2f6f9" /><path d="M590 45h10v7h-5l-3 3v-3h-2z" fill="none" stroke="#6c8ba0" stroke-width="1.1" /><text x="607" y="55" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#4a6b80">Chat</text>
-        <path d="M0 73h720v57H0z" fill="#72808a" />
-        <path d="M0 131h720" stroke="#dce6e0" />
-        <g transform="translate(17 86) scale(1.8)" style="filter:brightness(0) invert(1)"><use href="#lam-menu-logo" /></g>
-        <text x="57" y="111" font-family="Georgia, serif" font-size="22" fill="#fff">Lam Research</text>
-        <text x="24" y="180" font-family="Georgia, serif" font-size="23" fill="#35443e">What does it mean</text>
-        <text x="24" y="210" font-family="Georgia, serif" font-size="21" font-style="italic" fill="#2d9984">to achieve the unthinkable?</text>
-        <g fill="#e1e8e4"><rect x="24" y="238" width="460" height="5" rx="2.5" /><rect x="24" y="254" width="500" height="5" rx="2.5" /><rect x="24" y="270" width="430" height="5" rx="2.5" /></g>
-        <text x="24" y="382" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#526159">No matter what innovation means to you, we won’t stop until it’s proven.</text>
-        <g id="browser-extensions-menu" transform="translate(352 29)" font-family="Segoe UI, Arial, sans-serif">
-          <rect x="12" y="49" width="310" height="271" rx="7" fill="#fff" stroke="#dce2df" filter="url(#menu-shadow)" />
-          <text x="29" y="76" font-size="13" fill="#173c56">Extensions</text>
-          <path d="M13 94h308" stroke="#e7e8e7" />
-          <text x="29" y="123" font-size="12.5" fill="#173c56">Allow extensions on lamresearch.com</text>
-          <rect x="269" y="108" width="37" height="22" rx="11" fill="#2caa51" stroke="#3b4541" stroke-width="1.6" /><circle cx="295" cy="119" r="8" fill="#fff" />
-          <rect x="23" y="143" width="288" height="67" rx="5" fill="#f4faf6" stroke="#c5e0d2" />
-          <rect x="34" y="160" width="17" height="15" rx="3" fill="#171b1e" /><circle cx="39" cy="167.5" r="2.5" fill="#fff" /><circle cx="46" cy="167.5" r="2.5" fill="#fff" />
-          <rect x="44" y="169" width="8" height="8" rx="2" fill="#f03d44" /><text x="48" y="175" text-anchor="middle" font-size="6.5" font-weight="600" fill="#fff">1</text>
-          <text x="65" y="174" font-size="13" fill="#173c56">Tampermonkey</text><text x="65" y="195" font-size="11.5" fill="#356785">Allowed on all sites</text>
-          <g transform="translate(255 160) rotate(35 8 8)"><path d="M4 2h8l-1 5 3 4H2l3-4-1-5m4 9v7" fill="none" stroke="#526059" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" /></g>
-          <g fill="#4b554f"><circle cx="293" cy="172" r="1" /><circle cx="297" cy="172" r="1" /><circle cx="301" cy="172" r="1" /></g>
-          <path d="M13 226h308" stroke="#e7e8e7" />
-          <use href="#browser-puzzle-icon" x="31" y="243" width="17" height="17" color="#4d5c53" />
-          <text x="65" y="257" font-size="12.5" fill="#173c56">Manage extensions</text><text x="65" y="292" font-size="12.5" fill="#173c56">Get extensions for Microsoft Edge</text>
-        </g>
-        <g id="browser-tampermonkey-menu" transform="translate(-356 39)">
-        <g filter="url(#menu-shadow)"><rect x="422" y="49" width="286" height="271" rx="7" fill="#fff" stroke="#dce2df" /></g>
-        <path d="m436 71 4 4 8-9" fill="none" stroke="#4d9d35" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        <text x="457" y="76" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#273d30">Enabled</text>
-        <path d="M423 94h284" stroke="#edf0ee" stroke-width="4" />
-        <rect x="435" y="109" width="18" height="11" rx="5.5" fill="#59a02d" /><circle cx="448" cy="114.5" r="4" fill="#fff" />
-        <use href="#lam-menu-logo" x="462" y="105" />
-        <text x="488" y="120" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#273d30">Toolkit Kyra</text>
-        <path d="m689 110 5 5-5 5" fill="none" stroke="#718178" stroke-width="1.5" />
-        <path d="M423 263h284" stroke="#edf0ee" stroke-width="4" />
-        <text x="440" y="295" font-family="Segoe UI Emoji, sans-serif" font-size="17">⚙️</text>
-        <text x="467" y="294" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#53675a">Dashboard</text>
-        </g>
-      </symbol>
-      <symbol id="toolkit-menu-commands" viewBox="0 0 720 392">
-        <g transform="translate(-356 39)">
-        <g font-family="Segoe UI Emoji, sans-serif" font-size="18"><text x="444" y="163">📊</text><text x="444" y="193">🏭</text><text x="444" y="223">🧰</text><text x="444" y="253">📖</text></g>
-        <g font-family="Segoe UI, Arial, sans-serif" font-size="13.5" fill="#273d30"><text x="474" y="162">NSR Tracking Dashboard</text><text x="474" y="192">FCID Governance Control Tower</text><text x="474" y="222">SAP Toolbox</text><text x="474" y="252">Help</text></g>
-        </g>
-      </symbol>
-      <symbol id="nsr-data-scene" viewBox="0 0 720 310">
-        <rect width="720" height="310" fill="#f3f7fb" />
-        <path d="M0 0h720v48H0z" fill="#07556e" />
-        <text x="23" y="32" font-family="Segoe UI Emoji, sans-serif" font-size="21">📊</text><text x="54" y="31" fill="#fff" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="600">NSR Tracking Dashboard</text>
-        <rect x="19" y="68" width="266" height="219" rx="12" fill="#fff" stroke="#d9e4ec" />
-        <g font-family="Segoe UI, Arial, sans-serif"><text x="35" y="96" font-size="16" font-weight="600" fill="#283d49">Data Source</text>
-        <rect x="34" y="111" width="236" height="43" rx="8" fill="#2563eb" /><text x="152" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#fff">Load / Refresh NSR</text>
-        <text x="35" y="177" font-size="11" fill="#758593">Choose a date range to load NSRs.</text>
-        <path d="M35 193h232" stroke="#e3eaf0" />
-        <path d="m37 212 5 4-5 4" fill="none" stroke="#718391" stroke-width="1.5" /><text x="49" y="220" font-size="12" font-weight="600" fill="#425463">UPLOAD RAW DATA</text>
-        <rect x="35" y="239" width="233" height="28" rx="6" fill="#eef8f4" /><text x="45" y="257" font-size="11" fill="#33725b">Load from SAP or use a local file</text>
-        <path d="M291 133h26m-6-5 6 5-6 5" fill="none" stroke="#539078" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        <rect x="332" y="68" width="369" height="219" rx="12" fill="#fff" stroke="#b8cfc3" />
-        <text x="350" y="97" font-size="15" font-weight="600" fill="#283d49">Date range</text><text x="350" y="118" font-size="10" fill="#7b8a94">EXAMPLE DATES</text>
-        <text x="350" y="144" font-size="11" font-weight="600" fill="#617381">FROM DATE</text><text x="525" y="144" font-size="11" font-weight="600" fill="#617381">TO DATE</text>
-        <rect x="350" y="153" width="157" height="38" rx="7" fill="#fff" stroke="#bfd0c5" /><rect x="525" y="153" width="157" height="38" rx="7" fill="#fff" stroke="#bfd0c5" />
-        <text x="363" y="177" font-size="13" fill="#30494a">01/01/2026</text><text x="538" y="177" font-size="13" fill="#30494a">10/20/2026</text>
-        <text x="350" y="213" font-size="11" fill="#7a8893">Larger ranges may take 1-2 minutes.</text>
-        <rect x="510" y="235" width="82" height="33" rx="7" fill="#e8eef3" /><text x="551" y="256" text-anchor="middle" font-size="12" fill="#465b66">Cancel</text>
-        <rect x="602" y="235" width="80" height="33" rx="7" fill="#2563eb" /><text x="642" y="256" text-anchor="middle" font-size="12" font-weight="600" fill="#fff">Load</text></g>
-      </symbol>
-    </defs>
-  </svg>
 
-  <section class="guide-gate" id="guide-gate">
-    <h1 data-en="ToolKit is not running">未检测到 ToolKit</h1>
-    <p data-en="Install or enable the latest script, then refresh this page.">请安装或启用最新版脚本，再刷新此页。</p>
-    <div class="guide-actions">
-      <a class="action" href="./" data-language-link data-en="Install ToolKit →">安装 ToolKit →</a>
-      <button class="next" id="refresh-guide" type="button" data-en="Refresh">刷新页面</button>
-    </div>
-  </section>
-
-  <div class="docs-layout" id="guide-content" hidden>
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-heading"><span data-en="Tool guides">功能指南</span><span class="feature-count" data-feature-count></span></div>
-      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="feature-nav"><span data-en="Contents">功能目录</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5" /></svg></button>
-      <nav class="feature-nav" id="feature-nav" aria-label="功能目录" data-en-label="Tool guides"></nav>
-      <div class="sidebar-footer"><a href="./" data-language-link data-en="Install or reinstall ↗">安装与重装 ↗</a></div>
+  <div id="content">
+    <aside id="sidebar">
+      <div class="nav-head"><span data-en="Tool guides">功能指南</span><span id="count"></span></div>
+      <button id="toggle" type="button" aria-expanded="false" aria-controls="nav"><span data-en="Contents">功能目录</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5" /></svg></button>
+      <nav id="nav" aria-label="功能目录" data-en-label="Tool guides"></nav>
     </aside>
-    <main class="doc-main" id="doc-main">
-      <div class="doc-breadcrumb" id="guide-heading"><span data-en="Guide">使用指南</span><span aria-hidden="true">/</span><span id="active-doc-title"></span></div>
+    <main>
+      <div id="heading"><span data-en="Guide">使用指南</span><span aria-hidden="true">/</span><span id="doc-title"></span></div>
       <!-- 每个 data-feature 是独立说明，小节使用 data-section 和唯一 id；功能目录、子目录和数量自动生成。 -->
-        <article class="doc-page" id="nsr-guide" data-feature data-icon="📊" aria-labelledby="nsr-guide-title" hidden>
-          <div class="doc-heading">
-            <h1 class="tool-title" id="nsr-guide-title">NSR Tracking Dashboard</h1>
-            <div class="doc-description">
-              <strong data-en="Overview">功能简介</strong>
-              <ul>
-                <li data-en="Auto-load NSRs with flexible filters for Initiator, status, date, customer and NSR Type">自动加载 NSR，可按照 Initiator、状态、日期、客户、NSR Type 等自由筛选</li>
-                <li data-en="View NSR distributions by status, customer and product, and explore NSR details">按照状态、客户、产品等统计 NSR 分布，还可以查看 NSR 明细</li>
-                <li data-en="Query Cycle Time and Workflow details in bulk and export combined results">批量查询 Cycle Time 与 Workflow 详情，汇总导出</li>
-              </ul>
-            </div>
+        <article id="a" data-feature data-icon="🏭" aria-labelledby="a-title" hidden><div><h1 id="a-title" data-nav="FID &amp; NSR Tracking Dashboard">🏭 FID &amp; NSR<span class="title-tracking"> Tracking</span> Dashboard</h1><div class="intro"><strong data-en="Overview">功能简介</strong><ul><li data-en="Combine FID, CTL, NSR and NCE / FA to review Commit tools and delivery risk.">汇总 FID、CTL、NSR 和 NCE / FA，查看 Commit 机台的 Slot 与交付风险。</li><li data-en="Locate tools by overview and risk, and explore FID 360° for a complete view.">通过概览和风险定位机台，查看 FID 360° 全方位信息。</li><li data-en="Query Cycle Time and Workflow details in bulk and export combined results">批量查询 NSR 的 Cycle Time 与 Workflow 详情，汇总导出。</li><li data-en="Save FID / NSR marks and Note in your browser for ongoing tracking.">可在浏览器中为 FID 和 NSR 保存个人标记和 Note，便于持续跟踪。</li></ul></div>
+</div>
+<div class="actions"><a class="action" href="https://fep.lamresearch.com/staceykyra.png" target="_blank" rel="noopener" data-en="Open 🏭 FID &amp; NSR Tracking Dashboard ↗">打开 🏭 FID &amp; NSR Tracking Dashboard ↗</a></div>
+<section id="a1" data-section aria-labelledby="a1-title">
+<h2 id="a1-title" data-en="Getting started">开始使用</h2>
+<div id="fcid-launch">
+<div class="topic" id="a1-1" data-subsection aria-labelledby="a1-1-title">
+            <h3 id="a1-1-title" data-en="Open Dashboard">打开 Dashboard</h3>
+            <h4 data-en="<span class='method'>Method 1</span> Tampermonkey menu"><span class="method">方法一</span> Tampermonkey 菜单</h4>
+            <p data-en="Open any Lam Research page. Click <strong>Extensions</strong> → <strong>Tampermonkey</strong>, then choose <strong>🏭 FID &amp; NSR Tracking Dashboard</strong>.">打开任意 Lam Research 页面，点击<strong>扩展按钮</strong> → <strong>Tampermonkey</strong>，选择 <strong>🏭 FID &amp; NSR Tracking Dashboard</strong>。</p>
+            <figure class="media">
+              <img src="./images/guide-launch.svg#dashboard-menu" width="720" height="392" loading="lazy" alt="Open FID &amp; NSR Tracking Dashboard from the Tampermonkey menu" style="aspect-ratio: 720 / 392">
+            </figure>
+            <h4 data-en="<span class='method'>Method 2</span> NSR page button"><span class="method">方法二</span> NSR 页面按钮</h4>
+            <p data-en="On the <a href='https://fep.lamresearch.com/flp#ZNSR-display' target='_blank' rel='noopener'>FEP NSR page</a>, click <strong>🏭 FID &amp; NSR Tracking Dashboard</strong> beside the page title.">在 <a href="https://fep.lamresearch.com/flp#ZNSR-display" target="_blank" rel="noopener">FEP 的 NSR 页面</a>，点击标题旁的 <strong>🏭 FID &amp; NSR Tracking Dashboard</strong> 按钮。</p>
+            <figure class="media">
+              <a href="./images/guide-launch.svg#fep-entry" data-zoom aria-label="放大 FEP NSR 页面入口图" data-en-label="Enlarge the FEP NSR page button illustration">
+                <img src="./images/guide-launch.svg#fep-entry" width="1092" height="220" alt="FEP NSR page with the FID &amp; NSR Tracking Dashboard button highlighted beside the page title" loading="lazy" style="aspect-ratio: 1092 / 220">
+              </a>
+            </figure>
           </div>
-          <div class="tool-actions"><a class="action" href="https://fep.lamresearch.com/k1.png" target="_blank" rel="noopener" data-en="Open Dashboard ↗">打开 NSR Tracking Dashboard ↗</a></div>
-          <section class="doc-section" id="nsr-launch" data-section aria-labelledby="nsr-launch-title">
-            <h2 id="nsr-launch-title" data-en="How to open Dashboard">如何打开 Dashboard</h2>
-            <h3 data-en="<span class='method-label'>Method 1</span> Tampermonkey menu"><span class="method-label">方式一</span> Tampermonkey 菜单</h3>
-            <p data-en="Open any Lam Research page. Click <strong>Extensions</strong> → <strong>Tampermonkey</strong>, then choose <strong>📊 NSR Tracking Dashboard</strong>.">打开任意 Lam Research 页面，点击<strong>扩展按钮</strong> → <strong>Tampermonkey</strong>，选择 <strong>📊 NSR Tracking Dashboard</strong>。</p>
-            <figure class="step-media">
-              <svg viewBox="0 0 720 392" role="img" aria-labelledby="nsr-menu-title">
-                <title id="nsr-menu-title">Open NSR Tracking Dashboard from the Tampermonkey menu</title>
-                <use href="#toolkit-menu-scene" />
-                <rect x="80" y="180" width="260" height="29" rx="5" fill="#e7f6ef" stroke="#2a9872" stroke-width="1.5" />
-                <use href="#toolkit-menu-commands" />
-                <path d="m326 189 6 6-6 6" fill="none" stroke="#188461" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </figure>
-            <h3 data-en="<span class='method-label'>Method 2</span> NSR page button"><span class="method-label">方式二</span> NSR 页面按钮</h3>
-            <p data-en="On the <a href='https://fep.lamresearch.com/flp#ZNSR-display' target='_blank' rel='noopener'>FEP NSR page</a>, click <strong>NSR Tracking</strong> beside the page title.">在 <a href="https://fep.lamresearch.com/flp#ZNSR-display" target="_blank" rel="noopener">FEP 的 NSR 页面</a>，点击标题旁的 <strong>NSR Tracking</strong> 按钮。</p>
-            <figure class="step-media">
-              <a class="image-zoom" href="./images/guide-illustrations.svg#nsr-fep-entry" data-image-zoom aria-label="放大 FEP NSR 页面入口图" data-en-label="Enlarge the FEP NSR page button illustration">
-                <img src="./images/guide-illustrations.svg#nsr-fep-entry" width="1092" height="220" alt="FEP NSR page with the NSR Tracking button highlighted beside the page title" loading="lazy">
-              </a>
-            </figure>
-          </section>
-          <section class="doc-section" id="nsr-data" data-section aria-labelledby="nsr-data-title">
-            <h2 id="nsr-data-title" data-en="Load data">加载数据</h2>
-            <p data-en="On first use, Dashboard <strong>automatically loads NSR data from the past year</strong>. To choose a date range manually: <strong>Load NSR</strong> → enter dates → <strong>Load</strong>.">首次打开 Dashboard 时会<strong>自动加载最近 1 年的 NSR 数据</strong>。也可手动选择数据范围：<strong>Load NSR</strong> → 填写日期范围 → <strong>Load</strong>。</p>
-            <figure class="step-media"><svg viewBox="0 0 720 310" role="img" aria-labelledby="nsr-data-image-title"><title id="nsr-data-image-title">Load or refresh NSR data and choose a date range</title><use href="#nsr-data-scene" /></svg></figure>
-          </section>
-          <section class="doc-section" id="nsr-filters" data-section aria-labelledby="nsr-filters-title">
-            <h2 id="nsr-filters-title" data-en="Filter and explore">筛选与查看明细</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Search and combine filters"><span class="shot-step">1</span> 搜索与组合筛选</h3>
-            <p data-en="Search for an NSR number, FCID or title in the <strong>left sidebar</strong>. Combine filters such as status, customer and product; click <strong>Reset all</strong> to start over.">在<strong>左边栏</strong>搜索 NSR 编号、FCID 或标题，也可以组合状态、客户、产品等筛选条件。点击 <strong>Reset all</strong> 清除筛选。</p>
-            <h3 data-en="<span class='shot-step'>2</span> View grouped results"><span class="shot-step">2</span> 查看分组统计</h3>
-            <p data-en="Filtered results are grouped by <strong>Status</strong>, <strong>Product</strong> and <strong>Customer</strong>; you can click counts to filter further.">筛选结果按 <strong>Status</strong>、<strong>Product</strong>、<strong>Customer</strong> 等分组统计，点击数量可只看该组数据。</p>
-            <h3 data-en="<span class='shot-step'>3</span> Work with the detail table"><span class="shot-step">3</span> 使用明细表</h3>
-            <p data-en="<strong>NSR Detail</strong> displays the search results. Click a column heading to sort, or click <strong>Cycle Time</strong> to send these NSRs to the Cycle Time query.">在 <strong>NSR Detail</strong> 中显示搜索结果，点击列标题可以排序，点击 <strong>Cycle Time</strong> 可将这些 NSR 送入 Cycle Time 查询。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/nsr-dashboard.webp">
-                <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1397" viewBox="0 0 1600 1397" lang="en" role="img" aria-label="NSR Tracking Dashboard overview with sample data">
-                  <title>1 Sidebar filters; 2 Interactive Pivot counts; 3 NSR Detail controls</title>
-                  <image href="./images/nsr-dashboard.webp" width="1600" height="1397" />
-                  <g class="shot-marks">
-                    <rect x="24" y="397" width="295" height="770" rx="10" />
-                    <ellipse cx="726" cy="528" rx="23" ry="16" />
-                    <rect x="356" y="1062" width="1217" height="77" rx="10" />
-                    <ellipse cx="1528" cy="1085" rx="47" ry="23" />
-                  </g>
-                  <g class="shot-badge"><circle cx="129" cy="418" r="22" /><text x="129" y="418">1</text></g>
-                  <g class="shot-badge"><circle cx="676" cy="528" r="22" /><text x="676" y="528">2</text></g>
-                  <g class="shot-badge"><circle cx="487" cy="1040" r="22" /><text x="487" y="1040">3</text></g>
-                </svg>
-              </a>
-            </figure>
-          </section>
-          <section class="doc-section" id="nsr-cycle" data-section aria-labelledby="nsr-cycle-title">
-            <h2 id="nsr-cycle-title" data-en="Cycle Time and Workflow">Cycle Time 与 Workflow</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Query NSRs"><span class="shot-step">1</span> 查询 NSR</h3>
-            <p data-en="Clicking <strong>Cycle Time</strong> in the <strong>NSR Detail</strong> section above automatically brings all filtered NSRs here for querying.<br>You can also enter one NSR number per line, then click <strong>Query</strong> for Cycle Time and Workflow.">在上述 <strong>NSR Detail</strong> 页面点击 <strong>Cycle Time</strong> 后，会自动将筛选后的全部 NSR 带入此处查询<br>也可手动输入，每行一个 NSR 编号，点击 <strong>Query</strong> 查询 Cycle Time 和 Workflow。</p>
-            <h3 data-en="<span class='shot-step'>2</span> Review Workflow details"><span class="shot-step">2</span> 查看 Workflow 明细</h3>
-            <p data-en="View <strong>Assigned Approver</strong>, <strong>Pending Days</strong> and <strong>Cycle Time</strong>; click an underlined number for <strong>Workflow Detail</strong>.">查看 <strong>Assigned Approver</strong>、<strong>Pending Days</strong>、<strong>Cycle Time</strong> 等信息，点击下划线数字打开 <strong>Workflow Detail</strong>。</p>
-            <h3 data-en="<span class='shot-step'>3</span> Copy or export"><span class="shot-step">3</span> 复制与导出</h3>
-            <p data-en="Click <strong>Copy</strong> to copy the current result, or <strong>Export XLSX</strong> to export Cycle Time and Workflow details to Excel.">点击 <strong>Copy</strong> 复制当前结果，或用 <strong>Export XLSX</strong> 将 Cycle Time 与 Workflow 明细导出到 Excel。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/nsr-cycle-time.webp">
-                <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="727" viewBox="0 0 1600 727" lang="en" role="img" aria-label="NSR Cycle Time input and results with sample data">
-                  <title>1 NSR input and Query; 2 Approver, Pending Days and Cycle Time details; 3 Copy and Export XLSX</title>
-                  <image href="./images/nsr-cycle-time.webp" width="1600" height="727" />
-                  <g class="shot-marks">
-                    <rect x="113" y="110" width="111" height="38" rx="8" />
-                    <rect x="28" y="240" width="1542" height="130" rx="10" />
-                    <ellipse cx="60" cy="393" rx="34" ry="22" />
-                    <rect x="532" y="571" width="472" height="125" rx="6" />
-                    <ellipse cx="816" cy="648" rx="22" ry="14" />
-                    <rect x="1415" y="527" width="159" height="42" rx="8" />
-                  </g>
-                  <g class="shot-badge"><circle cx="133" cy="228" r="22" /><text x="133" y="228">1</text></g>
-                  <g class="shot-badge"><circle cx="788" cy="547" r="22" /><text x="788" y="547">2</text></g>
-                  <g class="shot-badge"><circle cx="1388" cy="548" r="22" /><text x="1388" y="548">3</text></g>
-                </svg>
-              </a>
-            </figure>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/nsr-workflow.webp">
-                <svg xmlns="http://www.w3.org/2000/svg" width="1239" height="285" viewBox="0 0 1239 285" lang="en" role="img" aria-label="Workflow Detail with sample approvers and comments">
-                  <title>2 Full Workflow Detail with the pending review highlighted</title>
-                  <image href="./images/nsr-workflow.webp" width="1239" height="285" />
-                  <g class="shot-marks"><rect x="28" y="230" width="1152" height="30" rx="5" /></g>
-                  <g class="shot-badge"><circle cx="1200" cy="245" r="22" /><text x="1200" y="245">2</text></g>
-                </svg>
-              </a>
-            </figure>
-          </section>
-        </article>
-
-        <article class="doc-page" id="fcid-guide" data-feature data-icon="🏭" aria-labelledby="fcid-guide-title" hidden>
-          <div class="doc-heading">
-            <h1 class="tool-title" id="fcid-guide-title" data-nav="FCID Control Tower">FCID Governance Control Tower</h1>
-            <div class="doc-description">
-              <strong data-en="Overview">功能简介</strong>
-              <ul>
-                <li data-en="Combine FCID, CTL, NSR and NCE / FA data to review the status of Commit tools">汇总 FCID、CTL、NSR 和 NCE / FA 数据，查看 Commit 机台的状态</li>
-                <li data-en="Filter by initiator, quarter, account, customer and risk to analyze slot readiness, configuration changes and open NSRs">按 Initiator、季度、Account、客户和风险筛选，分析 Slot 就绪情况、配置变更和未关闭的 NSR</li>
-                <li data-en="Review FCID 360° history and evidence, and export filtered results to Excel">查看 FCID 360° 历史记录与证据，按筛选结果导出 Excel</li>
-              </ul>
-            </div>
+</div>
+<div id="nsr-data">
+<div class="topic" id="a1-2" data-subsection aria-labelledby="a1-2-title"><h3 id="a1-2-title" data-en="Data Sources">Data Sources 数据加载</h3>
+<div class="sources"><figure class="media"><a data-zoom href="./images/guide-dashboard.svg#data-sources"><img src="./images/guide-dashboard.svg#data-sources" width="370" height="466" loading="lazy" alt="Five current data source cards with simulated loaded files" style="aspect-ratio: 370 / 466"></a></figure>
+<div class="source-list"><div><h4 data-en="&lt;span class=&#x27;step source-1&#x27;&gt;1&lt;/span&gt;&lt;span class=&#x27;step source-2&#x27;&gt;2&lt;/span&gt; FID / CTL BOBJ"><span class="step source-1">1</span><span class="step source-2">2</span> FID / CTL BOBJ</h4>
+<p data-en="Keep &lt;a href=&#x27;#b2&#x27;&gt;SAPGUIcontrol.exe&lt;/a&gt; running. BOBJ loads automatically; &lt;strong class=&#x27;guide-button&#x27;&gt;Update&lt;/strong&gt; refreshes it, usually in about two minutes.">保持 <a href="#b2">SAPGUIcontrol.exe</a> 运行，页面自动读取 BOBJ；点击 <strong class='guide-button'>Update</strong> 更新，通常约两分钟。</p>
+</div>
+<div><h4 data-en="&lt;span class=&#x27;step source-3&#x27;&gt;3&lt;/span&gt; CTL-NSR List"><span class="step source-3">3</span> CTL-NSR List</h4>
+<p data-en="Historical data from the CTL system is preloaded. Use &lt;strong class=&#x27;guide-button&#x27;&gt;Append&lt;/strong&gt; to add the latest CTL List.">预载 CTL 系统的历史数据，可用 <strong class='guide-button'>Append</strong> 追加最新 CTL List。</p>
+</div>
+<div class="source-nsr"><div><h4 data-en="&lt;span class=&#x27;step source-4&#x27;&gt;4&lt;/span&gt; NSR Log"><span class="step source-4">4</span> NSR Log</h4>
+<p data-en="Automatically load about a year of records from the NSR system. Click &lt;strong class=&#x27;guide-button&#x27;&gt;Load NSR&lt;/strong&gt; to change the date range.">自动从 NSR 系统读取近一年的记录，点击 <strong class='guide-button'>Load NSR</strong> 可修改日期范围。</p>
+</div><figure class="media"><a data-zoom href="./images/guide-dashboard.svg#nsr-load"><img src="./images/guide-dashboard.svg#nsr-load" width="450" height="208" loading="lazy" alt="Current NSR date-range dialog using simulated data" style="aspect-ratio: 450 / 208"></a></figure>
+</div>
+<div><h4 data-en="&lt;span class=&#x27;step source-5&#x27;&gt;5&lt;/span&gt; NCE / FA"><span class="step source-5">5</span> NCE / FA</h4>
+<p data-en="Historical data is preloaded. Use &lt;strong class=&#x27;guide-button&#x27;&gt;Import&lt;/strong&gt; to manually load the latest data.">预载历史数据，可通过 <strong class='guide-button'>Import</strong> 手动导入最新数据。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="topic" id="a1-3" data-subsection aria-labelledby="a1-3-title"><h3 id="a1-3-title" data-en="Filters">Filters 筛选与搜索</h3>
+<figure class="media" style="margin-bottom:20px"><a data-zoom href="./images/guide-dashboard.svg#active-filters"><img src="./images/guide-dashboard.svg#active-filters" width="820" height="47" loading="lazy" alt="Filtered By bar showing the active Account, Calendar Quarter and CTL Type filters" style="aspect-ratio: 820 / 47"></a></figure>
+<div class="sources"><figure class="media" style="max-width:260px"><a data-zoom href="./images/guide-dashboard.svg#filters"><img src="./images/guide-dashboard.svg#filters" width="370" height="370" loading="lazy" alt="Search box and a few example filters" style="aspect-ratio: 370 / 370"></a></figure>
+<div><p data-en="Use &lt;strong&gt;Search FIDs / CTLs / NSRs&lt;/strong&gt; on the left for quick filtering, including multiple IDs. Combine &lt;strong&gt;Account&lt;/strong&gt;, &lt;strong&gt;Calendar Quarter&lt;/strong&gt;, &lt;strong&gt;Customer&lt;/strong&gt; and other filters as needed. Values within one filter combine with OR; different filters combine with AND.">在左侧 <strong>Search FIDs / CTLs / NSRs</strong> 中快捷筛选，可一次输入多条编号；<strong>Account</strong>、<strong>Calendar Quarter</strong>、<strong>Customer</strong> 等可按需筛选。同一筛选内取并集，不同筛选取交集。</p>
+<p data-en="&lt;strong&gt;Filtered By&lt;/strong&gt; at the top shows active filters. Click to quickly locate or remove a filter.">页面上方的 <strong>Filtered By</strong> 显示已有筛选条件，可以点击进行快速定位或者删除筛选条件。</p>
+<p data-en="FIDs default to the current quarter and the next four. CTL Type defaults to Slot / Config / Drop Slot, excluding Pull / Push while retaining records without a loaded CTL.">FID 默认筛选当前及后续 4 个季度；CTL Type 默认筛选 Slot / Config / Drop Slot，排除 Pull / Push，同时保留缺少 CTL 的记录。</p></div>
+</div>
+</div>
+</section>
+<section id="a2" data-section aria-labelledby="a2-title">
+<h2 id="a2-title" data-en="FID queries">FID 查询</h2>
+<div class="topic" id="a2-1" data-subsection aria-labelledby="a2-1-title"><h3 id="a2-1-title" data-en="Read FID Overview">查看 FID Overview</h3>
+<p data-en="After loading FID Database, open the &lt;strong class=&#x27;guide-tab tab-fid&#x27;&gt;FID Portfolio&lt;/strong&gt; tab.">加载 FID Database 后，可进入 <strong class='guide-tab tab-fid'>FID Portfolio</strong> 标签页。</p>
+<p data-en="&lt;strong&gt;FID Overview&lt;/strong&gt; shows &lt;strong class=&#x27;guide-label label-total&#x27;&gt;Total FID&lt;/strong&gt;, &lt;strong class=&#x27;guide-label label-no-slot&#x27;&gt;No Slot&lt;/strong&gt; and &lt;strong class=&#x27;guide-label label-slotted&#x27;&gt;Slotted FID&lt;/strong&gt; from left to right. Only Completed Slot counts as &lt;strong class=&#x27;guide-label label-slotted&#x27;&gt;Slotted FID&lt;/strong&gt;; tools with no Slot, Pending Approval or Drop Slot count as &lt;strong class=&#x27;guide-label label-no-slot&#x27;&gt;No Slot&lt;/strong&gt;."><strong>FID Overview</strong> 从左到右展示 <strong class='guide-label label-total'>Total FID</strong>、<strong class='guide-label label-no-slot'>No Slot</strong> 和 <strong class='guide-label label-slotted'>Slotted FID</strong>。只有 Completed Slot 才计入 <strong class='guide-label label-slotted'>Slotted FID</strong>；未 Slot、Pending Approval 和 Drop Slot 的机台均归入 <strong class='guide-label label-no-slot'>No Slot</strong>。</p>
+<figure class="media" style="margin-bottom:16px"><a data-zoom href="./images/guide-dashboard.svg#fid-overview"><img src="./images/guide-dashboard.svg#fid-overview" width="1188" height="602" loading="lazy" alt="FID Portfolio selected above the FID Overview matrix" style="aspect-ratio: 1188 / 602"></a></figure>
+<p data-en="&lt;strong class=&#x27;guide-label label-slotted&#x27;&gt;Slotted FID&lt;/strong&gt; is shown by horizontal &lt;strong&gt;Pre-slot Risk&lt;/strong&gt; and vertical &lt;strong&gt;Post-slot Risk&lt;/strong&gt;. Pre-slot checks Slot timing; Post-slot checks CTL and NSR delivery risks, using a window of 20 weeks before MCSD / SRD (12 weeks for No Labor). Click Post-slot Risk's &lt;strong class=&#x27;guide-causes&#x27;&gt;Causes&lt;/strong&gt; to expand Late CTL / Late NSR details."><strong class='guide-label label-slotted'>Slotted FID</strong> 按横轴 <strong>Pre-slot Risk</strong> 和纵轴 <strong>Post-slot Risk</strong> 两个维度展示。Pre-slot 判断 Slot 是否及时，Post-slot 判断 CTL 和 NSR 的交付风险，时间窗口为 MCSD / SRD 提前 20 周（No Labor 为 12 周）。点击 Post-slot Risk 的 <strong class='guide-causes'>Causes</strong> 可以展开 Late CTL / Late NSR 明细。</p>
+<p data-en="For &lt;strong class=&#x27;guide-label label-slotted&#x27;&gt;Slotted FIDs&lt;/strong&gt;, Late in either dimension means &lt;strong class=&#x27;guide-label status-risk&#x27;&gt;Risk FID&lt;/strong&gt;; only stability in both dimensions means &lt;strong class=&#x27;guide-label status-clear&#x27;&gt;No Late Flags&lt;/strong&gt;. Click any card to filter tools with that status and view the list in &lt;strong&gt;FID Details&lt;/strong&gt; below.">对于 <strong class='guide-label label-slotted'>Slotted FID</strong>，只要在任一维度出现 Late，记为 <strong class='guide-label status-risk'>Risk FID</strong>；两个维度均稳定时才记为 <strong class='guide-label status-clear'>No Late Flags</strong>。点击任意卡片可筛选出对应状态的机台，并在下方 <strong>FID Details</strong> 查看列表。</p>
+<p data-en="The &lt;strong&gt;Risk Drivers&lt;/strong&gt; section also lists other exceptions or FIDs requiring follow-up. Click an item to filter them."><strong>Risk Drivers</strong> 板块还列出其他异常或待跟进的 FID，可点击相应项目筛选。</p>
+<figure class="media" id="fid-risk-drivers"><a data-zoom href="./images/guide-dashboard.svg#fid-risk-drivers"><img src="./images/guide-dashboard.svg#fid-risk-drivers" width="1188" height="99" loading="lazy" alt="Risk Drivers calculated from simulated FIDs" style="aspect-ratio: 1188 / 99"></a></figure>
+</div>
+<div class="topic" id="a2-2" data-subsection aria-labelledby="a2-2-title"><h3 id="a2-2-title" data-en="FID list and FID 360° information">FID 列表和 FID 360° 全方位信息</h3>
+<p data-en="After filtering with &lt;strong&gt;FID Overview&lt;/strong&gt; cards or the sidebar &lt;strong&gt;Filters&lt;/strong&gt;, view grouped results in &lt;strong&gt;Interactive Pivot&lt;/strong&gt; and the FID list in &lt;strong&gt;FID Details&lt;/strong&gt;.">通过 <strong>FID Overview</strong> 卡片或侧边栏 <strong>Filters</strong> 筛选后，可在 <strong>Interactive Pivot</strong> 查看透视结果，在 <strong>FID Details</strong> 查看 FID 列表。</p>
+<p data-en="Click the first column to switch &lt;strong class=&#x27;guide-label label-ignore&#x27;&gt;⊘ Ignore&lt;/strong&gt; / &lt;strong class=&#x27;guide-label label-star&#x27;&gt;★ Star&lt;/strong&gt; marks, or click &lt;strong&gt;Note&lt;/strong&gt; to add personal notes. Marks and notes are saved only on the local computer.">点击 FID 列表首列可切换 <strong class='guide-label label-ignore'>⊘ Ignore</strong> / <strong class='guide-label label-star'>★ Star</strong> 标记，点击 <strong>Note</strong> 添加个人备注；标记和备注仅保存在本地电脑中。</p>
+<p data-en="Select &lt;strong class=&#x27;guide-label label-scope&#x27;&gt;☐ Exclude ignored FID/NSR&lt;/strong&gt; at the top right of &lt;strong&gt;FID Overview&lt;/strong&gt; to exclude all Ignore-marked records from statistics and Details.">在 <strong>FID Overview</strong> 图右上角勾选 <strong class='guide-label label-scope'>☐ Exclude ignored FID/NSR</strong>，可以从统计与明细中排除所有 Ignore 条目。</p>
+<figure class="media"><a data-zoom href="./images/guide-dashboard.svg#fid-details"><img src="./images/guide-dashboard.svg#fid-details" width="1188" height="773" loading="lazy" alt="Interactive Pivot above the FID Details list, with Ignore and Star marks and a personal Note" style="aspect-ratio: 1188 / 773"></a></figure>
+<p id="fid-360" data-en="Click an FID number to view its full details, including the tool summary, delivery risks, and NSR and CTL history.">点击 FID 编号，可查看对应 FID 的全方位信息，包括机台概况、交付风险及 NSR、CTL 历史等。</p>
+<figure class="media"><a data-zoom href="./images/guide-dashboard.svg#fid-360"><img src="./images/guide-dashboard.svg#fid-360" width="1400" height="1048" loading="lazy" alt="Current FID 360 summary, note and history using simulated data" style="aspect-ratio: 1400 / 1048"></a></figure>
+</div>
+</section>
+<section id="a3" data-section aria-labelledby="a3-title">
+<h2 id="a3-title" data-en="CTL queries">CTL 查询</h2>
+<p id="ctl-overview" data-en="Open the &lt;strong class=&#x27;guide-tab tab-ctl&#x27;&gt;Slot / CTL&lt;/strong&gt; tab. &lt;strong&gt;CTL Overview&lt;/strong&gt; groups records by Stage: &lt;strong class=&#x27;guide-label status-completed&#x27;&gt;Completed&lt;/strong&gt;, &lt;strong class=&#x27;guide-label status-work&#x27;&gt;In work&lt;/strong&gt;, &lt;strong class=&#x27;guide-label status-draft&#x27;&gt;Draft&lt;/strong&gt;, &lt;strong class=&#x27;guide-label status-rejected&#x27;&gt;Rejected&lt;/strong&gt; and &lt;strong class=&#x27;guide-label status-cancelled&#x27;&gt;Cancelled&lt;/strong&gt;. Click a status card to filter.">进入 <strong class='guide-tab tab-ctl'>Slot / CTL</strong> 标签页，<strong>CTL Overview</strong> 按 Stage 分为 <strong class='guide-label status-completed'>Completed</strong>、<strong class='guide-label status-work'>In work</strong>、<strong class='guide-label status-draft'>Draft</strong>、<strong class='guide-label status-rejected'>Rejected</strong> 和 <strong class='guide-label status-cancelled'>Cancelled</strong>。点击状态卡片可进行筛选。</p>
+<p id="ctl-details" data-en="At the bottom, &lt;strong&gt;CTL Details&lt;/strong&gt; shows each CTL's Stage, type, creation and approval dates, Initiator and NSR Reference. &lt;strong&gt;Elapsed Days&lt;/strong&gt; shows the days since creation for In work CTLs.">最下方 <strong>CTL Details</strong> 显示 CTL 的 Stage、类型、创建及批准日期、Initiator 和 NSR Reference 等信息；<strong>Elapsed Days</strong> 显示 In work 的 CTL 自创建以来经过的天数。</p>
+<p data-en="Click a CTL number to open its details in &lt;strong class=&#x27;guide-button button-link&#x27;&gt;CRM ↗&lt;/strong&gt;, or an FID to view &lt;strong&gt;FID 360°&lt;/strong&gt;.">点击 CTL 编号可在 <strong class='guide-button button-link'>CRM ↗</strong> 中打开详情，点击 FID 查看 <strong>FID 360°</strong>。</p>
+<figure class="media" id="ctl-filters"><a data-zoom href="./images/guide-dashboard.svg#ctl-list"><img src="./images/guide-dashboard.svg#ctl-list" width="1188" height="1228" loading="lazy" alt="Slot / CTL selected above CTL Overview, Interactive Pivot and CTL Details" style="aspect-ratio: 1188 / 1228"></a></figure>
+</section>
+<section id="a4" data-section aria-labelledby="a4-title">
+<h2 id="a4-title" data-en="NSR queries">NSR 查询</h2>
+<div class="topic" id="a4-1" data-subsection aria-labelledby="a4-1-title">
+            <h3 id="a4-1-title" data-en="Read NSR Overview">查看 NSR Overview</h3>
+            <p id="nsr-overview" data-en="After loading NSR Log, open the &lt;strong class=&#x27;guide-tab tab-nsr&#x27;&gt;NSR List&lt;/strong&gt; tab. NSRs are grouped into &lt;strong class=&#x27;guide-label status-completed&#x27;&gt;Completed&lt;/strong&gt;, &lt;strong class=&#x27;guide-label status-work&#x27;&gt;In workflow&lt;/strong&gt;, &lt;strong class=&#x27;guide-label status-rejected&#x27;&gt;Rejected&lt;/strong&gt; and &lt;strong class=&#x27;guide-label status-cancelled&#x27;&gt;Cancelled&lt;/strong&gt;. Click a status card to filter records.">加载 NSR Log 后，可进入 <strong class='guide-tab tab-nsr'>NSR List</strong> 标签页。所有 NSR 按状态分为 <strong class='guide-label status-completed'>Completed</strong>、<strong class='guide-label status-work'>In workflow</strong>、<strong class='guide-label status-rejected'>Rejected</strong> 和 <strong class='guide-label status-cancelled'>Cancelled</strong>，点击状态卡片可筛选记录。</p>
+            <figure class="media" style="margin-bottom:16px"><a data-zoom href="./images/guide-dashboard.svg#nsr-overview"><img src="./images/guide-dashboard.svg#nsr-overview" width="1188" height="387" loading="lazy" alt="NSR List selected above NSR Overview and its Completed categories" style="aspect-ratio: 1188 / 387"></a></figure>
+            <p data-en="&lt;strong class=&#x27;guide-label status-completed&#x27;&gt;Completed&lt;/strong&gt; includes &lt;strong class=&#x27;guide-label status-alert&#x27;&gt;Completed NSR but no CTL&lt;/strong&gt;, &lt;strong class=&#x27;guide-label status-pending&#x27;&gt;CTL pending approval&lt;/strong&gt;, &lt;strong class=&#x27;guide-label status-completed&#x27;&gt;CTL approved&lt;/strong&gt; and &lt;strong class=&#x27;guide-label status-completed&#x27;&gt;Completed 5D NSR&lt;/strong&gt;."><strong class='guide-label status-completed'>Completed</strong> 细分为 <strong class='guide-label status-alert'>Completed NSR but no CTL</strong>、<strong class='guide-label status-pending'>CTL pending approval</strong>、<strong class='guide-label status-completed'>CTL approved</strong> 和 <strong class='guide-label status-completed'>Completed 5D NSR</strong>。</p>
           </div>
-          <div class="tool-actions"><a class="action" href="https://fep.lamresearch.com/stacey1.png" target="_blank" rel="noopener" data-en="Open FCID Governance Control Tower ↗">打开 FCID Governance Control Tower ↗</a></div>
-          <section class="doc-section" id="fcid-launch" data-section aria-labelledby="fcid-launch-title">
-            <h2 id="fcid-launch-title" data-en="How to open Control Tower">如何打开 Control Tower</h2>
-            <p data-en="Open any Lam Research page. Click <strong>Extensions</strong> → <strong>Tampermonkey</strong>, then choose <strong>🏭 FCID Governance Control Tower</strong>.">打开任意 Lam Research 页面，点击<strong>扩展按钮</strong> → <strong>Tampermonkey</strong>，选择 <strong>🏭 FCID Governance Control Tower</strong>。</p>
-            <figure class="step-media">
-              <svg viewBox="0 0 720 392" role="img" aria-labelledby="fcid-menu-title">
-                <title id="fcid-menu-title">Open FCID Governance Control Tower from the Tampermonkey menu</title>
-                <use href="#toolkit-menu-scene" />
-                <rect x="80" y="210" width="260" height="29" rx="5" fill="#e7f6ef" stroke="#2a9872" stroke-width="1.5" />
-                <use href="#toolkit-menu-commands" />
-                <path d="m326 219 6 6-6 6" fill="none" stroke="#188461" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </figure>
-          </section>
-          <section class="doc-section" id="fcid-data" data-section aria-labelledby="fcid-data-title">
-            <h2 id="fcid-data-title" data-en="Data loading and updates (automatic)">数据加载与更新（自动）</h2>
-            <div class="source-loading">
-              <figure class="step-media">
-                <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-data-sources" aria-label="放大 FCID 数据源示例" data-en-label="Enlarge the FCID data source example">
-                  <img src="./images/guide-illustrations.svg#fcid-data-sources" width="338" height="494" loading="lazy" alt="FCID data sources with BOBJ badges, loaded date ranges, Import buttons and download help for CTL-NSR List and NCE / FA Review">
-                </a>
-              </figure>
-              <div class="source-loading-steps">
-                <div>
-                  <h3 data-en="<span class='shot-step'>1</span><span class='shot-step'>2</span> Load FCID and CTL BOBJ data"><span class="shot-step">1</span><span class="shot-step">2</span> 加载 FCID 与 CTL BOBJ 数据</h3>
-                  <p data-en="Keep <strong>SAPGUIcontrol.exe</strong> running (see <a href='#sap-connect'>Connect to SAP GUI</a>). On opening, the page attempts to load <strong>[1] FCID Database (BOBJ)</strong> and <strong>[2] CTL Report (BOBJ)</strong> automatically. Click <strong>Update</strong> for the corresponding source to automatically update BOBJ data; this usually takes two minutes.">保持 <strong>SAPGUIcontrol.exe</strong> 运行（参见<a href="#sap-connect">连接 SAP GUI</a>）。打开页面后，会尝试自动读取 <strong>[1] FCID Database (BOBJ)</strong> 和 <strong>[2] CTL Report (BOBJ)</strong>。点击对应数据源的 <strong>Update</strong> 可自动更新 BOBJ 数据，通常需要两分钟。</p>
-                </div>
-                <div>
-                  <h3 data-en="<span class='shot-step'>3</span> CTL-NSR List automatically loads the preset version"><span class="shot-step">3</span> CTL-NSR List 自动加载预置版本</h3>
-                  <p class="hint" data-en="For the latest data, manually export a file from the CTL system and import it using Import.">如需使用最新数据，可从 CTL 系统手动导出文件，并通过 Import 导入。</p>
-                </div>
-                <div>
-                  <h3 data-en="<span class='shot-step'>4</span> Load NSRs"><span class="shot-step">4</span> 加载 NSR</h3>
-                  <p data-en="By default, NSR data from the past year loads automatically. To load a specific period, click <strong>Load NSR</strong> and select the date range in the dialog.">默认会自动加载近 1 年的 NSR 数据。如需读取指定时间范围，点击 <strong>Load NSR</strong>，在弹出的框内选择日期。</p>
-                </div>
-                <div>
-                  <h3 data-en="<span class='shot-step'>5</span> NCE / FA automatically loads the preset version"><span class="shot-step">5</span> NCE / FA 自动加载预置版本</h3>
-                  <p class="hint" data-en="For the latest data, please import it manually using Import.">如需使用最新数据，请手动通过 Import 导入。</p>
-                </div>
-              </div>
-            </div>
-          </section>
-          <!-- 暂不发布：FCID 从第 3 节起的说明待确认，更新后移除此注释块恢复展示。
-          <section class="doc-section" id="fcid-filters" data-section aria-labelledby="fcid-filters-title">
-            <h2 id="fcid-filters-title" data-en="Filter and search">筛选与搜索</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Combine multiple filters"><span class="shot-step">1</span> 组合多选筛选</h3>
-            <p data-en="Use <strong>Initiator</strong>, <strong>Quarter</strong>, <strong>Account</strong> and <strong>Customer</strong> to define the tool population. Initiators are matched by FCID from CTL Report, CTL-NSR List and NSR Log. Account IDs use NSR Log names when multiple shared FCIDs provide consistent matches with one initiator in each source. Each FCID belongs to the person with the most distinct CTL (including Slot) and NSR records in the loaded data. The same CTL in CTL Report and CTL-NSR List counts once; repeated NSR numbers also count once. Ties, missing names and unresolved owners appear under <strong>[Undefined]</strong>. <strong>Status / Risk</strong> selects risk categories for risk results; it does not change the Commit FCID population or the stability denominator.<br>Each filter supports multiple selections; use <strong>All / Clear</strong> for that filter, or <strong>Reset Filters</strong> to reset all filters and the search.">用左侧的 <strong>Initiator</strong>、<strong>Quarter</strong>、<strong>Account</strong> 和 <strong>Customer</strong> 确定机台范围。Initiator 按 FCID 从 CTL Report、CTL-NSR List 和 NSR Log 匹配；账号在多个共同 FCID 上均为双方单人且姓名对应一致时，统一显示 NSR Log 中的姓名。按当前加载数据中每人的不同 CTL（含 Slot）和 NSR 单数确定 FCID 归属，单数最多者为归属人。CTL Report 与 CTL-NSR List 的相同 CTL 只计一次，重复 NSR 编号也只计一次；最高次数并列、姓名缺失或归属人无法确定时，归入 <strong>[Undefined]</strong>。<strong>Status / Risk</strong> 用于选择风险结果中的风险类别，不改变 Commit FCID 机台数或稳定性指标的分母。<br>各项支持多选；用 <strong>All / Clear</strong> 全选或清除该项，<strong>Reset Filters</strong> 可重置全部筛选和搜索。</p>
-            <h3 data-en="<span class='shot-step'>2</span> Select quarters by year"><span class="shot-step">2</span> 按年份选择季度</h3>
-            <p data-en="Quarter options are sorted chronologically by default. Click a year under <strong>Select Year</strong> to select or clear all its quarters. Under <strong>Account</strong>, click <strong>Rule</strong> to jump to <strong>Fab / Account Group Mapping</strong> in Rules.">季度选项默认按时间顺序排列。点击 <strong>Select Year</strong> 下的年份，可选中或取消该年的全部季度。在 <strong>Account</strong> 下点击 <strong>Rule</strong>，可跳转到 Rules 中的 <strong>Fab / Account Group Mapping</strong>。</p>
-            <h3 data-en="<span class='shot-step'>3</span> Search for an identifier"><span class="shot-step">3</span> 搜索编号</h3>
-            <p data-en="Enter a target FCID or other keyword in <strong>Search FCID / CTL / NSR</strong>. Check <strong>Current Population Context</strong> to confirm the population and KPIs before interpreting a view or exporting results.">在 <strong>Search FCID / CTL / NSR</strong> 输入目标 FCID 等关键词；查看 <strong>Current Population Context</strong> 确认当前机台范围与指标，再阅读各视图或导出结果。</p>
-            <p class="hint" data-en="Example: selecting QDec'26 and AT1 leaves 2 demo FCIDs. Both have valid Slots, while neither meets the Post-Slot stable condition; Slot Readiness is 100.0% and Projected Post-Slot is 0.0%.">样例：选择 QDec'26 和 AT1 后剩下 2 台机台，均有有效 Slot，但均未满足 Post-Slot 稳定条件，因此 Slot Readiness 为 100.0%，Projected Post-Slot 为 0.0%。</p>
-            <figure class="step-media" style="max-width:360px">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-filters" aria-label="放大 FCID 多选筛选示例" data-en-label="Enlarge the FCID multi-select filter example">
-                <img src="./images/guide-illustrations.svg#fcid-filters" width="338" height="593" loading="lazy" alt="Sample Quarter and Account filters selecting QDec 2026 and AT1, with year shortcuts, risk categories and search">
-              </a>
-            </figure>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-filter-context" aria-label="放大筛选后的机台范围与指标" data-en-label="Enlarge the filtered population context and KPIs">
-                <img src="./images/guide-illustrations.svg#fcid-filter-context" width="1512" height="259" loading="lazy" alt="Sample current population context for 2 FCIDs with 100 percent Slot Readiness and 0 percent Projected Post-Slot">
-              </a>
-            </figure>
-          </section>
-          <section class="doc-section" id="fcid-views" data-section aria-labelledby="fcid-views-title">
-            <h2 id="fcid-views-title" data-en="Explore governance views">查看治理视图</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Executive: understand the overall position"><span class="shot-step">1</span> Executive：了解整体情况</h3>
-            <p data-en="<strong>Commit FCID</strong> is the filtered governance population after deduplication and exclusions. In this example, 20 of 24 tools have a valid Slot (<strong>Slot Readiness 83.3%</strong>); 15 satisfy Pre-Slot and 15 satisfy Post-Slot conditions (both <strong>62.5%</strong>).<br><strong>Risk FCID</strong> counts distinct tools with risks. One tool can have several risk types, so adding risk-category counts does not give a distinct tool count."><strong>Commit FCID</strong> 是当前筛选范围内，经去重和排除后的治理机台数。样例中 24 台机台有 20 台具备有效 Slot（<strong>Slot Readiness 83.3%</strong>），15 台满足 Pre-Slot、15 台满足 Post-Slot 条件（均为 <strong>62.5%</strong>）。<br><strong>Risk FCID</strong> 按存在风险的机台去重；同一台可能有多类风险，不能把各类风险数量相加当作机台数。</p>
-            <p data-en="Use <strong>Quarter Stability Heatmap</strong> to compare quarters and <strong>Top Risk Drivers</strong> to locate common risk causes. The lower <strong>Executive Watchlist</strong> lists P1 risks for follow-up.<br>Click <strong>Risk FCID</strong> for risk details; click <strong>Open NSR Qty</strong> or <strong>FCIDs Under Open NSR</strong> for NSR details. The example has <strong>6 open NSRs affecting 5 FCIDs</strong>.">用 <strong>Quarter Stability Heatmap</strong> 比较各季度表现，用 <strong>Top Risk Drivers</strong> 找到主要风险原因；下方 <strong>Executive Watchlist</strong> 列出需跟进的 P1 风险。<br>点击 <strong>Risk FCID</strong> 查看风险明细；点击 <strong>Open NSR Qty</strong> 或 <strong>FCIDs Under Open NSR</strong> 查看 NSR 明细。样例为 <strong>6 条未关闭 NSR，涉及 5 台 FCID</strong>。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-executive" aria-label="放大 Executive 总览示例" data-en-label="Enlarge the Executive overview example">
-                <img src="./images/guide-illustrations.svg#fcid-executive" width="1512" height="825" loading="lazy" alt="Sample Executive KPIs for 24 FCIDs, governance funnel, quarterly heatmap and risk driver counts">
-              </a>
-            </figure>
-            <h3 data-en="<span class='shot-step'>2</span> Stability Engine: explain Pre / Post status"><span class="shot-step">2</span> Stability Engine：分析 Pre / Post 状态</h3>
-            <p data-en="<strong>Weeks to Pre-Stability</strong> is the interval from Slot CTL submission / approval to its SRD / RD anchor. <strong>On Time</strong> meets the threshold (normally 20 weeks; No Labor uses 12); <strong>Pre Late Risk</strong> means the condition is not met.<br><strong>Weeks to Post-Stability</strong> shows weeks remaining to MCSD. <strong>Post Config CTL Risk</strong> identifies qualifying configuration CTLs within 20 weeks before MCSD; use <strong>Config CTL Risk</strong> to locate their CTL numbers."><strong>Weeks to Pre-Stability</strong> 表示 Slot CTL 提交／批准时间到其 SRD / RD 基准日的间隔周数；<strong>On Time</strong> 表示达到阈值（通常 20 周，No Labor 为 12 周），<strong>Pre Late Risk</strong> 表示未满足条件。<br><strong>Weeks to Post-Stability</strong> 表示距 MCSD 的剩余周数；<strong>Post Config CTL Risk</strong> 表示 MCSD 前 20 周内出现符合规则的配置变更 CTL，可通过 <strong>Config CTL Risk</strong> 列定位 CTL 编号。</p>
-            <p class="hint" data-en="Projected Stable means no qualifying configuration-change risk was found in the known window. Projected Stable + MCSD Pending means MCSD is still missing and needs confirmation.">Projected Stable 表示在已知时间窗口内未命中配置变更风险；Projected Stable + MCSD Pending 表示 MCSD 仍缺失，需要确认日期。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-stability" aria-label="放大稳定性分析示例" data-en-label="Enlarge the stability analysis example">
-                <img src="./images/guide-illustrations.svg#fcid-stability" width="1512" height="563" loading="lazy" alt="Sample Stability Engine rows showing On Time, Pre Late Risk, No Slot CTL, Post Config CTL Risk and MCSD Pending">
-              </a>
-            </figure>
-            <h3 data-en="<span class='shot-step'>3</span> Slot Governance: check slot evidence and dates"><span class="shot-step">3</span> Slot Governance：核对 Slot 与日期</h3>
-            <p data-en="Use <strong>Slot + MCSD</strong>, <strong>Slot + No MCSD</strong> and <strong>No Slot CTL</strong> to separate tools with confirmed dates, missing MCSD and missing Slots. Check <strong>Slot State</strong>, <strong>Slot CTL</strong>, <strong>MCSD</strong>, <strong>RD</strong> and <strong>CTL SRD</strong> to locate the record requiring follow-up.<br><strong>Slot Ready</strong> means a valid Slot exists; it does not mean the Slot was submitted on time. A later Drop Slot can also change the current Slot State.">通过 <strong>Slot + MCSD</strong>、<strong>Slot + No MCSD</strong>、<strong>No Slot CTL</strong> 区分已有日期、待补 MCSD 和缺少 Slot 的机台；结合 <strong>Slot State</strong>、<strong>Slot CTL</strong>、<strong>MCSD</strong>、<strong>RD</strong>、<strong>CTL SRD</strong> 定位需跟进的记录。<br><strong>Slot Ready</strong> 只表示存在有效 Slot，不代表提交时间满足 Pre-Slot 要求；后续 Drop Slot 也会改变当前 Slot State。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-slot" aria-label="放大 Slot Governance 示例" data-en-label="Enlarge the Slot Governance example">
-                <img src="./images/guide-illustrations.svg#fcid-slot" width="1512" height="529" loading="lazy" alt="Sample Slot Governance counts and detail rows with slot readiness, CTL references, MCSD, RD and Pre status">
-              </a>
-            </figure>
-            <h3 data-en="<span class='shot-step'>4</span> Risk Drivers: turn risks into follow-up items"><span class="shot-step">4</span> Risk Drivers：将风险转为跟进事项</h3>
-            <p data-en="Read the category cards, then use <strong>Risk Driver Detail</strong> to locate the FCID and its <strong>Message</strong>. <strong>P1</strong> covers missing / late Slots and qualifying configuration changes; <strong>P2</strong> flags MCSD Pending; <strong>P3</strong> includes NSR and NCE signals.<br>Messages give the relevant CTL number, week interval or missing condition so you can verify the source record and coordinate follow-up. Use <strong>Status / Risk</strong> to focus on a risk category.">先看分类卡片，再到 <strong>Risk Driver Detail</strong> 定位 FCID 和 <strong>Message</strong>。<strong>P1</strong> 包括缺少／偏晚的 Slot 与符合规则的配置变更，<strong>P2</strong> 提示 MCSD Pending，<strong>P3</strong> 包括 NSR 和 NCE 线索。<br>Message 会给出相关 CTL 编号、间隔周数或缺失条件，便于核实源记录并协调跟进；用 <strong>Status / Risk</strong> 可聚焦指定风险类别。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-risks" aria-label="放大风险原因与明细示例" data-en-label="Enlarge the risk driver and detail example">
-                <img src="./images/guide-illustrations.svg#fcid-risks" width="1512" height="768" loading="lazy" alt="Sample QDec 2026 risk category cards and P1, P2 and P3 detail messages for follow-up">
-              </a>
-            </figure>
-            <h3 data-en="<span class='shot-step'>5</span> NSR Governance: follow up open requests"><span class="shot-step">5</span> NSR Governance：跟进未关闭请求</h3>
-            <p data-en="Each row represents an FCID and groups its <strong>Open NSR Count</strong>, titles, workflow status and <strong>NSR#</strong>. NSR numbers, titles and statuses follow the same order; open <strong>FCID 360°</strong> for individual requests and historical records.<br>In the example, FCID <strong>990101</strong> has 2 open NSRs, so the NSR count is greater than the affected-FCID count.">每行按 FCID 汇总 <strong>Open NSR Count</strong>、标题、Workflow 状态和 <strong>NSR#</strong>；编号、标题和状态按相同顺序逐条对应，再到 <strong>FCID 360°</strong> 查看各条请求和历史记录。<br>样例中 <strong>990101</strong> 有 2 条未关闭 NSR，因此 NSR 条数大于受影响机台数。</p>
-            <p class="hint" data-en="Executive Open NSR Qty excludes NSR numbers beginning with D. The NSR Governance table groups all open NSRs, so counts can differ when D-prefixed records exist.">Executive 的 Open NSR Qty 不计入 D 开头的 NSR 编号；NSR Governance 表汇总全部未关闭 NSR，存在 D 编号时两处数量可能不同。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-nsr" aria-label="放大 NSR Governance 示例" data-en-label="Enlarge the NSR Governance example">
-                <img src="./images/guide-illustrations.svg#fcid-nsr" width="1512" height="299" loading="lazy" alt="Sample open NSR population grouped by 5 FCIDs, including two open requests for FCID 990101">
-              </a>
-            </figure>
-            <h3 data-en="<span class='shot-step'>6</span> Quarter Governance: explain quarter assignment"><span class="shot-step">6</span> Quarter Governance：解释季度归属</h3>
-            <p data-en="Use <strong>Quarter Governance View</strong> to compare population, Slot readiness and Pre / Post performance by quarter; <strong>Quarter Source Detail</strong> shows which dates determined the assignment.<br>MCSD takes priority, followed by Target Ship, Sales Ops RD and Calendar Quarter. If Target Ship agrees with the source Calendar Quarter, the displayed source remains Calendar Quarter. MCSD dates after the quarter's last Friday carry into the next quarter.">用 <strong>Quarter Governance View</strong> 比较各季度机台数、Slot 就绪情况及 Pre / Post 表现，用 <strong>Quarter Source Detail</strong> 确认季度由哪个日期决定。<br>优先使用 MCSD，其次为 Target Ship、Sales Ops RD、Calendar Quarter；Target Ship 与原 Calendar Quarter 一致时，来源仍显示 Calendar Quarter。MCSD 晚于该季度最后一个周五时，会结转到下一季度。</p>
-            <p class="hint" data-en="Example: FCID 990105 has MCSD 28 Dec 2026, after the quarter's last Friday, and is assigned to QMar'27. Check the Adjustment column in Slot Governance when explaining a carry-over.">样例中 990105 的 MCSD 为 2026-12-28，晚于当季最后一个周五，因此归入 QMar'27；可在 Slot Governance 的 Adjustment 列核对结转原因。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-quarter" aria-label="放大季度汇总与来源示例" data-en-label="Enlarge the quarter summary and source example">
-                <img src="./images/guide-illustrations.svg#fcid-quarter" width="1512" height="651" loading="lazy" alt="Sample quarterly population and stability summary, with MCSD, Target Ship, RD and Calendar Quarter source counts">
-              </a>
-            </figure>
-            <h3 data-en="<span class='shot-step'>7</span> Mapping Diagnostics: explain the data population"><span class="shot-step">7</span> Mapping Diagnostics：核对数据范围</h3>
-            <p data-en="Use <strong>Workbook Loading Summary</strong> to check the actual sheet, recognition score, row count and key field. <strong>Key Diagnostics</strong> explains invalid FIDs, duplicate removal, exclusions and the effective population; <strong>Field Mapping Matrix</strong> shows which source supplies each standard field.<br>In the example, 28 Commit rows become 27 distinct FCIDs after removing 1 duplicate; excluding 3 records leaves 24 tools in the governance population.">用 <strong>Workbook Loading Summary</strong> 检查实际工作表、识别分数、行数和关联字段；<strong>Key Diagnostics</strong> 解释无效 FID、去重、排除及最终机台数；<strong>Field Mapping Matrix</strong> 显示各标准字段由哪个数据源提供。<br>样例中 28 条 Commit 记录去除 1 条重复后得到 27 台不同 FCID，再排除 3 台，最终有 24 台进入治理范围。</p>
-            <p data-en="Use <strong>UAT Console</strong> to review rule-validation results. Open <strong>Rules</strong> for the rule book and Fab / Account Group mapping when checking thresholds or account assignment. Click <strong>Save</strong> after editing the mapping to save it in Tampermonkey. Unmodified rules follow updated defaults; your changes are kept. If both change the same Fab differently, review the notice and click <strong>Save</strong> to confirm. Older settings without a baseline need a one-time review. <strong>Restore Defaults</strong> restores and saves the latest default mapping.">在 <strong>UAT Console</strong> 查看规则校验结果；需要核对阈值或 Account 归属时，打开 <strong>Rules</strong> 查看规则说明和 Fab / Account Group 映射。修改映射后点击 <strong>Save</strong>，配置会保存在 Tampermonkey 中。未修改的规则会跟随新版默认值更新，个人修改会保留；如果双方对同一个 Fab 的修改不同，请按提示核对后点击 <strong>Save</strong> 确认。没有基准的旧配置首次需要核对一次。<strong>Restore Defaults</strong> 会恢复并保存最新默认映射。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-diagnostics" aria-label="放大数据加载与映射诊断示例" data-en-label="Enlarge the data loading and mapping diagnostics example">
-                <img src="./images/guide-illustrations.svg#fcid-diagnostics" width="1512" height="771" loading="lazy" alt="Sample workbook readiness, header scores, row counts, deduplication diagnostics and field mapping matrix">
-              </a>
-            </figure>
-          </section>
-          <section class="doc-section" id="fcid-detail" data-section aria-labelledby="fcid-detail-title">
-            <h2 id="fcid-detail-title" data-en="View an FCID in 360°">查看 FCID 360°</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Check a tool and its action focus"><span class="shot-step">1</span> 核对单台机台与跟进重点</h3>
-            <p data-en="Open <strong>FCID 360°</strong>, enter an FCID / FID and click <strong>View FCID</strong>. <strong>Basic Info</strong> combines its customer, product, dates and Pre / Post status; <strong>Recommended Action</strong> lists the current risk causes for follow-up.<br>This view uses the current population filters. If the target FCID is outside that population, broaden the filters and confirm the FCID shown in Basic Info.">切换到 <strong>FCID 360°</strong>，输入 FCID / FID，点击 <strong>View FCID</strong>。<strong>Basic Info</strong> 汇总客户、产品、日期与 Pre / Post 状态，<strong>Recommended Action</strong> 列出当前需跟进的风险原因。<br>此视图受当前机台范围限制；目标 FCID 不在范围中时，先放宽筛选，并确认 Basic Info 实际显示的 FCID。</p>
-            <h3 data-en="<span class='shot-step'>2</span> Separate open requests from historical evidence"><span class="shot-step">2</span> 区分未结请求与历史证据</h3>
-            <p data-en="<strong>Open NSR</strong> shows individual NSR numbers, titles and workflow status for active follow-up; <strong>Historical NSR</strong> retains closed requests. <strong>Configuration Accuracy History</strong> lists Closed / Cancelled NCE records with issue type, part number and description.<br>In this example, 990101 has 2 open NSRs, 1 historical NSR and 1 historical accuracy issue. Historical NCE evidence is not a count of currently open quality problems."><strong>Open NSR</strong> 展示各条未关闭 NSR 的编号、标题和 Workflow 状态，供当前跟进；<strong>Historical NSR</strong> 保留已结束的请求；<strong>Configuration Accuracy History</strong> 列出 Closed / Cancelled 的 NCE 历史，并提供问题类别、Part Number 和描述。<br>样例中 990101 有 2 条未关闭 NSR、1 条历史 NSR 和 1 条历史准确性问题；NCE 历史线索不等同于当前未结质量问题数。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-360" aria-label="放大 FCID 360° 与历史证据示例" data-en-label="Enlarge the FCID 360 degree view and evidence example">
-                <img src="./images/guide-illustrations.svg#fcid-360" width="1512" height="1094" loading="lazy" alt="Sample FCID 990101 basic information and recommended actions, two open NSRs, one historical NSR and one historical accuracy issue">
-              </a>
-            </figure>
-            <p data-en="Click <strong>Export FCID360</strong> to export the selected FCID's calculated summary fields. The workbook does not reproduce all the expanded NSR / NCE evidence cards shown on this page.">点击 <strong>Export FCID360</strong> 可导出当前 FCID 的计算汇总字段；导出表不会包含页面中全部展开的 NSR / NCE 证据卡片。</p>
-          </section>
-          <section class="doc-section" id="fcid-export" data-section aria-labelledby="fcid-export-title">
-            <h2 id="fcid-export-title" data-en="Export results">导出结果</h2>
-            <p data-en="At the bottom of each tab, use <strong>Export Center</strong>. Choose <strong>Export Population</strong> for the tool population, <strong>Export Stability / Slot</strong> for calculated tool details, <strong>Export Risk</strong> for risk items, or <strong>Export Quarter</strong> for quarter and source summaries.<br><strong>Export All Tabs</strong> combines Executive KPI, Population, Excluded, Watchlist, Stability, Slot, Risk, Quarter and the currently selected FCID360 summary into one Excel workbook.">在各标签页底部的 <strong>Export Center</strong>，用 <strong>Export Population</strong> 导出机台范围，<strong>Export Stability / Slot</strong> 导出机台计算明细，<strong>Export Risk</strong> 导出风险条目，<strong>Export Quarter</strong> 导出季度及来源汇总。<br><strong>Export All Tabs</strong> 将 Executive KPI、Population、Excluded、Watchlist、Stability、Slot、Risk、Quarter 及当前选中 FCID360 的汇总数据放入一个 Excel 工作簿。</p>
-            <p class="hint" data-en="Confirm Current Population Context first. Quarter, Account, Customer and search define the population; Status / Risk limits risk results. Export Excluded always exports the full excluded list, including the Excluded sheet in Export All Tabs. If required sources are missing, load them before exporting.">导出前确认 Current Population Context：Quarter、Account、Customer 和搜索决定机台范围，Status / Risk 限制风险结果。Export Excluded 始终导出完整排除清单，Export All Tabs 中的 Excluded 页也一样；如提示缺少数据源，先补齐所需数据。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#fcid-export" aria-label="放大 Export Center 示例" data-en-label="Enlarge the Export Center example">
-                <img src="./images/guide-illustrations.svg#fcid-export" width="1512" height="106" loading="lazy" alt="Sample Export Center with population, excluded, stability, slot, risk, quarter and combined workbook actions">
-              </a>
-            </figure>
-          </section>
-          -->
-        </article>
+<div class="topic" id="a4-2" data-subsection aria-labelledby="a4-2-title"><h3 id="a4-2-title" data-en="NSR list and details">NSR 列表与明细</h3>
+<p data-en="Filter with &lt;strong&gt;NSR Overview&lt;/strong&gt; or &lt;strong&gt;Filters&lt;/strong&gt;; view grouped results in &lt;strong&gt;Interactive Pivot&lt;/strong&gt; and records in &lt;strong&gt;NSR Details&lt;/strong&gt;.">通过 <strong>NSR Overview</strong> 或 <strong>Filters</strong> 筛选，在 <strong>Interactive Pivot</strong> 查看透视结果，在 <strong>NSR Details</strong> 查看列表。</p>
+<p data-en="Click an NSR number to query its &lt;strong&gt;Cycle Time&lt;/strong&gt; and &lt;strong&gt;Workflow&lt;/strong&gt;, or click &lt;strong class=&#x27;guide-button button-primary&#x27;&gt;Cycle Time&lt;/strong&gt; at the table's top right to query all filtered NSRs.">点击 NSR 编号可查询单条 <strong>Cycle Time</strong> 与 <strong>Workflow</strong>，或点击表格右上角的 <strong class='guide-button button-primary'>Cycle Time</strong> 批量查询筛选后的全部 NSR。</p>
+<figure class="media"><a data-zoom href="./images/guide-dashboard.svg#nsr-details"><img src="./images/guide-dashboard.svg#nsr-details" width="1188" height="909" loading="lazy" alt="Interactive Pivot above NSR Details, with Ignore and Star marks and the Cycle Time button" style="aspect-ratio: 1188 / 909"></a></figure>
+</div>
+<div class="topic" id="a4-3" data-subsection aria-labelledby="a4-3-title">
+            <h3 id="a4-3-title" data-en="NSR Cycle Time and Workflow">NSR Cycle Time 与 Workflow</h3>
+            <h4 data-en="<span class='step'>1</span> Query NSRs"><span class="step">1</span> 查询 NSR</h4>
+            <p data-en="Open the &lt;strong class=&#x27;guide-tab tab-cycle&#x27;&gt;NSR Cycle Time&lt;/strong&gt; tab, enter one NSR number per line, then click &lt;strong class=&#x27;guide-button button-primary&#x27;&gt;Query&lt;/strong&gt;. NSRs sent from &lt;strong&gt;NSR Details&lt;/strong&gt; are queried automatically.">进入 <strong class='guide-tab tab-cycle'>NSR Cycle Time</strong> 标签页，每行输入一个 NSR 编号，点击 <strong class='guide-button button-primary'>Query</strong>；从 <strong>NSR Details</strong> 带入的编号会自动查询。</p>
+            <h4 data-en="<span class='step'>2</span> Review Workflow details"><span class="step">2</span> 查看 Workflow 明细</h4>
+            <p data-en="View <strong>Assigned Approver</strong>, <strong>Pending Days</strong> and <strong>Cycle Time</strong>; click an <strong>NSR#</strong> for <strong>Workflow Detail</strong>, then <strong class='guide-button button-link'>NSR ↗</strong> to open the NSR page.">查看 <strong>Assigned Approver</strong>、<strong>Pending Days</strong> 和 <strong>Cycle Time</strong>；点击 <strong>NSR#</strong> 打开 <strong>Workflow Detail</strong>，通过 <strong class='guide-button button-link'>NSR ↗</strong> 进入原始 NSR 页面。</p>
+            <h4 data-en="<span class='step'>3</span> Copy or export"><span class="step">3</span> 复制与导出</h4>
+            <p data-en="Click <strong class='guide-button'>Copy</strong> to copy the current result, or <strong class='guide-button'>Export XLSX</strong> to export Cycle Time and Workflow details to Excel.">点击 <strong class='guide-button'>Copy</strong> 复制当前结果，或用 <strong class='guide-button'>Export XLSX</strong> 将 Cycle Time 与 Workflow 明细导出到 Excel。</p>
+            <figure class="media"><a data-zoom href="./images/guide-dashboard.svg#nsr-cycle-time"><img src="./images/guide-dashboard.svg#nsr-cycle-time" width="1188" height="617" loading="lazy" alt="Steps 1 Query, 2 Workflow details and 3 Copy or export highlighted, with Workflow Detail floating above the input and results panels with a drop shadow" style="aspect-ratio: 1188 / 617"></a></figure>
+          </div>
+</section>
+<section id="a5" data-section aria-labelledby="a5-title">
+<h2 id="a5-title" data-en="Summary and exports">汇总与导出</h2>
+<div class="topic" id="a5-1" data-subsection aria-labelledby="a5-1-title">
+<h3 id="a5-1-title" data-en="Read Summary Metrics">查看 Summary Metrics</h3>
+<p data-en="Open the &lt;strong class=&#x27;guide-tab tab-summary&#x27;&gt;Summary Metrics&lt;/strong&gt; tab to compare &lt;strong class=&#x27;guide-label label-metric&#x27;&gt;Slot Completion%&lt;/strong&gt;, &lt;strong class=&#x27;guide-label label-metric&#x27;&gt;Slot Stability%&lt;/strong&gt;, &lt;strong class=&#x27;guide-label label-metric&#x27;&gt;FID&lt;/strong&gt;, &lt;strong class=&#x27;guide-label label-metric&#x27;&gt;NSR&lt;/strong&gt; and other metrics within the current filters.">进入 <strong class='guide-tab tab-summary'>Summary Metrics</strong> 标签页，对比当前筛选范围内的 <strong class='guide-label label-metric'>Slot Completion%</strong>, <strong class='guide-label label-metric'>Slot Stability%</strong>, <strong class='guide-label label-metric'>FID</strong>, <strong class='guide-label label-metric'>NSR</strong> 等指标。</p>
+<figure class="media"><a data-zoom href="./images/guide-dashboard.svg#summary-metrics"><img src="./images/guide-dashboard.svg#summary-metrics" width="1188" height="1003" loading="lazy" alt="Summary Metrics with six calendar quarters and FID, NSR and CTL metrics" style="aspect-ratio: 1188 / 1003"></a></figure>
+</div>
+<div class="topic" id="a5-2" data-subsection aria-labelledby="a5-2-title">
+<span id="fid-settings" aria-hidden="true"></span><span id="dashboard-marks" aria-hidden="true"></span><span id="dashboard-mapping" aria-hidden="true"></span>
+<h3 id="a5-2-title" data-en="Copy and export">复制与导出</h3>
+<p data-en="Use &lt;strong class=&#x27;guide-button&#x27;&gt;Copy&lt;/strong&gt; at the top right of each table to copy its current results, or &lt;strong class=&#x27;guide-button&#x27;&gt;Export XLSX&lt;/strong&gt; to export them to Excel.">各表格右上角的 <strong class='guide-button'>Copy</strong> 可复制当前结果，<strong class='guide-button'>Export XLSX</strong> 可导出 Excel。</p>
+<p data-en="In &lt;strong class=&#x27;guide-tab tab-settings&#x27;&gt;Rules &amp;amp; Settings&lt;/strong&gt;, use &lt;strong class=&#x27;guide-button&#x27;&gt;Export Settings&lt;/strong&gt; to back up custom settings, including FID / NSR marks and FID notes. Use &lt;strong class=&#x27;guide-button&#x27;&gt;Import Settings&lt;/strong&gt; to restore them, replacing the current settings.">在 <strong class='guide-tab tab-settings'>Rules &amp; Settings</strong> 中，使用 <strong class='guide-button'>Export Settings</strong> 备份自定义设置，包括 FID / NSR 标记和 FID 备注等；使用 <strong class='guide-button'>Import Settings</strong> 恢复，导入时会替换现有设置。</p>
+<figure class="media"><a data-zoom href="./images/guide-dashboard.svg#settings-backup"><img src="./images/guide-dashboard.svg#settings-backup" width="600" height="142" loading="lazy" alt="Rules &amp; Settings selected in the dashboard navigation, with Import Settings and Export Settings at the top of the page" style="aspect-ratio: 600 / 142"></a></figure>
+</div>
+</section>
+</article>
 
-        <article class="doc-page" id="sap-guide" data-feature data-icon="🧰" aria-labelledby="sap-guide-title" hidden>
-          <div class="doc-heading">
-            <h1 class="tool-title" id="sap-guide-title">SAP Toolbox</h1>
-            <div class="doc-description">
+        <article id="b" data-feature data-icon="🧰" aria-labelledby="b-title" hidden>
+          <div>
+            <h1 id="b-title">SAP Toolbox</h1>
+            <div class="intro">
               <strong data-en="Overview">功能简介</strong>
               <ul>
                 <li data-en="Export ZBOM PDFs in batches with custom file names">批量导出 ZBOM PDF，支持自定义文件名</li>
@@ -531,103 +315,97 @@
               </ul>
             </div>
           </div>
-          <div class="tool-actions">
+          <div class="actions">
                 <a class="action" href="https://fep.lamresearch.com/k2.png" target="_blank" rel="noopener" data-en="Open SAP Toolbox ↗">打开 SAP 工具箱 ↗</a>
               </div>
-          <section class="doc-section" id="sap-launch" data-section aria-labelledby="sap-launch-title">
-            <h2 id="sap-launch-title" data-en="How to open SAP Toolbox">如何打开 SAP 工具箱</h2>
+          <section id="b1" data-section aria-labelledby="b1-title">
+            <h2 id="b1-title" data-en="How to open SAP Toolbox">如何打开 SAP 工具箱</h2>
             <p data-en="Open any Lam Research page. Click <strong>Extensions</strong> → <strong>Tampermonkey</strong>, then choose <strong>🧰 SAP Toolbox</strong>.">打开任意 Lam Research 页面，点击<strong>扩展按钮</strong> → <strong>Tampermonkey</strong>，选择 <strong>🧰 SAP Toolbox</strong>。</p>
-            <figure class="step-media">
-              <svg viewBox="0 0 720 392" role="img" aria-labelledby="sap-menu-title">
-                <title id="sap-menu-title">Open SAP Toolbox from the Tampermonkey menu</title>
-                <use href="#toolkit-menu-scene" />
-                <rect x="80" y="240" width="260" height="29" rx="5" fill="#e7f6ef" stroke="#2a9872" stroke-width="1.5" />
-                <use href="#toolkit-menu-commands" />
-                <path d="m326 249 6 6-6 6" fill="none" stroke="#188461" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+            <figure class="media">
+              <img src="./images/guide-launch.svg#sap-menu" width="720" height="392" loading="lazy" alt="Open SAP Toolbox from the Tampermonkey menu" style="aspect-ratio: 720 / 392">
             </figure>
           </section>
-          <section class="doc-section" id="sap-connect" data-section aria-labelledby="sap-connect-title">
-            <h2 id="sap-connect-title" data-en="Connect to SAP GUI">连接 SAP GUI</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Download for first use"><span class="shot-step">1</span> 首次下载 SAPGUIcontrol</h3>
-            <p data-en="On first use, click <strong>Download SAPGUIcontrol</strong> in SAP Toolbox, then extract the download.">首次使用时，在 SAP Toolbox 点击 <strong>Download SAPGUIcontrol</strong>，下载并解压。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#sap-download">
-                <img src="./images/guide-illustrations.svg#sap-download" width="1265" height="416" loading="lazy" alt="Download SAPGUIcontrol in the SAP Toolbox Local service card">
+          <section id="b2" data-section aria-labelledby="b2-title">
+            <h2 id="b2-title" data-en="Connect to SAP GUI">连接 SAP GUI</h2>
+            <h3 data-en="<span class='step'>1</span> Download for first use"><span class="step">1</span> 首次下载 SAPGUIcontrol</h3>
+            <p data-en="On first use, click <strong class='guide-button'>Download SAPGUIcontrol</strong> in SAP Toolbox, then extract the download.">首次使用时，在 SAP Toolbox 点击 <strong class='guide-button'>Download SAPGUIcontrol</strong>，下载并解压。</p>
+            <figure class="media">
+              <a data-zoom href="./images/guide-sap-toolbox.svg#download">
+                <img src="./images/guide-sap-toolbox.svg#download" width="1265" height="416" loading="lazy" alt="Download SAPGUIcontrol in the SAP Toolbox Local service card" style="aspect-ratio: 1265 / 416">
               </a>
             </figure>
-            <h3 data-en="<span class='shot-step'>2</span> Run and minimize"><span class="shot-step">2</span> 运行并最小化</h3>
+            <h3 data-en="<span class='step'>2</span> Run and minimize"><span class="step">2</span> 运行并最小化</h3>
             <p data-en="Run <strong>SAPGUIcontrol.exe</strong> and minimize it. Keep it running; SAP Toolbox connects automatically.">运行 <strong>SAPGUIcontrol.exe</strong> 并最小化，保持程序运行，SAP Toolbox 会自动连接。</p>
-            <h3 data-en="<span class='shot-step'>3</span> Select SAP windows"><span class="shot-step">3</span> 选择 SAP 窗口</h3>
+            <h3 data-en="<span class='step'>3</span> Select SAP windows"><span class="step">3</span> 选择 SAP 窗口</h3>
             <p data-en="After signing in to SAP GUI, <strong>SAP session</strong> selects the first available window for automation.<br>For concurrent tasks, open multiple SAP windows and select a different window for each task.">登录 SAP GUI 后，<strong>SAP session</strong> 默认选择第一个可用窗口进行自动化操作。<br>多个任务同时运行时，先在 SAP 打开多个窗口，再为各任务选择不同窗口。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#sap-connection">
-                <img src="./images/guide-illustrations.svg#sap-connection" width="1265" height="392" loading="lazy" alt="SAP Toolbox connected state, Refresh and SAP session selection">
+            <figure class="media">
+              <a data-zoom href="./images/guide-sap-toolbox.svg#connection">
+                <img src="./images/guide-sap-toolbox.svg#connection" width="1265" height="392" loading="lazy" alt="SAP Toolbox connected state, Refresh and SAP session selection" style="aspect-ratio: 1265 / 392">
               </a>
             </figure>
           </section>
-          <section class="doc-section" id="sap-bobj" data-section aria-labelledby="sap-bobj-title">
-            <h2 id="sap-bobj-title" data-en="Refresh FID BOBJ Data (optional, recommended)">刷新 FID BOBJ Data（可选，建议）</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Refresh the data"><span class="shot-step">1</span> 刷新数据</h3>
-            <p data-en="Click <strong>Update</strong> to refresh <strong>FID BOBJ Data</strong> for file naming and other features; wait for completion.">点击 <strong>Update</strong> 并稍等，工具会刷新 <strong>FID BOBJ Data</strong>，用于后续导出文件的命名等功能。</p>
-            <h3 data-en="<span class='shot-step'>2</span> View the data"><span class="shot-step">2</span> 打开查看</h3>
-            <p data-en="Saved locally as <strong>BOBJ_FID.xlsm</strong> and used in the background as needed. Click <strong>Open</strong> to view the data.">数据以 <strong>BOBJ_FID.xlsm</strong> 保存在本机，会按需在后台自动调用。点击 <strong>Open</strong> 可以打开查看 FID BOBJ 内容。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#sap-fid-bobj">
-                <img src="./images/guide-illustrations.svg#sap-fid-bobj" width="1265" height="392" loading="lazy" alt="FID BOBJ Data with Update and Open buttons highlighted">
+          <section id="b3" data-section aria-labelledby="b3-title">
+            <h2 id="b3-title" data-en="Refresh FID BOBJ Data (optional, recommended)" data-nav="刷新 FID BOBJ Data" data-nav-en="Refresh FID BOBJ Data">刷新 FID BOBJ Data（可选，建议）</h2>
+            <h3 data-en="<span class='step'>1</span> Refresh the data"><span class="step">1</span> 刷新数据</h3>
+            <p data-en="Click <strong class='guide-button'>Update</strong> to refresh <strong>FID BOBJ Data</strong> for file naming and other features; wait for completion.">点击 <strong class='guide-button'>Update</strong> 并稍等，工具会刷新 <strong>FID BOBJ Data</strong>，用于后续导出文件的命名等功能。</p>
+            <h3 data-en="<span class='step'>2</span> View the data"><span class="step">2</span> 打开查看</h3>
+            <p data-en="Saved locally as <strong>BOBJ_FID.xlsm</strong>. Click <strong class='guide-button'>Open</strong> to view the data.">数据以 <strong>BOBJ_FID.xlsm</strong> 保存在本机，点击 <strong class='guide-button'>Open</strong> 查看 FID BOBJ 内容。</p>
+            <figure class="media">
+              <a data-zoom href="./images/guide-sap-toolbox.svg#fid-bobj">
+                <img src="./images/guide-sap-toolbox.svg#fid-bobj" width="1265" height="392" loading="lazy" alt="FID BOBJ Data with Update and Open buttons highlighted" style="aspect-ratio: 1265 / 392">
               </a>
             </figure>
           </section>
-          <section class="doc-section" id="sap-pdf" data-section aria-labelledby="sap-pdf-title">
-            <h2 id="sap-pdf-title" data-en="Batch export ZBOM PDFs">批量导出 ZBOM PDF</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Enter Quotation numbers"><span class="shot-step">1</span> 输入 Quotation</h3>
-            <p data-en="Select the <strong>ZBOM PDF</strong> tab; enter one Quotation per line in <strong>Quotation Data</strong> to export in batches.<br>Paste Excel columns with FID and System Description; <strong>History</strong> restores recent inputs.">选择 <strong>ZBOM PDF</strong> 标签，在 <strong>Quotation Data</strong> 中每行输入一个 Quotation，即可批量导出。<br>也支持粘贴 Excel 多列数据，可包含 FID、System Description 等信息。<strong>History</strong> 可恢复最近运行的输入。</p>
-            <h3 data-en="<span class='shot-step'>2</span> Customize file names"><span class="shot-step">2</span> 设置文件名</h3>
+          <section id="b4" data-section aria-labelledby="b4-title">
+            <h2 id="b4-title" data-en="Batch export ZBOM PDFs">批量导出 ZBOM PDF</h2>
+            <h3 data-en="<span class='step'>1</span> Enter Quotation numbers"><span class="step">1</span> 输入 Quotation</h3>
+            <p data-en="Select the <strong class='guide-tab'>ZBOM PDF</strong> tab; enter one Quotation per line in <strong>Quotation Data</strong> to export in batches.<br>Paste Excel columns with FID and System Description; <strong class='guide-button'>History</strong> restores recent inputs.">选择 <strong class='guide-tab'>ZBOM PDF</strong> 标签，在 <strong>Quotation Data</strong> 中每行输入一个 Quotation，即可批量导出。<br>也支持粘贴 Excel 多列数据，可包含 FID、System Description 等信息。<strong class='guide-button'>History</strong> 可恢复最近运行的输入。</p>
+            <h3 data-en="<span class='step'>2</span> Customize file names"><span class="step">2</span> 设置文件名</h3>
             <p data-en="Set the <strong>Filename</strong> template with the field buttons, then check the file names in <strong>Preview</strong>.<br><span class='hint'>({FID} and {System Description} may be incomplete in Preview; up-to-date FID BOBJ Data fills them after export.)</span>">在 <strong>Filename</strong> 设置模板，点击下方字段按钮插入变量，在 <strong>Preview</strong> 中确认文件名。<br><span class="hint">（{FID}、{System Description} 在 Preview 中可能暂不完整，确保 FID BOBJ Data 是最新，导出完毕后会自动补全）</span></p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#sap-zbom-pdf">
-                <img src="./images/guide-illustrations.svg#sap-zbom-pdf" width="1265" height="818" loading="lazy" alt="ZBOM PDF sample showing single-column Quotation input, filename template, preview and completed export">
+            <figure class="media">
+              <a data-zoom href="./images/guide-sap-toolbox.svg#zbom-pdf">
+                <img src="./images/guide-sap-toolbox.svg#zbom-pdf" width="1265" height="818" loading="lazy" alt="ZBOM PDF sample showing single-column Quotation input, filename template, preview and completed export" style="aspect-ratio: 1265 / 818">
               </a>
             </figure>
-            <h3 data-en="<span class='shot-step'>3</span> Export and review"><span class="shot-step">3</span> 导出与查看结果</h3>
-            <p data-en="Click <strong>Start PDF Export</strong> to export PDFs in batches through the selected SAP window, then click <strong>Open Folder</strong>.">点击 <strong>Start PDF Export</strong>，工具会自动操作所选 SAP 窗口并批量导出 PDF，完成后点击 <strong>Open Folder</strong>。</p>
+            <h3 data-en="<span class='step'>3</span> Export and review"><span class="step">3</span> 导出与查看结果</h3>
+            <p data-en="Click <strong class='guide-button'>Start PDF Export</strong> to export PDFs in batches through the selected SAP window, then click <strong class='guide-button'>Open Folder</strong>.">点击 <strong class='guide-button'>Start PDF Export</strong>，工具会自动操作所选 SAP 窗口并批量导出 PDF，完成后点击 <strong class='guide-button'>Open Folder</strong>。</p>
           </section>
-          <section class="doc-section" id="sap-compare" data-section aria-labelledby="sap-compare-title">
-            <h2 id="sap-compare-title" data-en="Compare ZBOMs">比较 ZBOM</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Enter Quotation numbers"><span class="shot-step">1</span> 输入 Quotation</h3>
-            <p data-en="Select the <strong>ZBOM Compare</strong> tab; enter one Quotation per line in <strong>Quotation Data</strong>, or paste Excel columns with FID.">选择 <strong>ZBOM Compare</strong> 标签，在 <strong>Quotation Data</strong> 中每行输入一个 Quotation，也可从 Excel 粘贴含 FID 的多列数据。</p>
-            <h3 data-en="<span class='shot-step'>2</span> Set file names"><span class="shot-step">2</span> 设置文件名</h3>
+          <section id="b5" data-section aria-labelledby="b5-title">
+            <h2 id="b5-title" data-en="Compare ZBOMs">比较 ZBOM</h2>
+            <h3 data-en="<span class='step'>1</span> Enter Quotation numbers"><span class="step">1</span> 输入 Quotation</h3>
+            <p data-en="Select the <strong class='guide-tab'>ZBOM Compare</strong> tab; enter one Quotation per line in <strong>Quotation Data</strong>, or paste Excel columns with FID.">选择 <strong class='guide-tab'>ZBOM Compare</strong> 标签，在 <strong>Quotation Data</strong> 中每行输入一个 Quotation，也可从 Excel 粘贴含 FID 的多列数据。</p>
+            <h3 data-en="<span class='step'>2</span> Set file names"><span class="step">2</span> 设置文件名</h3>
             <p data-en="Set <strong>Filename</strong> and the separator (default <strong>vs</strong>), then set the destination in <strong>Output Folder</strong>.">在 <strong>Filename</strong> 设置模板和连接文字（默认 <strong>vs</strong>），在 <strong>Output Folder</strong> 设置导出目录。</p>
-            <h3 data-en="<span class='shot-step'>3</span> Assign comparison groups"><span class="shot-step">3</span> 设置比较分组</h3>
+            <h3 data-en="<span class='step'>3</span> Assign comparison groups"><span class="step">3</span> 设置比较分组</h3>
             <p data-en="Assign Quotations to the same <strong>Compare Group</strong>; <strong>Standalone</strong> formats a Quotation without comparing it.">在 <strong>Compare Group</strong> 中，将需比较的 Quotation 设为同一组；选择 <strong>Standalone</strong> 时仅整理该 Quotation，不参与比较。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#sap-zbom-compare">
-                <img src="./images/guide-illustrations.svg#sap-zbom-compare" width="1265" height="1094" loading="lazy" alt="ZBOM Compare sample with comparison groups, Standalone output and highlighted configuration differences">
+            <figure class="media">
+              <a data-zoom href="./images/guide-sap-toolbox.svg#zbom-compare">
+                <img src="./images/guide-sap-toolbox.svg#zbom-compare" width="1265" height="1094" loading="lazy" alt="ZBOM Compare sample with comparison groups, Standalone output and highlighted configuration differences" style="aspect-ratio: 1265 / 1094">
               </a>
             </figure>
-            <h3 data-en="<span class='shot-step'>4</span> Run and review results"><span class="shot-step">4</span> 开始比较并查看结果</h3>
-            <p data-en="Click <strong>Start Compare</strong>; tabs such as <strong>G01</strong> show colored differences and <strong>Gas</strong> comparisons when available.">点击 <strong>Start Compare</strong>，在 <strong>G01</strong> 等页签查看比较结果，差异以底色标出；有 Gas 数据时提供 Gas 比较表。</p>
+            <h3 data-en="<span class='step'>4</span> Run and review results"><span class="step">4</span> 开始比较并查看结果</h3>
+            <p data-en="Click <strong class='guide-button'>Start Compare</strong>; tabs such as <strong>G01</strong> show colored differences and <strong>Gas</strong> comparisons when available.">点击 <strong class='guide-button'>Start Compare</strong>，在 <strong>G01</strong> 等页签查看比较结果，差异以底色标出；有 Gas 数据时提供 Gas 比较表。</p>
           </section>
-          <section class="doc-section" id="sap-quote" data-section aria-labelledby="sap-quote-title">
-            <h2 id="sap-quote-title" data-en="Create Quotations">创建 Quotation</h2>
-            <h3 data-en="<span class='shot-step'>1</span> Enter Reference Quotation and FIDs"><span class="shot-step">1</span> 填写 Reference Quotation 和 FID</h3>
-            <p data-en="Select the <strong>Quote Create</strong> tab, fill in <strong>Reference Quotation</strong> and enter one FID per line in <strong>FID</strong>.<br>CRD and ValidTo can be included. Missing CRD is read from FID BOBJ when available and can be edited in <strong>Preview</strong>.">选择 <strong>Quote Create</strong> 标签，填写 <strong>Reference Quotation</strong>，在 <strong>FID</strong> 中每行输入一个 FID 即可。<br>也可一并粘贴 CRD 和 ValidTo，缺少 CRD 时会从 FID BOBJ 补全，也可在 <strong>Preview</strong> 中修改。</p>
-            <h3 data-en="<span class='shot-step'>2</span> Check dates and versions"><span class="shot-step">2</span> 检查日期与 Version</h3>
+          <section id="b6" data-section aria-labelledby="b6-title">
+            <h2 id="b6-title" data-en="Create Quotations">创建 Quotation</h2>
+            <h3 data-en="<span class='step'>1</span> Enter Reference Quotation and FIDs"><span class="step">1</span> 填写 Reference Quotation 和 FID</h3>
+            <p data-en="Select the <strong class='guide-tab'>Quote Create</strong> tab, fill in <strong>Reference Quotation</strong> and enter one FID per line in <strong>FID</strong>.<br>CRD and ValidTo can be included. Missing CRD is read from FID BOBJ when available and can be edited in <strong>Preview</strong>.">选择 <strong class='guide-tab'>Quote Create</strong> 标签，填写 <strong>Reference Quotation</strong>，在 <strong>FID</strong> 中每行输入一个 FID 即可。<br>也可一并粘贴 CRD 和 ValidTo，缺少 CRD 时会从 FID BOBJ 补全，也可在 <strong>Preview</strong> 中修改。</p>
+            <h3 data-en="<span class='step'>2</span> Check dates and versions"><span class="step">2</span> 检查日期与 Version</h3>
             <p data-en="<strong>Default ValidTo</strong> defaults to 30 days from today, and <strong>New FID suffix</strong> defaults to <strong>-01</strong>, so new Quotations are named <strong>XXXXXX-01</strong>.<br>If a FID matches the Reference Quotation, its Version suffix increases by 1 and the same CRD is used."><strong>Default ValidTo</strong> 默认为今天起 30 天，<strong>New FID suffix</strong> 默认为 <strong>-01</strong>，表示新建的 Quotation 名称格式为 <strong>XXXXXX-01</strong>。<br>FID 与 Reference Quotation 相同时，Version 后缀会自动 +1，并沿用其 CRD。</p>
-            <h3 data-en="<span class='shot-step'>3</span> Fill SAP and continue"><span class="shot-step">3</span> 填写到 SAP 并继续</h3>
-            <p data-en="Click <strong>Create Quote</strong> to fill data using <strong>ZVA21M</strong>, then review it in SAP and manually finish creating the Quotation.">点击 <strong>Create Quote</strong> 后，工具会使用 <strong>ZVA21M</strong> 填写数据，随后需在 SAP 中自行检查并手动完成创建。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#sap-quote-create">
-                <img src="./images/guide-illustrations.svg#sap-quote-create" width="1265" height="791" loading="lazy" alt="Quote Create sample with reference quotation, FIDs, date settings, editable CRD preview and Create Quote button">
+            <h3 data-en="<span class='step'>3</span> Fill SAP and continue"><span class="step">3</span> 填写到 SAP 并继续</h3>
+            <p data-en="Click <strong class='guide-button'>Create Quote</strong> to fill data using <strong>ZVA21M</strong>, then review it in SAP and manually finish creating the Quotation.">点击 <strong class='guide-button'>Create Quote</strong> 后，工具会使用 <strong>ZVA21M</strong> 填写数据，随后需在 SAP 中自行检查并手动完成创建。</p>
+            <figure class="media">
+              <a data-zoom href="./images/guide-sap-toolbox.svg#quote-create">
+                <img src="./images/guide-sap-toolbox.svg#quote-create" width="1265" height="791" loading="lazy" alt="Quote Create sample with reference quotation, FIDs, date settings, editable CRD preview and Create Quote button" style="aspect-ratio: 1265 / 791">
               </a>
             </figure>
           </section>
         </article>
 
-        <article class="doc-page" id="mylam-guide" data-feature data-icon="🔩" aria-labelledby="mylam-guide-title" hidden>
-          <div class="doc-heading">
-            <h1 class="tool-title" id="mylam-guide-title" data-en="Find Part Changes Related to TM/PCN, etc." data-nav="TM/PCN 相关的 Part Changes" data-nav-en="Part Changes Related to TM/PCN">查找与 TM/PCN 等相关的 Part Changes</h1>
-            <div class="doc-description">
+        <article id="c" data-feature data-icon="🔩" aria-labelledby="c-title" hidden>
+          <div>
+            <h1 id="c-title" data-en="Find Part Changes Related to TM/PCN, etc." data-nav="TM/PCN 相关的 Part Changes" data-nav-en="Part Changes Related to TM/PCN">查找与 TM/PCN 等相关的 Part Changes</h1>
+            <div class="intro">
               <strong data-en="Overview">功能简介</strong>
               <ul>
                 <li data-en="Compare any two SO/Quote BOMs to identify Part Number differences.">对比任意两份 SO/Quote BOM，提取 Delta Part Number。</li>
@@ -635,63 +413,63 @@
               </ul>
             </div>
           </div>
-          <div class="tool-actions"><a class="action" href="https://techinfo.mylam.com/portal/group/mylam/contenttyperesults?ctype=Tech%20Articles" target="_blank" rel="noopener" data-en="Open Tech Articles ↗">打开 Tech Articles ↗</a></div>
-          <section class="doc-section" id="mylam-start" data-section aria-labelledby="mylam-start-title">
-            <h2 id="mylam-start-title" data-en="Filter technical documents by tool type">筛选对应机型的技术文档</h2>
+          <div class="actions"><a class="action" href="https://techinfo.mylam.com/portal/group/mylam/contenttyperesults?ctype=Tech%20Articles" target="_blank" rel="noopener" data-en="Open Tech Articles ↗">打开 Tech Articles ↗</a></div>
+          <section id="c1" data-section aria-labelledby="c1-title">
+            <h2 id="c1-title" data-en="Filter technical documents by tool type" data-nav-en="Filter by tool type">筛选对应机型的技术文档</h2>
             <p data-en="Prepare the BOMs to compare, identify the tool type, then filter by <strong>System</strong> to get all its Tech Articles.">准备待比较的 BOM，确认机型后按照 <strong>System</strong> 筛选，获取该机型的全部 Tech Articles。</p>
-            <p data-en="Click <strong>Apply Filters</strong> → <strong>🔩 Find Part Changes Related to TM/PCN</strong>, then wait for all Part Number data to load.">点 <strong>Apply Filters</strong> → <strong>🔩 Find Part Changes Related to TM/PCN</strong>，等待全部 Part Number 读取完成。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#mylam-entry">
-                <img src="./images/guide-illustrations.svg#mylam-entry" width="1890" height="720" loading="lazy" alt="Filter Tech Articles by System for the tool type identified from the BOMs">
+            <p data-en="Click <strong class='guide-button'>Apply Filters</strong> → <strong class='guide-button'>🔩 Find Part Changes Related to TM/PCN</strong>, then wait for all Part Number data to load.">点 <strong class='guide-button'>Apply Filters</strong> → <strong class='guide-button'>🔩 Find Part Changes Related to TM/PCN</strong>，等待全部 Part Number 读取完成。</p>
+            <figure class="media">
+              <a data-zoom href="./images/guide-launch.svg#part-entry">
+                <img src="./images/guide-launch.svg#part-entry" width="1890" height="720" loading="lazy" alt="Filter Tech Articles by System for the tool type identified from the BOMs" style="aspect-ratio: 1890 / 720">
               </a>
             </figure>
           </section>
-          <section class="doc-section" id="mylam-match" data-section aria-labelledby="mylam-match-title">
-            <h2 id="mylam-match-title" data-en="Upload BOMs and find matches">上传 BOM 并匹配</h2>
-            <p data-en="Upload two SO/Quote BOMs, then click <strong>Find Tech Articles for BOM</strong>; the system automatically finds Delta Parts and their corresponding Tech Articles.">上传两份 SO/Quote BOM，点 <strong>Find Tech Articles for BOM</strong>，系统会自动检索 Delta Parts 及其对应的 Tech Articles。</p>
+          <section id="c2" data-section aria-labelledby="c2-title">
+            <h2 id="c2-title" data-en="Upload BOMs and find matches">上传 BOM 并匹配</h2>
+            <p data-en="Upload two SO/Quote BOMs, then click <strong class='guide-button'>Find Tech Articles for BOM</strong>; the system automatically finds Delta Parts and their corresponding Tech Articles.">上传两份 SO/Quote BOM，点 <strong class='guide-button'>Find Tech Articles for BOM</strong>，系统会自动检索 Delta Parts 及其对应的 Tech Articles。</p>
             <p class="hint" data-en="(Use an SO BOM for shipped or slotted tools; use a Quote BOM for unslotted Drafts.)">（已 Shipped 或已 Slot 的机台可用 SO BOM；未 Slot 的 Draft 可用 Quote BOM。）</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#mylam-upload">
-                <img src="./images/guide-illustrations.svg#mylam-upload" width="1440" height="305" loading="lazy" alt="Sample SO BOM and Quote BOM files selected for matching Part Number differences to documents">
+            <figure class="media">
+              <a data-zoom href="./images/guide-launch.svg#part-upload">
+                <img src="./images/guide-launch.svg#part-upload" width="1440" height="305" loading="lazy" alt="Sample SO BOM and Quote BOM files selected for matching Part Number differences to documents" style="aspect-ratio: 1440 / 305">
               </a>
             </figure>
           </section>
-          <section class="doc-section" id="mylam-export" data-section aria-labelledby="mylam-export-title">
-            <h2 id="mylam-export-title" data-en="View matching results and export">查看匹配结果并导出</h2>
-            <p data-en="Click a document title to check which Delta Parts relate to its published changes; click <strong>Download Excel</strong> to export the matches and both BOMs.">点击文档标题，确认哪些 Delta Parts 与文档发布的变化有关；点 <strong>Download Excel</strong> 导出匹配结果和两份 BOM。</p>
-            <figure class="step-media">
-              <a class="image-zoom" data-image-zoom href="./images/guide-illustrations.svg#mylam-results">
-                <img src="./images/guide-illustrations.svg#mylam-results" width="1440" height="475" loading="lazy" alt="Sample Tech Memo and PCN references matching Part Number differences from SO BOM and Quote BOM, with Download Excel highlighted">
+          <section id="c3" data-section aria-labelledby="c3-title">
+            <h2 id="c3-title" data-en="View matching results and export">查看匹配结果并导出</h2>
+            <p data-en="Click a document title to check which Delta Parts relate to its published changes; click <strong class='guide-button'>Download Excel</strong> to export the matches and both BOMs.">点击文档标题，确认哪些 Delta Parts 与文档发布的变化有关；点 <strong class='guide-button'>Download Excel</strong> 导出匹配结果和两份 BOM。</p>
+            <figure class="media">
+              <a data-zoom href="./images/guide-launch.svg#part-results">
+                <img src="./images/guide-launch.svg#part-results" width="1440" height="475" loading="lazy" alt="Sample Tech Memo and PCN references matching Part Number differences from SO BOM and Quote BOM, with Download Excel highlighted" style="aspect-ratio: 1440 / 475">
               </a>
             </figure>
           </section>
         </article>
     </main>
   </div>
-  <dialog class="image-viewer" id="image-viewer" aria-label="图片预览" data-en-label="Image preview">
+  <dialog id="viewer" aria-label="图片预览" data-en-label="Image preview">
     <form method="dialog">
-      <button class="next" id="image-zoom-out" type="button" aria-label="缩小" data-en-label="Zoom out">−</button>
-      <button class="next" id="image-zoom-in" type="button" aria-label="放大" data-en-label="Zoom in">+</button>
-      <button class="next" type="submit" data-en="Close ×">关闭 ×</button>
+      <button id="zoom-out" type="button" aria-label="缩小" data-en-label="Zoom out">−</button>
+      <button id="zoom-in" type="button" aria-label="放大" data-en-label="Zoom in">+</button>
+      <button type="submit" data-en="Close ×">关闭 ×</button>
     </form>
-    <div id="image-preview"></div>
+    <div id="preview"></div>
   </dialog>
 
   <script>
     (() => {
+      const byId = id => document.getElementById(id);
       const SCRIPT_URL = './ToolKit.user.js';
       const features = [...document.querySelectorAll('[data-feature]')];
-      const navigation = document.getElementById('feature-nav');
-      const sidebar = document.getElementById('sidebar');
-      const navToggle = document.getElementById('nav-toggle');
+      const navigation = byId('nav');
+      const sidebar = byId('sidebar');
+      const navToggle = byId('toggle');
       let activeFeature;
       let sectionFrame = 0;
       features.forEach(feature => {
-        const title = feature.querySelector('.tool-title');
+        const title = feature.querySelector('h1');
         const group = document.createElement('div');
-        group.className = 'nav-group';
         const link = document.createElement('a');
-        link.className = 'doc-link';
+        link.className = 'nav-link';
         link.setAttribute('href', '#' + feature.id);
         link.setAttribute('aria-controls', feature.id);
         const icon = document.createElement('span');
@@ -704,55 +482,66 @@
         link.append(icon, label);
         link.addEventListener('click', () => selectFeature(feature.id));
         const sections = document.createElement('div');
-        sections.className = 'doc-subnav';
+        sections.className = 'subnav';
         sections.dataset.featureId = feature.id;
-        feature.querySelectorAll('[data-section]').forEach((section, index) => {
-          const heading = section.querySelector('h2');
-          const number = (index + 1) + '. ';
-          heading.textContent = number + heading.textContent;
-          if (heading.dataset.en) heading.dataset.en = number + heading.dataset.en;
+        let sectionNumber = 0, subsectionNumber = 0;
+        feature.querySelectorAll('[data-section], [data-subsection]').forEach(section => {
+          const subsection = section.hasAttribute('data-subsection');
+          if (!subsection) { sectionNumber++; subsectionNumber = 0; }
+          const heading = section.querySelector(subsection ? 'h3' : 'h2');
+          const titleEn = heading.dataset.navEn || heading.dataset.en;
+          const number = subsection ? sectionNumber + '.' + (++subsectionNumber) + ' ' : sectionNumber + '. ';
+          if (subsection) {
+            const badge = document.createElement('span');
+            badge.className = 'num';
+            badge.textContent = number;
+            heading.prepend(badge);
+            if (heading.dataset.en) heading.dataset.en = '<span class="num">' + number + '</span>' + heading.dataset.en;
+          } else {
+            heading.textContent = number + heading.textContent;
+            if (heading.dataset.en) heading.dataset.en = number + heading.dataset.en;
+          }
           const item = document.createElement('a');
-          item.className = 'section-link';
+          item.className = 'sub-link' + (subsection ? ' subsection' : ' category');
           item.setAttribute('href', '#' + section.id);
-          item.textContent = heading.textContent;
-          if (heading.dataset.en) item.dataset.en = heading.dataset.en;
+          item.textContent = heading.dataset.nav ? number + heading.dataset.nav : heading.textContent;
+          if (titleEn) item.dataset.en = number + titleEn;
           item.addEventListener('click', () => selectFeature(section.id));
           sections.append(item);
         });
         group.append(link, sections);
         navigation.append(group);
       });
-      document.querySelector('[data-feature-count]').textContent = features.length;
+      byId('count').textContent = features.length;
 
       function selectFeature(id) {
-        const target = document.getElementById(id);
+        const target = byId(id);
         activeFeature = features.find(feature => feature === target || feature.contains(target)) || features[0];
         features.forEach(feature => { feature.hidden = feature !== activeFeature; });
-        navigation.querySelectorAll('.doc-link').forEach(link => {
+        navigation.querySelectorAll('.nav-link').forEach(link => {
           if (link.getAttribute('href') === '#' + activeFeature.id) link.setAttribute('aria-current', 'page');
           else link.removeAttribute('aria-current');
         });
-        navigation.querySelectorAll('.doc-subnav').forEach(list => { list.hidden = list.dataset.featureId !== activeFeature.id; });
+        navigation.querySelectorAll('.subnav').forEach(list => { list.hidden = list.dataset.featureId !== activeFeature.id; });
         markSection(id);
-        document.getElementById('active-doc-title').textContent = activeFeature.querySelector('.tool-title').textContent;
+        byId('doc-title').textContent = activeFeature.querySelector('h1').textContent;
         sidebar.classList.remove('is-open');
         navToggle.setAttribute('aria-expanded', 'false');
         scheduleSectionSync();
       }
       function markSection(id) {
-        navigation.querySelectorAll('.section-link').forEach(link => {
+        navigation.querySelectorAll('.sub-link').forEach(link => {
           if (link.getAttribute('href') === '#' + id) link.setAttribute('aria-current', 'location');
           else link.removeAttribute('aria-current');
         });
       }
       function syncSectionFromScroll() {
         sectionFrame = 0;
-        if (document.getElementById('guide-content').hidden) return;
-        const sections = [...activeFeature.querySelectorAll('[data-section]')];
+        const sections = [...activeFeature.querySelectorAll('[data-section], [data-subsection]')];
         const readingLine = Math.min(160, window.innerHeight * .2);
         let current = sections[0];
         for (const section of sections) {
-          if (section.querySelector('h2').getBoundingClientRect().top > readingLine) break;
+          if (section.querySelector('h2, h3').getBoundingClientRect().top > readingLine) break;
           current = section;
         }
         if (window.scrollY > 0 && Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight - 2) current = sections.at(-1);
@@ -773,23 +562,23 @@
 
       const translations = [...document.querySelectorAll('[data-en]')].map(element => ({element, zh: element.innerHTML, en: element.dataset.en}));
       const labels = [...document.querySelectorAll('[data-en-label]')].map(element => ({element, zh: element.getAttribute('aria-label'), en: element.dataset.enLabel}));
-      const languageSwitch = document.getElementById('language-switch');
+      const languageSwitch = byId('lang');
       let language = new URL(location.href).searchParams.get('lang') === 'en' ? 'en' : 'zh';
       let currentVersion = '', autoUpdate = null, latestVersion = '', updateState = 'idle', updateRequest = null;
-      const versionStatus = document.getElementById('version-status');
-      const autoUpdateNote = document.getElementById('auto-update-note');
-      const updateLink = document.getElementById('script-update');
-      const retryVersion = document.getElementById('retry-version');
+      const versionStatus = byId('status');
+      const autoUpdateNote = byId('auto');
+      const updateLink = byId('update');
+      const retryVersion = byId('retry');
       const updateMessages = {
-        zh: {idle: '', checking: '正在检查更新…', current: 'Up to date', update: '新版 v{version} 可用', unavailable: '暂无法检查更新', preview: '预览模式', enabled: '自动更新已开启', disabled: '自动更新已关闭'},
-        en: {idle: '', checking: 'Checking for updates…', current: 'Up to date', update: 'v{version} available', unavailable: 'Unable to check for updates', preview: 'Preview mode', enabled: 'Auto-updates on', disabled: 'Auto-updates off'}
+        zh: {idle: '', checking: '正在检查更新…', current: 'Up to date', update: '新版 v{version} 可用', unavailable: '暂无法检查更新', enabled: '自动更新已开启', disabled: '自动更新已关闭'},
+        en: {idle: '', checking: 'Checking for updates…', current: 'Up to date', update: 'v{version} available', unavailable: 'Unable to check for updates', enabled: 'Auto-updates on', disabled: 'Auto-updates off'}
       };
 
       function renderVersionStatus() {
         const messages = updateMessages[language];
         versionStatus.textContent = messages[updateState].replace('{version}', latestVersion);
         versionStatus.dataset.state = updateState;
-        autoUpdateNote.hidden = autoUpdate === null || updateState === 'preview';
+        autoUpdateNote.hidden = autoUpdate === null;
         autoUpdateNote.textContent = autoUpdate ? messages.enabled : messages.disabled;
         updateLink.hidden = !['update', 'unavailable'].includes(updateState) && !(autoUpdate === false && updateState === 'current');
         retryVersion.hidden = updateState !== 'unavailable';
@@ -802,7 +591,7 @@
         languageSwitch.textContent = language === 'zh' ? 'English' : '中文';
         languageSwitch.lang = language === 'zh' ? 'en' : 'zh-CN';
         languageSwitch.setAttribute('aria-label', language === 'zh' ? 'Switch to English' : '切换为中文');
-        document.querySelectorAll('[data-language-link]').forEach(link => {
+        document.querySelectorAll('[data-lang]').forEach(link => {
           const target = new URL(link.getAttribute('href'), location.href);
           if (language === 'en') target.searchParams.set('lang', 'en');
           else target.searchParams.delete('lang');
@@ -812,7 +601,7 @@
         if (language === 'en') address.searchParams.set('lang', 'en');
         else address.searchParams.delete('lang');
         if (address.href !== location.href) history.replaceState(null, '', address.href);
-        document.getElementById('active-doc-title').textContent = activeFeature.querySelector('.tool-title').textContent;
+        byId('doc-title').textContent = activeFeature.querySelector('h1').textContent;
         renderVersionStatus();
         scheduleSectionSync();
       }
@@ -820,12 +609,11 @@
         language = language === 'zh' ? 'en' : 'zh';
         renderLanguage();
       });
-      document.getElementById('refresh-guide').addEventListener('click', () => location.reload());
 
-      const imageViewer = document.getElementById('image-viewer');
-      const imagePreview = document.getElementById('image-preview');
-      const zoomOut = document.getElementById('image-zoom-out');
-      const zoomIn = document.getElementById('image-zoom-in');
+      const imageViewer = byId('viewer');
+      const imagePreview = byId('preview');
+      const zoomOut = byId('zoom-out');
+      const zoomIn = byId('zoom-in');
       let imageWidth = 0, imageScale = 1;
       function zoomImage(factor) {
         imageScale = Math.max(.25, Math.min(3, imageScale * factor));
@@ -835,9 +623,9 @@
       }
       zoomOut.addEventListener('click', () => zoomImage(1 / 1.25));
       zoomIn.addEventListener('click', () => zoomImage(1.25));
-      document.querySelectorAll('[data-image-zoom]').forEach(link => link.addEventListener('click', event => {
+      document.querySelectorAll('[data-zoom]').forEach(link => link.addEventListener('click', event => {
         event.preventDefault();
-        const image = link.querySelector('img, svg');
+        const image = link.querySelector('img');
         const preview = image.cloneNode(true);
         preview.removeAttribute('loading');
         imagePreview.replaceChildren(preview);
@@ -881,7 +669,6 @@
         return version;
       }
       function resolveVersionState() {
-        if (currentVersion === 'preview') return 'preview';
         const comparison = compareVersions(currentVersion, latestVersion);
         return comparison < 0 ? 'update' : 'current';
       }
@@ -894,7 +681,7 @@
         updateRequest = readLatestVersion(controller.signal).then(version => {
           latestVersion = version;
           updateState = resolveVersionState();
-        }).catch(() => { updateState = currentVersion === 'preview' ? 'preview' : 'unavailable'; }).finally(() => {
+        }).catch(() => { updateState = 'unavailable'; }).finally(() => {
           clearTimeout(timeout);
           updateRequest = null;
           renderVersionStatus();
@@ -906,22 +693,17 @@
       function showInstalled(version, automatic = null) {
         currentVersion = version;
         autoUpdate = typeof automatic === 'boolean' ? automatic : null;
-        const reveal = document.getElementById('guide-content').hidden;
-        document.getElementById('guide-gate').hidden = true;
-        document.getElementById('guide-content').hidden = false;
-        const target = document.getElementById(location.hash.slice(1));
-        if (reveal && target?.hasAttribute('data-section')) target.scrollIntoView({block: 'start'});
-        document.getElementById('version-info').hidden = false;
-        document.querySelector('[data-toolkit-version]').textContent = 'v' + version;
+        byId('warning').hidden = true;
+        byId('version').hidden = false;
+        byId('installed').textContent = 'v' + version;
         const address = new URL(location.href);
         if (address.searchParams.get('from') === 'install') {
-          document.getElementById('guide-heading').hidden = true;
-          document.getElementById('installation-success').hidden = false;
+          byId('heading').hidden = true;
+          byId('success').hidden = false;
           address.searchParams.delete('from');
           history.replaceState(null, '', address.href);
         }
-        if (version === 'preview') updateState = 'preview';
-        else if (latestVersion) updateState = resolveVersionState();
+        if (latestVersion) updateState = resolveVersionState();
         else checkLatestVersion();
         renderVersionStatus();
         scheduleSectionSync();
@@ -930,12 +712,6 @@
         if (event.source !== window || event.origin !== location.origin || event.data?.type !== 'toolkit:ready' || typeof event.data.version !== 'string') return;
         showInstalled(event.data.version, event.data.autoUpdate);
       });
-      document.addEventListener('keydown', event => {
-        if (!event.ctrlKey || !event.altKey || !event.shiftKey || event.metaKey || event.repeat || (event.code !== 'KeyD' && event.key?.toLowerCase() !== 'd')) return;
-        event.preventDefault();
-        showInstalled('preview');
-      }, true);
-
       renderLanguage();
       if (location.protocol !== 'file:') window.postMessage({type: 'toolkit:check'}, location.origin);
     })();

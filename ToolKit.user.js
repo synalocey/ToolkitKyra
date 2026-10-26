@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.10.25
+// @version      26.10.26
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
@@ -30,7 +30,9 @@
 // @grant        GM_setValue
 // @grant        unsafeWindow
 // @connect      127.0.0.1
+// @connect      synalocey.github.io
 // @connect      raw.githubusercontent.com
+// @connect      github.com
 // ==/UserScript==
 /* globals jQuery, XLSX, zip */
 const chosenBaseCss=GM_getResourceText('chosenCss');
@@ -47,17 +49,17 @@ function loadExcelJs(){
 'use strict';
 const date_v = new Date('20' + GM_info.script.version); const APP_PATH='/k1.png'; const BRIDGE_PATH='/k2.png'; const FCID_PATH='/staceykyra.png'; const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
 const BRIDGE_URLS=[25972,25973,25974,8765].map(port=>'http://127.0.0.1:'+port); let bridgeUrl='',bridgeDiscovery=null;
-const SAPGUICONTROL_DOWNLOAD_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.zip'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
+const SAPGUICONTROL_DOWNLOAD_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.7z'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
 const GUIDE_URL='https://synalocey.github.io/ToolkitKyra/guide';
 const FID_DASHBOARD_TITLE='🏭 FID & NSR Tracking Dashboard';
 const DASHBOARD_BASE_CSS=chosenBaseCss+`
 :root{--bg:#f3f6fc;--panel:#fff;--ink:#24354e;--muted:#53657d;--line:#d8e1ee;--blue:#2563eb;--teal:#0f766e;--green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;--radius:12px;--font-sans:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",Arial,sans-serif;--shadow:0 3px 16px #253c6410}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 var(--font-sans)}h1,h2,h3,b,strong{font-weight:600}button,input,select,textarea{font:inherit}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #8ab4f2;outline-offset:2px}.card,.side{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{border:1px solid transparent;border-radius:8px;background:var(--teal);color:#fff;font-weight:600;line-height:1.35;padding:8px 12px;cursor:pointer}.btn:disabled{cursor:not-allowed;opacity:.48}.btn:hover:not(:disabled){filter:brightness(.96)}
 .chosen-container{font-family:var(--font-sans);width:100%!important}.chosen-container-multi .chosen-choices{background-image:none;min-height:34px}.chosen-container-multi .chosen-choices li.search-field input{height:26px;line-height:26px;font-family:inherit}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close{top:50%;right:5px;width:14px;height:14px;margin-top:-7px;background:none;font-size:0}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close::after{content:"×";display:block;color:#365c95;font-size:15px;line-height:13px;text-align:center}.chosen-container .chosen-drop{border-color:#b8c8d8;border-radius:0 0 9px 9px;box-shadow:0 9px 24px #263b6425}.chosen-container .chosen-results{max-height:230px}
-.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-title h2{margin:0}.context-badge{display:inline-flex;align-items:center;background:#e7f6ed;color:#22604b;border:1px solid #b8dcc7;border-radius:18px;padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.table-search{width:290px;max-width:70vw;border:1px solid var(--line);border-radius:8px;padding:8px 10px}.row-count{font-size:12px;color:#425a7b;background:#f3f6fa;border:1px solid #dce5ef;border-radius:6px;padding:4px 7px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff;scrollbar-width:thin}
-#cycleTable,#wfTable{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13px}#cycleTable{width:2422px;min-width:2422px}#cycleTable td,#cycleTable th,#wfTable td,#wfTable th{border-right:1px solid #e4eaf3;border-bottom:1px solid #dde6f0;padding:8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#cycleTable th,#wfTable th{position:sticky;top:0;z-index:4;background:#edf2fa;color:#425a7b;font-size:12px;font-weight:600;cursor:pointer;user-select:none}#cycleTable td:first-child,#cycleTable th:first-child,#wfTable td:first-child,#wfTable th:first-child{position:sticky;left:0;box-shadow:2px 0 0 #d8e2ef}#cycleTable td:first-child,#wfTable td:first-child{background:#fff;z-index:2}#cycleTable th:first-child,#wfTable th:first-child{z-index:6}#cycleTable tbody tr:nth-child(even) td,#wfTable tbody tr:nth-child(even) td{background:#f7f9fd}#cycleTable th .sort-mark{margin-left:5px;color:#526c91}.status-pill{display:inline-flex;border-radius:12px;padding:3px 7px;font-size:12px;line-height:1.3;background:#dbeafe;color:#1d4ed8}.status-pill.terminal{background:#dcfce7;color:#166534}.status-pill.stop{background:#fee2e2;color:#991b1b}.status-pill.unknown{background:#fef3c7;color:#92400e}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-title h2{margin:0}.context-badge{display:inline-flex;align-items:center;background:#e7f6ed;color:#22604b;border:1px solid #b8dcc7;border-radius:18px;padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.row-count{font-size:12px;color:#425a7b;background:#f3f6fa;border:1px solid #dce5ef;border-radius:6px;padding:4px 7px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff;scrollbar-width:thin}
+.status-pill{display:inline-flex;border-radius:12px;padding:3px 7px;font-size:12px;line-height:1.3;background:#dbeafe;color:#1d4ed8}.status-pill.terminal{background:#dcfce7;color:#166534}.status-pill.stop{background:#fee2e2;color:#991b1b}.status-pill.unknown{background:#fef3c7;color:#92400e}
 .cycle-shell{display:grid;gap:14px}.cycle-label{display:block;color:#425a7b;font-size:12px;font-weight:600;margin-bottom:6px}.cycle-input{display:block;width:100%;resize:vertical;min-height:110px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:10px;font:13px/1.5 Consolas,"Segoe UI",sans-serif}.cycle-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}.cycle-progress{display:block;width:100%;height:6px;margin-top:12px;accent-color:var(--teal);appearance:none;border:0;border-radius:9px;overflow:hidden;background:#e9eff4}.cycle-progress::-webkit-progress-bar{background:#e9eff4}.cycle-progress::-webkit-progress-value,.cycle-progress::-moz-progress-bar{background:var(--teal)}.cycle-status{margin-top:7px;color:var(--muted);font-size:12px}.cycle-status:empty{display:none}.cycle-wrap{max-height:650px}.ct-link{border:0;background:none;color:#0369a1;padding:0;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.duration-over,.duration-over .ct-link{color:var(--red)!important}
-.wf-modal[hidden]{display:none}.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:18px}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0f172a7a;backdrop-filter:blur(2px)}.wf-box{position:relative;display:flex;flex-direction:column;width:min(1320px,calc(100vw - 36px));max-height:calc(100vh - 36px);overflow:hidden;border:1px solid #bdcde1;border-radius:13px;background:#fff;box-shadow:0 24px 70px #1a2e5259}.wf-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line);background:#f7f9fc}.wf-head h2{margin:0;font-size:17px}.wf-head p{margin:3px 0 0;color:var(--muted);font-size:13px}.wf-actions{display:flex;align-items:center;gap:8px}.wf-wrap{overflow:auto;max-height:calc(100vh - 120px)}#wfTable{width:1280px;min-width:1280px}#wfTable th:first-child{width:190px}#wfTable th:nth-child(2){width:120px}#wfTable th:nth-child(3){width:160px}#wfTable th:nth-child(4){width:160px}#wfTable th:nth-child(5){width:95px}#wfTable th:nth-child(6){width:120px}#wfTable th:nth-child(7){width:435px}#wfTable td{white-space:normal;overflow-wrap:anywhere;vertical-align:top;line-height:1.45}#wfTable td:nth-child(7){white-space:pre-wrap}#wfTable th{white-space:normal;overflow:visible;text-overflow:clip;cursor:default}body.wf-open{overflow:hidden}
+.wf-modal:not([open]){display:none}.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:18px;border:0;background:transparent;overflow:hidden}.wf-modal::backdrop{background:#152e505c;backdrop-filter:blur(2px)}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.wf-box.fid-dialog{--table-heading-bg:initial;position:relative;width:min(1200px,calc(100vw - 36px));min-width:0;height:auto;min-height:0;max-height:90vh}.wf-head p{margin:4px 0 0;font-size:13px}#wfTable .tabulator-col-title{white-space:normal;line-height:17px}.wf-box .fc-table-wrap .tabulator-row .tabulator-cell{height:auto;white-space:pre-wrap}.wf-box .cell-content{white-space:pre-wrap;max-height:none;overflow-wrap:anywhere}body.wf-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 `;
 const NSR_CYCLE_HTML=`<section id="cycleTab" class="tab-page" role="tabpanel" aria-label="NSR Cycle Time">
@@ -78,38 +80,24 @@ const NSR_CYCLE_HTML=`<section id="cycleTab" class="tab-page" role="tabpanel" ar
     </section>
 
     <section class="card">
-      <div class="section-title">
-        <div><h2>Cycle Time Detail</h2></div>
+      <div class="section-title detail-head">
+        <h2>Cycle Time Detail</h2>
       </div>
-      <div class="table-toolbar">
-        <div class="toolbar-left">
-          <input id="cycleSearch" class="table-search" placeholder="Search within lookup result…" autocomplete="off">
-          <span id="cycleCount" class="row-count">0 rows</span>
-        </div>
-        <div class="toolbar-right">
-          <button id="copyCycleBtn" class="btn light" type="button" disabled>Copy</button>
-          <button id="exportCycleBtn" class="btn light" type="button" title="Export the current Cycle Time rows and their workflow details" disabled>Export XLSX</button>
-        </div>
-      </div>
-      <div class="table-wrap cycle-wrap">
-        <table id="cycleTable" aria-label="NSR cycle time detail"></table>
-      </div>
+      <div id="cycleTable" aria-label="NSR cycle time detail"></div>
     </section>
   </div>
 </section>
-<div id="wfModal" class="wf-modal" hidden>
-  <button class="wf-bg" type="button" data-wf-close aria-label="Close workflow detail"></button>
-  <section class="wf-box" role="dialog" aria-modal="true" aria-labelledby="wfTitle">
-    <div class="wf-head">
-      <div><h2 id="wfTitle">Workflow Detail</h2><p id="wfMeta"></p></div>
-      <div class="wf-actions">
-        <button id="wfCopy" class="btn light" type="button">Copy</button>
-        <button id="wfClose" class="btn light" type="button" data-wf-close aria-label="Close workflow detail">Close</button>
-      </div>
+<dialog id="wfModal" class="wf-modal" aria-labelledby="wfTitle">
+  <button class="wf-bg" type="button" data-wf-close aria-label="Close workflow detail" tabindex="-1"></button>
+  <section class="wf-box fid-dialog">
+    <div class="section-head wf-head">
+      <div><h1><span id="wfTitle">Workflow Detail</span><a id="wfNsrLink" class="fid-action" target="_blank" rel="noopener noreferrer" hidden>NSR ↗</a></h1><p id="wfMeta" class="muted"></p></div>
+      <button id="wfClose" class="fid-close" type="button" data-wf-close aria-label="Close workflow detail">×</button>
     </div>
-    <div class="wf-wrap"><table id="wfTable" aria-label="Full NSR workflow detail"></table></div>
+    <div id="wfSummary" class="fid-dialog-grid"></div>
+    <div id="wfTable" aria-label="Full NSR workflow detail"></div>
   </section>
-</div>
+</dialog>
 `;
 const BRIDGE_CSS=(`
 :root{--bg:#f3f7fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--line:#d8e3ee;--blue:#2563eb;--teal:#0f766e;--green:#16a34a;--amber:#d97706;--red:#dc2626;--shadow:0 14px 34px rgba(15,23,42,.08);
@@ -195,8 +183,8 @@ const BRIDGE_HTML=(`
         <small>Local service</small>
         <strong id="bridgeService">Checking SAPGUIcontrol…</strong>
         <div id="bridgeUpdateStatus" class="bridge-note" style="margin-top:6px" aria-live="polite">Checking for updates…</div>
-        <a id="bridgeDownload" class="bridge-btn light small bridge-download" href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer"` +
-  ` title="Download SAPGUIcontrol.zip, then extract it and run SAPGUIcontrol.exe." hidden>Download SAPGUIcontrol</a>
+        <a id="bridgeDownload" class="bridge-btn light small bridge-download" href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.7z" target="_blank" rel="noopener noreferrer"` +
+  ` title="Download SAPGUIcontrol.7z, then extract it and run SAPGUIcontrol.exe." hidden>Download SAPGUIcontrol</a>
       </div>
       <div class="bridge-status-item"><small>SAP GUI</small><strong id="bridgeSap">Not checked</strong></div>
       <div class="bridge-status-item">
@@ -1159,7 +1147,7 @@ function isSapGuiControlUpdateAvailable(current,latest){const local=current.repl
 function renderSapGuiControlUpdate(){
   const state=sapGuiControlUpdate,release=state.release,download=bridgeId('bridgeDownload'); const newer=Boolean(release&&state.current&&isSapGuiControlUpdateAvailable(state.current,release.version)); download.href=release&&release.downloadUrl||SAPGUICONTROL_DOWNLOAD_URL;
   download.hidden=state.online===null||Boolean(state.online&&!newer); download.textContent=state.online?'Update SAPGUIcontrol':'Download SAPGUIcontrol';
-  download.title=(state.online&&release?'Download SAPGUIcontrol '+release.version+' (ZIP).':'Download SAPGUIcontrol.zip.')+' Extract it and run SAPGUIcontrol.exe.';
+  download.title=(state.online&&release?'Download SAPGUIcontrol '+release.version+' (7z).':'Download SAPGUIcontrol.7z.')+' Extract it and run SAPGUIcontrol.exe.';
   bridgeId('bridgeUpdateStatus').textContent=state.checking?'Checking for updates…':release?(state.online&&!newer?'Up to date':'Latest version: '+release.version):'Update check unavailable';
 }
 
@@ -2302,7 +2290,12 @@ const sources={
   }}
 };
 
-sources.ctl.label='CTL Report'; const BOBJ_SOURCES={fcid:{label:'FID BOBJ',endpoint:'/excel',file:'BOBJ_FID.xlsm'}, ctl:{label:'CTL BOBJ',endpoint:'/excel/ctl',file:'BOBJ_CTL.xlsm'}}; const HOSTED_ARCHIVE_URL='https://synalocey.github.io/ToolkitKyra/Stacey1.zip';
+sources.ctl.label='CTL Report'; const BOBJ_SOURCES={fcid:{label:'FID BOBJ',endpoint:'/excel',file:'BOBJ_FID.xlsm'}, ctl:{label:'CTL BOBJ',endpoint:'/excel/ctl',file:'BOBJ_CTL.xlsm'}};
+const HOSTED_ARCHIVE_URLS=[
+  'https://synalocey.github.io/ToolkitKyra/Stacey1.zip',
+  'https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/Stacey1.zip',
+  'https://github.com/synalocey/ToolkitKyra/raw/refs/heads/main/Stacey1.zip'
+];
 const HOSTED_PASSWORD_URL='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNameDateTimeSet/?$filter=Userid%20eq%20%27LONGKY%27',HOSTED_SOURCE_PREFIXES={ctlNsr:'c',nce:'n'};
 const SOURCE_DATES={
   fcid:{fields:['Slot Actual'],label:'Slot Actual'}, ctl:{fields:['Creation Date','Create Date'],label:'Creation Date'}, ctlNsr:{fields:['Create Date','Creation Date'],label:'Create Date'},
@@ -2332,9 +2325,9 @@ const nsrData=createNsrDataService((range,count)=>sourceMessage('nsr',`Loading S
 const nsrRecords=createNsrRecords(),accountMapping=createFidAccountMapping(),report=createFidSourceReaders(sources);
 const gridModule={exports:{}};new Function('module','exports',GM_getResourceText('tabulatorJs'))(gridModule,gridModule.exports);const Tabulator=gridModule.exports;
 const filterDefs=[
-  ['fAccount','Account','account','common'],['fQuarter','Calendar Quarter','quarter','fid'],['fOwner','FID Owner','owner','fidCtl'],
+  ['fAccount','Account','account','common'],['fQuarter','Calendar Quarter','quarter','fid'],['fOwner','FID Owner','owner','fidOwner'],
   ['fCustomer','FID Customer','customer','fid'],['fSystem','System Description','system','fid'],['fBusinessUnit','Business Unit','businessUnit','fid'],['fSalesAdmin','Sales Admin','salesAdmin','fidSalesAdmin'],
-  ['fSlotInitiator','Slot Initiator','slot.initiator','fidCtl'],['fFidStatus','FID Status','fidStatus','fidCtl'],['fRisk','Risk Drivers','riskType','fidRisk'],
+  ['fSlotInitiator','Slot Initiator','slot.initiator','fidSlot'],['fFidStatus','FID Status','fidStatus','fidCtl'],['fRisk','Risk Drivers','riskType','fidRisk'],
   ['fCtlStage','CTL Stage','ctl.stage','ctl'],['fCtlInitiator','CTL Initiator','ctl.initiator','ctl'],['fCtlCreatedDate','CTL Created Date','ctl.created','ctl'],['fCtlChange','CTL Type','ctl.change','ctl'],['fCtlCustomer','CTL Customer','ctl.customer','ctl'],
   ['fNsrInitiator','NSR Initiator','nsr.initiator','nsr'],['fNsrSubmitDate','NSR Submit Date','nsr.submitted','nsr'],
   ['fNsrTaskStatus','NSR Task Status','nsr.taskStatus','nsr'],['fNsrType','NSR Type','nsr.type','nsr'],['fNsrOrg','NSR Org','nsr.org','nsr'],
@@ -2350,18 +2343,18 @@ const ownerHint="Inferred from CTL/NSR records based on the highest operation co
 const salesAdminHint="Inferred from Pull/Push CTL records based on the highest operation count. For reference only; may be inaccurate.";
 const inferenceHelp=tip=>`<span class="inference-help" title="" aria-label="${escapeHtml(tip)}"></span>`;
 const lifecycleNames={'open':'Pending NSR','discarded':'Cancelled / Rejected','completed-5d':'Completed 5D NSR','completed-unlinked':'Completed NSR but no CTL','ctl-pending':'CTL pending approval','implemented':'CTL approved','ctl-unavailable':'CTL status unknown',ignore:'⊘ Ignore','ignore-completed':'⊘ Ignore',important:'★ Star'};
-const markLabels={all:'All',normal:'Unmarked',ignore:'⊘ Ignore',important:'★ Star'};
+const markLabels={all:'All',normal:'Unmarked',ignore:'⊘ Ignore',important:'★ Star'},markOptions=['important','ignore','normal'];
 const nsrCompletedTasks=Object.fromEntries(['completed-unlinked','ctl-pending','implemented','completed-5d'].map(key=>['15-Completed|'+key,lifecycleNames[key]]));
-const defaultCtlTypes=['Config','Slot','Drop Slot'];
+const defaultCtlTypes=['Config','Slot','Drop Slot','[Unknown]'];
 const pendingCtlTypes={'Pending Config CTL':['Slot','Config'],'Pending Pull/Push CTL':['Pull','Push']};
-const overviewColors={total:'#94a3b8',completed:'#16843f',workflow:'#2563eb',originator:'#8a5c0c',rejected:'#c42f48',cancelled:'#52647d',unknown:'#52647d'};
+const overviewColors={total:'#94a3b8',completed:'#16843f',workflow:'#2563eb',draft:'#8a5c0c',rejected:'#c42f48',cancelled:'#52647d',unknown:'#52647d'};
 let includeIgnored=true;
 function ignoredToggle(view){return `<label class="ignore-scope" title="Exclude Ignore-marked FIDs, their linked records and Ignore NSRs from statistics and Details"><input type="checkbox" data-exclude-ignored="${view}"${includeIgnored?'':' checked'}>Exclude ignored FID/NSR</label>`}
 function overviewHead(view,count,total,selected){const unit=view==='portfolio'?'FID':'NSR';return `<div class="section-head overview-head"><h2>${unit} Overview</h2><div class="overview-tools"><span class="badge">${selected?`${number(count)} / ${number(total)} selected ${unit}s`:`${number(count)} filtered ${unit}s`}</span>${ignoredToggle(view)}</div></div>`}
-const ctlStageOrder=['0-Cancelled','0-Rejected','1-Originator','PM','Sales Ops','NSR PE','CE','MSPM','MS','15-Completed'];
-function ctlStageName(value){const stage=text(value).replace(/^\d+\s*-\s*/,'');return ({cancelled:'0-Cancelled',canceled:'0-Cancelled',rejected:'0-Rejected',originator:'1-Originator',completed:'15-Completed'})[stage.toLowerCase()]||stage}
+const ctlStageOrder=['0-Cancelled','0-Rejected','Draft','PM','Sales Ops','NSR PE','CE','MSPM','MS','15-Completed'];
+function ctlStageName(value){const stage=text(value).replace(/^\d+\s*-\s*/,'');return ({cancelled:'0-Cancelled',canceled:'0-Cancelled',rejected:'0-Rejected',draft:'Draft',completed:'15-Completed'})[stage.toLowerCase()]||stage}
 function compareCtlStages(a,b){const rank=value=>!value||value==='[Unknown]'?100:value==='15-Completed'?99:ctlStageOrder.includes(value)?ctlStageOrder.indexOf(value):98;const left=ctlStageName(a),right=ctlStageName(b);return rank(left)-rank(right)||left.localeCompare(right,undefined,{numeric:true})}
-function taskGroup(value,ctl=false){return value==='15-Completed'?'completed':value==='0-Rejected'?'rejected':value==='0-Cancelled'?'cancelled':ctl&&value==='1-Originator'?'originator':ctl&&(!value||value==='[Unknown]')?'unknown':'workflow'}
+function taskGroup(value,ctl=false){return value==='15-Completed'?'completed':value==='0-Rejected'?'rejected':value==='0-Cancelled'?'cancelled':ctl&&value==='Draft'?'draft':ctl&&(!value||value==='[Unknown]')?'unknown':'workflow'}
 function taskOverview(kind,terms,groups,total){
   const unit=kind.toUpperCase(),equation=total+' = '+terms.map(([group])=>groups[group]).join(' + ');
   const card=(group,label,count,color)=>{
@@ -2383,7 +2376,7 @@ function selectTaskFilter(kind,key,types){
 }
 function normalizeNsrTasks(values){const selected=[...new Set(values)],previous=filterValues['nsr.taskStatus']||[];if(selected.includes('15-Completed')&&selected.some(value=>Object.hasOwn(nsrCompletedTasks,value)))return selected.filter(value=>!previous.includes('15-Completed')?!Object.hasOwn(nsrCompletedTasks,value):value!=='15-Completed');return selected}
 const fidStatusNames={'no-slot':'No Slot','slot-ready':'Slotted FID','stable-slot':'Stable Slot','late-slot':'Late Slot','stable-ctl':'Stable CTL/NSR','late-ctl-nsr':'Late CTL/NSR','late-ctl':'Late CTL','open-nsr':'Late NSR','slot-unknown':'Slot status unknown','slot-date-unknown':'Slot date unknown','ctl-unknown':'CTL/NSR status unknown','risk-fid':'Risk FID','risk-free':'No Late Flags','risk-unknown':'Risk Status Unknown','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'No Slot · drop slot'};
-const fidCellNames={'stable-slot|stable-ctl':'No Late Flags (Stable Slot & Stable CTL/NSR)','late-slot|stable-ctl':'Late Slot with Stable CTL/NSR','stable-slot|late-ctl-nsr':'Stable Slot with Late CTL/NSR','late-slot|late-ctl-nsr':'Late Slot with Late CTL/NSR','stable-slot|ctl-unknown':'Stable Slot · CTL/NSR unknown','late-slot|ctl-unknown':'Late Slot · CTL/NSR unknown','slot-date-unknown|stable-ctl':'Slot date unknown · Stable CTL/NSR','slot-date-unknown|late-ctl-nsr':'Late CTL/NSR · Slot unknown','slot-date-unknown|ctl-unknown':'Slot & CTL/NSR status unknown'};
+const fidCellNames={'stable-slot|stable-ctl':'No Late Flags (Stable Slot & CTL/NSR)','late-slot|stable-ctl':'Late Slot with Stable CTL/NSR','stable-slot|late-ctl-nsr':'Stable Slot with Late CTL/NSR','late-slot|late-ctl-nsr':'Late Slot with Late CTL/NSR','stable-slot|ctl-unknown':'Stable Slot · CTL/NSR unknown','late-slot|ctl-unknown':'Late Slot · CTL/NSR unknown','slot-date-unknown|stable-ctl':'Slot date unknown · Stable CTL/NSR','slot-date-unknown|late-ctl-nsr':'Late CTL/NSR · Slot unknown','slot-date-unknown|ctl-unknown':'Slot & CTL/NSR status unknown'};
 const fidCauseNames={'late-ctl':'Late CTL','open-nsr':'Late NSR','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'No Slot · drop slot'};
 const fidCauseKeys=Object.keys(fidCauseNames);
 const fidSelection={order:[],groups:{}};
@@ -2398,8 +2391,8 @@ body.fcid-app{--side:370px;--fid-ink:#2458a6;--fid-tint:#eaf1ff;--fid-line:#bed0
 body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fc-filter[data-filter-needs=ctl]{--filter-ink:var(--ctl-ink);--filter-tint:var(--ctl-tint);--filter-line:var(--ctl-line)}.filter-group-title[data-filter-needs=ctl]{color:var(--ctl-ink);border-top-color:var(--ctl-line)}
 .ctl-overview{container-type:inline-size}.ctl-flow{display:grid;grid-template-columns:minmax(0,1fr) repeat(var(--ctl-terms),14px minmax(0,1fr));gap:7px;padding:2px 0}.ctl-flow .nsr-kpi{padding:11px 9px}.ctl-flow .nsr-kpi small{overflow:hidden;text-overflow:ellipsis}
-#view-changes .section-head h2{color:var(--ctl-ink)}#view-changes .pivot-head,#view-changes .tabulator-header,#view-changes .tabulator-header .tabulator-col{background:var(--ctl-tint)}#view-changes .pivot-count{color:var(--ctl-ink);background:var(--ctl-tint)}
-#view-nsr .section-head h2{color:var(--nsr-ink)}#view-nsr .pivot-head{background:var(--nsr-tint)}#view-nsr .pivot-card,#view-nsr .pivot-head{border-color:var(--nsr-line)}#view-nsr .pivot-count,#view-nsr .interactive-pivot .badge{color:var(--nsr-ink);background:var(--nsr-tint)}
+:is(#view-changes,#view-nsr) :is(.pivot-head,.pivot-count){background:var(--view-tint)}:is(#view-changes,#view-nsr) .pivot-count{color:var(--view-ink)}
+#view-nsr :is(.pivot-card,.pivot-head){border-color:var(--view-line)}#view-nsr .interactive-pivot .badge{color:var(--view-ink);background:var(--view-tint)}
 .fc-filter[data-filter-needs=nsr] input[type=date]{border-color:var(--nsr-line);color:var(--nsr-ink)}.fc-filter[data-filter-needs=nsr] :focus-visible{outline-color:var(--nsr-ink)}
 .filter-chip:has([data-locate-filter^=fNsr]){--chip-ink:var(--nsr-ink);--chip-tint:var(--nsr-tint);--chip-line:var(--nsr-line)}.filter-chip:has([data-locate-filter^=fCtl]){--chip-ink:var(--ctl-ink);--chip-tint:var(--ctl-tint);--chip-line:var(--ctl-line)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])){color:var(--chip-ink);background:var(--chip-tint);border-color:var(--chip-line)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])):hover{border-color:var(--chip-ink)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])) .filter-chip-remove{color:var(--chip-ink)}.filter-chip:has(:is([data-locate-filter^=fNsr],[data-locate-filter^=fCtl])) .filter-chip-remove:hover{background:var(--chip-line)}
 @container(max-width:850px){.ctl-flow{grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr)}.ctl-flow>[data-ctl-status=all]{grid-column:1/-1;display:grid;grid-template-columns:1fr auto;align-items:center}.ctl-flow>[data-ctl-status=all] b{grid-column:2;grid-row:1/3;margin:0}}
@@ -2409,9 +2402,15 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 #fFidStatus_chosen .chosen-results .fid-status-child{padding-inline-start:22px}
 #fFidStatus_chosen .chosen-results .fid-status-detail{padding-inline-start:37px}
 .workspace-nav{display:flex;gap:12px;flex-wrap:wrap;padding:6px;background:#fff;border:1px solid var(--line);border-radius:10px}.workspace-nav button{border:0;background:transparent;color:#485d7b;font-size:13px;font-weight:600;padding:8px 10px;border-radius:7px;cursor:pointer}.workspace-nav button.active{background:#e4edff;color:#1e52ad}.workspace-nav button:hover{background:#eef3fd}.workspace-nav button[data-view=rules]{margin-left:auto}.fc-view{display:grid;gap:12px;min-width:0}.filter-context{display:flex;align-items:center;flex-wrap:wrap;gap:7px 10px;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:9px;font-size:12px}.context-title{flex:none;font-weight:600;color:#304d77}.filter-tags{display:flex;align-items:center;min-height:27px;flex:1 1 240px;min-width:0;flex-wrap:wrap;gap:6px}.filter-chip{display:inline-flex;align-items:center;gap:0;max-width:min(360px,100%);min-width:0;border:1px solid #c8d6ed;background:#f5f8ff;color:#31528a;border-radius:16px;padding:0;font-size:12px;line-height:1.4;cursor:pointer}.filter-chip:hover{background:#eaf1ff;border-color:#94b2df}.filter-chip-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:4px 0 4px 9px;cursor:pointer;border-radius:16px 0 0 16px}.filter-chip-remove{flex:none;align-self:stretch;border:0;background:none;font-size:15px;line-height:1;color:#536d95;padding:0 8px 0 6px;cursor:pointer;border-radius:0 16px 16px 0}.filter-chip-remove:hover{background:#dfe9fb;color:#244c87}.scope-note{margin-left:auto;color:#53657d}
-.workspace-nav button[data-view=portfolio]{--nav-ink:var(--fid-ink);--nav-tint:var(--fid-tint);--nav-line:var(--fid-line)}.workspace-nav button[data-view=nsr]{--nav-ink:var(--nsr-ink);--nav-tint:var(--nsr-tint);--nav-line:var(--nsr-line)}.workspace-nav button[data-view=changes]{--nav-ink:var(--ctl-ink);--nav-tint:var(--ctl-tint);--nav-line:var(--ctl-line)}.workspace-nav button[data-view=cycle]{--nav-ink:#a85c07;--nav-tint:#fff4e4;--nav-line:#e6c79e}.workspace-nav button[data-view=summary]{--nav-ink:#3d805d;--nav-tint:#edf7ef;--nav-line:#c1dcc7}.workspace-nav button:not([data-view=rules]){background:var(--nav-tint);color:var(--nav-ink);box-shadow:inset 0 0 0 1px var(--nav-line)}.workspace-nav button:not([data-view=rules]):hover{box-shadow:inset 0 0 0 1px var(--nav-ink)}.workspace-nav button:not([data-view=rules]).active{background:var(--nav-ink);color:#fff;box-shadow:inset 0 0 0 1px var(--nav-ink),0 2px 5px #253c6420}
+.workspace-nav [data-view=portfolio],#view-portfolio{--view-ink:var(--fid-ink);--view-tint:var(--fid-tint);--view-line:var(--fid-line)}
+.workspace-nav [data-view=nsr],#view-nsr{--view-ink:var(--nsr-ink);--view-tint:var(--nsr-tint);--view-line:var(--nsr-line)}
+.workspace-nav [data-view=changes],#view-changes{--view-ink:var(--ctl-ink);--view-tint:var(--ctl-tint);--view-line:var(--ctl-line)}
+.workspace-nav [data-view=cycle],#view-cycle,#wfModal{--view-ink:#a85c07;--view-tint:#fff4e4;--view-line:#e6c79e}
+.workspace-nav [data-view=summary],#view-summary{--view-ink:#3d805d;--view-tint:#edf7ef;--view-line:#c1dcc7}
+.workspace-nav button:not([data-view=rules]){background:var(--view-tint);color:var(--view-ink);box-shadow:inset 0 0 0 1px var(--view-line)}.workspace-nav button:not([data-view=rules]):hover{box-shadow:inset 0 0 0 1px var(--view-ink)}.workspace-nav button:not([data-view=rules]).active{background:var(--view-ink);color:#fff;box-shadow:inset 0 0 0 1px var(--view-ink),0 2px 5px #253c6420}
+.fc-view :is(.section-head,.section-title) h2,#wfModal .wf-head h1{color:var(--view-ink)}
 
-.signal-strip{display:flex;gap:7px;flex-wrap:wrap}.mark-filter .signal[aria-pressed=true]{outline:2px solid #3566b0;outline-offset:2px}.signal{border:1px solid #d4deef;background:#fff;color:#3e5575;padding:6px 9px;border-radius:7px;font-size:12px;cursor:pointer}.signal b{margin-right:5px;color:#34539d;font-variant-numeric:tabular-nums}
+.signal-strip{display:flex;gap:7px;flex-wrap:wrap}.signal{border:1px solid #d4deef;background:#fff;color:#3e5575;padding:6px 9px;border-radius:7px;font-size:12px;cursor:pointer}.signal b{margin-right:5px;color:#34539d;font-variant-numeric:tabular-nums}
 .fid-risk-drivers .signal{border:0;border-radius:0;padding:8px 15px;background:#edf2fa;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
 .fid-risk-drivers .signal b{font:inherit;margin:0;color:inherit}.fid-risk-drivers .signal small{font-size:11px;opacity:.8;white-space:nowrap}
 .fid-risk-drivers .signal:hover{background:#e5efff}
@@ -2425,13 +2424,14 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fid-risk-drivers .signal[data-nsr-lifecycle="open"]:hover{background:#f8e0e6}
 .fid-risk-drivers .signal[data-nsr-lifecycle="open"][aria-pressed=true]{background:var(--nsr-ink);color:#fff}
 .fid-risk-drivers .signal[data-group-value="Pending Config CTL"][aria-pressed=true]{background:#745097;color:#fff}
-.table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 8px}.table-toolbar>.toolbar-left{flex:1 1 270px;min-width:0}.table-toolbar input{width:min(310px,100%);border:1px solid #c5d2e5;border-radius:6px;padding:7px 9px;font-size:13px}.table-count{font-size:12px;color:#4d6383}.fc-table-shell{min-width:0}.fc-table-wrap.tabulator{overflow:hidden;resize:vertical;min-height:105px;border:1px solid #d5dfed;border-radius:8px;scrollbar-width:thin;background:#fff;font:13px/20px var(--font-sans);color:#344c6b}.fid-dialog .fc-table-wrap.tabulator{min-height:0;resize:none}.fid-dialog .tabulator-tableholder{min-height:34px}.fc-table-wrap .tabulator-header{background:#edf2fb;border-bottom:1px solid #d5dfed;color:#344c6b;font-weight:600}.fc-table-wrap .tabulator-header .tabulator-col{background:#edf2fb;border-right:1px solid #e0e7f1;font-size:12px}.fc-table-wrap .tabulator-header .tabulator-col .tabulator-col-content{padding:7px 9px}.fc-table-wrap .tabulator-row{background:#fff;color:#344c6b;min-height:34px}.fc-table-wrap .tabulator-row.tabulator-row-even{background:#f8faff}.fc-table-wrap .tabulator-row:hover{background:#f0f5fc}.fc-table-wrap .tabulator-row .tabulator-cell{padding:6px 9px;height:34px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid #e8edf5;border-bottom:1px solid #e3e9f3}.fc-table-wrap .tabulator-row .tabulator-cell.tabulator-frozen{background:inherit;border-right:1px solid #d6e0ed}.fc-table-wrap .tabulator-tableholder{scrollbar-width:thin;overflow-anchor:none}.cell-content{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-height:22px}.fid-status-tags{display:inline-flex;gap:4px;vertical-align:top}#portfolioTable .tabulator-cell:has(.fid-status-tags){cursor:pointer}.fid-status-tags .pill{flex:none}.cell-content .pill,.cell-content .status-pill{max-width:100%;white-space:nowrap;vertical-align:top}.fc-link{border:0;background:none;color:#215fbb;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:0;font-size:13px;white-space:nowrap}.pill{display:inline-block;font-size:12px;line-height:17px;padding:2px 6px;border-radius:5px;background:#edf2fa;color:#3e5a80}.pill.risk,.pill.alert{background:#ffe5eb;color:#a12d47}.pill.clear{background:#ddf4e7;color:#196747}.pill.unknown,.fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{background:#fff1cf;color:#7c5514}.pill.info{background:#e7effb;color:#375b91}.fcid-app .status-pill{padding:2px 6px;line-height:17px}
+.table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 8px}.detail-head>.table-toolbar,summary>.table-toolbar{margin:0 0 0 auto;justify-content:flex-end}.detail-head>.table-toolbar{flex-wrap:nowrap;flex:0 1 auto}summary>.table-toolbar{float:right}.detail-head{flex-wrap:wrap}.table-count{font-size:12px;color:#4d6383}.fc-table-shell{min-width:0}.fc-table-wrap.tabulator{overflow:hidden;resize:vertical;min-height:105px;border:1px solid #d5dfed;border-radius:8px;scrollbar-width:thin;background:#fff;font:13px/20px var(--font-sans);color:#344c6b}.fid-dialog .fc-table-wrap.tabulator{min-height:0;resize:none}.fid-dialog .tabulator-tableholder{min-height:34px}.fc-table-wrap .tabulator-header{background:var(--table-heading-bg,#edf2fb);border-bottom:1px solid #d5dfed;color:#344c6b;font-weight:600}.fc-table-wrap .tabulator-header .tabulator-col{background:var(--table-heading-bg,#edf2fb);border-right:1px solid #e0e7f1;font-size:12px}.fc-table-wrap .tabulator-header .tabulator-col .tabulator-col-content{padding:7px 9px}.fc-table-wrap .tabulator-row{background:#fff;color:#344c6b;min-height:34px}.fc-table-wrap .tabulator-row.tabulator-row-even{background:#f8faff}.fc-table-wrap .tabulator-row:hover{background:#f0f5fc}.fc-table-wrap .tabulator-row .tabulator-cell{padding:6px 9px;height:34px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid #e8edf5;border-bottom:1px solid #e3e9f3}.fc-table-wrap .tabulator-row .tabulator-cell.tabulator-frozen{background:inherit;border-right:1px solid #d6e0ed}.fc-table-wrap .tabulator-tableholder{scrollbar-width:thin;overflow-anchor:none}.cell-content{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-height:22px}.fid-status-tags{display:inline-flex;gap:4px;vertical-align:top}#portfolioTable .tabulator-cell:has(.fid-status-tags){cursor:pointer}.fid-status-tags .pill{flex:none}.cell-content .pill,.cell-content .status-pill{max-width:100%;white-space:nowrap;vertical-align:top}.fc-link{border:0;background:none;color:#215fbb;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:0;font-size:13px;white-space:nowrap}.pill{display:inline-block;font-size:12px;line-height:17px;padding:2px 6px;border-radius:5px;background:#edf2fa;color:#3e5a80}.pill.risk,.pill.alert{background:#ffe5eb;color:#a12d47}.pill.clear{background:#ddf4e7;color:#196747}.pill.unknown,.fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{background:#fff1cf;color:#7c5514}.pill.info{background:#e7effb;color:#375b91}.fcid-app .status-pill{padding:2px 6px;line-height:17px}
 .record-mark-toggle{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin:0;padding:0;border:1px solid #a9b3c0;border-radius:3px;background:transparent;color:#7d8a9d;font:600 13px/1 var(--font-sans);vertical-align:middle;cursor:pointer}.record-mark-toggle svg{display:block;width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:1.2}.record-mark-toggle[data-record-mark=ignore]{background:#edf0f4}.record-mark-toggle[data-record-mark=important]{border-color:#d99aa5;background:#fff1f3;color:#b8324a}.record-mark-toggle:focus-visible{outline:2px solid #557cae;outline-offset:2px}.fc-table-wrap .tabulator-row[data-record-mark=ignore] .tabulator-cell,.fc-table-wrap .tabulator-row[data-record-mark=ignore] .tabulator-cell *{color:#929aa5}.fc-table-wrap .tabulator-row[data-record-mark=important] .tabulator-cell,.fc-table-wrap .tabulator-row[data-record-mark=important] .tabulator-cell *{color:#b8324a}.pill.ignore{background:#edf0f4;color:#667184}
 .fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]),.pill.pending,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){background:#f2edfb;--fid-history-line:#aa83c6}
 .pill.pending,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){color:#745097}
-.fc-table-wrap .tabulator-header-filter{display:none}.fc-table-wrap.column-filters .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title{padding-right:29px}.fc-table-wrap.column-filters .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter{right:0}.fc-table-wrap.column-filters .tabulator-col-sorter .tabulator-arrow{border-left-width:4px;border-right-width:4px}.column-heading>span{display:block;overflow:hidden;text-overflow:ellipsis}.column-funnel{position:absolute;right:11px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:16px;height:18px;padding:2px;border:0;border-radius:3px;background:none;color:#8a97aa;cursor:pointer}.column-funnel svg{width:12px;height:12px;fill:currentColor}.column-funnel:hover,.column-funnel.active{background:#dceaff;color:#215fbb}.column-funnel:focus-visible{outline:2px solid #557cae;outline-offset:-2px}
+.fc-table-wrap .tabulator-header-filter{display:none}.fc-table-wrap.column-filters .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title{padding-right:29px}.fc-table-wrap.column-filters .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter{right:0}.fc-table-wrap.column-filters .tabulator-col-sorter .tabulator-arrow{border-left-width:4px;border-right-width:4px}.column-heading>span{display:block;overflow:hidden;text-overflow:ellipsis}.column-funnel,.mark-filter-trigger{position:absolute;right:11px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:16px;height:18px;padding:2px;border:0;border-radius:3px;background:none;color:#8a97aa;cursor:pointer}.column-funnel svg,.mark-filter-trigger svg{width:12px;height:12px;fill:currentColor}.column-funnel:hover,.column-funnel.active,.mark-filter-trigger:hover,.mark-filter-trigger.active{background:#dceaff;color:#215fbb}.column-funnel:focus-visible,.mark-filter-trigger:focus-visible{outline:2px solid #557cae;outline-offset:-2px}
 .column-filter-bar{display:flex;align-items:center;flex-wrap:wrap;gap:4px;flex:1 1 160px;min-width:0}.column-filter-bar:empty{display:none}.column-filter-bar .pill{max-width:min(220px,100%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;cursor:pointer}
 .column-filter-popup{position:fixed;position-area:bottom;position-try-fallbacks:flip-block;inset:auto;margin:8px;width:min(240px,calc(100vw - 16px));color:#344c6b;box-shadow:0 6px 22px #213a612b}.column-filter-popup label>span{font-weight:600}.column-filter-popup input{display:block;width:100%;margin:7px 0 10px;padding:7px;border:1px solid #c5d2e5;border-radius:5px}.column-filter-popup .btnrow{justify-content:space-between}
+.mark-filter-trigger{position:static;transform:none;display:flex;margin:auto;height:20px}.column-filter-popup.mark-filter-popup{position-area:bottom span-right;justify-self:start;position-try-fallbacks:flip-block,flip-inline;margin:8px 0;padding:7px;width:190px}.mark-filter-popup label{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border-radius:5px;color:#344c6b;cursor:pointer}.mark-filter-popup label:first-child{border-bottom:1px solid #e0e7f1;margin-bottom:4px}.mark-filter-popup label:hover{background:#f0f5fc}.mark-filter-popup label:has(input:checked){background:#e7effb;color:#215fbb}.mark-filter-popup input[type=checkbox]{width:14px;height:14px;margin:0;padding:0;accent-color:#2863d6;flex:none}.mark-filter-popup label>span{flex:1;font-weight:400}.mark-filter-popup b{font-weight:400;font-variant-numeric:tabular-nums}
 .fid-dialog .tabulator-row[data-fid-risk^="late-"],.fid-header-status .pill.risk{background:#fff2f5;--fid-history-line:#c75970}
 .fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]):hover,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]):hover{background:#e8ddf5}
 .fid-dialog .tabulator-row[data-fid-risk^="late-"]:hover{background:#ffe0e8}
@@ -2447,7 +2447,7 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{border-color:#e4c381}.fid-detail-value.no-slot small{color:inherit}
 .interactive-pivot>summary{list-style:none;pointer-events:none}.interactive-pivot>summary::-webkit-details-marker{display:none}.interactive-pivot:not([open])>summary{margin-bottom:0}.pivot-toggle{display:inline-block;margin-left:7px;padding:2px 4px;color:#53657d;font-size:12px;cursor:pointer;pointer-events:auto}.pivot-toggle::before{content:"▶"}.interactive-pivot[open] .pivot-toggle::before{content:"▼"}
 #nsrTable .fid-sorted .tabulator-row{background:#fff}#nsrTable .fid-sorted .tabulator-row[data-fid-band="1"]{background:#edf3fc}#nsrTable .fid-sorted .tabulator-row .tabulator-cell{border-bottom-color:transparent}#nsrTable .fid-sorted .tabulator-row[data-fid-start="true"] .tabulator-cell{box-shadow:inset 0 1px #b8c0cb}#nsrTable .fid-sorted .tabulator-row:hover{background:#e3edfc}
-.nsr-overview{container-type:inline-size}.nsr-flow{display:grid;grid-template-columns:minmax(0,1fr) repeat(4,16px minmax(0,1fr));gap:7px;padding:2px 0}.nsr-equation,.nsr-breakdown{display:contents}.nsr-kpi{min-width:0;text-align:left;border:1px solid #d6e1ed;border-top:3px solid var(--kpi-color);border-radius:9px;background:#fff;padding:11px;color:var(--kpi-color);cursor:pointer}.nsr-kpi small{display:block;font-size:12px;font-weight:600;color:#435774;white-space:nowrap}.nsr-kpi b{display:block;font-size:28px;line-height:1.2;font-weight:600;margin:6px 0 3px}.nsr-kpi span{font-size:12px;color:#53657d}.math-sign{align-self:center;justify-self:center;font-size:22px;color:#52657f;font-weight:600}.nsr-completed-arrow{grid-column:3;grid-row:2;position:relative;margin-top:12px;color:#78a98b}.nsr-completed-arrow::before{content:"";position:absolute;left:50%;right:0;top:-19px;bottom:50%;border-left:1.5px solid;border-bottom:1.5px solid;border-bottom-left-radius:12px}.nsr-completed-arrow::after{content:"";position:absolute;right:0;top:50%;width:6px;height:6px;border-top:1.5px solid;border-right:1.5px solid;transform:translateY(-50%) rotate(45deg)}.nsr-breakdown-equals{grid-column:4;grid-row:2;margin-top:12px;color:#16843f}.nsr-stage-sum{position:relative;grid-column:5/-1;grid-row:2;display:flex;gap:7px;min-width:0;margin-top:12px}.nsr-stage-sum::before{content:"";position:absolute;top:-10px;left:-23px;right:0;border-top:1px solid #d9dee4;pointer-events:none}.nsr-stage-sum>.math-sign{flex:none;width:16px}.nsr-stage-spacer{display:none}.nsr-stage{flex:1;display:flex;flex-direction:column}.nsr-stage small{white-space:normal;min-height:2.8em}.nsr-stage b{margin-top:auto}.nsr-stage.alert{background:#fff2f5;border-color:#ecb0bf}.nsr-stage.alert small,.nsr-stage.alert span{color:#992f49}.nsr-stage.approved{background:#f1fbf5}.nsr-stage.pending{background:#fff9ed}.nsr-stage.unknown{background:#f3f5f9}.nsr-pivots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pivot-card{border:1px solid #d6dff0;border-radius:9px;overflow:hidden;min-width:0}.pivot-head{display:flex;justify-content:space-between;gap:7px;padding:9px 10px;background:#f5f8fc;border-bottom:1px solid #dce5ef}.pivot-head span{font-size:12px;color:#52657f;white-space:nowrap}.pivot-list{height:320px;min-height:100px;padding:8px 10px;overflow:auto;resize:vertical;scrollbar-width:thin}.pivot-row{display:grid;grid-template-columns:minmax(85px,1fr) minmax(20px,.8fr) 42px;align-items:center;gap:7px;padding:5px 0;font-size:12px}.pivot-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#405775}.pivot-bar{height:5px;background:#eaf0fa;border-radius:4px;overflow:hidden}.pivot-bar i{display:block;height:100%;background:var(--bar);border-radius:4px}.pivot-count{border:0;border-radius:4px;background:#edf1ff;color:#3e5b9a;font-size:12px;padding:3px;cursor:pointer}
+.nsr-overview{container-type:inline-size}.nsr-flow{display:grid;grid-template-columns:minmax(max-content,calc(20% - 110px)) 16px minmax(max-content,calc(20% - 110px)) repeat(3,16px minmax(0,1fr));gap:7px;padding:2px 0}.nsr-equation,.nsr-breakdown{display:contents}.nsr-kpi{min-width:0;text-align:left;border:1px solid #d6e1ed;border-top:3px solid var(--kpi-color);border-radius:9px;background:#fff;padding:11px;color:var(--kpi-color);cursor:pointer}.nsr-kpi small{display:block;font-size:12px;font-weight:600;color:#435774;white-space:nowrap}.nsr-kpi b{display:block;font-size:28px;line-height:1.2;font-weight:600;margin:6px 0 3px}.nsr-kpi span{font-size:12px;color:#53657d}.math-sign{align-self:center;justify-self:center;font-size:22px;color:#52657f;font-weight:600}.nsr-completed-arrow{grid-column:3;grid-row:2;position:relative;margin-top:12px;color:#78a98b}.nsr-completed-arrow::before{content:"";position:absolute;left:50%;right:0;top:-19px;bottom:50%;border-left:1.5px solid;border-bottom:1.5px solid;border-bottom-left-radius:12px}.nsr-completed-arrow::after{content:"";position:absolute;right:0;top:50%;width:6px;height:6px;border-top:1.5px solid;border-right:1.5px solid;transform:translateY(-50%) rotate(45deg)}.nsr-breakdown-equals{grid-column:4;grid-row:2;margin-top:12px;color:#16843f}.nsr-stage-sum{position:relative;grid-column:5/-1;grid-row:2;display:flex;gap:7px;min-width:0;margin-top:12px}.nsr-stage-sum::before{content:"";position:absolute;top:-10px;left:-23px;right:0;border-top:1px solid #d9dee4;pointer-events:none}.nsr-stage-sum>.math-sign{flex:none;width:16px}.nsr-stage-spacer{display:none}.nsr-stage{flex:1;display:flex;flex-direction:column}.nsr-stage:first-of-type{flex:1.3}.nsr-stage small{white-space:normal;min-height:2.8em}.nsr-stage b{margin-top:auto}.nsr-stage.alert{background:#fff2f5;border-color:#ecb0bf}.nsr-stage.alert small,.nsr-stage.alert span{color:#992f49}.nsr-stage.approved{background:#f1fbf5}.nsr-stage.pending{background:#fff9ed}.nsr-stage.unknown{background:#f3f5f9}.nsr-pivots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pivot-card{border:1px solid #d6dff0;border-radius:9px;overflow:hidden;min-width:0}.pivot-head{display:flex;justify-content:space-between;gap:7px;padding:9px 10px;background:#f5f8fc;border-bottom:1px solid #dce5ef}.pivot-head span{font-size:12px;color:#52657f;white-space:nowrap}.pivot-list{height:320px;min-height:100px;padding:8px 10px;overflow:auto;resize:vertical;scrollbar-width:thin}.pivot-row{display:grid;grid-template-columns:minmax(85px,1fr) minmax(20px,.8fr) 42px;align-items:center;gap:7px;padding:5px 0;font-size:12px}.pivot-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#405775}.pivot-bar{height:5px;background:#eaf0fa;border-radius:4px;overflow:hidden}.pivot-bar i{display:block;height:100%;background:var(--bar);border-radius:4px}.pivot-count{border:0;border-radius:4px;background:#edf1ff;color:#3e5b9a;font-size:12px;padding:3px;cursor:pointer}
 .nsr-kpi[aria-pressed=true]{outline:2px solid var(--kpi-color);outline-offset:2px}
 .nsr-kpi[data-fid-status=all],.nsr-kpi[data-nsr-group=all],.nsr-kpi[data-ctl-status=all]{background:#fff;color:#344c6b;border-top:1px solid #d6e1ed}
 .fid-flow{overflow-x:auto;padding:6px}
@@ -2520,10 +2520,10 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fid-subcount-filter:hover{color:#405972;text-decoration:underline;text-underline-offset:2px}
 .fid-waiting{margin-top:12px;font-size:12px;color:#7c5514}
 .notice{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 13px;border:1px solid #e6a5b5;border-left:4px solid #c43c5c;background:#fff0f3;color:#992f48;border-radius:9px;font-size:13px}.notice small{display:block;font-size:12px;margin-top:3px}.statistics-state{margin-top:8px;color:#196b50;font-size:12px}.statistics-state.error{color:#ac3049}.ag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.marked-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.nsr-mark-editors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ag-box label{display:block;font-size:13px;font-weight:600;margin:6px 0}.ag-box textarea{width:100%;min-height:150px;resize:vertical;border:1px solid #cbd7e9;border-radius:7px;padding:8px;color:#345073}.ag-notice{white-space:pre-line;background:#fff3d7;color:#805b16;border:1px solid #debf79;border-radius:7px;padding:10px;margin:10px 0;font-size:13px}
-.fc-nsr-dialog,.fid-dialog,.fc-note-dialog{border:1px solid #b7c7e0;border-radius:12px;padding:17px;background:#f6f8fe;color:#2e486c;box-shadow:0 16px 70px #1e355550}.fc-nsr-dialog{width:min(450px,94vw)}.fc-nsr-dialog::backdrop,.fid-dialog::backdrop,.fc-note-dialog::backdrop{background:#152e505c}.fc-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.fc-range input{width:100%;padding:8px;border:1px solid #c2d0e4;border-radius:6px;margin-top:5px}.fc-nsr-help{font-size:12px;margin:12px 0}.fc-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}.fid-dialog{width:min(1400px,96vw);height:min(860px,92vh);max-width:96vw;max-height:94vh;min-width:min(600px,94vw);min-height:300px;overflow:auto;resize:both}.fid-dialog>.section-head{position:sticky;top:-17px;background:#f6f8fe;z-index:10;padding:10px 0}.fid-dialog h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:20px}.fid-action{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#215fbb;font-size:12px;line-height:1.3;text-decoration:none;white-space:nowrap;cursor:pointer}.fid-close{align-self:flex-start;margin:-8px -8px 0 0;width:36px;height:36px;padding:0;border:0;border-radius:7px;background:transparent;color:#526b8d;font-size:28px;line-height:1;cursor:pointer}.fid-action:hover,.fid-close:hover{background:#e7edf8}.fid-dialog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fid-detail-value{padding:9px;background:#fff;border:1px solid #d6e0ef;border-radius:7px;font-size:13px;overflow-wrap:anywhere}.fid-detail-value small{display:block;font-size:12px;color:#526b8d;margin-bottom:3px}.fid-evidence{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.fid-evidence>.notice{display:block;min-width:0;overflow-wrap:anywhere}.fid-evidence>.notice.clear{border-color:#a8d5bb;border-left-color:#2d8b60;background:#eef9f2;color:#196747}.fid-evidence>.notice.unknown{border-color:#d2dcee;border-left-color:#91a2ba;background:#fff;color:#526b8d}.fid-evidence b{font-weight:600}.fid-evidence p{margin:7px 0 0}.fid-dialog h2{margin:0}.fid-dialog .table-toolbar{margin:16px 0 8px}.fc-toast{position:fixed;right:20px;bottom:20px;z-index:150;background:#244a79;color:#fff;padding:11px 14px;border-radius:9px;font-size:13px;max-width:min(480px,90vw);display:flex;align-items:center;gap:13px}.fc-toast button{color:#fff;border:1px solid #b7cceb;border-radius:5px;background:none;padding:4px 7px;cursor:pointer}.fcid-app .cycle-shell{display:grid;gap:12px}.fcid-app #cycleTab{display:block}.fcid-app #cycleTab:not(.active){display:none}.fcid-app #cycleTable td,.fcid-app #wfTable td{font-size:13px;color:#344c6b}.fcid-app #cycleTable th,.fcid-app #wfTable th,.fcid-app .cycle-status,.fcid-app .cycle-label,.fcid-app .row-count,.fcid-app .context-badge{font-size:12px;color:#425c7f}body:has(#dashboardWorkspace.wf-open){overflow:hidden}.cycle-wrap{height:450px;max-height:none;resize:vertical;min-height:140px}
+.fc-nsr-dialog,.fid-dialog,.fc-note-dialog{border:1px solid #b7c7e0;border-radius:12px;padding:17px;background:#f6f8fe;color:#2e486c;box-shadow:0 16px 70px #1e355550}.fc-nsr-dialog{width:min(450px,94vw)}.fc-nsr-dialog::backdrop,.fid-dialog::backdrop,.fc-note-dialog::backdrop{background:#152e505c}.fc-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.fc-range input{width:100%;padding:8px;border:1px solid #c2d0e4;border-radius:6px;margin-top:5px}.fc-nsr-help{font-size:12px;margin:12px 0}.fc-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}.fid-dialog{width:min(1400px,96vw);height:min(860px,92vh);max-width:96vw;max-height:94vh;min-width:min(600px,94vw);min-height:300px;overflow:auto;resize:both}.fid-dialog>.section-head{position:sticky;top:-17px;background:#f6f8fe;z-index:10;padding:10px 0}.fid-dialog h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:20px}.fid-action{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#215fbb;font-size:12px;line-height:1.3;text-decoration:none;white-space:nowrap;cursor:pointer}.fid-close{align-self:flex-start;margin:-8px -8px 0 0;width:36px;height:36px;padding:0;border:0;border-radius:7px;background:transparent;color:#526b8d;font-size:28px;line-height:1;cursor:pointer}.fid-action:hover,.fid-close:hover{background:#e7edf8}.fid-dialog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fid-detail-value{padding:9px;background:#fff;border:1px solid #d6e0ef;border-radius:7px;font-size:13px;overflow-wrap:anywhere}.fid-detail-value small{display:block;font-size:12px;color:#526b8d;margin-bottom:3px}.fid-evidence{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.fid-evidence>.notice{display:block;min-width:0;overflow-wrap:anywhere}.fid-evidence>.notice.clear{border-color:#a8d5bb;border-left-color:#2d8b60;background:#eef9f2;color:#196747}.fid-evidence>.notice.unknown{border-color:#d2dcee;border-left-color:#91a2ba;background:#fff;color:#526b8d}.fid-evidence b{font-weight:600}.fid-evidence p{margin:7px 0 0}.fid-dialog h2{margin:0}.fid-dialog .table-toolbar{margin:16px 0 8px}.fc-toast{position:fixed;right:20px;bottom:20px;z-index:150;background:#244a79;color:#fff;padding:11px 14px;border-radius:9px;font-size:13px;max-width:min(480px,90vw);display:flex;align-items:center;gap:13px}.fc-toast button{color:#fff;border:1px solid #b7cceb;border-radius:5px;background:none;padding:4px 7px;cursor:pointer}.fcid-app .cycle-shell{display:grid;gap:12px}.fcid-app #cycleTab{display:block}.fcid-app #cycleTab:not(.active){display:none}.fcid-app .cycle-status,.fcid-app .cycle-label,.fcid-app .row-count,.fcid-app .context-badge{font-size:12px;color:#425c7f}body:has(#dashboardWorkspace.wf-open){overflow:hidden}
 .inference-help{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;box-sizing:border-box;margin-left:5px;vertical-align:middle;border:1px solid #b6c5da;border-radius:50%;color:#6c809d;font-size:10px;font-weight:600;line-height:1;cursor:help}.inference-help::before{content:"?"}.inference-help:hover{color:#2458a6;border-color:#6d90c2;background:#edf3ff;outline:2px solid #c0d2ed;outline-offset:2px}
 .inference-tooltip{position:fixed;inset:auto;margin:0;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:9px 11px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#344c6b;box-shadow:0 3px 14px #253c6426;font:12px/1.5 var(--font-sans);pointer-events:none}
-.detail-head{justify-content:flex-start;flex-wrap:wrap}.detail-head h2{white-space:nowrap}.mark-filter{align-items:center;gap:6px}.mark-filter .signal{white-space:nowrap}.mark-filter .signal:not(.all){padding:4px 7px;font-size:11px}.mark-filter .all{margin-right:5px}.mark-filter .ignore{color:#758192;background:#f3f5f8}.mark-filter .important{color:#b8324a;background:#fff1f3}.mark-filter .signal b{margin:0;color:inherit}.fid-note-cell{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.fid-note-add{display:inline-block;min-width:28px;border:1px solid #c5d2e5;border-radius:4px;background:#f5f8fd;line-height:18px;text-align:center;text-decoration:none}.fid-note-panel{margin:12px 0;border:1px solid #d2dcee;border-radius:8px;background:#fff}.fid-note-view{display:block;width:100%;padding:10px 12px;border:0;border-radius:7px;background:none;color:inherit;text-align:left;cursor:text}.fid-note-title{display:block;margin-bottom:6px;font-size:17px;font-weight:600}.fid-note-panel>form{padding:10px 12px}#fidNoteForm .section-head{margin-bottom:6px}.fid-note-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5}.fid-personal-mark{display:inline-flex;align-items:center}.fc-note-dialog{position:fixed;inset:auto;margin:0;width:min(520px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto}#fidNoteForm textarea{width:100%;min-height:180px;resize:vertical;border:1px solid #c2d0e4;border-radius:7px;padding:9px;font:13px/1.5 var(--font-sans);color:#263e60;background:#fff}.fc-note-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px}
+.detail-head{justify-content:flex-start;flex-wrap:wrap}.detail-head h2{white-space:nowrap}.fid-note-cell{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.fid-note-add{display:inline-block;min-width:28px;border:1px solid #c5d2e5;border-radius:4px;background:#f5f8fd;line-height:18px;text-align:center;text-decoration:none}.fid-note-panel{margin:12px 0;border:1px solid #d2dcee;border-radius:8px;background:#fff}.fid-note-view{display:block;width:100%;padding:10px 12px;border:0;border-radius:7px;background:none;color:inherit;text-align:left;cursor:text}.fid-note-title{display:block;margin-bottom:6px;font-size:17px;font-weight:600}.fid-note-panel>form{padding:10px 12px}#fidNoteForm .section-head{margin-bottom:6px}.fid-note-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5}.fid-personal-mark{display:inline-flex;align-items:center}.fc-note-dialog{position:fixed;inset:auto;margin:0;width:min(520px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto}#fidNoteForm textarea{width:100%;min-height:180px;resize:vertical;border:1px solid #c2d0e4;border-radius:7px;padding:9px;font:13px/1.5 var(--font-sans);color:#263e60;background:#fff}.fc-note-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px}
 .date-picks{margin:0 0 6px}.date-picks:empty{display:none}.fc-filter .fc-range{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:0}.fc-filter .fc-range label{min-width:0;font-weight:400}.fc-filter .fc-range input{min-width:0;min-height:32px;padding:5px 6px;margin-top:0;background:#fff;color:var(--filter-ink,#263e60);border-color:var(--filter-line,#c2d0e4);font:inherit}
 .summary-heading{display:flex;align-items:center;gap:10px}.summary-controls{display:grid;grid-template-columns:170px minmax(0,1fr);gap:14px;padding:12px;margin-bottom:6px;background:#f5f7fb;border-radius:9px}.summary-controls .fc-filter{margin:0}.summary-chart{overflow:auto}.summary-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0 10px;color:#344c6b}.summary-table th{font-size:12px;font-weight:600}.summary-table .fc-link{color:inherit;font:inherit;text-align:left;white-space:normal;text-decoration:none}.summary-table .fc-link:hover{text-decoration:underline}.summary-table thead th{padding:4px 10px 2px;color:#5b6d85;overflow-wrap:anywhere}.summary-table th:first-child{position:sticky;left:0;z-index:1;text-align:left}.summary-table thead th:first-child{background:#fff;z-index:2}.summary-table tbody tr{--metric-color:var(--fid-ink);--metric-bg:var(--fid-tint)}.summary-table tr[data-summary-source=nsr],.summary-table tr[data-summary-source=linked]{--metric-color:var(--nsr-ink);--metric-bg:var(--nsr-tint)}.summary-table tr[data-summary-source=ctl]{--metric-color:var(--ctl-ink);--metric-bg:var(--ctl-tint)}.summary-table tr:is([data-summary-metric=slotted],[data-summary-metric=stableSlot],[data-summary-metric=stablePost]){--metric-color:#3d805d;--metric-bg:#edf7ef}.summary-table tbody th,.summary-table td{background:var(--metric-bg);border-block:1px solid #e0e6ef}.summary-table tbody th{border-left:3px solid var(--metric-color);border-radius:9px 0 0 9px;padding:16px;color:#304967;font-size:13px;line-height:1.5}.summary-table td{padding:0}.summary-table td:last-child{border-right:1px solid #e0e6ef;border-radius:0 9px 9px 0}.summary-plot{position:relative;height:112px;font-variant-numeric:tabular-nums;text-align:center}.summary-bar{position:absolute;bottom:14px;left:calc(50% - 17px);width:34px;height:var(--bar);background:var(--metric-color);border-radius:4px 4px 0 0}.summary-value{position:absolute;top:10px;left:0;width:100%;font-size:14px;font-weight:600;color:#304967;white-space:nowrap}.summary-plot.unavailable .summary-value{color:#8794a5;font-weight:400}.summary-empty{padding:22px 12px;color:#61738c}.summary-legend{margin-top:6px;font-size:12px;color:#61738c}@media(max-width:760px){.summary-controls{grid-template-columns:minmax(0,1fr)}.summary-heading{flex-wrap:wrap}.summary-table tbody th{padding:12px}}
 @container(max-width:700px){.nsr-stage-sum::before{display:none}.nsr-flow{grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr)}.nsr-equation>[data-nsr-group=all]{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:1fr auto;align-items:center}.nsr-equation>[data-nsr-group=all] b{grid-column:2;grid-row:1/3;margin:0}.nsr-equation>.math-sign:nth-child(2){grid-column:1;grid-row:2}.nsr-equation>[data-nsr-group=completed]{grid-column:2;grid-row:2}.nsr-equation>.math-sign:nth-child(4){grid-column:3;grid-row:2}.nsr-equation>[data-nsr-group=workflow]{grid-column:4;grid-row:2}.nsr-equation>.math-sign:nth-child(6){grid-column:1;grid-row:3}.nsr-equation>[data-nsr-group=rejected]{grid-column:2;grid-row:3}.nsr-equation>.math-sign:nth-child(8){grid-column:3;grid-row:3}.nsr-equation>[data-nsr-group=cancelled]{grid-column:4;grid-row:3}.has-completed .nsr-equation>[data-nsr-group=completed]{grid-column:2/-1;display:grid;grid-template-columns:1fr auto;align-items:center}.has-completed .nsr-equation>[data-nsr-group=completed] b{grid-column:2;grid-row:1/3;margin:0}.nsr-completed-arrow{grid-column:2;grid-row:3;margin:0;height:22px}.nsr-completed-arrow::before{top:-7px}.nsr-breakdown-equals{grid-column:3;grid-row:3;margin:0}.nsr-stage-sum{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr);margin:0}.nsr-stage-spacer{display:block}.nsr-stage:only-of-type{grid-column:2/-1}.has-completed .nsr-equation>.math-sign:nth-child(4){grid-column:1;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=workflow]{grid-column:2;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(6){grid-column:3;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=rejected]{grid-column:4;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(8){grid-column:1;grid-row:6}.has-completed .nsr-equation>[data-nsr-group=cancelled]{grid-column:2;grid-row:6}}
@@ -2532,7 +2532,7 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 `;
 const sourceHtml=Object.entries(sources).map(([key,source],index)=>{
   const importLabel=key==='ctlNsr'?'Append':'Import';
-  const help=BOBJ_SOURCES[key]?`Open SAPGUIcontrol.exe. <a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer">Download SAPGUIcontrol</a>.`:key==='ctlNsr'?'Download from the CTL system: <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">Open download page</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
+  const help=BOBJ_SOURCES[key]?`Open SAPGUIcontrol.exe. <a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.7z" target="_blank" rel="noopener noreferrer">Download SAPGUIcontrol</a>.`:key==='ctlNsr'?'Download from the CTL system: <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">Open download page</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
   return `<section class="fc-source" data-source="${key}" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span>${BOBJ_SOURCES[key]?'<small class="fc-source-bobj">BOBJ</small>':''}</h3><span id="fcSource-${key}" class="fc-source-state" role="status">Unavailable</span></div><div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>${BOBJ_SOURCES[key]?`<button class="btn small" data-source-action="${key==='fcid'?'bobj-update':'ctl-bobj-update'}">Update</button>`:key==='nsr'?'<button class="btn small light" data-source-action="nsr-open">Load NSR</button>':''}<button id="fcImport-${key}" class="btn small light" data-import-source="${key}">${importLabel}</button>${help?`<details class="fc-source-help" id="fcHelp-${key}"${BOBJ_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble">${help}</div></details>`:''}</div><input type="file" id="fcFile-${key}" data-source-file="${key}" aria-label="${importLabel} ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden></section>`;
 }).join('');
 const filterHtml=([name,label,path,needs])=>dateFilters.includes(path)?`<div class="fc-filter primary-filter" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name.slice(0,-4)}From">${label}</label><div class="fc-filter-actions"><button type="button" data-clear-filter="${name}">Clear</button></div></div><div id="${name.slice(0,-4)}${needs==='ctl'?'Periods':'Years'}" class="nsr-year-picks date-picks"></div><div id="${name}" class="fc-range" role="group" aria-label="${label}"><label>From<input id="${name.slice(0,-4)}From" type="date" aria-label="${label} from"></label><label>To<input id="${name.slice(0,-4)}To" type="date" aria-label="${label} to"></label></div></div>`:`<div class="fc-filter${['fAccount','fQuarter','fOwner','fSlotInitiator','fNsrInitiator','fCtlStage','fCtlInitiator'].includes(name)?' primary-filter':''}" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name}" title="${path==='owner'?escapeHtml(ownerHint):path.startsWith('nsr.')?'All selected NSR conditions must match the same NSR':''}">${label}${path==='owner'?inferenceHelp(ownerHint):path==='salesAdmin'?inferenceHelp(salesAdminHint):''}</label><div class="fc-filter-actions">${name==='fAccount'?'<button type="button" data-mapping-rule title="Fab / Account Mapping">Rule</button>':''}${name==='fQuarter'?'<button type="button" data-reset-quarter>Reset</button>':''}<button type="button" data-select-all="${name}">All</button><button type="button" data-clear-filter="${name}">Clear</button></div></div><select id="${name}" multiple aria-label="${label}"></select></div>`;
@@ -2546,15 +2546,11 @@ document.body.innerHTML=`<header class="fc-hero"><div class="fc-hero-inner"><div
 <form id="fidLookup" class="fc-filter fid-lookup"><input id="fFid360" type="text" inputmode="numeric" placeholder="FID 360°" aria-label="FID 360°" autocomplete="off"><button class="btn light" type="submit" aria-label="Open FID 360°" title="Open FID 360°"><span aria-hidden="true">🔍</span></button></form>
 ${['fAccount'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="fid">FID Filters</h3>${['fQuarter','fOwner','fSlotInitiator','fFidStatus','fRisk','fCustomer','fSystem','fBusinessUnit','fSalesAdmin'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="ctl">CTL Filters</h3>${['fCtlStage','fCtlInitiator','fCtlCreatedDate','fCtlChange','fCtlCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="nsr">NSR Filters</h3>${['fNsrInitiator','fNsrSubmitDate','fNsrTaskStatus','fNsrType','fNsrOrg','fNsrSubsystem','fNsrProduct','fNsrCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}</aside>
 <main class="main"><nav class="workspace-nav" id="workspaceNav" aria-label="Dashboard views">${views.map(([view,label])=>`<button type="button" data-view="${view}" aria-selected="${view==='nsr'}"${view==='nsr'?' class="active"':''}${['nsr','cycle','rules'].includes(view)?'':' hidden'}>${label}</button>`).join('')}</nav><div id="filterContext" class="filter-context"></div>${views.map(([view])=>`<section id="view-${view}" class="fc-view"${view==='nsr'?'':' hidden'}></section>`).join('')}</main></div>
-<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card column-filter-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
+<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card column-filter-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="markFilterPopup" class="card column-filter-popup mark-filter-popup" popover role="dialog" aria-label="Mark filter"><div role="group" aria-label="Mark status"></div></div><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
 const cycleTemplate=document.createElement('template');cycleTemplate.innerHTML=NSR_CYCLE_HTML;id('view-cycle').append(cycleTemplate.content.querySelector('#cycleTab'));id('dashboardWorkspace').append(cycleTemplate.content.querySelector('#wfModal'));
 let selectedView='nsr',graph=null,current=null,revision=0,modelRevision=0,toastTimer=0,searchTimer=0,sidebarAnimation=null;
 const rendered=new Map(),tables=new Map(),filterValues={},localTables=new Map();let mappingDraft=null;const markDrafts={nsr:null,fid:null};
-const cycle=createNsrCycle(id('dashboardWorkspace'),{getRows:nsrs=>{
-  const selected=new Set(nsrs);
-  return nsrCopyRows(graph.nsrs.filter(nsr=>selected.has(nsr.number))).map(row=>({...row,'REF FCID':row.FID}));
-},onNotify:message=>toast(message)});
-const pretty=(value,path='')=>path==='nsr.taskStatus'?(nsrCompletedTasks[value]||value||'[Unknown]'):path==='ctl.stage'?ctlStageName(value)||'[Unknown]':path==='fidStatus'?(value==='stable-slot|stable-ctl'?fidStatusNames['risk-free']:value.startsWith('cause:')?fidCauseNames[value.slice(6)]||value:fidCellNames[value]||fidStatusNames[value]||value):path==='riskType'?(value==='MCSD pending'?'Slot + no MCSD':value):value||'[Unknown]';
+const pretty=(value,path='')=>path==='nsr.taskStatus'?(nsrCompletedTasks[value]||value||'[Unknown]'):path==='ctl.stage'?ctlStageName(value)||'[Unknown]':path==='ctl.change'&&value==='[Unknown]'?'No CTL Yet':path==='fidStatus'?(value==='stable-slot|stable-ctl'?fidStatusNames['risk-free']:value.startsWith('cause:')?fidCauseNames[value.slice(6)]||value:fidCellNames[value]||fidStatusNames[value]||value):path==='riskType'?(value==='MCSD pending'?'Slot + no MCSD':value):value||'[Unknown]';
 const number=value=>String(Number(value||0));
 const pill=(value,kind='info',tip='')=>`<span class="pill ${kind}"${tip?` title="${escapeHtml(tip)}"`:''}>${escapeHtml(value||'—')}</span>`;
 const fidLink=value=>value?`<button type="button" class="fc-link" data-fid="${escapeHtml(value)}">${escapeHtml(value)}</button>`:'—';
@@ -2617,17 +2613,17 @@ function buildFilters(paths){
 }
 function syncFilters(){
   const fid=store.raw.fcid.length>0,nsr=store.raw.nsr.length>0,ctl=store.raw.ctl.length>0||store.raw.ctlNsr.length>0;
-  const needs={common:fid||nsr,fid,fidCtl:fid&&ctl,fidSalesAdmin:fid&&ctl&&graph.population.some(node=>node.salesAdmin),fidRisk:fid&&(ctl||nsr||store.raw.nce.length>0),ctl,nsr};document.querySelectorAll('[data-filter-needs]').forEach(group=>group.hidden=!needs[group.dataset.filterNeeds]);
+  const needs={common:fid||nsr,fid,fidCtl:fid&&ctl,fidOwner:fid&&ctl&&graph.population.some(node=>node.owner),fidSlot:fid&&ctl&&graph.population.some(node=>node.slot.initiator),fidSalesAdmin:fid&&ctl&&graph.population.some(node=>node.salesAdmin),fidRisk:fid&&graph.population.some(node=>node.risks.some(risk=>['MCSD pending','NCE / FA signal'].includes(risk.label))),ctl,nsr};document.querySelectorAll('[data-filter-needs]').forEach(group=>group.hidden=!needs[group.dataset.filterNeeds]);
 }
 function recalculate(updateMarks=false){
   const started=performance.now();graph=createFidGraph(store.raw,{fidMarks:currentMarks('fid'),accountMap:accountMapping.match,ignoredNsrs,importantNsrs,loadedSources:Object.fromEntries(Object.keys(store.meta).map(key=>[key,true])),today:nsrData.localDate(new Date())});modelRevision++;
   buildFilters();syncFilters();applyFilters(updateMarks);store.dirty=false;store.buildMs=performance.now()-started;
 }
-function queryFilters(){const filters={search:id('fSearch').value,fidStatus:filterValues.fidStatus||[],signal:filterValues.signal||[],includeIgnored};for(const [,,path] of filterDefs)if(filterValues[path]?.length)setPath(filters,path,dateFilters.includes(path)?{from:filterValues[path][0],to:filterValues[path][1]}:filterValues[path]);return filters}
+function queryFilters(){const filters={search:id('fSearch').value,fidStatus:[],signal:store.raw.fcid.length?filterValues.signal||[]:[],includeIgnored};for(const [name,,path] of filterDefs)if(!id(name).closest('.fc-filter').hidden&&filterValues[path]?.length)setPath(filters,path,dateFilters.includes(path)?{from:filterValues[path][0],to:filterValues[path][1]}:filterValues[path]);return filters}
 function applyFilters(updateMarks=false,changedNsr=''){
   const detailFid=id('fidDetail').open?id('fidDetail').dataset.fid:'',view=id('view-'+selectedView),anchor=changedNsr&&!detailFid&&selectedView==='nsr'?id('nsrTable'):view,position=updateMarks?anchor?.getBoundingClientRect():null;
   current=graph.query(queryFilters());revision++;
-  for(const [name,state] of tables){if(updateMarks&&(changedNsr||state.grid.element.closest('.fc-view')?.hidden===false||state.grid.element.closest('.fid-dialog')?.open))continue;tableResize.unobserve(state.grid.element);state.grid.destroy();tables.delete(name)}
+  for(const [name,state] of tables){if(name==='cycleTable'||name==='wfTable'||updateMarks&&(changedNsr||state.grid.element.closest('.fc-view')?.hidden===false||state.grid.element.closest('.fid-dialog')?.open))continue;tableResize.unobserve(state.grid.element);state.grid.destroy();tables.delete(name)}
   rendered.clear();paintContext();showView(selectedView,updateMarks,changedNsr);if(detailFid)showFid(detailFid,updateMarks,changedNsr);
   // Keep visible content in place when filter chips or NSR Overview cards change height.
   if(position?.top<innerHeight&&position.bottom>0)window.scrollBy({top:anchor.getBoundingClientRect().top-position.top,behavior:'instant'});
@@ -2637,11 +2633,11 @@ function paintContext(){
   document.querySelectorAll('[data-fid-year]').forEach(button=>{const values=[...id('fQuarter').options].map(option=>option.value).filter(value=>quarterYear(value)===button.dataset.fidYear),selected=filterValues.quarter||[],count=values.filter(value=>selected.includes(value)).length;button.classList.toggle('active',count>0&&count===values.length);button.classList.toggle('partial',count>0&&count<values.length);button.setAttribute('aria-pressed',String(count>0&&count===values.length))});
   id('filterContext').hidden=!Object.keys(store.meta).length;
   const chip=(value,target,clear,label)=>{
-    const reset=target==='fQuarter'||target==='fCtlChange',action=target==='fQuarter'?'data-reset-quarter title="Reset to the default five quarters"':target==='fCtlChange'?'data-reset-ctl-type title="Reset to Config, Slot and Drop Slot"':clear;
+    const reset=target==='fQuarter'||target==='fCtlChange',action=target==='fQuarter'?'data-reset-quarter title="Reset to the default five quarters"':target==='fCtlChange'?'data-reset-ctl-type title="Reset to Config, Slot, Drop Slot and No CTL Yet"':clear;
     return `<span class="filter-chip" title="${escapeHtml(value)}"><button class="filter-chip-label" type="button" data-locate-filter="${target}" aria-label="Locate ${escapeHtml(label)} filter">${escapeHtml(value)}</button><button class="filter-chip-remove" type="button" ${action} aria-label="${reset?'Reset':'Remove'} ${escapeHtml(label)} filter">${reset?'↺':'×'}</button></span>`;
   };
-  const chips=filterDefs.filter(([, ,path])=>filterValues[path]?.length).map(([name,label,path])=>chip(label+': '+(dateFilters.includes(path)?(filterValues[path][0]&&filterValues[path][1]?filterValues[path].join(' → '):filterValues[path][0]?'From '+filterValues[path][0]:'Through '+filterValues[path][1]):filterValues[path].map(value=>pretty(value,path)).join(' or ')),name,`data-clear-filter="${name}"`,label));
-  if(filterValues.signal?.length)chips.push(chip('Signal: '+filterValues.signal.map(value=>fidStatusNames[value]||(value==='nce'?'NCE / FA':'Pending Config CTL')).join(' or '),'fRisk','data-clear-signal','signal'));
+  const chips=filterDefs.filter(([name,,path])=>!id(name).closest('.fc-filter').hidden&&filterValues[path]?.length).map(([name,label,path])=>chip(label+': '+(dateFilters.includes(path)?(filterValues[path][0]&&filterValues[path][1]?filterValues[path].join(' → '):filterValues[path][0]?'From '+filterValues[path][0]:'Through '+filterValues[path][1]):filterValues[path].map(value=>pretty(value,path)).join(' or ')),name,`data-clear-filter="${name}"`,label));
+  if(store.raw.fcid.length&&filterValues.signal?.length)chips.push(chip('Signal: '+filterValues.signal.map(value=>fidStatusNames[value]||(value==='nce'?'NCE / FA':'Pending Config CTL')).join(' or '),'fRisk','data-clear-signal','signal'));
   const search=id('fSearch').value.trim();if(search)chips.push(chip('Search: '+search,'fSearch','data-clear-search','search'));
   id('filterContext').innerHTML=`<span class="context-title">Filtered By:</span><div class="filter-tags">${chips.join('')||'<span class="muted">All values</span>'}</div><span class="scope-note">Commit portfolio: ${number(current.fids.length)} FIDs · NSR List: ${number(current.nsrs.length)}</span>`;
 }
@@ -2649,7 +2645,8 @@ function showView(name,updateMarks=false,changedNsr=''){
   selectedView=name;
   id('workspaceNav').querySelectorAll('[data-view]').forEach(button=>{const active=button.dataset.view===name;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
   document.querySelectorAll('.fc-view').forEach(element=>element.hidden=element.id!=='view-'+name);id('cycleTab').classList.toggle('active',name==='cycle');
-  if(name==='cycle'||rendered.get(name)===revision)return;
+  if(name==='cycle'){cycle.show();return}
+  if(rendered.get(name)===revision)return;
   ({portfolio:renderPortfolio,changes:renderChanges,nsr:renderNsrs,summary:renderSummaryMetrics,rules:renderRules}[name])(id('view-'+name),updateMarks,changedNsr);rendered.set(name,revision);
 }
 // Persist only leaf selections. Every aggregate is the same set of cells, regardless of entry point.
@@ -2804,12 +2801,12 @@ function renderPortfolio(target,updateMarks=false){
     target.querySelector('.fid-flow').scrollLeft=scroll;
     target.querySelector('.fid-risk-drivers').innerHTML=drivers;
     target.querySelector('[data-nce-signal]').parentElement.innerHTML=signals;
-  }else target.innerHTML=`<section class="card fid-overview">${overview}</section><section class="card fid-risk-drivers">${drivers}</section>${pivotHtml('fid',current.fids.length,'FIDs',target)}<div class="signal-strip">${signals}</div><section class="card"><div class="section-head detail-head"><h2>FID Details</h2><div id="fidMarkFilter" class="signal-strip mark-filter" role="group" aria-label="FID Mark"></div></div><div id="portfolioTable"></div></section>`;
+  }else target.innerHTML=`<section class="card fid-overview">${overview}</section><section class="card fid-risk-drivers">${drivers}</section>${pivotHtml('fid',current.fids.length,'FIDs',target)}<div class="signal-strip">${signals}</div><section class="card"><div class="section-head detail-head"><h2>FID Details</h2></div><div id="portfolioTable"></div></section>`;
   renderPivots('fidPivots',current.fids,[['quarter','Calendar Quarter','fQuarter','#4679cf'],['customer','FID Customer','fCustomer','#b44771'],['account','Account','fAccount','#347d50'],['businessUnit','Business Unit','fBusinessUnit','#8251bb'],['system','System Description','fSystem','#14869a']],'FIDs',updateMarks);
   table('portfolioTable',portfolioColumns,current.fids,{file:'FID_Portfolio',fid:true,markFilter:'fid',defaultSort:'FID',ascending:false,frozen:['FID'],exportRows:fidDetailRows,copyRows:fidCopyRows,widths:{FID:80,'FID Status & Risks':175,Note:220}},updateMarks);
 }
 const ctlColumns=[['CTL',ctl=>ctl.number||ctl.id,(value,ctl)=>ctl.number?`<a class="fc-link" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=CRM_SRQM_RFC&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(ctl.number)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`:escapeHtml(value)],['FID',ctl=>ctl.fidId,fidLink],
-  ['Stage',ctl=>ctlStageName(ctl.stage),value=>value?`<span class="status-pill ${value.startsWith('0-')?'stop':value==='15-Completed'?'terminal':value==='1-Originator'?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
+  ['Stage',ctl=>ctlStageName(ctl.stage),value=>value?`<span class="status-pill ${value.startsWith('0-')?'stop':value==='15-Completed'?'terminal':value==='Draft'?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
   ['Change',ctl=>ctl.change],['Created Date',ctl=>ctl.created],
   ['Elapsed Days',ctl=>taskGroup(ctlStageName(ctl.stage),true)==='workflow'&&ctl.created?(nsrRecords.dateNumber(nsrData.localDate(new Date()))-nsrRecords.dateNumber(ctl.created))/86400000:''],
   ['Sales Ops Approval',ctl=>ctl.approved],['Config Frz',ctl=>ctl.configFrz],['Initiator',ctl=>ctl.initiator],['Customer',ctl=>ctl.customer],['Quote ID',ctl=>ctl.quote],['NSR Reference',ctl=>ctl.nsrReferences.join(', ')],['Root Cause',ctl=>ctl.rootCause],['CTL Notes',ctl=>ctl.notes],['Sub Reason',ctl=>ctl.subReason]
@@ -2818,8 +2815,8 @@ function renderChanges(target,updateMarks=false){
   updateMarks=updateMarks&&tables.has('ctlTable');
   const selected=filterValues['ctl.stage']||[],filters=queryFilters();if(filters.ctl)delete filters.ctl.stage;
   const pendingOnly=filterValues.signal?.includes('pending-ctl'),rows=pendingOnly?current.ctls.filter(ctl=>ctl.pending):current.ctls,overviewRows=(selected.length?graph.query(filters,'ctls'):current.ctls).filter(ctl=>!pendingOnly||ctl.pending);
-  const groups={completed:0,workflow:0,originator:0,rejected:0,cancelled:0,unknown:0};for(const ctl of overviewRows)groups[taskGroup(ctlStageName(ctl.stage),true)]++;
-  const terms=[['completed','Completed',overviewColors.completed],['workflow','In work',overviewColors.workflow],['originator','Originator',overviewColors.originator],['rejected','Rejected',overviewColors.rejected],['cancelled','Cancelled',overviewColors.cancelled],['unknown','Stage unknown',overviewColors.unknown]].filter(([group])=>group!=='unknown'||groups.unknown||taskFilterSelected('ctl','unknown'));
+  const groups={completed:0,workflow:0,draft:0,rejected:0,cancelled:0,unknown:0};for(const ctl of overviewRows)groups[taskGroup(ctlStageName(ctl.stage),true)]++;
+  const terms=[['completed','Completed',overviewColors.completed],['workflow','In work',overviewColors.workflow],['draft','Draft',overviewColors.draft],['rejected','Rejected',overviewColors.rejected],['cancelled','Cancelled',overviewColors.cancelled],['unknown','Stage unknown',overviewColors.unknown]].filter(([group])=>group!=='unknown'||groups.unknown||taskFilterSelected('ctl','unknown'));
   const overview=`<div class="section-head"><h2>CTL Overview</h2><span class="badge">${selected.length?number(rows.length)+' / '+number(overviewRows.length)+' selected CTL':number(rows.length)+' filtered CTL'}</span></div><div class="ctl-flow" style="--ctl-terms:${terms.length}" aria-label="Total CTL = ${terms.map(([,label])=>label).join(' + ')}">${taskOverview('ctl',terms,groups,overviewRows.length)}</div>`;
   if(updateMarks)target.querySelector('.ctl-overview').innerHTML=overview;
   else target.innerHTML=`<section class="card ctl-overview">${overview}</section>${pivotHtml('ctl',rows.length,'CTL',target)}<section class="card"><div class="section-head detail-head"><h2>CTL Details</h2></div><div id="ctlTable"></div></section>`;
@@ -2888,7 +2885,7 @@ function renderNsrs(target,updateMarks=false,changedNsr=''){
   const overview=`${overviewHead('nsr',rows.length,overviewRows.length,selected.length)}<div class="nsr-flow${showCompleted?' has-completed':''}"><div class="nsr-equation" aria-label="Total NSR = ${terms.map(([,label])=>label).join(' + ')}">${taskOverview('nsr',terms,groups,overviewRows.length)}</div>
   ${showCompleted?`<div class="nsr-breakdown" role="group" aria-label="Completed NSR breakdown"><span class="nsr-completed-arrow" title="${escapeHtml(completedEquation)}" aria-hidden="true"></span><span class="math-sign nsr-breakdown-equals" aria-hidden="true">=</span><div class="nsr-stage-sum"><span class="nsr-stage-spacer" aria-hidden="true"></span>${completedStages.map(([key,kind,color,tip],index)=>{const count=stageCounts[key],active=taskFilterSelected('nsr',key),percent=groups.completed?(100*count/groups.completed).toFixed(1):'0.0';return (index?'<span class="math-sign" aria-hidden="true">+</span>':'')+`<button class="nsr-kpi nsr-stage ${kind}" style="--kpi-color:${color}" type="button" data-nsr-lifecycle="${key}" data-count="${count}" aria-pressed="${active}"${!count&&!active?' disabled':''} title="${escapeHtml(`${count} / ${groups.completed} = ${percent}%\n${tip}`)}"><small>${lifecycleNames[key]}</small><b>${number(count)}</b><span>${percent}% of Completed NSRs</span></button>`}).join('')}${unknown?`<span class="math-sign" aria-hidden="true">+</span><span class="nsr-kpi nsr-stage unknown" style="--kpi-color:#52647d" data-count="${unknown}" role="status" title="CTL sources are not loaded or approval status is missing. View these records under 15-Completed."><small>CTL status unknown</small><b>${number(unknown)}</b><span>${groups.completed?(100*unknown/groups.completed).toFixed(1):'0.0'}% of Completed NSRs</span></span>`:''}</div></div>`:''}</div>`;
   if(updateMarks)target.querySelector('.nsr-overview').innerHTML=overview;
-  else target.innerHTML=`<section class="card nsr-overview">${overview}</section>${pivotHtml('nsr',rows.length,'NSRs',target)}<section class="card"><div class="section-head detail-head"><h2>NSR Details</h2><div id="nsrMarkFilter" class="signal-strip mark-filter" role="group" aria-label="NSR Mark"></div></div><div id="nsrTable"></div></section>`;
+  else target.innerHTML=`<section class="card nsr-overview">${overview}</section>${pivotHtml('nsr',rows.length,'NSRs',target)}<section class="card"><div class="section-head detail-head"><h2>NSR Details</h2></div><div id="nsrTable"></div></section>`;
   const pivots=[['taskStatus','Task Status','fNsrTaskStatus','var(--nsr-ink)'],['subsystem','Impacted Sub System','fNsrSubsystem','var(--nsr-ink)'],['type','NSR Type','fNsrType','var(--nsr-ink)'],['product','Primary Product','fNsrProduct','var(--nsr-ink)'],['org','NSR Org','fNsrOrg','var(--nsr-ink)'],['customer','Customer','fNsrCustomer','var(--nsr-ink)']];
   if(!sameRows)renderPivots('nsrPivots',rows,pivots,'NSRs',updateMarks);
   renderNsrDetail('nsrTable',rows,{markFilter:'nsr'},updateMarks,sameRows?changedNsr:'');
@@ -2968,7 +2965,7 @@ function renderSummaryMetrics(target){
 const nceColumns=[['NCE',row=>row.number],['State',row=>row.status],['Title',row=>row.title],['Impact',row=>row.impact],['Opened',row=>row.opened],['Damage Group',row=>row.damageGroup],['Damage Code',row=>row.damageCode],['Part Number',row=>row.partNumber],['Part Description',row=>row.partDescription]];
 
 const tableCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
-const columnPopup=id('columnFilterPopup'),columnInput=columnPopup.querySelector('input');
+const columnPopup=id('columnFilterPopup'),columnInput=columnPopup.querySelector('input'),markPopup=id('markFilterPopup');
 // Hidden tabs keep their measured size, so showing an unchanged table does not rebuild its rows.
 const tableResize=new ResizeObserver(entries=>{for(const {target} of entries){const state=tables.get(target.dataset.tableName);if(!state?.ready||!target.clientWidth||!target.clientHeight)continue;const size=target.clientWidth+':'+target.clientHeight;if(size!==state.size){state.size=size;state.grid.redraw()}}});
 function orderTableColumns(definitions,columns,order,nsrHistory=false){
@@ -2980,21 +2977,27 @@ function orderTableColumns(definitions,columns,order,nsrHistory=false){
 }
 function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
   // Tabulator deep-clones row data; keep the full graph records in state.rows.
-  const previous=tables.get(name),dataRow=(row,index)=>{const values=columns.map(([,get])=>get(row)??'');return {id:index,search:values.join('\0').toLowerCase(),...Object.fromEntries(values.map((value,index)=>['c'+index,value]))}};
+  const previous=tables.get(name),dataRow=(row,index)=>({id:index,...Object.fromEntries(columns.map(([,get],column)=>['c'+column,get(row)??'']))});
+  if(previous&&!previous.ready&&previous.built)return previous.built.then(()=>table(name,columns,rows,options,updateMarks,changedNsr));
   if(previous?.ready&&updateMarks){
     const wrap=previous.grid.element,active=document.activeElement,focused=wrap.contains(active)?active.dataset.markId||active.dataset.noteFid:'',focusSelector=active.matches('[data-mark-id]')?'[data-mark-id]':'[data-note-fid]';previous.rows=rows;previous.columns=columns;previous.options=options;wrap.setAttribute('aria-busy','true');
     const index=changedNsr?rows.findIndex(row=>(options.fid?row.id:row.number)===changedNsr):-1,updated=index>=0?previous.grid.updateData([dataRow(rows[index],index)]):previous.grid.replaceData(rows.map(dataRow));
     return updated.then(()=>{
-      if(index>=0){if(previous.local.search||previous.local.marks?.length||previous.local.headerFilters?.length)previous.grid.refreshFilter();else paintMarkFilter(previous);const sorters=previous.grid.getSorters();if(sorters.some(sorter=>['NSR → CTL','Note'].includes(columns[Number(sorter.field.slice(1))]?.[0])))previous.grid.setSort(sorters.map(sorter=>({column:sorter.field,dir:sorter.dir})))}
+      if(index>=0){if(previous.local.marks?.length||previous.local.headerFilters?.length)previous.grid.refreshFilter();else paintMarkFilter(previous);const sorters=previous.grid.getSorters();if(sorters.some(sorter=>['NSR → CTL','Note'].includes(columns[Number(sorter.field.slice(1))]?.[0])))previous.grid.setSort(sorters.map(sorter=>({column:sorter.field,dir:sorter.dir})))}
       wrap.setAttribute('aria-busy','false');if(focused)[...wrap.querySelectorAll(focusSelector)].find(button=>(button.dataset.markId||button.dataset.noteFid)===focused)?.focus({preventScroll:true});
+      return previous;
     });
   }
   if(previous){tableResize.unobserve(previous.grid.element);previous.grid.destroy()}
-  const local=localTables.get(name)||{search:'',marks:[],sort:options.defaultSort?columns.findIndex(([label])=>label===options.defaultSort):-1,ascending:options.ascending??true},orderKey=name==='fidCtlTable'?'ctlTable':name==='fidNsrTable'?'nsrTable':name,state={name,columns,rows,options,local,orderKey};
+  const local=localTables.get(name)||{marks:null,sort:options.defaultSort?columns.findIndex(([label])=>label===options.defaultSort):-1,ascending:options.ascending??true},orderKey=name==='fidCtlTable'?'ctlTable':name==='fidNsrTable'?'nsrTable':name,state={name,columns,rows,options,local,orderKey};
   if(name==='fidCtlTable'&&!id('fidDetail').open)local.showPullPush=false;
   tables.set(name,state);localTables.set(name,local);
-  const host=id(name),autoHeight=Boolean(host.closest('.fid-dialog'));if(autoHeight)local.headerFilters=[];host.innerHTML=`<div class="fc-table-shell"><div class="table-toolbar">${autoHeight?`<div class="btnrow"><h2>${escapeHtml(options.title)} (<span data-table-count></span>)</h2>${name==='fidCtlTable'?`<button type="button" class="fc-link" data-toggle-pull-push aria-pressed="${Boolean(local.showPullPush)}">${local.showPullPush?'Hide':'Show'} Pull/Push</button>`:''}</div>`:`<div class="toolbar-left"><input type="search" data-table-search="${name}" aria-label="Search ${options.file||name}" placeholder="Search this result…" value="${escapeHtml(local.search)}"><span class="table-count" data-table-count></span></div>`}${autoHeight?'':`<div class="column-filter-bar"></div>`}<div class="toolbar-right${autoHeight?' btnrow':''}"><button class="btn light small" data-table-copy="${name}">Copy</button>${autoHeight?'':`<button class="btn light small" data-table-export="${name}">Export XLSX</button>`}${options.cycle?`<button class="btn blue small" data-table-cycle="${name}">Cycle Time</button>`:''}</div></div><div class="fc-table-wrap" data-table-name="${name}" aria-label="${escapeHtml(options.file||name)}" aria-busy="true"></div></div>`;
-  const wrap=host.querySelector('.fc-table-wrap');wrap.classList.toggle('column-filters',!autoHeight);
+  const host=id(name),autoHeight=Boolean(host.closest('.fid-dialog')),columnFilters=!autoHeight&&options.columnFilters!==false;if(!columnFilters)local.headerFilters=[];
+  host.innerHTML=`<div class="fc-table-shell"><div class="table-toolbar" data-table-tools="${name}">${autoHeight?`<div class="btnrow"><h2>${escapeHtml(options.title)} (<span data-table-count></span>)</h2>${name==='fidCtlTable'?`<button type="button" class="fc-link" data-toggle-pull-push aria-pressed="${Boolean(local.showPullPush)}">${local.showPullPush?'Hide':'Show'} Pull/Push</button>`:''}</div>`:'<span class="table-count" data-table-count></span>'}<div class="toolbar-right${autoHeight?' btnrow':''}"><button class="btn light small" data-table-copy="${name}"${options.copyId?` id="${options.copyId}"`:''}>Copy</button>${autoHeight?'':`<button class="btn light small" data-table-export="${name}"${options.exportId?` id="${options.exportId}"`:''}>Export XLSX</button>`}${options.cycle?`<button class="btn blue small" data-table-cycle="${name}">Cycle Time</button>`:''}</div></div>${columnFilters?'<div class="column-filter-bar"></div>':''}<div class="fc-table-wrap" data-table-name="${name}" aria-label="${escapeHtml(options.file||name)}" aria-busy="true"></div></div>`;
+  state.toolbar=host.querySelector('.table-toolbar');
+  const heading=autoHeight?null:host.parentElement.querySelector(':scope > .detail-head, :scope > summary');
+  if(heading&&state.toolbar){heading.querySelector('[data-table-tools="'+name+'"]')?.remove();heading.append(state.toolbar)}
+  const wrap=host.querySelector('.fc-table-wrap');wrap.classList.toggle('column-filters',columnFilters);
   const data=rows.map(dataRow),widths={...options.widths};
   if(options.fid){
     const measure=document.createElement('canvas').getContext('2d'),font=getComputedStyle(wrap).fontFamily;
@@ -3008,10 +3011,10 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
       widths[label]=Math.ceil(Math.max(75,Math.min(220,width)));
     }
   }
-  state.search=autoHeight?'':local.search.trim().toLowerCase();const filter=item=>(!state.search||item.search.includes(state.search))&&(name!=='fidCtlTable'||local.showPullPush||!['pull','push'].includes(state.rows[item.id].changeKey))&&(!local.marks?.length||local.marks.includes(recordMark(options.markFilter,options.markFilter==='fid'?state.rows[item.id].id:state.rows[item.id].number)||'normal'));
-  const columnDefs=columns.map(([label,,render],index)=>({title:label==='Mark'?'':label,titleFormatter:autoHeight||label==='Mark'?undefined:columnHeader,field:'c'+index,frozen:index===0||(options.frozen||[]).includes(label),minWidth:label==='Mark'?36:75,headerSort:label!=='Mark',headerFilter:autoHeight||label==='Mark'?false:'input',headerFilterParams:{elementAttributes:{'aria-label':'Filter '+label}},cellClick:name==='portfolioTable'&&label==='FID Status & Risks'?(_event,cell)=>showFid(state.rows[cell.getRow().getIndex()].id):undefined,hozAlign:label==='Mark'?'center':'left',headerHozAlign:label==='Mark'?'center':'left',width:widths[label]??(label==='Mark'?36:label==='Task Status'?275:/Title|Summary|Documents|Sample|File|Reason|Description|Action/.test(label)?320:/Owner|Initiator|Candidate|Customer|Product/.test(label)?185:/^Pre$|^Post$|NSR → CTL|Application/.test(label)?180:Math.max(110,Math.min(240,label.length*7+28))),sorter:(a,b)=>label==='Stage'?compareCtlStages(a,b):/Quarter|Period/.test(label)?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||tableCollator.compare(String(a),String(b)):typeof a==='number'&&typeof b==='number'?a-b:tableCollator.compare(String(a),String(b)),formatter:cell=>{const value=cell.getValue();cell.getElement().title=label==='Mark'?'':String(value);return '<span class="cell-content">'+(render?render(value,state.rows[cell.getRow().getIndex()]):escapeHtml(value)||'—')+'</span>'}}));
-  state.grid=new Tabulator(wrap,{data,autoResize:false,movableColumns:true,height:autoHeight?false:Math.min(620,Math.max(105,rows.length*34+68)),rowHeight:34,renderVertical:autoHeight?'basic':'virtual',renderVerticalBuffer:200,columnDefaults:{resizable:'header',headerFilterFunc:'like',headerFilterPlaceholder:'Filter…'},layout:'fitDataFill',placeholder:'',dataLoader:false,initialFilter:filter,initialHeaderFilter:local.headerFilters||[],initialSort:local.sort>=0?[{column:'c'+local.sort,dir:local.ascending?'asc':'desc'}]:[],rowFormatter:row=>{const element=row.getElement(),data=row.getData();element.dataset.rowIndex=row.getIndex();if(state.options.rowRisk)element.dataset.fidRisk=state.options.rowRisk(state.rows[row.getIndex()]);if(options.nsr||options.fid){const mark=recordMark(options.nsr?'nsr':'fid',options.nsr?state.rows[data.id].number:state.rows[data.id].id);element.dataset.recordMark=mark;if(options.nsr)element.dataset.nsrMark=mark;else element.dataset.fidMark=mark;}if(name==='nsrTable'){element.dataset.fidBand=data.fidBand;element.dataset.fidStart=data.fidStart}},columns:orderTableColumns(columnDefs,columns,tableOrders[orderKey],name==='fidNsrTable')});
-  state.grid.on('tableDestroyed',()=>{if(columnPopup.column?.getTable()===state.grid)columnPopup.hidePopover()});
+  const filter=item=>(name!=='fidCtlTable'||local.showPullPush||!['pull','push'].includes(state.rows[item.id].changeKey))&&(!options.markFilter||!local.marks||local.marks.includes(recordMark(options.markFilter,options.markFilter==='fid'?state.rows[item.id].id:state.rows[item.id].number)||'normal'));
+  const columnDefs=columns.map(([label,,render,settings],index)=>({title:label==='Mark'?'':label,titleFormatter:label==='Mark'&&options.markFilter?()=>markHeader(state):columnFilters&&label!=='Mark'?columnHeader:undefined,field:'c'+index,frozen:index===0||(options.frozen||[]).includes(label),minWidth:label==='Mark'?36:75,headerSort:label!=='Mark',headerFilter:columnFilters&&label!=='Mark'?'input':false,headerFilterParams:{elementAttributes:{'aria-label':'Filter '+label}},cellClick:name==='portfolioTable'&&label==='FID Status & Risks'?(_event,cell)=>showFid(state.rows[cell.getRow().getIndex()].id):undefined,hozAlign:label==='Mark'?'center':'left',headerHozAlign:label==='Mark'?'center':'left',width:widths[label]??(label==='Mark'?36:label==='Task Status'?275:/Title|Summary|Documents|Sample|File|Reason|Description|Action/.test(label)?320:/Owner|Initiator|Candidate|Customer|Product/.test(label)?185:/^Pre$|^Post$|NSR → CTL|Application/.test(label)?180:Math.max(110,Math.min(240,label.length*7+28))),sorter:(a,b)=>label==='Stage'?compareCtlStages(a,b):/Quarter|Period/.test(label)?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||tableCollator.compare(String(a),String(b)):typeof a==='number'&&typeof b==='number'?a-b:tableCollator.compare(String(a),String(b)),...settings,formatter:cell=>{const value=cell.getValue();cell.getElement().title=label==='Mark'?'':String(value);return '<span class="cell-content">'+(render?render(value,state.rows[cell.getRow().getIndex()]):escapeHtml(value)||'—')+'</span>'}}));
+  state.grid=new Tabulator(wrap,{data,autoResize:false,movableColumns:true,height:autoHeight?false:options.height??Math.min(620,Math.max(105,rows.length*34+68)),rowHeight:options.rowHeight??34,renderVertical:autoHeight?'basic':'virtual',renderVerticalBuffer:200,columnDefaults:{resizable:'header',headerFilterFunc:'like',headerFilterPlaceholder:'Filter…'},layout:'fitDataFill',placeholder:'',dataLoader:false,initialFilter:filter,initialHeaderFilter:local.headerFilters||[],initialSort:local.sort>=0?[{column:'c'+local.sort,dir:local.ascending?'asc':'desc'}]:[],rowFormatter:row=>{const element=row.getElement(),data=row.getData();element.dataset.rowIndex=row.getIndex();if(state.options.rowRisk)element.dataset.fidRisk=state.options.rowRisk(state.rows[row.getIndex()]);if(options.nsr||options.fid){const mark=recordMark(options.nsr?'nsr':'fid',options.nsr?state.rows[data.id].number:state.rows[data.id].id);element.dataset.recordMark=mark;if(options.nsr)element.dataset.nsrMark=mark;else element.dataset.fidMark=mark;}if(name==='nsrTable'){element.dataset.fidBand=data.fidBand;element.dataset.fidStart=data.fidStart}},columns:orderTableColumns(columnDefs,columns,tableOrders[orderKey],name==='fidNsrTable')});
+  state.grid.on('tableDestroyed',()=>{if(columnPopup.column?.getTable()===state.grid)columnPopup.hidePopover();if(markPopup.state===state)markPopup.hidePopover()});
   state.grid.on('columnMoved',()=>{
     if(state.ordering)return;
     const order=state.grid.getColumns().map(column=>columns[Number(column.getField().slice(1))][0]).filter(label=>name!=='fidNsrTable'||!['NSR → CTL','CTL references'].includes(label));let index=0;
@@ -3023,7 +3026,8 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
       finally{target.ordering=false}
     }
   });
-  state.grid.on('dataFiltered',(_filters,rows)=>{local.headerFilters=state.grid.getHeaderFilters();if(!autoHeight)paintColumnFilters(state);host.querySelector('[data-table-count]').textContent=number(rows.length)+(autoHeight?'':' rows');paintMarkFilter(state)});
+  state.grid.on('dataFiltered',(_filters,rows)=>{local.headerFilters=state.grid.getHeaderFilters();if(columnFilters)paintColumnFilters(state);const count=state.toolbar?.querySelector('[data-table-count]');if(count)count.textContent=number(rows.length)+(autoHeight?'':' rows');paintMarkFilter(state)});
+  if(options.markFilter)state.grid.on('renderComplete',()=>{if(markPopup.state===state)markPopup.position=markMenuPosition(state)});
   state.grid.on('dataSorted',(sorters,rows)=>{
     if(sorters.length){local.sort=Number(sorters[0].field.slice(1));local.ascending=sorters[0].dir==='asc'}
     if(name!=='nsrTable')return;const fidSorted=sorters.length===1&&columns[local.sort]?.[0]==='FID';wrap.classList.toggle('fid-sorted',fidSorted);if(!fidSorted)return;
@@ -3038,12 +3042,13 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
     state.grid.on('rowMouseLeave',()=>highlightLinkedHistory(linkedTable));
   }
   state.grid.on('dataProcessed',()=>{state.ready=true;state.size=wrap.clientWidth+':'+wrap.clientHeight;wrap.setAttribute('aria-busy','false')});tableResize.observe(wrap);
+  return state.built=new Promise(resolve=>state.grid.on('tableBuilt',()=>resolve(state)));
 }
 function columnHeader(cell){
   const column=cell.getColumn(),title=column.getDefinition().title,header=document.createElement('span');header.className='column-heading';
   header.innerHTML='<span>'+escapeHtml(title)+(title==='FID Owner'?inferenceHelp(ownerHint):'')+'</span><button type="button" class="column-funnel" popovertarget="columnFilterPopup" aria-label="Filter '+escapeHtml(title)+'" aria-haspopup="dialog" aria-pressed="false" title="Filter '+escapeHtml(title)+'"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z"/></svg></button>';
   const button=header.lastElementChild;button.onmousedown=event=>event.stopPropagation();
-  button.onclick=event=>{event.stopPropagation();columnPopup.hidePopover();columnPopup.column=column;columnPopup.querySelector('label>span').textContent=title;columnInput.value=column.getHeaderFilterValue()??''};return header;
+  button.onclick=event=>{event.stopPropagation();markPopup.hidePopover();columnPopup.hidePopover();columnPopup.column=column;columnPopup.querySelector('label>span').textContent=title;columnInput.value=column.getHeaderFilterValue()??''};return header;
 }
 function paintColumnFilters(state){
   const filters=state.local.headerFilters,key=JSON.stringify(filters);if(state.columnFilterKey===key)return;state.columnFilterKey=key;
@@ -3054,7 +3059,7 @@ function paintColumnFilters(state){
   host.querySelector('.column-filter-bar').innerHTML=filters.map(({field,value})=>{const text=escapeHtml(state.grid.getColumn(field).getDefinition().title+': '+value);return '<button type="button" class="pill info" data-column-remove="'+state.name+'" data-field="'+field+'" title="'+text+'" aria-label="Remove filter '+text+'">'+text+' ×</button>'}).join('')+(filters.length?'<button type="button" class="fc-link" data-column-clear="'+state.name+'">Clear</button>':'');
 }
 function tableResult(state){return state.grid.getRows('active').map(row=>state.rows[row.getIndex()])}
-function paintTable(state){state.search=state.local.search.trim().toLowerCase();state.grid.refreshFilter()}
+function paintTable(state){state.grid.refreshFilter()}
 
 
 function exportTableRows(state,copy=false){const rows=tableResult(state),columns=state.grid.getColumns().filter(column=>column.isVisible()).map(column=>state.columns[Number(column.getField().slice(1))]),format=copy?state.options.copyRows:state.options.exportRows;return format?format(rows,columns):rows.map(row=>Object.fromEntries(columns.map(([label,get])=>[label,get(row)??''])))}
@@ -3107,15 +3112,23 @@ function saveMarkLists(kind){
   applyFilters(true);
   id(config.status).textContent='Saved';
 }
+function markMenuPosition(state){const holder=state.grid.element.querySelector('.tabulator-tableholder');return holder?[scrollX,scrollY,holder.scrollLeft,holder.scrollTop].join(':'):''}
+function markHeader(state){
+  const button=document.createElement('button');button.type='button';button.className='mark-filter-trigger';button.setAttribute('popovertarget','markFilterPopup');button.setAttribute('aria-haspopup','dialog');
+  button.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z"/></svg>';
+  button.onmousedown=event=>event.stopPropagation();
+  button.onclick=event=>{event.stopPropagation();columnPopup.hidePopover();markPopup.hidePopover();markPopup.state=state;markPopup.trigger=button;markPopup.position=markMenuPosition(state);paintMarkFilter(state)};
+  return button;
+}
 function paintMarkFilter(state){
   const kind=state.options.markFilter;if(!kind)return;
-  const host=id(kind+'MarkFilter'),selected=state.local.marks||[],counts={all:0,normal:0,ignore:0,important:0};
-  for(const {id:index,search}of state.grid.searchData(state.grid.getHeaderFilters()))if(!state.search||search.includes(state.search)){const record=state.rows[index];counts.all++;counts[recordMark(kind,kind==='fid'?record.id:record.number)||'normal']++}
-  if(!host.children.length)host.innerHTML=['all','important','ignore','normal'].map(mark=>{
-    const label=mark==='important'?'★ ':mark==='ignore'?'⊘ ':markLabels[mark]+' (';
-    return `<button type="button" class="signal ${mark}" data-table-mark-filter="${state.name}" data-mark="${mark}" title="${markLabels[mark]}">${label}<b></b>${mark==='all'||mark==='normal'?')':''}</button>`;
-  }).join('');
-  for(const button of host.children){const mark=button.dataset.mark;button.querySelector('b').textContent=number(counts[mark]);button.dataset.count=counts[mark];button.setAttribute('aria-label',markLabels[mark]+' ('+number(counts[mark])+')');button.setAttribute('aria-pressed',String(mark==='all'?!selected.length:selected.includes(mark)))}
+  const selected=state.local.marks??markOptions,active=Boolean(state.local.marks),trigger=state.grid.element.querySelector('.mark-filter-trigger'),label='Filter marks: '+(active?(selected.length?selected.map(mark=>markLabels[mark]).join(', '):'None'):'All');
+  if(trigger){trigger.classList.toggle('active',active);trigger.setAttribute('aria-pressed',String(active));trigger.setAttribute('aria-label',label);trigger.title=label}
+  if(markPopup.state!==state)return;
+  const host=markPopup.querySelector('[role=group]'),counts={all:0,normal:0,ignore:0,important:0};
+  for(const {id:index}of state.grid.searchData(state.grid.getHeaderFilters())){const record=state.rows[index];counts.all++;counts[recordMark(kind,kind==='fid'?record.id:record.number)||'normal']++}
+  if(host.dataset.tableName!==state.name){host.dataset.tableName=state.name;host.innerHTML=['all',...markOptions].map(mark=>`<label><input type="checkbox" data-table-mark-filter="${state.name}" data-mark="${mark}"><span>${markLabels[mark]}</span><b aria-hidden="true"></b></label>`).join('')}
+  for(const input of host.querySelectorAll('input')){const mark=input.dataset.mark;input.checked=mark==='all'?selected.length===markOptions.length:selected.includes(mark);input.indeterminate=mark==='all'&&selected.length>0&&selected.length<markOptions.length;input.dataset.count=counts[mark];input.setAttribute('aria-label',markLabels[mark]+' ('+number(counts[mark])+')');input.parentElement.querySelector('b').textContent=number(counts[mark])}
 }
 function paintFidPersonal(fid){
   const dialog=id('fidDetail');if(dialog.dataset.fid!==fid||!id('fidPersonalMark'))return;
@@ -3248,7 +3261,6 @@ document.addEventListener('click',event=>{
   if(button.hasAttribute('data-nce-signal')){filterValues.signal=['nce'];applyFilters();return}
   if(button.dataset.noteFid){editFidNote(button.dataset.noteFid,button);return}
   if(button.hasAttribute('data-cancel-fid-note')){closeFidNote();return}
-  if(button.dataset.tableMarkFilter){const state=tables.get(button.dataset.tableMarkFilter),mark=button.dataset.mark;state.local.marks=mark==='all'?[]:[mark];paintTable(state);return}
   if(button.dataset.ignoreNsr||button.dataset.ignoreFid){setRecordMark(button.dataset.ignoreFid?'fid':'nsr',button.dataset.ignoreFid||button.dataset.ignoreNsr);return}
   if(button.dataset.view){showView(button.dataset.view);return}
   if(button.dataset.fid){showFid(button.dataset.fid);return}
@@ -3283,7 +3295,7 @@ document.addEventListener('click',event=>{
   if(button.dataset.tableCycle){const state=tables.get(button.dataset.tableCycle),rows=tableResult(state);if(id('fidDetail').open)id('fidDetail').close();showView('cycle');cycle.query(rows.map(row=>row.number));return}
   if(button.dataset.columnClear){tables.get(button.dataset.columnClear).grid.clearHeaderFilter();return}
   if(button.dataset.columnRemove){tables.get(button.dataset.columnRemove).grid.setHeaderFilterValue(button.dataset.field,'');return}
-  if(button.dataset.tableCopy){copyRows(exportTableRows(tables.get(button.dataset.tableCopy),true));return}
+  if(button.dataset.tableCopy){const state=tables.get(button.dataset.tableCopy);if(state.options.onCopy)state.options.onCopy();else copyRows(exportTableRows(state,true));return}
   if(button.dataset.summarySort){
     const key=button.dataset.summarySort;summarySort={key,dir:summarySort.key===key?-summarySort.dir:-1};renderSummaryMetrics(id('view-summary'));
     id('summaryChart').querySelector('[data-summary-sort="'+key+'"]').focus({preventScroll:true});return;
@@ -3294,7 +3306,7 @@ document.addEventListener('click',event=>{
     else exportWorkbook('Summary_Metrics_'+summaryGroup,{Metrics:summaryReport},Object.fromEntries(percentMetrics.map(label=>[label,'0.0%'])));
     return;
   }
-  if(button.dataset.tableExport){const state=tables.get(button.dataset.tableExport);exportWorkbook(state.options.file,{Detail:exportTableRows(state),...(state.options.cycle?{Source_Rows:tableResult(state).flatMap(nsr=>nsr.rows||nsr.rawRows||[])}:{})});return}
+  if(button.dataset.tableExport){const state=tables.get(button.dataset.tableExport);if(state.options.onExport)state.options.onExport();else exportWorkbook(state.options.file,{Detail:exportTableRows(state),...(state.options.cycle?{Source_Rows:tableResult(state).flatMap(nsr=>nsr.rows||nsr.rawRows||[])}:{})});return}
   if(button.hasAttribute('data-clear-search')){id('fSearch').value='';applyFilters();return}
   if(button.hasAttribute('data-clear-signal')){delete filterValues.signal;applyFilters();return}
   if(button.hasAttribute('data-toast-close')){id('fcToast').hidden=true;return}
@@ -3303,7 +3315,7 @@ document.addEventListener('click',event=>{
   if(button.hasAttribute('data-reset-mapping')){if(!unsafeWindow.confirm('Restore the default Fab / Account mapping?'))return;const result=accountMapping.reset();if(result.ok){mappingDraft=null;recalculate()}else toast(result.error);return}
   if(button.hasAttribute('data-import-settings')){id('fcSettingsFile').click();return}
   if(button.hasAttribute('data-export-settings')){exportSettings();return}
-  if(button.id==='fcRefresh')restoreSources(true);else if(button.id==='fcReset'){includeIgnored=true;clearTimeout(searchTimer);for(const key of Object.keys(filterValues))delete filterValues[key];id('fSearch').value='';for(const local of localTables.values()){local.search='';local.scroll=0;local.marks=[];local.headerFilters=[]}for(const state of tables.values())if(state.ready)state.grid.clearHeaderFilter();buildFilters();applyFilters()}
+  if(button.id==='fcRefresh')restoreSources(true);else if(button.id==='fcReset'){includeIgnored=true;clearTimeout(searchTimer);for(const key of Object.keys(filterValues))delete filterValues[key];id('fSearch').value='';for(const local of localTables.values()){local.scroll=0;local.marks=null;local.headerFilters=[]}for(const state of tables.values())if(state.ready)state.grid.clearHeaderFilter();buildFilters();applyFilters()}
 });
 document.addEventListener('keydown',event=>{
   if(event.ctrlKey&&event.shiftKey&&event.altKey&&event.code==='KeyD'){
@@ -3313,10 +3325,13 @@ document.addEventListener('keydown',event=>{
   if((event.key==='Enter'||event.key===' ')&&event.target.matches('.fc-table-wrap .tabulator-col')){event.preventDefault();event.target.click()}
   if(event.key==='Escape')document.querySelectorAll('.fc-source-help[open]').forEach(help=>help.open=false);
 });
-document.addEventListener('input',event=>{const kind=event.target.dataset.nsrMarks?'nsr':event.target.dataset.fidMarks?'fid':'';if(kind){markDrafts[kind]=Object.fromEntries([...document.querySelectorAll(`[data-${kind}-marks]`)].map(textarea=>[textarea.dataset[kind+'Marks'],textarea.value]));id(markKinds[kind].status).textContent=''}if(event.target.dataset.accountGroup){mappingDraft??=accountMapping.getMap();mappingDraft[event.target.dataset.accountGroup]=event.target.value}if(event.target.dataset.tableSearch){const state=tables.get(event.target.dataset.tableSearch);state.local.search=event.target.value;paintTable(state)}});
+document.addEventListener('input',event=>{const kind=event.target.dataset.nsrMarks?'nsr':event.target.dataset.fidMarks?'fid':'';if(kind){markDrafts[kind]=Object.fromEntries([...document.querySelectorAll(`[data-${kind}-marks]`)].map(textarea=>[textarea.dataset[kind+'Marks'],textarea.value]));id(markKinds[kind].status).textContent=''}if(event.target.dataset.accountGroup){mappingDraft??=accountMapping.getMap();mappingDraft[event.target.dataset.accountGroup]=event.target.value}});
 document.addEventListener('change',event=>{
   const input=event.target;
-  if(input.dataset.excludeIgnored){
+  if(input.dataset.tableMarkFilter){
+    const state=tables.get(input.dataset.tableMarkFilter),marks=input.dataset.mark==='all'?(input.checked?null:[]):[...markPopup.querySelectorAll('input[data-mark]:checked')].map(input=>input.dataset.mark).filter(mark=>mark!=='all');
+    state.local.marks=marks?.length===markOptions.length?null:marks;paintTable(state);
+  }else if(input.dataset.excludeIgnored){
     const view=input.dataset.excludeIgnored,focused=document.activeElement===input;includeIgnored=!input.checked;applyFilters(true);
     if(focused)id('view-'+view).querySelector('[data-exclude-ignored]').focus({preventScroll:true});
   }else if(input.id==='fcSettingsFile'&&input.files?.[0]){importSettings(input.files[0]);input.value=''}else if(input.dataset.sourceFile&&input.files?.[0])importSource(input.files[0],input.dataset.sourceFile);
@@ -3327,7 +3342,8 @@ columnPopup.onsubmit=columnPopup.onreset=event=>{
   if(column&&value!==(column.getHeaderFilterValue()??''))column.setHeaderFilterValue(value);columnPopup.hidePopover();
 };
 columnPopup.ontoggle=event=>{if(event.newState==='open')columnInput.select();else columnPopup.column=null};
-document.addEventListener('scroll',event=>{if(columnPopup.column&&!columnPopup.contains(event.target))columnPopup.hidePopover()},true);window.addEventListener('resize',()=>columnPopup.hidePopover());
+markPopup.onbeforetoggle=event=>{if(event.newState==='closed'){markPopup.state=null;markPopup.trigger=null}};
+document.addEventListener('scroll',event=>{if(columnPopup.column&&!columnPopup.contains(event.target))columnPopup.hidePopover();if(markPopup.state&&!markPopup.contains(event.target)){if(markPopup.position!==markMenuPosition(markPopup.state))markPopup.hidePopover()}},true);window.addEventListener('resize',()=>{columnPopup.hidePopover();markPopup.hidePopover()});
 id('fidDetail').addEventListener('close',()=>{id('fidNotePanel')?.querySelector('form')?.remove();highlightLinkedHistory('fidCtlTable');highlightLinkedHistory('fidNsrTable')});
 id('fidNoteDialog').addEventListener('close',()=>id('fidNoteDialog').replaceChildren());
 document.addEventListener('submit',event=>{if(event.target.id==='fidNoteForm'){event.preventDefault();saveFidNote()}});
@@ -3377,14 +3393,22 @@ async function applySource(key,rows,meta,render=true){
 }
 
 
-function downloadHostedArchive(){
-  return new Promise((resolve,reject)=>{
-    GM_xmlhttpRequest({
-      method:'GET',url:HOSTED_ARCHIVE_URL+'?t='+Date.now(),responseType:'arraybuffer',timeout:30000,nocache:true,anonymous:true,
-      onload:response=>{if(response.status>=200&&response.status<300&&response.response)resolve(response.response); else reject(new Error('Data download failed (HTTP '+response.status+').'));}, onerror:()=>reject(new Error('Could not download data.')),
-      ontimeout:()=>reject(new Error('Data download timed out.'))
-    });
-  });
+async function downloadHostedArchive(){
+  const failures=[];
+  for(const url of HOSTED_ARCHIVE_URLS){
+    try{
+      return await new Promise((resolve,reject)=>{
+        GM_xmlhttpRequest({
+          method:'GET',url:url+'?t='+Date.now(),responseType:'arraybuffer',timeout:30000,nocache:true,anonymous:true,
+          onload:response=>{if(response.status>=200&&response.status<300&&response.response?.byteLength)resolve(response.response);else reject(new Error('HTTP '+response.status+(response.statusText?' '+response.statusText:'')+(response.status>=200&&response.status<300?' (empty response).':'.')));},
+          onerror:response=>reject(new Error((response?.status?'HTTP '+response.status+'. ':'')+(response?.error?.message||response?.error||response?.message||response?.statusText||'Network or Tampermonkey permission error.'))),
+          ontimeout:()=>reject(new Error('Data download timed out (30 s).')),
+          onabort:()=>reject(new Error('Data download was cancelled.'))
+        });
+      });
+    }catch(error){failures.push(new URL(url).hostname+': '+error.message)}
+  }
+  throw new Error('All data download sources failed.\n'+failures.join('\n')+'\nCheck Tampermonkey connection permissions and network/proxy access.');
 }
 async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES),force=false){
   const runs=Object.fromEntries(keys.map(key=>[key,startSource(key)]));keys.forEach(key=>sourceMessage(key,'Loading data…','loading'));
@@ -3520,6 +3544,10 @@ async function restoreSources(reset=false){
 }
 
 
+const cycle=createNsrCycle(id('dashboardWorkspace'),{getRows:nsrs=>{
+  const selected=new Set(nsrs);
+  return nsrCopyRows(graph.nsrs.filter(nsr=>selected.has(nsr.number))).map(row=>({...row,'REF FCID':row.FID}));
+},renderTable:(name,columns,rows,options)=>table(name,columns,rows,options,true),copyRows,onNotify:message=>toast(message)});
 setNsrRange(nsrRange);recalculate();restoreSources();
 }
 
@@ -4043,8 +4071,9 @@ function createFidGraph(raw, options = {}) {
     }
     ctl.fidId=validFid(ctl.fidId); ctl.initiator=person(ctl.initiator); for(const name of ctlDateFields)ctl[name]=iso(ctl[name]);
     // Every CTL source uses Stage; Status columns remain only in the original source rows.
+    ctl.stage=ctl.stage.replace(/^(?:\d+\s*-\s*)?(?:originator|draft)$/i,'Draft');
     const stage=String(ctl.stage||'').trim().replace(/^\d+\s*-\s*/,'').toLowerCase();
-    ctl.status=stage&&stage!=='[unknown]'?({completed:'Completed',cancelled:'Cancelled',canceled:'Cancelled',rejected:'Rejected',originator:'Draft'})[stage]||'Submitted':'';
+    ctl.status=stage&&stage!=='[unknown]'?({completed:'Completed',cancelled:'Cancelled',canceled:'Cancelled',rejected:'Rejected',draft:'Draft'})[stage]||'Submitted':'';
     ctl.changeKey=norm(ctl.change); ctl.statusKind=ctl.status==='Completed'?'completed':['Cancelled','Rejected'].includes(ctl.status)?'discarded':'pending';
     ctl.pending=['slot','config'].includes(ctl.changeKey)&&ctl.status==='Submitted';
     ctl.pendingPullPush=['pull','push'].includes(ctl.changeKey)&&ctl.status==='Submitted';
@@ -4247,8 +4276,10 @@ function createFidGraph(raw, options = {}) {
     const includeIgnored=filters.includeIgnored!==false;let base=filters.excluded?observedPopulation.filter(node=>node.excludedReason):population;
     if(!includeIgnored)base=base.filter(node=>node.fidMark!=='ignore');
     const ctlRows=hasPredicates(filters.ctl)?ctls.filter(ctl=>matchCtl(ctl,filters.ctl)):ctls,ctlFids=ctlRows===ctls?null:new Set(ctlRows.map(ctl=>ctl.fidId));
+    // An absent CTL matches Unknown only when every selected CTL field accepts an empty value.
+    const ctlUnknown=!!ctlFids&&matchCtl({},filters.ctl),matchCtlFid=fidId=>!ctlFids||ctlFids.has(fidId)||ctlUnknown&&!fids.get(fidId)?.ctls.length;
     const directKeys=['quarter','systemQuarter','account','customer','system','businessUnit','salesAdmin','owner','category','preState','postState','slotState','fidStatus','fidMark','signal','riskType'];
-    const hasFidPredicates=!!filters.excluded||directKeys.some(key=>key!=='account'&&values(filters[key]).length)||hasPredicates(filters.slot)||hasPredicates(filters.ctl);
+    const hasFidPredicates=!!filters.excluded||directKeys.some(key=>key!=='account'&&values(filters[key]).length)||hasPredicates(filters.slot);
     const scalarKeys=directKeys.filter(key=>!['fidStatus','signal','riskType'].includes(key)&&values(filters[key]).length),fidStatuses=values(filters.fidStatus),signals=values(filters.signal),riskTypes=values(filters.riskType).map(label=>label==='Post NSR risk'?'Late NSR':label==='Open NSR'?'Pending NSR':label==='Pending CTL'?'Pending Config CTL':label),nsrRiskOnly=riskTypes.length>0&&riskTypes.every(isNsrRisk),hasNsrPredicates=hasPredicates(filters.nsr);
     const search=clean(filters.search).toLowerCase(),tokens=search.split(/[\s,;|/]+/).filter(Boolean),idSearch=!!tokens.length&&tokens.every(token=>/^(?:\d{5,10}|[ndl]\d{5,8})$/i.test(token));
     const entityMatch=node=>idSearch?tokens.some(token=>/^\d+$/.test(token)&&(node.id.toLowerCase()===token||node.ctls.some(ctl=>ctl.number.toLowerCase()===token))):node.entitySearchText.includes(search);
@@ -4265,27 +4296,29 @@ function createFidGraph(raw, options = {}) {
       if(!entityHit(node.id)&&!node.nsrs.some(nsr=>nsrDomainMatch(nsr,node.id)))return false;
       if (hasNsrPredicates&&!node.nsrs.some(nsr=>(includeIgnored||!nsr.ignored)&&matchNsr(nsr,filters.nsr,node.id))) return false;
       if (hasPredicates(filters.slot)) { const slot=node.slot.active; if (!slot||!match(slot.initiator,filters.slot.initiator)||!match(node.quarter,filters.slot.quarter)||!match(slot.status,filters.slot.status)) return false; }
-      if (ctlFids&&!ctlFids.has(node.id)) return false;
+      if (!matchCtlFid(node.id)) return false;
       return true;
     });
     // Overview-only queries skip unrelated projections and metric aggregation.
     if(rowsOnly==='fids')return selectedFids;
     const ids=new Set(selectedFids.map(node=>node.id));
     if(rowsOnly==='ctls')return ctlRows.filter(ctl=>ids.has(ctl.fidId));
-    // NSR List is independent; explicit FID filters restrict it to matching Commit FIDs.
+    // CTL conditions use loaded CTL relationships, even outside the loaded FID Database range.
+    // Only explicit FID conditions restrict NSRs to matching Commit FIDs.
     const selectedNsrs=[];
     for(const nsr of nsrs) {
       if(!nsr.eligible||!includeIgnored&&nsr.ignored)continue;
       const matchedFidIds=nsr.fidIds.filter(fidId=>{
         if(!includeIgnored&&fids.get(fidId)?.fidMark==='ignore')return false;
         if(hasFidPredicates&&!ids.has(fidId))return false;
+        if(!matchCtlFid(fidId))return false;
         if(nsrRiskOnly){
           const node=fids.get(fidId),riskNsrs=riskTypes.includes('Pending NSR')?node.nsrs:node.post.nsrs;
           if(!riskNsrs.some(row=>row.number===nsr.number&&row.lifecycle==='open'))return false;
         }
         return entityHit(fidId)?(!hasNsrPredicates&&!hasAccount)||(nsr.observations.length?nsr.observations:[nsr]).some(observation=>observationMatches(nsr,observation,fidId)):nsrDomainMatch(nsr,fidId);
       });
-      const orphan=!nsr.fidId&&!hasFidPredicates&&nsrDomainMatch(nsr);
+      const orphan=!nsr.fidId&&!hasFidPredicates&&(!ctlFids||ctlUnknown)&&nsrDomainMatch(nsr);
       if(!matchedFidIds.length&&!orphan)continue;
       if(!nsr.observations.length){selectedNsrs.push({...nsr,taskLifecycle:observationLifecycle(nsr,nsr,nsr.fidId)});continue;}
       const scopeLifecycles=unique(matchedFidIds.map(fidId=>nsr.implementationByFid[fidId]||nsr.lifecycle)),lifecycle=['open','discarded','completed-5d','completed-unlinked','ctl-pending','implemented','ctl-unavailable'].find(state=>scopeLifecycles.includes(state))||nsr.lifecycle;
@@ -4485,7 +4518,7 @@ function periodYear(value){const rank=periodRank(value);return rank?String(Math.
 return {detailFields:DETAIL_FIELDS,clean,upper,canonicalRow,normalizeRows,deriveTaskStatus,compareStatus,dateNumber,periodRank,periodYear};
 }
 
-function createNsrCycle(root=document,{getRows=null,onNotify=null}={}){
+function createNsrCycle(root=document,{getRows=null,onNotify=null,renderTable,copyRows}={}){
 const ownerDocument=root.ownerDocument||root,embedded=root!==ownerDocument,modalHost=embedded?root:ownerDocument.body;
 const {detailFields:DETAIL_FIELDS,clean,upper,dateNumber,compareStatus}=createNsrRecords();
 const LIVE_FIELDS=['Submit Date','Task Status','ECD','Approver Team','Assigned Approver','Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'];
@@ -4497,18 +4530,17 @@ const CYCLE_WIDTHS=CYCLE_FIELDS.map(field=>({
   'NSR#':78,'Submit Date':116,'Approver Team':125, 'Assigned Approver':130,'Pending Days':82,'Elapsed Days':82,'Cycle Time (ECD)':110,'Cycle Time (SOBi)':116,'NSR Title':190,'Task Status':144,'ECD':96, 'NSR Category':100,'Customer':150,'Primary Product':120,'Technical Contact':108,
     'Impacted Sub System':104,'NSR → CTL':180,'CTL references':180
 }[field]||92));
-const CYCLE_CONCURRENCY=8,CYCLE_WARN_AT=100,CYCLE_LIMIT=500; const WORKFLOW_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const NSR_DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const FIORI_DETAIL='/flp#ZNSR-display&/NsrDetail/';
+const CYCLE_CONCURRENCY=8,CYCLE_WARN_AT=100,CYCLE_LIMIT=500; const WORKFLOW_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const NSR_DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const FIORI_DETAIL='https://fep.lamresearch.com/flp#ZNSR-display&/NsrDetail/';
 const pageFetch=(url,options)=>unsafeWindow.fetch(url,options);
 const collator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
-const state={rows:[],cycleRows:[],cycleSort:{field:'NSR#',dir:'asc'},cycleAbort:null,cycleRun:0,toastTimer:null};
+const state={rows:[],cycleRows:[],cycleAbort:null,cycleRun:0,toastTimer:null};
 const $id=id=>root.querySelector('#'+id),esc=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const tsvValue=v=>clean(v).replace(/[\t\r\n]+/g,' ');
 function statusPill(value){const cls=value==='15-Completed'?'terminal':value.startsWith('0-')?'stop':value.startsWith('Unmapped')?'unknown':'';return `<span class="status-pill ${cls}">${esc(value)}</span>`;}
 function toast(message,isError=false){
   if(onNotify){onNotify(message,isError);return}
   const el=$id('toast');if(!el)return;clearTimeout(state.toastTimer);el.textContent=message;el.className=`toast show${isError?' error':''}`;state.toastTimer=setTimeout(()=>el.className='toast',3000);
 }
-let wfTrigger=null,wfRows=[];
+let wfTrigger=null,workflowTable=null,cycleTable=null;
 function parseNsrInput(text){
   const valid=[],invalid=[],seen=new Set(); String(text||'').split(/[\s,;|]+/).map(v=>v.trim()).filter(Boolean).forEach(token=>{const nsr=token.toUpperCase(); if(!/^[A-Z]\d{5,9}$/.test(nsr)){invalid.push(token);return} if(!seen.has(nsr)){seen.add(nsr);valid.push(nsr)}});
   return {valid,invalid};
@@ -4605,7 +4637,7 @@ async function runCycleLookup(nsrs){
   if(total>CYCLE_WARN_AT&&!unsafeWindow.confirm(`You are about to query ${total} NSRs from SAP. This may take some time. Continue?`)){setCycleProgress(0,0,`Query cancelled. ${total} NSRs were not sent to SAP.`);return;}
   if(state.cycleAbort)state.cycleAbort.abort();
   const run=++state.cycleRun,controller=new unsafeWindow.AbortController();state.cycleAbort=controller;state.cycleRows=[]; const details=new Map((getRows?getRows(parsed.valid):state.rows).map(row=>[upper(row['NSR#']),row])),results=new Array(total),workers=Math.min(CYCLE_CONCURRENCY,total);
-  let next=0,done=0,stoppedForAuth=false,lastPaint=0; setCycleBusy(true);setCycleProgress(0,total,`Starting ${total} live lookup${total===1?'':'s'} · up to ${workers} requests at once…`);renderCycleTable();
+  let next=0,done=0,stoppedForAuth=false,lastPaint=0; setCycleBusy(true);setCycleProgress(0,total,`Starting ${total} live lookup${total===1?'':'s'} · up to ${workers} requests at once…`);await renderCycleTable();
   async function worker(){
     while(!controller.signal.aborted&&run===state.cycleRun&&!stoppedForAuth){
       const index=next++;if(index>=total)return;
@@ -4618,13 +4650,15 @@ async function runCycleLookup(nsrs){
       }
       if(categoryError)live.__categoryError=categoryError;
       if(run!==state.cycleRun)return;
-      results[index]=mergeCycle(nsr,live,details);done++;state.cycleRows=results.filter(Boolean); const now=Date.now();if(now-lastPaint>200||done===total||stoppedForAuth){renderCycleTable();lastPaint=now}
+      results[index]=mergeCycle(nsr,live,details);done++;state.cycleRows=results.filter(Boolean); const now=Date.now();if(now-lastPaint>200||done===total||stoppedForAuth){lastPaint=now;await renderCycleTable()}
+      if(run!==state.cycleRun)return;
       if(!stoppedForAuth)setCycleProgress(done,total,`Queried ${done} of ${total} · up to ${workers} requests at once`);
     }
   }
   await Promise.all(Array.from({length:workers},()=>worker()));
   if(run!==state.cycleRun)return;
-  state.cycleRows=results.filter(Boolean); const cancelled=controller.signal.aborted&&!stoppedForAuth,failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length; state.cycleAbort=null;setCycleBusy(false);renderCycleTable();
+  state.cycleRows=results.filter(Boolean);await renderCycleTable();if(run!==state.cycleRun)return;
+  const cancelled=controller.signal.aborted&&!stoppedForAuth,failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length;state.cycleAbort=null;setCycleBusy(false);
   if(stoppedForAuth){setCycleProgress(done,total,'Stopped because the Fiori session is unavailable. Return to Fiori, sign in, and run the query again.');toast('Fiori session unavailable.',true)}
   else if(cancelled)setCycleProgress(done,total,`Cancelled after ${done} of ${total} lookups.`);
   else{setCycleProgress(done,total,`${done} live lookup${done===1?'':'s'} completed${failed?` · ${failed} unavailable`:''}.`);
@@ -4632,24 +4666,26 @@ async function runCycleLookup(nsrs){
 }
 
 function compareCycle(a,b,field){
-  if(['Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'].includes(field))return (Number(a[field])||0)-(Number(b[field])||0);
-  if(field==='ECD'||field.includes('Date'))return dateNumber(a[field])-dateNumber(b[field]);
-  if(field==='Task Status')return compareStatus(a[field],b[field]);
-  return collator.compare(clean(a[field]),clean(b[field]));
+  if(['Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'].includes(field))return (Number(a)||0)-(Number(b)||0);
+  if(field==='ECD'||field.includes('Date'))return dateNumber(a)-dateNumber(b);
+  if(field==='Task Status')return compareStatus(a,b);
+  return collator.compare(clean(a),clean(b));
 }
 
 function cycleRows(){
-  const query=clean($id('cycleSearch').value).toLowerCase(); const rows=query?state.cycleRows.filter(row=>CYCLE_FIELDS.some(field=>clean(row[field]).toLowerCase().includes(query))):[...state.cycleRows]; const {field,dir}=state.cycleSort;return rows.sort((a,b)=>compareCycle(a,b,
-    field)*(dir==='asc'?1:-1));
+  return cycleTable?.ready?cycleTable.grid.getRows('active').map(row=>cycleTable.rows[row.getIndex()]):[];
 }
+function cycleFields(){return cycleTable.grid.getColumns().filter(column=>column.isVisible()).map(column=>CYCLE_FIELDS[Number(column.getField().slice(1))])}
+
+function nsrDetailUrl(row){return clean(row['Temp Id#'])&&clean(row['NSR#'])?`${FIORI_DETAIL}${encodeURIComponent(clean(row['Temp Id#']))}/${encodeURIComponent(clean(row['NSR#']))}/Search`:''}
 
 function cycleCell(row,field){
   if(field==='Task Status')return statusPill(row[field]);
   if(field==='NSR Title'&&clean(row[field])&&clean(row['Temp Id#'])&&clean(row['NSR#'])){
-    const href=`${unsafeWindow.location.origin}${FIORI_DETAIL}${encodeURIComponent(clean(row['Temp Id#']))}/${encodeURIComponent(clean(row['NSR#']))}/Search`;
+    const href=nsrDetailUrl(row);
     return `<a class="ct-link" data-nsr-detail="${esc(row['NSR#'])}" href="${esc(href)}" target="_blank" rel="noopener noreferrer" title="Open ${esc(row['NSR#'])} in Fiori">${esc(row[field])}</a>`;
   }
-  if(['Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'].includes(field)&&clean(row[field])&&Array.isArray(row.__workflow)&&
+  if(['NSR#','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'].includes(field)&&clean(row[field])&&Array.isArray(row.__workflow)&&
     row.__workflow.length){return `<button class="ct-link" type="button" data-wf-nsr="${esc(row['NSR#'])}" title="View full workflow for ${esc(row['NSR#'])}">${esc(row[field])}</button>`;}
   return esc(row[field]);
 }
@@ -4661,47 +4697,34 @@ function cycleCellClass(row,field){
   return '';
 }
 
-function openWorkflow(nsr,trigger){
+async function openWorkflow(nsr,trigger){
   const row=state.cycleRows.find(item=>upper(item['NSR#'])===upper(nsr)),stages=row&&Array.isArray(row.__workflow)?row.__workflow:[];
   if(!stages.length){toast('Workflow detail is unavailable for this NSR.',true);return}
-  const head=`<thead><tr>${WF_FIELDS.map(field=>`<th scope="col">${esc(field)}</th>`).join('')}</tr></thead>`; const body=`<tbody>${stages.map(stage=>`<tr>${WF_FIELDS.map(field=>`<td>${esc(stage[field])}</td>`).join('')}</tr>`).join('')}</tbody>`;
-  $id('wfTitle').textContent=`${clean(nsr)} Workflow Detail`;$id('wfMeta').textContent=`${stages.length} workflow record${stages.length===1?'':'s'}`; $id('wfTable').innerHTML=head+body;wfRows=stages;wfTrigger=trigger||ownerDocument.activeElement;$id('wfModal').hidden=
-    false;modalHost.classList.add('wf-open');$id('wfClose').focus();
+  const modal=$id('wfModal'),link=$id('wfNsrLink'),href=nsrDetailUrl(row);
+  $id('wfTitle').textContent=`${clean(nsr)} Workflow Detail`;$id('wfMeta').textContent=clean(row['NSR Title']);
+  link.hidden=!href;if(href)link.href=href;else link.removeAttribute('href');
+  $id('wfSummary').innerHTML=['Task Status','Assigned Approver','Pending Days','Submit Date'].map(field=>`<div class="fid-detail-value"><small>${field}</small>${field==='Task Status'&&clean(row[field])?statusPill(clean(row[field])):esc(row[field])||'—'}</div>`).join('');
+  wfTrigger=trigger||ownerDocument.activeElement;if(!modal.open)modal.showModal();modalHost.classList.add('wf-open');
+  workflowTable=await renderTable('wfTable',WF_FIELDS.map(field=>[field,row=>row[field],value=>field==='Approver Status'?`<span class="pill ${/APPROVED|COMPLETED/.test(upper(value))?'clear':/REJECT|CANCEL/.test(upper(value))?'risk':'info'}">${esc(value)}</span>`:esc(value),{variableHeight:true,...(field==='Pending Days'?{sorter:(a,b)=>(Number(a)||0)-(Number(b)||0)}:{})}]),stages,{title:'Workflow History',rowHeight:false,copyId:'wfCopy',onCopy:copyWorkflow,widths:{'Task Name':160,'Approver Status':130,'Approver Team':140,Approver:120,'Pending Days':112,'Approved Date':125,Comments:360}});
+  if(modal.open)$id('wfClose').focus({preventScroll:true});
 }
 
-function closeWorkflow(){if($id('wfModal').hidden)return;$id('wfModal').hidden=true;modalHost.classList.remove('wf-open'); if(wfTrigger&&wfTrigger.isConnected)wfTrigger.focus();wfTrigger=null;wfRows=[];}
+function closeWorkflow(){if($id('wfModal').open)$id('wfModal').close()}
+function restoreWorkflowFocus(){modalHost.classList.remove('wf-open');if(wfTrigger?.isConnected)wfTrigger.focus({preventScroll:true});wfTrigger=null}
 
-function renderCycleTable(){
-  const rows=cycleRows(),sort=state.cycleSort; const cols=`<colgroup>${CYCLE_WIDTHS.map(width=>`<col style="width:${width}px">`).join('')}</colgroup>`;
-  const head=`<thead><tr>${CYCLE_FIELDS.map(field=>`<th scope="col" title="${esc(embedded&&field==='REF FCID'?'FID':field)}" data-cycle-sort="${esc(field)}" class="${sort.field===field?'sorted':''}" aria-sort="${sort.field===field?(sort.dir===
-    'asc'?'ascending':'descending'):'none'}">${esc(embedded&&field==='REF FCID'?'FID':field)}<span class="sort-mark">${sort.field===field?(sort.dir==='asc'?'▲':'▼'):'↕'}</span></th>`).join('')}</tr></thead>`;
-  const body=rows.length?rows.map(row=>`<tr>${CYCLE_FIELDS.map(field=>`<td class="${cycleCellClass(row,field)}" title="${esc(row[field])}">${cycleCell(row,
-    field)}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${CYCLE_FIELDS.length}"><div class="empty">No cycle time results yet.</div></td></tr>`;
-  $id('cycleTable').innerHTML=cols+head+`<tbody>${body}</tbody>`; const failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length;
-  $id('cycleCount').textContent=`${rows.length} shown · ${state.cycleRows.length} queried${failed?` · ${failed} unavailable`:''}`; $id('copyCycleBtn').disabled=!rows.length;$id('exportCycleBtn').disabled=!rows.length;
+async function renderCycleTable(){
+  cycleTable=await renderTable('cycleTable',CYCLE_FIELDS.map(field=>[field,row=>row[field],(_,row)=>`<span class="${cycleCellClass(row,field)}">${cycleCell(row,field)}</span>`,{title:embedded&&field==='REF FCID'?'FID':field,sorter:(a,b)=>compareCycle(a,b,field)}]),state.cycleRows,{file:'NSR_Cycle_Time',height:450,columnFilters:false,defaultSort:'NSR#',copyId:'copyCycleBtn',exportId:'exportCycleBtn',onCopy:copyCycleRows,onExport:exportCycleRows,widths:Object.fromEntries(CYCLE_FIELDS.map((field,index)=>[field,CYCLE_WIDTHS[index]]))});
 }
 
-function sortCycle(field){if(state.cycleSort.field===field)state.cycleSort.dir=state.cycleSort.dir==='asc'?'desc':'asc'; else state.cycleSort={field,dir:field==='ECD'||field.includes('Date')?'desc':'asc'}; renderCycleTable();}
-
-async function writeClipboard(text){
-  if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(text);
-  const ta=ownerDocument.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:0';ownerDocument.body.appendChild(ta);ta.select();
-  try{if(!ownerDocument.execCommand('copy'))throw new Error('Copy was blocked by the browser.')}finally{ta.remove()}
-}
-
-async function copyCycleData(rows,fields,label){
-  const text=[fields.join('\t'),...rows.map(row=>fields.map(field=>tsvValue(row[field])).join('\t'))].join('\r\n');
-  try{await writeClipboard(text);toast(`${rows.length} ${label}${rows.length===1?'':'s'} copied.`)}catch(err){toast(err.message||'Copy failed.',true)}
-}
-function copyWorkflow(){if(wfRows.length)return copyCycleData(wfRows,WF_FIELDS,'workflow record')}
-function copyCycleRows(){return copyCycleData(cycleRows(),CYCLE_FIELDS,'cycle time row')}
+function copyWorkflow(){if(!workflowTable?.ready)return;const fields=workflowTable.grid.getColumns().filter(column=>column.isVisible()).map(column=>WF_FIELDS[Number(column.getField().slice(1))]),rows=workflowTable.grid.getRows('active').map(row=>workflowTable.rows[row.getIndex()]);if(rows.length)return copyRows([fields,...rows.map(row=>fields.map(field=>row[field]??''))])}
+function copyCycleRows(){const rows=cycleRows();if(!rows.length)return;const fields=cycleFields();return copyRows([fields,...rows.map(row=>fields.map(field=>row[field]??''))])}
 
 function exportCycleRows(){
   const rows=cycleRows();if(!rows.length)return;
   if(!window.XLSX){toast('The XLSX library did not load.',true);return}
-  const data=rows.map(row=>Object.fromEntries(CYCLE_FIELDS.map(field=>[field,row[field]??'']))),sheet=XLSX.utils.json_to_sheet(data,{header:CYCLE_FIELDS});
+  const fields=cycleFields(),data=rows.map(row=>Object.fromEntries(fields.map(field=>[field,row[field]??'']))),sheet=XLSX.utils.json_to_sheet(data,{header:fields});
   const workflowData=rows.flatMap(row=>(Array.isArray(row.__workflow)?row.__workflow:[]).map((stage,index)=>Object.fromEntries(WORKFLOW_EXPORT_FIELDS.map(field=>[field,field==='NSR#'?(row['NSR#']??''):field==='Workflow Step'?index+1:(stage[field]??'')]))));
-  const workflowSheet=XLSX.utils.json_to_sheet(workflowData,{header:WORKFLOW_EXPORT_FIELDS}); sheet['!cols']=CYCLE_WIDTHS.map(width=>({wch:Math.max(10,Math.round(width/7))}));sheet['!autofilter']={ref:sheet['!ref']};
+  const workflowSheet=XLSX.utils.json_to_sheet(workflowData,{header:WORKFLOW_EXPORT_FIELDS}); sheet['!cols']=fields.map(field=>({wch:Math.max(10,Math.round(CYCLE_WIDTHS[CYCLE_FIELDS.indexOf(field)]/7))}));sheet['!autofilter']={ref:sheet['!ref']};
   workflowSheet['!cols']=[12,14,32,18,22,24,14,14,50].map(wch=>({wch}));workflowSheet['!autofilter']={ref:workflowSheet['!ref']}; const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,'NSR Cycle Time');XLSX.utils.book_append_sheet(book,workflowSheet,
     'Workflow Detail'); const now=new Date(),stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`; XLSX.writeFile(book,`NSR_Cycle_Time_${stamp}.xlsx`,{compression:true});
     toast(`${rows.length} summary rows and ${workflowData.length} workflow records exported.`);
@@ -4710,17 +4733,17 @@ function exportCycleRows(){
 function cancel(){if(!state.cycleAbort)return;state.cycleAbort.abort();$id('cycleStatus').textContent='Cancelling active requests…';}
 const listeners=[];
 function bind(element,event,handler){element.addEventListener(event,handler);listeners.push([element,event,handler]);}
-bind($id('runCycleBtn'),'click',()=>runCycleLookup());bind($id('cancelCycleBtn'),'click',cancel);bind($id('copyCycleBtn'),'click',copyCycleRows);bind($id('exportCycleBtn'),'click',exportCycleRows);
-bind($id('cycleSearch'),'input',renderCycleTable);
-bind($id('cycleTable'),'click',event=>{const trigger=event.target.closest('[data-wf-nsr]');if(trigger){openWorkflow(trigger.dataset.wfNsr,trigger);return}const th=event.target.closest('th[data-cycle-sort]');if(th)sortCycle(th.dataset.cycleSort)});
-bind($id('wfCopy'),'click',copyWorkflow);bind($id('wfModal'),'click',event=>{if(event.target.closest('[data-wf-close]'))closeWorkflow()});
-bind(root,'keydown',event=>{if(event.key==='Escape'&&!$id('wfModal').hidden)closeWorkflow()});
-setCycleBusy(false);renderCycleTable();
+bind($id('runCycleBtn'),'click',()=>runCycleLookup());bind($id('cancelCycleBtn'),'click',cancel);
+bind($id('cycleTable'),'click',event=>{const trigger=event.target.closest('[data-wf-nsr]');if(trigger)openWorkflow(trigger.dataset.wfNsr,trigger)});
+bind($id('wfModal'),'click',event=>{if(event.target.closest('[data-wf-close]'))closeWorkflow()});
+bind($id('wfModal'),'close',()=>{if(!$id('wfModal').open)restoreWorkflowFocus()});
+setCycleBusy(false);
 return {
   setRows(rows){state.rows=Array.isArray(rows)?rows:[]},
+  show:()=>renderCycleTable().then(()=>cycleTable.grid.redraw(true)),
   query(nsrs,{run=true}={}){if(nsrs!==undefined)$id('cycleInput').value=Array.isArray(nsrs)?nsrs.join('\n'):String(nsrs);return run?runCycleLookup():parseNsrInput($id('cycleInput').value)},
   snapshot:()=>({rows:state.cycleRows,busy:Boolean(state.cycleAbort)}),cancel,
-  destroy(){state.cycleRun++;if(state.cycleAbort)state.cycleAbort.abort();state.cycleAbort=null;setCycleBusy(false);clearTimeout(state.toastTimer);closeWorkflow();listeners.forEach(([element,event,handler])=>element.removeEventListener(event,handler));}
+  destroy(){state.cycleRun++;if(state.cycleAbort)state.cycleAbort.abort();state.cycleAbort=null;setCycleBusy(false);clearTimeout(state.toastTimer);closeWorkflow();restoreWorkflowFocus();cycleTable?.grid.destroy();workflowTable?.grid.destroy();listeners.forEach(([element,event,handler])=>element.removeEventListener(event,handler));}
 };
 }
 

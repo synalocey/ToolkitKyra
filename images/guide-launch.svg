@@ -1,0 +1,360 @@
+<svg xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif" width="1890" height="2664" viewBox="0 0 1890 2664"><title>ToolKit launch and Part Changes guide</title>
+<desc>Dashboard and SAP Toolbox launch methods, followed by Part Changes illustrations, in guide order.</desc>
+<view id="dashboard-menu" viewBox="0 0 720 392"/>
+<view id="fep-entry" viewBox="0 424 1092 220"/>
+<view id="sap-menu" viewBox="0 676 720 392"/>
+<view id="part-entry" viewBox="0 1100 1890 720"/>
+<view id="part-upload" viewBox="0 1852 1440 305"/>
+<view id="part-results" viewBox="0 2189 1440 475"/>
+<defs>
+      <filter id="menu-shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#203d30" flood-opacity=".13"/></filter>
+      <image id="logo" width="18" height="18" href="data:image/png;base64,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"/>
+      <symbol id="puzzle" viewBox="0 0 24 24"><path d="M3 7h5V5a3 3 0 0 1 6 0v2h5v5h2a3 3 0 0 1 0 6h-2v4h-5v-2a3 3 0 0 0-6 0v2H3z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+      <symbol id="scene" viewBox="0 0 720 392">
+        <rect width="720" height="392" fill="#fff"/>
+        <path d="M0 0h720v29H0z" fill="#1276b5"/>
+        <rect x="7" y="5" width="252" height="30" rx="6" fill="#fff"/>
+        <use href="#logo" x="18" y="8"/>
+        <text x="43" y="21" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#283e32">Home | Lam Research</text>
+        <g fill="none" stroke-width="1.1" stroke-linecap="round"><path d="m240 13 6 6m0-6-6 6" stroke="#596a60"/><path d="M273 13v8m-4-4h8M629 15h10m24-5h9v9h-9zm34 0 9 9m0-9-9 9" stroke="#fff"/></g>
+
+        <path d="M0 29h720v43H0z" fill="#fff"/>
+        <path d="M0 72h720" stroke="#dbe3df"/>
+        <g fill="none" stroke="#65756b" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 45h-9m4-4-4 4 4 4"/><path d="M47 41a6 6 0 1 0 2 7m-1-9 1 4-4-1"/></g>
+
+        <rect x="61" y="35" width="237" height="30" rx="15" fill="#fbfcfb" stroke="#d9e1dc"/>
+        <g fill="none" stroke="#8b9690" stroke-width="1.1"><rect x="73" y="48" width="7" height="7" rx="1"/><path d="M75 48v-3a1.5 1.5 0 0 1 3 0v3"/></g>
+
+        <text x="89" y="54" font-family="Segoe UI, Arial, sans-serif" font-size="10.5" fill="#59685f">https://www.lamresearch.com</text>
+        <g id="browser-tampermonkey-button"><rect x="314" y="34" width="34" height="34" rx="7" fill="#e7ece9" stroke="#6caa92"/><rect x="321" y="42" width="21" height="18" rx="4" fill="#30363a"/><circle cx="327" cy="51" r="3" fill="#fff"/><circle cx="335" cy="51" r="3" fill="#fff"/></g>
+
+        <g id="extensions"><rect x="360" y="34" width="34" height="34" rx="7" fill="#e7ece9" stroke="#6caa92"/><use href="#puzzle" x="366" y="40" width="21" height="21" color="#4d5c53"/></g>
+
+        <g fill="none" stroke="#76857b" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="m425 42 2.2 4.5 5 .7-3.6 3.5.8 5-4.4-2.4-4.4 2.4.8-5-3.6-3.5 5-.7z"/><path d="M456 42h15v14h-15zm5 0v14"/><circle cx="503" cy="46" r="4"/><path d="M496 57c0-7 14-7 14 0"/><path d="M681 43h17v14h-17zm11 0v14"/></g>
+
+        <g fill="#76857b"><circle cx="537" cy="50" r="1.2"/><circle cx="542" cy="50" r="1.2"/><circle cx="547" cy="50" r="1.2"/></g>
+
+        <rect x="578" y="37" width="70" height="27" rx="13.5" fill="#f2f6f9"/><path d="M590 45h10v7h-5l-3 3v-3h-2z" fill="none" stroke="#6c8ba0" stroke-width="1.1"/><text x="607" y="55" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#4a6b80">Chat</text>
+        <path d="M0 73h720v57H0z" fill="#72808a"/>
+        <path d="M0 131h720" stroke="#dce6e0"/>
+        <g transform="translate(17 86) scale(1.8)" style="filter:brightness(0) invert(1)"><use href="#logo"/></g>
+
+        <text x="57" y="111" font-family="Georgia, serif" font-size="22" fill="#fff">Lam Research</text>
+        <text x="24" y="180" font-family="Georgia, serif" font-size="23" fill="#35443e">What does it mean</text>
+        <text x="24" y="210" font-family="Georgia, serif" font-size="21" font-style="italic" fill="#2d9984">to achieve the unthinkable?</text>
+        <g fill="#e1e8e4"><rect x="24" y="238" width="460" height="5" rx="2.5"/><rect x="24" y="254" width="500" height="5" rx="2.5"/><rect x="24" y="270" width="430" height="5" rx="2.5"/></g>
+
+        <text x="24" y="382" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#526159">No matter what innovation means to you, we won’t stop until it’s proven.</text>
+        <g id="browser-extensions-menu" transform="translate(352 29)" font-family="Segoe UI, Arial, sans-serif">
+          <rect x="12" y="49" width="310" height="271" rx="7" fill="#fff" stroke="#dce2df" filter="url(#menu-shadow)"/>
+          <text x="29" y="76" font-size="13" fill="#173c56">Extensions</text>
+          <path d="M13 94h308" stroke="#e7e8e7"/>
+          <text x="29" y="123" font-size="12.5" fill="#173c56">Allow extensions on lamresearch.com</text>
+          <rect x="269" y="108" width="37" height="22" rx="11" fill="#2caa51" stroke="#3b4541" stroke-width="1.6"/><circle cx="295" cy="119" r="8" fill="#fff"/>
+          <rect x="23" y="143" width="288" height="67" rx="5" fill="#f4faf6" stroke="#c5e0d2"/>
+          <rect x="34" y="160" width="17" height="15" rx="3" fill="#171b1e"/><circle cx="39" cy="167.5" r="2.5" fill="#fff"/><circle cx="46" cy="167.5" r="2.5" fill="#fff"/>
+          <rect x="44" y="169" width="8" height="8" rx="2" fill="#f03d44"/><text x="48" y="175" text-anchor="middle" font-size="6.5" font-weight="600" fill="#fff">1</text>
+          <text x="65" y="174" font-size="13" fill="#173c56">Tampermonkey</text><text x="65" y="195" font-size="11.5" fill="#356785">Allowed on all sites</text>
+          <g transform="translate(255 160) rotate(35 8 8)"><path d="M4 2h8l-1 5 3 4H2l3-4-1-5m4 9v7" fill="none" stroke="#526059" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></g>
+
+          <g fill="#4b554f"><circle cx="293" cy="172" r="1"/><circle cx="297" cy="172" r="1"/><circle cx="301" cy="172" r="1"/></g>
+
+          <path d="M13 226h308" stroke="#e7e8e7"/>
+          <use href="#puzzle" x="31" y="243" width="17" height="17" color="#4d5c53"/>
+          <text x="65" y="257" font-size="12.5" fill="#173c56">Manage extensions</text><text x="65" y="292" font-size="12.5" fill="#173c56">Get extensions for Microsoft Edge</text>
+        </g>
+
+        <g id="browser-tampermonkey-menu" transform="translate(-356 39)">
+        <g filter="url(#menu-shadow)"><rect x="422" y="49" width="286" height="271" rx="7" fill="#fff" stroke="#dce2df"/></g>
+
+        <path d="m436 71 4 4 8-9" fill="none" stroke="#4d9d35" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="457" y="76" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#273d30">Enabled</text>
+        <path d="M423 94h284" stroke="#edf0ee" stroke-width="4"/>
+        <rect x="435" y="109" width="18" height="11" rx="5.5" fill="#59a02d"/><circle cx="448" cy="114.5" r="4" fill="#fff"/>
+        <use href="#logo" x="462" y="105"/>
+        <text x="488" y="120" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#273d30">Toolkit Kyra</text>
+        <path d="m689 110 5 5-5 5" fill="none" stroke="#718178" stroke-width="1.5"/>
+        <path d="M423 263h284" stroke="#edf0ee" stroke-width="4"/>
+        <text x="440" y="295" font-family="Segoe UI Emoji, sans-serif" font-size="17">⚙️</text>
+        <text x="467" y="294" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#53675a">Dashboard</text>
+        </g>
+
+      </symbol>
+      <symbol id="commands" viewBox="0 0 720 392">
+        <g transform="translate(-356 39)">
+        <g font-family="Segoe UI Emoji, sans-serif" font-size="18"><text x="444" y="163">🏭</text><text x="444" y="193">🧰</text><text x="444" y="223">📖</text></g>
+
+        <g font-family="Segoe UI, Arial, sans-serif" font-size="13.5" fill="#273d30"><text x="474" y="162">FID &amp; NSR Tracking Dashboard</text><text x="474" y="192">SAP Toolbox</text><text x="474" y="222">Help</text></g>
+
+        </g>
+
+      </symbol>
+    <clipPath id="frame-fep-entry"><rect width="1092" height="220"/></clipPath></defs>
+<!-- dashboard-menu --><g transform="translate(0 0)">
+<use href="#scene"/>
+                <rect x="80" y="180" width="260" height="29" rx="5" fill="#e7f6ef" stroke="#2a9872" stroke-width="1.5"/>
+                <use href="#commands"/>
+                <path d="m326 189 6 6-6 6" fill="none" stroke="#188461" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+<!-- fep-entry --><g transform="translate(0 424)" clip-path="url(#frame-fep-entry)" font-family="Arial, Segoe UI, sans-serif" lang="en">
+<g font-family="Arial, Segoe UI, sans-serif" transform="translate(0 0)">
+  <title id="fep-entry-title">Open FID and NSR Tracking Dashboard from the FEP NSR page</title>
+
+  <desc id="fep-entry-desc">Cropped vector redraw of the FEP Non-Standard Request System page header with a sample user. The red outline highlights the FID and NSR Tracking Dashboard button beside the NSR title in the top bar.</desc>
+
+  <defs>
+    <linearGradient id="fep-entry-sap-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#00b8f1"/>
+      <stop offset="1" stop-color="#0072bb"/>
+    </linearGradient>
+    <filter id="fep-entry-tile-shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity=".10"/>
+    </filter>
+  </defs>
+
+
+  <rect width="1092" height="220" fill="#f7f7f7"/>
+  <rect width="1092" height="54" fill="#354a5f"/>
+  <path d="M26 9h74L62 45H26z" fill="url(#fep-entry-sap-blue)"/>
+  <text x="26" y="37" fill="#fff" font-size="30" font-weight="900" font-style="italic" letter-spacing="-2">SAP</text>
+  <text x="128" y="33" fill="#fff" font-size="20" font-weight="700">NSR</text>
+  <path d="m179 24 7 7 7-7" fill="none" stroke="#dce4eb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="218" y="5" width="346" height="43" rx="1" fill="#efefef" stroke="#9b9b9b"/>
+  <text x="230" y="33" font-size="19">🏭</text>
+  <text x="256" y="33" fill="#000" font-size="17">FID &amp; NSR Tracking Dashboard</text>
+  <rect x="213" y="1.5" width="356" height="50" rx="4" fill="none" stroke="#d83c32" stroke-width="3" vector-effect="non-scaling-stroke"/>
+
+  <rect y="54" width="1092" height="49" fill="#fff"/>
+  <path d="M0 103.5h1092" stroke="#d9d9d9"/>
+  <text x="103" y="86" fill="#2865a3" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="300">Non-Standard Request System</text>
+  <g fill="#6c7276" font-size="18">
+    <text x="919" y="85">Welcome</text>
+    <text x="1007" y="85" font-weight="700">USER</text>
+  </g>
+
+
+  <g fill="#383c40" font-size="20" font-weight="700">
+    <text x="20" y="143">My Data</text>
+    <text x="20" y="416">My Requests</text>
+  </g>
+
+  <g fill="#fff" stroke="#d4d4d4" filter="url(#fep-entry-tile-shadow)">
+    <rect x="20.5" y="156.5" width="221" height="221" rx="5.5"/>
+    <rect x="280.5" y="156.5" width="221" height="221" rx="5.5"/>
+    <rect x="540.5" y="156.5" width="221" height="221" rx="5.5"/>
+    <rect x="20.5" y="429.5" width="221" height="221" rx="5.5"/>
+    <rect x="280.5" y="429.5" width="221" height="221" rx="5.5"/>
+    <rect x="540.5" y="429.5" width="221" height="221" rx="5.5"/>
+    <rect x="20.5" y="689.5" width="221" height="221" rx="5.5"/>
+  </g>
+
+  <g fill="#383c40" font-size="20">
+    <text x="42" y="196">Search</text>
+    <text x="302" y="196">Open Tasks</text>
+    <text x="562" y="196">In Work</text>
+    <text x="42" y="469">Customer Request</text>
+    <text x="302" y="469">Local NSR</text>
+    <text x="562" y="469">Internal Request</text>
+    <text x="42" y="729">Config<tspan x="42" dy="24">(Restricted Access)</tspan></text>
+  </g>
+
+
+  <g fill="none" stroke="#34699e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="54.5" cy="299" r="11"/>
+    <path d="m63 307 7 8" stroke-width="5"/>
+    <path d="m419 287 7 8 8-8m5 0h10v29h-28v-17m6 3h15"/>
+    <path d="M655 298c0-5 3-10 8-11M672 287c5 2 8 6 8 11M663 290v-5h9v5M659 287l1 5m16-5-1 5M655 298h-1l-1 5h30l-1-5h-2m-7 14 4 4 7-9"/>
+    <circle cx="59.5" cy="576" r="16.5"/>
+    <circle cx="59.5" cy="571.5" r="5.5"/>
+    <path d="M49.5 588v-3c0-8 20-8 20 0v3m-24-2 3-4m23 0 3 4"/>
+    <path d="M320 560a13 13 0 1 0-8 24m4-20v8h-7"/>
+    <circle cx="325.5" cy="576" r="5.5"/>
+    <path d="M315.5 592v-3c0-8 20-8 20 0v3z"/>
+    <path d="M43 827a9 9 0 0 1 15 10l14 13-5 5-14-14a9 9 0 0 1-10-6h9l3-4-3-4z"/>
+  </g>
+
+  <g fill="#34699e" aria-hidden="true">
+    <path d="M52 584h15v9H52z"/>
+    <rect x="562" y="567" width="13" height="13" rx=".5"/>
+    <rect x="577" y="558" width="17" height="18" rx=".5"/>
+    <rect x="563" y="582" width="11" height="11" rx=".5"/>
+    <rect x="577" y="578" width="13" height="13" rx=".5"/>
+  </g>
+
+  <g fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m564 574 3 3 6-7m6-8 1 1 2-3m2 2h7m-12 4 1 1 2-3m2 2h7m-12 4 1 1 2-3m2 2h7m-24 14v4m3-7v7m-6-2v2m19-12v10m3-8c-5-3-8 2-3 3s2 6-2 3"/>
+  </g>
+
+  <g fill="#6c7276" font-family="Segoe UI, Arial, sans-serif" font-size="44" font-weight="300">
+    <text x="457" y="317">0</text>
+    <text x="694" y="317">38</text>
+  </g>
+
+</g>
+
+  </g>
+<!-- sap-menu --><g transform="translate(0 676)">
+<use href="#scene"/>
+                <rect x="80" y="210" width="260" height="29" rx="5" fill="#e7f6ef" stroke="#2a9872" stroke-width="1.5"/>
+                <use href="#commands"/>
+                <path d="m326 219 6 6-6 6" fill="none" stroke="#188461" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+<svg x="0" y="1100" xmlns="http://www.w3.org/2000/svg" font-family="Arial, Segoe UI, sans-serif" lang="en" width="1890" height="1564" viewBox="0 0 1890 1564"><title>Part Changes guide</title>
+<desc>Illustrations in the same order as the guide. Examples use fictional data.</desc>
+<defs><clipPath id="frame-part-entry"><rect width="1890" height="720"/></clipPath><clipPath id="frame-part-upload"><rect width="1440" height="305"/></clipPath><clipPath id="frame-part-results"><rect width="1440" height="475"/></clipPath></defs>
+<!-- entry --><g transform="translate(0 0)" clip-path="url(#frame-part-entry)">
+<rect x="0" y="0" width="1890" height="720" fill="#e7e4df"/>
+<rect x="0" y="0" width="1890" height="94" fill="#242435"/>
+<path d="M28 79 62 20 94 79z" fill="#fff"/>
+<path d="M43 51 91 79" fill="none" stroke="#242435" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M44.4 53 91 79" fill="none" stroke="#242435" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M45.8 55 91 79" fill="none" stroke="#242435" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M47.2 57 91 79" fill="none" stroke="#242435" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M48.6 59 91 79" fill="none" stroke="#242435" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M50 61 91 79" fill="none" stroke="#242435" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M51.4 63 91 79" fill="none" stroke="#242435" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="96" y="62" font-size="59" fill="#fff" font-family="Georgia,serif">Lam</text>
+<text x="96" y="79" font-size="17" fill="#fff" font-family="Georgia,serif" letter-spacing="1.5">RESEARCH</text>
+<text x="520" y="57" font-size="20" fill="#fff">Home</text>
+<text x="612" y="57" font-size="20" fill="#fff">Product Explorer</text>
+<text x="797" y="57" font-size="20" fill="#fff">Field Eng. Support</text>
+<text x="1060" y="57" font-size="20" fill="#fff">IB Productivity</text>
+<text x="1218" y="57" font-size="20" fill="#fff">Help</text>
+<path d="m995 43 6 6 6-6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="m1183 43 6 6 6-6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="m1269 43 6 6 6-6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1343" y="22" width="250" height="55" fill="#eee" rx="28"/>
+<text x="1368" y="57" font-size="20" fill="#777">Search MyLam</text>
+<circle cx="1570" cy="48" r="7" fill="none" stroke="#777" stroke-width="3"/><path d="M1575 53l6 6" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1631" cy="33" r="6" fill="#fff"/>
+<path d="M1620 49c0-12 22-12 22 0z" fill="#fff"/>
+<text x="1622" y="73" font-size="18" fill="#fff">KL</text>
+<path d="M1677 28v44" fill="none" stroke="#888" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1698" y="63" font-size="44" fill="#fff" font-weight="700">MyLam</text>
+<rect x="28" y="122" width="556" height="37" fill="#fff" stroke="#aaa" rx="4"/>
+<text x="38" y="147" font-size="18" fill="#222">Tech Articles</text>
+<path d="M570.5 134.66666666666666l7 0-3.5 4.666666666666667z" fill="#3a4c5c"/>
+<rect x="28" y="185" width="1857" height="536" fill="#fff" stroke="#d8d8d8"/>
+<text x="65" y="249" font-size="20" fill="#6f8192" font-weight="700">Filters</text>
+<path d="m138 244 6-5 6 5" fill="none" stroke="#6f8192" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="313" y="260" font-size="20" fill="#6f8192" font-weight="700">Saved Filters</text>
+<rect x="450" y="228" width="275" height="38" fill="#fff" stroke="#aaa" rx="4"/>
+<text x="460" y="253" font-size="18" fill="#222">Select One</text>
+<path d="M709.5 239.66666666666666l7 0-3.5 4.666666666666667z" fill="#3a4c5c"/>
+<rect x="744" y="221" width="187" height="49" fill="#4a4a4a" stroke="#4a4a4a" rx="1"/><text x="837.5" y="245.5" font-size="20" fill="#fff" text-anchor="middle" dominant-baseline="central">Apply</text>
+<rect x="969" y="221" width="187" height="49" fill="#4a4a4a" stroke="#4a4a4a" rx="1"/><text x="1062.5" y="245.5" font-size="20" fill="#fff" text-anchor="middle" dominant-baseline="central">Save Filters</text>
+<rect x="1212" y="219" width="419" height="56" fill="#fff" stroke="#aaa" rx="13"/>
+<text x="1237" y="254" font-size="20" fill="#777">Search within search</text>
+<circle cx="1602" cy="247" r="7" fill="none" stroke="#777" stroke-width="3"/><path d="M1607 252l6 6" fill="none" stroke="#777" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1657" cy="241" r="10" fill="none" stroke="#555" stroke-width="2.2"/>
+<path d="M1657 234v8l5 4m3 3 9 9" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="1683" y="238" width="187" height="50" fill="#4a4a4a" stroke="#4a4a4a" rx="1"/><text x="1776.5" y="263" font-size="20" fill="#fff" text-anchor="middle" dominant-baseline="central">Export To Excel</text>
+<text x="68" y="367" font-size="20" fill="#222">Business Line</text><rect x="68" y="383" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="76" y="408" font-size="18" fill="#777">Select Some Options</text>
+<text x="68" y="462" font-size="20" fill="#222">Tech Article Type</text><rect x="68" y="478" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="76" y="503" font-size="18" fill="#777">Select Some Options</text>
+<text x="513" y="367" font-size="20" fill="#222">Platform</text><rect x="513" y="383" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="521" y="408" font-size="18" fill="#777">Select Some Options</text>
+<text x="513" y="462" font-size="20" fill="#222">Action Required</text><rect x="513" y="478" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="521" y="503" font-size="18" fill="#777">Select Some Options</text>
+<text x="960" y="367" font-size="20" fill="#222">Family</text><rect x="960" y="383" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="968" y="408" font-size="18" fill="#777">Select Some Options</text>
+<text x="960" y="462" font-size="20" fill="#222">Priority</text><rect x="960" y="478" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="968" y="503" font-size="18" fill="#777">Select Some Options</text>
+<text x="1405" y="367" font-size="20" fill="#222">System</text><rect x="1405" y="383" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="1413" y="408" font-size="18" fill="#777">Select Some Options</text>
+<text x="1405" y="462" font-size="20" fill="#222">Software Related</text><rect x="1405" y="478" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="1413" y="503" font-size="18" fill="#777">Select Some Options</text>
+<text x="68" y="558" font-size="20" fill="#222">Language</text><rect x="68" y="574" width="369" height="38" fill="#fff" stroke="#aaa" rx="4"/><text x="76" y="599" font-size="18" fill="#777">English</text>
+<path d="M422.5 586.6666666666666l7 0-3.5 4.666666666666667z" fill="#3a4c5c"/>
+<rect x="48" y="624" width="188" height="49" fill="#4a4a4a" stroke="#4a4a4a" rx="1"/><text x="142" y="648.5" font-size="20" fill="#fff" text-anchor="middle" dominant-baseline="central">Apply Filters</text>
+<text x="294" y="655" font-size="20" fill="#222">Clear Filters</text>
+<rect x="452" y="624" width="438" height="49" fill="#5b6f7a" stroke="#5b6f7a" rx="1"/>
+<text x="485" y="655" font-size="20" font-family="Segoe UI Emoji, Apple Color Emoji, sans-serif">🔩</text>
+<text x="514" y="655" font-size="20" fill="#fff">Find Part Changes Related to TM/PCN</text>
+<rect x="1401" y="379" width="377" height="46" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
+<rect x="43" y="619" width="198" height="59" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
+<rect x="447" y="618" width="448" height="60" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
+<circle cx="423" cy="648" r="19" fill="#fff" stroke="#d83c32" stroke-width="3" vector-effect="non-scaling-stroke"/><text x="423" y="648" font-size="24.7" fill="#d83c32" font-weight="700" text-anchor="middle" dominant-baseline="central">1</text>
+  </g>
+<!-- upload --><g transform="translate(0 752)" clip-path="url(#frame-part-upload)">
+<rect x="0.5" y="0.5" width="1439" height="474" fill="#fff" stroke="#cbd5e1" rx="10"/><text x="21" y="44" font-size="20" fill="#222" font-weight="700">BOM - Part Number Analysis</text><rect x="1233" y="21" width="128" height="32" fill="#7fb3ae" stroke="#7fb3ae" rx="6"/><text x="1297" y="37" font-size="13" fill="#fff" text-anchor="middle" dominant-baseline="central">Download Excel</text><rect x="1370" y="28" width="49" height="19" fill="#eee" stroke="#111" rx="1"/><text x="1394.5" y="37.5" font-size="13" fill="#111" text-anchor="middle" dominant-baseline="central">Close</text>
+<rect x="21" y="65" width="1398" height="90" fill="#f8fafc" stroke="#cbd5e1" rx="8"/>
+<path d="M33 80.33333333333333l8 0-4 5.333333333333333z" fill="#334155"/>
+<text x="46" y="89" font-size="13" fill="#334155" font-weight="600">BOM files SO BOM vs Quote BOM</text>
+<text x="33" y="115" font-size="12" fill="#334155" font-weight="600">SO BOM</text>
+<rect x="33" y="123" width="79" height="20" fill="#eee" stroke="#777" rx="2"/>
+<text x="72.5" y="133" font-size="12" fill="#111" text-anchor="middle" dominant-baseline="central">Choose File</text>
+<text x="117" y="138" font-size="12" fill="#334155">SO BOM - SYSTEM.xlsx</text>
+<text x="622" y="115" font-size="12" fill="#334155" font-weight="600">Quote BOM</text>
+<rect x="622" y="123" width="79" height="20" fill="#eee" stroke="#777" rx="2"/>
+<text x="661.5" y="133" font-size="12" fill="#111" text-anchor="middle" dominant-baseline="central">Choose File</text>
+<text x="706" y="138" font-size="12" fill="#334155">Quote BOM - SYSTEM.xlsx</text>
+<rect x="1212" y="111" width="195" height="32" fill="#526b78" stroke="#526b78" rx="6"/><text x="1309.5" y="127" font-size="13" fill="#fff" text-anchor="middle" dominant-baseline="central">Find Tech Articles for BOM</text>
+<rect x="21" y="167" width="1398" height="199" fill="#fff" stroke="#dce3e8" rx="6"/>
+<rect x="22" y="168" width="1396" height="34" fill="#f8fafc"/>
+<path d="M33 181.33333333333334l8 0-4 5.333333333333333z" fill="#334155"/>
+<text x="46" y="190" font-size="13" fill="#334155" font-weight="600">Tech Articles</text>
+<text x="31" y="223" font-size="13" fill="#222">4/4 documents · 7 unique Part Numbers · 0 failed</text>
+<rect x="22" y="239" width="1396" height="31" fill="#eef5f7"/>
+<text x="31" y="259" font-size="13" fill="#222" font-weight="700">Part Number</text>
+<text x="374" y="259" font-size="13" fill="#222" font-weight="700">Document No.</text>
+<text x="646" y="259" font-size="13" fill="#222" font-weight="700">Title</text>
+<text x="1310" y="259" font-size="13" fill="#222" font-weight="700">Release Date</text>
+<text x="31" y="291" font-size="13" fill="#222">100-000100-001</text>
+<text x="374" y="291" font-size="13" fill="#222">PCN-DEMO-01</text>
+<text x="646" y="291" font-size="13" fill="#007a95" text-decoration="underline">Sample PCN: pump material change</text>
+<text x="1310" y="291" font-size="13" fill="#222">10/19/2026</text>
+<path d="M22 302L1418 302" stroke="#dce3e8" stroke-width="1"/>
+<rect x="28" y="99" width="1383" height="49" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
+<circle cx="18" cy="114" r="13" fill="#fff" stroke="#d83c32" stroke-width="3" vector-effect="non-scaling-stroke"/><text x="18" y="114" font-size="16.900000000000002" fill="#d83c32" font-weight="700" text-anchor="middle" dominant-baseline="central">2</text>
+  </g>
+<!-- results --><g transform="translate(0 1089)" clip-path="url(#frame-part-results)">
+<rect x="0.5" y="0.5" width="1439" height="474" fill="#fff" stroke="#cbd5e1" rx="10"/><text x="21" y="44" font-size="20" fill="#222" font-weight="700">BOM - Part Number Analysis</text><rect x="1233" y="21" width="128" height="32" fill="#0f766e" stroke="#0f766e" rx="6"/><text x="1297" y="37" font-size="13" fill="#fff" text-anchor="middle" dominant-baseline="central">Download Excel</text><rect x="1370" y="28" width="49" height="19" fill="#eee" stroke="#111" rx="1"/><text x="1394.5" y="37.5" font-size="13" fill="#111" text-anchor="middle" dominant-baseline="central">Close</text>
+<rect x="21" y="65" width="1398" height="38" fill="#f8fafc" stroke="#cbd5e1" rx="8"/>
+<path d="M33 80v9l7-4.5z" fill="#334155"/>
+<text x="46" y="89" font-size="13" fill="#334155" font-weight="600">BOM files SO BOM vs Quote BOM</text>
+<rect x="21" y="116" width="1398" height="290" fill="#fff" stroke="#cbd5e1" rx="8"/>
+<rect x="22" y="117" width="1396" height="36" fill="#f1f5f9"/>
+<text x="33" y="141" font-size="14" fill="#334155" font-weight="700">Comparison result — 4 Tech Articles</text>
+<rect x="32" y="163" width="132" height="19" fill="#e2e8f0" rx="10"/>
+<text x="40" y="176" font-size="11" fill="#334155">SO BOM differences: 3</text>
+<rect x="171" y="163" width="151" height="19" fill="#e2e8f0" rx="10"/>
+<text x="179" y="176" font-size="11" fill="#334155">Quote BOM differences: 3</text>
+<rect x="329" y="163" width="145" height="19" fill="#e2e8f0" rx="10"/>
+<text x="337" y="176" font-size="11" fill="#334155">Matching Part Numbers: 6</text>
+<rect x="31" y="190" width="1378" height="206" fill="#fff" stroke="#dce3e8" rx="6"/>
+<rect x="32" y="191" width="1376" height="32" fill="#eef5f7"/>
+<rect x="956" y="223" width="226" height="128" fill="#eff6ff"/>
+<rect x="1182" y="223" width="226" height="128" fill="#ecfdf5"/>
+<text x="39" y="212" font-size="13" fill="#222" font-weight="700">Title</text>
+<text x="707" y="212" font-size="13" fill="#222" font-weight="700">Document No.</text>
+<text x="828" y="212" font-size="13" fill="#222" font-weight="700">Release Date</text>
+<text x="964" y="212" font-size="13" fill="#222" font-weight="700">SO BOM</text>
+<text x="1190" y="212" font-size="13" fill="#222" font-weight="700">Quote BOM</text>
+<text x="39" y="244" font-size="13" fill="#007a95" text-decoration="underline">Sample PCN: pump material change</text>
+<text x="707" y="244" font-size="13" fill="#222">PCN-DEMO-01</text>
+<text x="828" y="244" font-size="13" fill="#222">10/19/2026</text>
+<text x="964" y="244" font-size="13" fill="#222">100-000101-001</text>
+<text x="1190" y="244" font-size="13" fill="#222">100-000201-001</text>
+<path d="M32 254L1408 254" stroke="#dce3e8" stroke-width="1"/>
+<text x="39" y="276" font-size="13" fill="#007a95" text-decoration="underline">Sample Tech Memo: valve replacement</text>
+<text x="707" y="276" font-size="13" fill="#222">TM-DEMO-02</text>
+<text x="828" y="276" font-size="13" fill="#222">10/16/2026</text>
+<text x="964" y="276" font-size="13" fill="#222">100-000102-001</text>
+<text x="1190" y="276" font-size="13" fill="#222">100-000202-001</text>
+<path d="M32 286L1408 286" stroke="#dce3e8" stroke-width="1"/>
+<text x="39" y="308" font-size="13" fill="#007a95" text-decoration="underline">Sample Tech Memo: sensor compatibility</text>
+<text x="707" y="308" font-size="13" fill="#222">TM-DEMO-03</text>
+<text x="828" y="308" font-size="13" fill="#222">10/12/2026</text>
+<text x="964" y="308" font-size="13" fill="#222">100-000103-001</text>
+<text x="1190" y="308" font-size="13" fill="#222"/>
+<path d="M32 318L1408 318" stroke="#dce3e8" stroke-width="1"/>
+<text x="39" y="340" font-size="13" fill="#007a95" text-decoration="underline">Sample PCN: seal kit revision</text>
+<text x="707" y="340" font-size="13" fill="#222">PCN-DEMO-04</text>
+<text x="828" y="340" font-size="13" fill="#222">10/08/2026</text>
+<text x="964" y="340" font-size="13" fill="#222"/>
+<text x="1190" y="340" font-size="13" fill="#222">100-000203-001</text>
+<path d="M32 350L1408 350" stroke="#dce3e8" stroke-width="1"/>
+<rect x="21" y="418" width="1398" height="36" fill="#f8fafc" stroke="#dce3e8" rx="6"/>
+<path d="M33 432v9l7-4.5z" fill="#334155"/>
+<text x="46" y="442" font-size="13" fill="#334155" font-weight="600">Tech Articles</text>
+<rect x="28" y="187" width="1385" height="211" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
+<rect x="1228" y="16" width="138" height="42" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
+<circle cx="1211" cy="37" r="13" fill="#fff" stroke="#d83c32" stroke-width="3" vector-effect="non-scaling-stroke"/><text x="1211" y="37" font-size="16.900000000000002" fill="#d83c32" font-weight="700" text-anchor="middle" dominant-baseline="central">3</text>
+  </g>
+</svg>
+</svg>
