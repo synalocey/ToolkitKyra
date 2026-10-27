@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.10.26
+// @version      26.10.28
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
@@ -47,9 +47,10 @@ function loadExcelJs(){
 
 (function(){
 'use strict';
-const date_v = new Date('20' + GM_info.script.version); const APP_PATH='/k1.png'; const BRIDGE_PATH='/k2.png'; const FCID_PATH='/staceykyra.png'; const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
+const [versionYear,versionMonth,versionDay]=GM_info.script.version.split('.').map(Number);
+const date_v = new Date(2000+versionYear,versionMonth-1,versionDay); const APP_PATH='/k1.png'; const BRIDGE_PATH='/k2.png'; const FCID_PATH='/staceykyra.png'; const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
 const BRIDGE_URLS=[25972,25973,25974,8765].map(port=>'http://127.0.0.1:'+port); let bridgeUrl='',bridgeDiscovery=null;
-const SAPGUICONTROL_DOWNLOAD_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.7z'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
+const SAPGUICONTROL_DOWNLOAD_URL='https://lamresearch-my.sharepoint.com/:u:/p/kyra_long/IQCAPvhOkNDMQ4pOTdowYccSAdE-W_6rbCWzHrdVjAIc7KM?e=baVxbG'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
 const GUIDE_URL='https://synalocey.github.io/ToolkitKyra/guide';
 const FID_DASHBOARD_TITLE='🏭 FID & NSR Tracking Dashboard';
 const DASHBOARD_BASE_CSS=chosenBaseCss+`
@@ -2292,9 +2293,9 @@ const sources={
 
 sources.ctl.label='CTL Report'; const BOBJ_SOURCES={fcid:{label:'FID BOBJ',endpoint:'/excel',file:'BOBJ_FID.xlsm'}, ctl:{label:'CTL BOBJ',endpoint:'/excel/ctl',file:'BOBJ_CTL.xlsm'}};
 const HOSTED_ARCHIVE_URLS=[
-  'https://synalocey.github.io/ToolkitKyra/Stacey1.zip',
-  'https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/Stacey1.zip',
-  'https://github.com/synalocey/ToolkitKyra/raw/refs/heads/main/Stacey1.zip'
+  'https://synalocey.github.io/ToolkitKyra/images/Stacey1.png',
+  'https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/images/Stacey1.png',
+  'https://github.com/synalocey/ToolkitKyra/raw/refs/heads/main/images/Stacey1.png'
 ];
 const HOSTED_PASSWORD_URL='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNameDateTimeSet/?$filter=Userid%20eq%20%27LONGKY%27',HOSTED_SOURCE_PREFIXES={ctlNsr:'c',nce:'n'};
 const SOURCE_DATES={
@@ -2302,6 +2303,7 @@ const SOURCE_DATES={
   nsr:{fields:['Submit Date','Submitted Date','Submission Date'],label:'Submit Date'}, nce:{fields:['Open Date'],label:'Open Date'}
 };
 const CACHE_PREFIX='fcid-governance:'; const store={raw:Object.fromEntries(Object.keys(sources).map(key=>[key,[]])),meta:{},busy:new Set(),refreshing:false,dirty:false,runs:{},controllers:{}};
+const cacheKeys=Object.fromEntries(Object.keys(sources).map(key=>[key,key==='nsr'?'sap-nsr-search':CACHE_PREFIX+(BOBJ_SOURCES[key]?'bobj:':'')+key]));
 const NSR_MARKS_KEY='toolkitKyra.nsr.marks.v1',IGNORED_NSRS_KEY='toolkitKyra.nsr.ignored.v1',FID_MARKS_KEY='toolkitKyra.fid.marks.v1',FID_NOTES_KEY='toolkitKyra.fid.notes.v1',TABLE_ORDERS_KEY='toolkitKyra.table.orders.v1';
 const ignoredNsrs=new Set(),importantNsrs=new Set(),ignoredFids=new Set(),importantFids=new Set();
 const markKinds={
@@ -3370,7 +3372,9 @@ function sourceMessage(key,message,kind='ok',transport=false){
   const target=id('fcSource-'+key),meta=store.meta[key],hasRange=Boolean(meta?.dateFrom&&meta?.dateTo);
   const cutoff=new Date();cutoff.setDate(cutoff.getDate()-3);const stale=hasRange&&meta.dateTo<=nsrData.localDate(cutoff);
   const label=kind==='loading'?(/updat/i.test(message)?'Updating…':'Loading…'):meta?(hasRange?meta.dateFrom+' ~ '+meta.dateTo:'Loaded · no dates'):'Unavailable';
-  target.textContent=label;target.className='fc-source-state '+(kind==='loading'?'loading':meta?'ok':'')+(hasRange?' has-range':'')+(kind!=='loading'&&stale?' stale':'')+(kind==='error'?' error':'');target.title=kind==='error'?message:hasRange?'Data range · '+meta.dateField:message;target.setAttribute('aria-label',label);target.tabIndex=kind==='error'?0:-1;
+  target.textContent=label;target.className='fc-source-state '+(kind==='loading'?'loading':meta?'ok':'')+(hasRange?' has-range':'')+(kind!=='loading'&&stale?' stale':'')+(kind==='error'?' error':'');
+  target.title=meta?.cached&&kind!=='loading'?['Using cache · '+new Date(meta.savedAt).toLocaleString('en-GB'),meta.modifiedAt?(BOBJ_SOURCES[key]?'Workbook updated · ':'Source updated · ')+new Date(meta.modifiedAt).toLocaleString('en-GB'):'',kind==='error'?message:meta.cacheReason].filter(Boolean).join('\n'):kind==='error'?message:hasRange?'Data range · '+meta.dateField:message;
+  target.setAttribute('aria-label',label);target.tabIndex=kind==='error'||meta?.cached?0:-1;
   if(BOBJ_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=kind!=='error'||!transport;if(help.hidden)help.open=false}
 }
 function actionMessage(message){id('fcActionStatus').textContent=message}
@@ -3389,7 +3393,7 @@ async function applySource(key,rows,meta,render=true){
     id('workspaceNav').querySelectorAll('[data-view]').forEach(button=>button.hidden=false);
     showView('portfolio');
   }
-  store.raw[key]=rows;store.meta[key]={...meta,...sourceRange(rows,key,meta),rows:rows.length,savedAt:meta.savedAt||Date.now()};store.dirty=true;sourceMessage(key,'Loaded');sourceMeta(key);if(render&&!store.refreshing)recalculate();
+  store.raw[key]=rows;store.meta[key]={...meta,...(meta.cached&&meta.dateField?{}:sourceRange(rows,key,meta)),rows:rows.length,savedAt:meta.savedAt||Date.now()};store.dirty=true;sourceMessage(key,'Loaded');sourceMeta(key);if(render&&!store.refreshing)recalculate();
 }
 
 
@@ -3410,28 +3414,73 @@ async function downloadHostedArchive(){
   }
   throw new Error('All data download sources failed.\n'+failures.join('\n')+'\nCheck Tampermonkey connection permissions and network/proxy access.');
 }
+async function readSourceCache(key){
+  const cache=await nsrData.readDataset(cacheKeys[key]);
+  if(key==='nsr'&&cache?.schema===1&&!cache.columns){
+    if(!Array.isArray(cache.rows)||!cache.rows.length||!nsrData.validSapDate(cache.from)||!nsrData.validSapDate(cache.to))return null;
+    return {rows:normalizeNsrRows(cache.rows),meta:{file:'NSR cache',kind:'sap',sheet:'SearchNsrSet',from:cache.from,to:cache.to,pages:cache.pages,savedAt:cache.savedAt||Date.now()}};
+  }
+  if(cache?.schema!==2&&(!BOBJ_SOURCES[key]||cache?.schema!==1)||typeof cache.meta?.file!=='string'||!Number.isFinite(cache.meta.savedAt)||cache.meta.savedAt<=0||
+    !Array.isArray(cache.columns)||cache.columns.some(column=>typeof column!=='string')||new Set(cache.columns).size!==cache.columns.length||
+    !Array.isArray(cache.rows)||cache.rows.some(row=>!Array.isArray(row)||row.length!==cache.columns.length)||
+    cache.rows.length&&[key==='nsr'?'NSR#':sources[key].fields.fid.label,sources[key].fields.number?.label].filter(Boolean).some(field=>!cache.columns.includes(field))||
+    key==='ctlNsr'&&(!Array.isArray(cache.meta.rowTimes)||cache.meta.rowTimes.length!==cache.rows.length||cache.meta.rowTimes.some(time=>!Number.isFinite(time)||time<0)))return null;
+  return {rows:cache.rows.map(row=>Object.fromEntries(cache.columns.map((column,index)=>[column,row[index]]).filter(([,value])=>value!==undefined))),meta:{...cache.meta,fields:cache.columns}};
+}
+async function restoreSourceCache(key,run,render=true){
+  if(store.meta[key])return;
+  const cache=await readSourceCache(key);
+  if(cache&&run===store.runs[key])await applySource(key,cache.rows,{...cache.meta,cached:true,cacheReason:''},render);
+}
+async function sourceFailure(key,run,message,transport=false){
+  if(run!==store.runs[key])return;
+  await restoreSourceCache(key,run).catch(()=>{});
+  if(run!==store.runs[key])return;
+  const meta=store.meta[key];if(meta){meta.cached=true;meta.cacheReason=message}
+  sourceMessage(key,message,meta?'ok':'error',transport);
+}
+async function saveSourceCache(key,run){
+  const rows=store.raw[key],{fields,...meta}=store.meta[key],names=new Set(key==='ctlNsr'?fields:[]);
+  if(meta.cacheReadError){sourceMessage(key,'Cache not saved: '+meta.cacheReadError,'error');return}
+  for(const row of key==='nsr'?rows:rows.slice(0,1))for(const column of Object.keys(row))names.add(column);
+  const columns=[...names];
+  try{await nsrData.writeDataset({key:cacheKeys[key],schema:2,columns,rows:rows.map(row=>columns.map(column=>row[column])),meta})}
+  catch(error){if(run===store.runs[key])sourceMessage(key,'Cache not saved: '+error.message,'error')}
+}
+function mergeCtlNsr(rows,time,append=false){
+  const merged=new Map(),previous=store.meta.ctlNsr?.rowTimes||[],keyOf=row=>text(row['CTL ID'])||'\0'+JSON.stringify(row);
+  store.raw.ctlNsr.forEach((row,index)=>merged.set(keyOf(row),{row,time:previous[index]||0}));
+  const incoming=new Map(rows.map(row=>[keyOf(row),row]));
+  for(const [key,row]of incoming){
+    const existing=merged.get(key);
+    if(!existing||append||time>existing.time){merged.delete(key);merged.set(key,{row,time})}
+  }
+  const records=[...merged.values()];return {rows:records.map(record=>record.row),rowTimes:records.map(record=>record.time),fields:[...new Set([...(store.meta.ctlNsr?.fields||[]),...Object.keys(rows[0]||{})])]};
+}
 async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES),force=false){
-  const runs=Object.fromEntries(keys.map(key=>[key,startSource(key)]));keys.forEach(key=>sourceMessage(key,'Loading data…','loading'));
-  const cacheKey=CACHE_PREFIX+'archive',today=nsrData.localDate(new Date());
-  let archivePassword='',cache=null,valid=true,stage='SAP access';
-  const failed=(key,error)=>{valid=false;if(runs[key]===store.runs[key])sourceMessage(key,stage+' failed: '+(error.userMessage||error.message)+'\n'+(archivePassword?'':'Sign in to Fiori. ')+(store.meta[key]?'Previous data retained.':key==='ctlNsr'?'Retry or append a file.':'Retry or import a file.'),'error');};
+  const runs=Object.fromEntries(keys.map(key=>[key,startSource(key)])),today=nsrData.localDate(new Date());keys.forEach(key=>sourceMessage(key,'Loading data…','loading'));
+  const cacheErrors={};let pending=keys,stage='SAP access';
+  const failed=(key,error)=>sourceFailure(key,runs[key],stage+' failed: '+(error.userMessage||error.message)+(stage==='SAP access'&&!store.meta[key]?'\nSign in to Fiori.':''));
   try{
+    await Promise.all(keys.map(key=>restoreSourceCache(key,runs[key],false).catch(error=>{cacheErrors[key]=error.message})));
+    pending=keys.filter(key=>runs[key]===store.runs[key]&&(force||store.meta[key]?.hostedDay!==today));
+    keys.filter(key=>runs[key]===store.runs[key]&&!pending.includes(key)).forEach(key=>sourceMessage(key,'Loaded'));
+    if(!pending.length)return;
+    pending.forEach(key=>sourceMessage(key,'Loading data…','loading'));
     const response=await unsafeWindow.fetch(HOSTED_PASSWORD_URL,{credentials:'same-origin',cache:'no-store',signal:unsafeWindow.AbortSignal.timeout(30000),headers:{Accept:'application/atom+xml,application/xml,text/xml'}});
     if(!response.ok)throw new Error('HTTP '+response.status);
     if((response.headers.get('Content-Type')||'').toLowerCase().includes('text/html'))throw new Error('SAP returned a sign-in page.');
     const doc=new DOMParser().parseFromString(await response.text(),'application/xml');
     if(doc.getElementsByTagName('parsererror').length)throw new Error('SAP returned invalid XML.');
     const properties=[...doc.getElementsByTagNameNS('*','properties')].find(node=>node.getElementsByTagNameNS('*','Userid')[0]?.textContent.trim()==='LONGKY');
-    archivePassword=properties?.getElementsByTagNameNS('*','FullName')[0]?.textContent.replace(/\s+/g,'')||'';
+    const archivePassword=properties?.getElementsByTagNameNS('*','FullName')[0]?.textContent.replace(/\s+/g,'')||'';
     if(!archivePassword)throw new Error('SAP returned no password.');
-    if(keys.every(key=>runs[key]!==store.runs[key]))return;
-    cache=force?null:await nsrData.readDataset(cacheKey).catch(()=>null);
-    if(cache?.day!==today||!cache.bytes?.byteLength)cache=null;
+    if(pending.every(key=>runs[key]!==store.runs[key]))return;
     stage='GitHub download';
-    const archive=cache?.bytes||await downloadHostedArchive();let bytes=archive;if(keys.every(key=>runs[key]!==store.runs[key]))return;
+    let bytes=await downloadHostedArchive();if(pending.every(key=>runs[key]!==store.runs[key]))return;
     stage='Archive decryption';
     if(typeof zip==='undefined')throw new Error('Data reader is unavailable. Import a file manually.');
-    // Keep report filenames inside the encrypted outer ZIP.
+    // zip.js reads the encrypted ZIP appended after the PNG.
     const outer=new zip.ZipReader(new zip.Uint8ArrayReader(new Uint8Array(bytes)),{useWebWorkers:false});
     try{
       const entry=(await outer.getEntries()).find(item=>!item.directory&&item.filename.split(/[\\/]/).pop().toLowerCase()==='data.zip');
@@ -3442,34 +3491,37 @@ async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES),force=
     const reader=new zip.ZipReader(new zip.Uint8ArrayReader(new Uint8Array(bytes)),{useWebWorkers:false});
     try{
       const entries=await reader.getEntries();
-      for(const key of keys){
+      for(const key of pending){
         if(runs[key]!==store.runs[key])continue;
         try{
           stage='Read '+sources[key].label;
           const entry=entries.find(item=>!item.directory&&item.filename.split(/[\\/]/).pop().toLowerCase().startsWith(HOSTED_SOURCE_PREFIXES[key]));
           if(!entry)throw new Error('The data file is missing.');
-          const filename=entry.filename.split(/[\\/]/).pop();
+          const filename=entry.filename.split(/[\\/]/).pop(),modifiedAt=entry.lastModDate?.getTime();
+          if(!Number.isFinite(modifiedAt)||modifiedAt<=0)throw new Error('The data file timestamp is invalid.');
           const data=await entry.getData(new zip.Uint8ArrayWriter(),{checkSignature:true}),parsed=await report.readFile(new File([data],filename),key);
           if(runs[key]!==store.runs[key])continue;
-          const {rows,...recognition}=parsed;await applySource(key,rows,{file:filename,kind:'github',...recognition},false);
-        }catch(error){failed(key,error)}
+          const {rows,...recognition}=parsed,merged=key==='ctlNsr'?mergeCtlNsr(rows,modifiedAt):{rows};
+          await applySource(key,merged.rows,{file:filename,kind:'github',...recognition,modifiedAt,hostedDay:today,savedAt:Date.now(),cacheReadError:cacheErrors[key]||'',...(merged.rowTimes?{rowTimes:merged.rowTimes,fields:merged.fields}:{})},false);
+          await saveSourceCache(key,runs[key]);
+        }catch(error){await failed(key,error)}
       }
     }finally{await reader.close()}
-    if(cache&&!valid)throw new Error('Cached archive is invalid.');
-    if(!cache&&valid&&keys.every(key=>runs[key]===store.runs[key]))await nsrData.writeDataset({key:cacheKey,day:today,bytes:archive}).catch(()=>{});
-  }catch(error){if(cache&&keys.every(key=>runs[key]===store.runs[key]))await loadHostedSources(keys,true);else keys.forEach(key=>failed(key,error))}finally{if(store.dirty&&!store.refreshing)recalculate();keys.forEach(key=>{if(runs[key]===store.runs[key])sourceBusy(key,false)})}
+  }catch(error){await Promise.all(pending.map(key=>failed(key,error)))}finally{if(store.dirty&&!store.refreshing)recalculate();keys.forEach(key=>{if(runs[key]===store.runs[key])sourceBusy(key,false)})}
 }
 async function importSource(file,key){
   const run=startSource(key);sourceMessage(key,'Reading '+file.name+'…','loading');
   try{
-    const parsed=await report.readFile(file,key);let range={};
-    if(key==='nsr'){parsed.rows=normalizeNsrRows(parsed.rows);if(nsrData.validSapDate(parsed.from)&&nsrData.validSapDate(parsed.to))range={from:parsed.from,to:parsed.to};delete parsed.from;delete parsed.to}
+    const parsed=await report.readFile(file,key);let range={savedAt:Date.now()};
+    if(key==='nsr'){parsed.rows=normalizeNsrRows(parsed.rows);if(nsrData.validSapDate(parsed.from)&&nsrData.validSapDate(parsed.to))range={...range,from:parsed.from,to:parsed.to};delete parsed.from;delete parsed.to}
     if(run!==store.runs[key])return;
     if(key==='ctlNsr'){
-      const appendedIds=new Set(parsed.rows.map(row=>text(row['CTL ID'])).filter(Boolean));
-      parsed.rows=[...store.raw[key].filter(row=>!appendedIds.has(text(row['CTL ID']))),...parsed.rows];
+      const savedAt=Date.now(),meta=store.meta[key],merged=mergeCtlNsr(parsed.rows,savedAt,true);parsed.rows=merged.rows;
+      range={rowTimes:merged.rowTimes,fields:merged.fields,hostedDay:meta?.hostedDay||'',modifiedAt:meta?.modifiedAt||0,savedAt,cacheReadError:meta?.cacheReadError||''};
     }
+    if(key==='nce')range.hostedDay=nsrData.localDate(new Date());
     const {rows,...recognition}=parsed;await applySource(key,rows,{file:file.name,kind:'file',...recognition,...range});
+    await saveSourceCache(key,run);
   }catch(error){if(run===store.runs[key])sourceMessage(key,(key==='ctlNsr'?'Append':'Import')+' failed: '+(error.userMessage||error.message)+(store.meta[key]?' Previous data retained.':''),'error')}finally{if(run===store.runs[key]){sourceBusy(key,false);
     id('fcFile-'+key).value=''}}
 }
@@ -3492,12 +3544,17 @@ async function loadBobj(update=false,key='fcid'){
     sourceMessage(key,'Reading BOBJ in the background…','loading'); const bytes=Uint8Array.from(atob(result.contentBase64),character=>character.charCodeAt(0)),parsed=await report.readWorkbook(bytes.buffer,key);
     if(run!==store.runs[key])return;
     const {rows,...recognition}=parsed;await applySource(key,rows,{file:status.outputPath,kind:'bridge',...recognition});
+    let modified=0;
+    try{const data=await bridgeFileRequest('stat',{path:status.outputPath},10000);modified=Number(data.entries?.[0]?.lastModified)||0}catch(_){/* File dates are optional; keep successfully read data. */}
+    if(run!==store.runs[key])return;
+    store.meta[key].modifiedAt=modified;
+    await saveSourceCache(key,run);
+    if(run!==store.runs[key])return;
     if(!update){
-      const data=await bridgeFileRequest('stat',{path:status.outputPath},10000),modified=Number(data.entries?.[0]?.lastModified)||0;
       const date=modified>0?nsrData.localDate(new Date(modified)):'';
       if(date&&date<nsrData.localDate(new Date())&&unsafeWindow.confirm(`${sources[key].label} data is not up to date (last updated: ${date}). Update now? This may take 2-3 minutes.`))setTimeout(()=>document.querySelector(`[data-source-action="${key==='ctl'?'ctl-bobj-update':'bobj-update'}"]`).click(),0);
     }
-  }catch(error){if(run===store.runs[key])sourceMessage(key,error.message+(store.meta[key]&&!error.transport?' Previous data retained.':''),'error',error.transport)}
+  }catch(error){await sourceFailure(key,run,error.message,error.transport)}
   finally{if(run===store.runs[key])sourceBusy(key,false)}
 }
 function setNsrRange(range){nsrRange=range;id('fcNsrFrom').value=range.from;id('fcNsrTo').value=range.to;id('fcNsrTo').min=range.from;id('fcNsrFrom').max=id('fcNsrTo').max=nsrData.localDate(new Date())}
@@ -3505,21 +3562,18 @@ async function loadSharedNsr(useCache=true){
   const key='nsr',run=startSource(key);sourceMessage(key,useCache?'Checking NSR cache…':'Loading NSR…','loading'); const today=nsrData.localDate(new Date());let range={from:id('fcNsrFrom').value,to:id('fcNsrTo').value};
   try{
     if(useCache){
-      const cache=await nsrData.readNsrCache();if(run!==store.runs[key])return;
-      if(cache){
-        range={from:cache.from,to:cache.to};setNsrRange(range);
-        await applySource(key,normalizeNsrRows(cache.rows),{file:'NSR cache',kind:'sap',sheet:'SearchNsrSet',...range,savedAt:cache.savedAt,fields:Object.keys(sources.nsr.fields).filter(name=>name!=='leadTime'&&name!=='workflow')});
-        if(cache.to===today)return;
-        range={from:cache.from,to:today};
+      await restoreSourceCache(key,run).catch(()=>{});if(run!==store.runs[key])return;
+      const meta=store.meta[key];
+      if(meta){
+        if(meta.from&&meta.to){range={from:meta.from,to:meta.to};setNsrRange(range)}
+        if(meta.kind==='file'||meta.to===today)return;
+        range={from:meta.from,to:today};
       }else range=nsrData.sapRange();
     }
     if(!nsrData.validSapDate(range.from)||!nsrData.validSapDate(range.to)||range.from>range.to||range.to>today)throw new Error('Choose a valid NSR date range ending on or before today.');
     const controller=new unsafeWindow.AbortController();store.controllers[key]=controller; const result=await nsrData.fetchSapRows(range,controller.signal);if(run!==store.runs[key])return;
-    let savedAt=Date.now(),cacheError='';
-    try{savedAt=await nsrData.writeNsrCache(result.rows,range,result.pages)}catch(error){cacheError=error.message}
-    if(run!==store.runs[key])return;setNsrRange(range); await applySource(key,normalizeNsrRows(result.rows),{file:'SAP live NSR',kind:'sap',sheet:'SearchNsrSet',...range,savedAt,fields:Object.keys(sources.nsr.fields).filter(name=>name!=='leadTime'&&name!=='workflow')});
-    if(cacheError)sourceMessage(key,'Loaded; shared cache could not be saved. '+cacheError,'error');
-  }catch(error){if(run===store.runs[key])sourceMessage(key,'NSR load failed: '+error.message+(store.meta[key]?' Previous data retained.':''),'error')}
+    setNsrRange(range);await applySource(key,normalizeNsrRows(result.rows),{file:'SAP live NSR',kind:'sap',sheet:'SearchNsrSet',...range,pages:result.pages,savedAt:Date.now()});await saveSourceCache(key,run);
+  }catch(error){await sourceFailure(key,run,'NSR load failed: '+error.message)}
   finally{if(run===store.runs[key]){sourceBusy(key,false);delete store.controllers[key]}}
 }
 async function restoreSources(reset=false){
@@ -3531,8 +3585,8 @@ async function restoreSources(reset=false){
       keys.forEach(key=>{store.runs[key]=(store.runs[key]||0)+1;store.raw[key]=[];delete store.meta[key]; sourceMessage(key,'Not loaded','');sourceMeta(key);sourceBusy(key,true);id('fcFile-'+key).value='';}); setNsrRange(nsrData.sapRange());actionMessage('');
         recalculate();
     }
-    // Manual imports are page-local; discard source caches left by earlier versions.
-    try{await nsrData.deleteDatasets(keys.map(key=>CACHE_PREFIX+key))} catch(error){if(reset)actionMessage('Local source cache could not be reset. '+error.message)} finally{if(reset)keys.forEach(key=>sourceBusy(key,false))}
+    // Retain hosted merged data and BOBJ fallback caches; discard other legacy source caches.
+    try{await nsrData.deleteDatasets([...keys.filter(key=>!HOSTED_SOURCE_PREFIXES[key]).map(key=>CACHE_PREFIX+key),CACHE_PREFIX+'archive'])} catch(error){if(reset)actionMessage('Local source cache could not be reset. '+error.message)} finally{if(reset)keys.forEach(key=>sourceBusy(key,false))}
     if(store.meta.nsr?.from)setNsrRange({from:store.meta.nsr.from,to:store.meta.nsr.to});
     const loads=[];
     for(const key of Object.keys(BOBJ_SOURCES))if(!store.busy.has(key))loads.push(loadBobj(false,key));
@@ -4360,37 +4414,19 @@ const SAP_FIELDS={
   'Temp Id#':['TempId'],'NSR#':['Nsrnum'],'NSR Status':['NsrWorkflowStatus','NsrStatus'],'REF FCID':['RefFcid'], 'NSR Request':['NsrRequest'],'Task Name':['DescriptionTask'],'NSR Title':['NsrTitle','EnggTitle'],'NSR Type':['NsrType'], 'Impacted Sub System':['ImpSubSys'],
     'Initiator':['InitiatedByFn','Requester','InitiatedBy'],'Sales Rep':['SalesRepFn'], 'Sales Ops':['SalesOpsFn','SalesOps'],'Technical Contact':['TechContactFn'],'Customer':['Customer'],'Submit Date':['SubmitDate'], 'NSR Org':['NsrOrg'],'Primary Product':['PrimaryProd']
 };
-const NSR_CACHE_DB='toolkitKyra',NSR_CACHE_DB_VERSION=1,NSR_CACHE_STORE='datasets',NSR_CACHE_KEY='sap-nsr-search',NSR_CACHE_SCHEMA=1;
+const NSR_CACHE_DB='toolkitKyra',NSR_CACHE_DB_VERSION=1,NSR_CACHE_STORE='datasets';let cacheDb;
 
-function openNsrCache(){
-  return new Promise((resolve,reject)=>{
+function openCache(){
+  if(!cacheDb)cacheDb=new Promise((resolve,reject)=>{
     const api=unsafeWindow.indexedDB;if(!api){reject(new Error('IndexedDB is unavailable.'));return}
     const request=api.open(NSR_CACHE_DB,NSR_CACHE_DB_VERSION);let settled=false; request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(NSR_CACHE_STORE))db.createObjectStore(NSR_CACHE_STORE,{keyPath:'key'})};
-    request.onsuccess=()=>{if(settled){request.result.close();return}settled=true;resolve(request.result)}; request.onerror=()=>{if(!settled){settled=true;reject(request.error||new Error('Could not open the NSR cache.'))}};
-    request.onblocked=()=>{if(!settled){settled=true;reject(new Error('The NSR cache is blocked by another page.'))}};
-  });
+    request.onsuccess=()=>{const db=request.result;if(settled){db.close();return}settled=true;db.onversionchange=db.onclose=()=>{db.close();cacheDb=null};resolve(db)}; request.onerror=()=>{if(!settled){settled=true;reject(request.error||new Error('Could not open the data cache.'))}};
+    request.onblocked=()=>{if(!settled){settled=true;reject(new Error('Data cache is blocked by another page.'))}};
+  }).catch(error=>{cacheDb=null;throw error});return cacheDb;
 }
 
-function cachedRequest(request){return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result); request.onerror=()=>reject(request.error||new Error('The NSR cache request failed.'));});}
-function cacheTransactionDone(transaction){return new Promise((resolve,reject)=>{transaction.oncomplete=()=>resolve(); transaction.onerror=()=>reject(transaction.error||new Error('The NSR cache transaction failed.')); transaction.onabort=()=>reject(transaction.error||
-  new Error('The NSR cache transaction was cancelled.'));});}
-
-async function readNsrCache(){
-  const db=await openNsrCache();
-  try{
-    const entry=await cachedRequest(db.transaction(NSR_CACHE_STORE,'readonly').objectStore(NSR_CACHE_STORE).get(NSR_CACHE_KEY));
-    if(!entry||entry.schema!==NSR_CACHE_SCHEMA||!Array.isArray(entry.rows)||!entry.rows.length||!validSapDate(entry.from)||!validSapDate(entry.to))return null;
-    return entry;
-  }finally{db.close()}
-}
-
-async function writeNsrCache(rows,range,pages){
-  const db=await openNsrCache(),savedAt=Date.now();
-  try{
-    const transaction=db.transaction(NSR_CACHE_STORE,'readwrite'); transaction.objectStore(NSR_CACHE_STORE).put({key:NSR_CACHE_KEY,schema:NSR_CACHE_SCHEMA,savedAt:savedAt,from:range.from,to:range.to,pages:Number(pages)||0,rows:rows}); await cacheTransactionDone(transaction);
-      return savedAt;
-  }finally{db.close()}
-}
+function cacheRequest(request){return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('Cache request failed.'))});}
+function cacheDone(transaction){return new Promise((resolve,reject)=>{transaction.oncomplete=resolve;transaction.onerror=()=>reject(transaction.error||new Error('Cache write failed.'));transaction.onabort=()=>reject(transaction.error||new Error('Cache write cancelled.'))});}
 
 function localDate(value){return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;}
 function sapRange(){const today=new Date(),yearAgo=new Date(today.getFullYear()-1,today.getMonth(),today.getDate()); const quarterStart=new Date(yearAgo.getFullYear(),Math.floor(yearAgo.getMonth()/3)*3,1); return {from:localDate(quarterStart),to:localDate(today)};}
@@ -4432,10 +4468,10 @@ async function fetchSapRows(range,signal){
   return {rows,pages};
 }
 
-async function readDataset(key){const db=await openNsrCache(); try{return await cachedRequest(db.transaction(NSR_CACHE_STORE,'readonly').objectStore(NSR_CACHE_STORE).get(key))}finally{db.close()}}
-async function writeDataset(entry){const db=await openNsrCache(); try{const transaction=db.transaction(NSR_CACHE_STORE,'readwrite');transaction.objectStore(NSR_CACHE_STORE).put(entry); await cacheTransactionDone(transaction);}finally{db.close()}}
-async function deleteDatasets(keys){const db=await openNsrCache(); try{const transaction=db.transaction(NSR_CACHE_STORE,'readwrite');keys.forEach(key=>transaction.objectStore(NSR_CACHE_STORE).delete(key)); await cacheTransactionDone(transaction);}finally{db.close()}}
-return {fields:SOURCE_FIELDS,readNsrCache,writeNsrCache,localDate,sapRange,validSapDate,fetchSapRows,readDataset,writeDataset,deleteDatasets};
+async function readDataset(key){return cacheRequest((await openCache()).transaction(NSR_CACHE_STORE,'readonly').objectStore(NSR_CACHE_STORE).get(key))}
+async function writeDataset(entry){const transaction=(await openCache()).transaction(NSR_CACHE_STORE,'readwrite');transaction.objectStore(NSR_CACHE_STORE).put(entry);await cacheDone(transaction)}
+async function deleteDatasets(keys){const transaction=(await openCache()).transaction(NSR_CACHE_STORE,'readwrite');keys.forEach(key=>transaction.objectStore(NSR_CACHE_STORE).delete(key));await cacheDone(transaction)}
+return {fields:SOURCE_FIELDS,localDate,sapRange,validSapDate,fetchSapRows,readDataset,writeDataset,deleteDatasets};
 }
 
 function createNsrRecords(){
