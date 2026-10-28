@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.10.28
+// @version      26.10.29
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
@@ -2264,17 +2264,17 @@ if(document.documentElement.dataset.fcidMounted)return;
 document.documentElement.dataset.fcidMounted='1';document.documentElement.lang='en'; const id=value=>document.getElementById(value); const text=value=>String(value??'').trim();
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character])); const field=(label,aliases=[],required=false)=>({label,aliases:[label,...aliases],required});
 const ctlFields={
-  fid:field('Opportunity ID',['FCID','FID'],true),number:field('CTL ID',['CTL#','CTL Number'],true), change:field('Change Cat',['Change Type','Change Category','CTL Change Type'],true),mcsd:field('MCSD @ Current',['MCSD','Current MCSD']),
+  fid:field('Opportunity ID',['FCID','FID'],true),number:field('CTL ID',['CTL#','CTL Number'],true), change:field('Change Cat',['Change Type','Change Category','CTL Change Type'],true),mcsd:field('MCSD @ Current',['MCSD','Current MCSD']),mcsdCreate:field('MCSD@Create',['MCSD At Create']),rdCreate:field('RD At Create'),mcsdApproval:field('MCSD At SOps Approval'),tsdApproval:field('TSD @ SOPs Approval'),
     srd:field('SRD @ Current',['Sales Ops RD','Current SRD','SRD']), slotSrd:field('SRD @ SOPs Approval',['SRD at SOPs Approval']),approved:field('1st SOps Appr Dt',['Sales Ops Approval Date','SOPS Approval Date']), created:field('Create Date',['Creation Date']),
     initiator:field('Initiator',['Created By','Initiated By','Requester']),businessUnit:field('Business Unit',['BU']),modified:field('Last Modified Date',['Modified Date']), summary:field('Change Summary',['Summary']),mfg:field('Mfg Upgrade Type',['Manufacturing Upgrade Type']),
     stage:field('Stage',['CTL Stage']),quote:field('Quote ID',['Quote Number']),customer:field('Customer group 2',['Customer','Customer Name','End Customer']),configFrz:field('Config Frz@Current',['Config Frz','Config Frozen Date','Config Freeze Date']),rootCause:field('Root Cause',['Root Cause of Late Change']),notes:field('Notes',['CTL Notes']),subReason:field('Sub Reason')
 };
 const sources={
   fcid:{label:'FID Database',sheet:'BOBJ',fields:{
-    fid:field('FID',['FCID','Field ID'],true),commit:field('Commit: Field',['Commit Field','Field Commit','Commit Status'],true), calendarQuarter:field('Time: Calendar Quarter',['Calendar Quarter','Cal Quarter','Quarter']),
+    fid:field('FID',['FCID','Field ID'],true),commit:field('Commit: Field',['Commit Field','Field Commit','Commit Status'],true),
     account:field('Account Group',['Account Team','Sales Territory','AT']),businessUnit:field('Business Unit',['BU']),fab:field('Fab Name',['Fab']),fabSegment:field('Fab Segment',['Fab_Segment']), customer:field('Customer',['Customer Name','End Customer']),
     description:field('FID Description'),system:field('System Description',['System Desc','System']),quote:field('Active Quote Number',['Quote Number','Active Quote']),crd:field('Date: Customer Request',['Customer Request Date']),targetShip:field('Date: Target Ship',['Target Ship Date','Target Ship']),mcsd:field('Date: Mfg Commit Ship',['Mfg Commit Ship',
-      'Manufacturing Commit Ship Date','MCSD']), rd:field('Date: Sales Ops Request Date (RD)',['Sales Ops Request Date','Sales Ops RD','RD']),mfg:ctlFields.mfg
+      'Manufacturing Commit Ship Date','MCSD']), rd:field('Date: Sales Ops Request Date (RD)',['Sales Ops Request Date','Sales Ops RD','SRD','RD']),mfg:ctlFields.mfg
   }},
   ctl:{label:'CTL BOBJ',sheet:'CTL BOBJ',fields:ctlFields},
   ctlNsr:{label:'CTL-NSR List',sheet:'export',fields:{...ctlFields, fid:field('FCID',['FID','Opportunity ID'],true),change:field('Change Type',['Change Cat','CTL Change Type'],true),mcsd:field('MCSD',['MCSD @ Current']),srd:field('Sales Ops RD',
@@ -2318,16 +2318,19 @@ for(const [kind,config]of Object.entries(markKinds))try{
 let fidNotes={};
 try{const saved=GM_getValue(FID_NOTES_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;fidNotes=Object.fromEntries(Object.entries(parsed||{}).filter(([fid,note])=>markKinds.fid.pattern.test(fid)&&typeof note==='string'&&note.trim()).map(([fid,note])=>[fid,note.replace(/\r\n?/g,'\n')]))}catch(_){/* Keep source data available when notes cannot be read. */}
 let tableOrders={};
-try{const saved=GM_getValue(TABLE_ORDERS_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))tableOrders=Object.fromEntries(Object.entries(parsed).filter(([,order])=>Array.isArray(order)&&order.every(label=>typeof label==='string')).map(([name,order])=>[name,[...new Set(order)]]))}catch(_){/* Invalid preferences leave the default column order available. */}
+try{const saved=GM_getValue(TABLE_ORDERS_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))tableOrders=Object.fromEntries(Object.entries(parsed).filter(([,order])=>Array.isArray(order)&&order.every(label=>typeof label==='string')).map(([name,order])=>[name,[...new Set(order.map(label=>label.replace(/^Calendar (?=Quarter$)/,'')))]]))}catch(_){/* Invalid preferences leave the default column order available. */}
 if(tableOrders.ctlTable){
   tableOrders.ctlTable=tableOrders.ctlTable.map(label=>label==='Created'?'Created Date':label);
-  for(const [label,after]of [['Elapsed Days','Created Date'],['CTL Notes','Root Cause'],['Sub Reason','CTL Notes']])if(!tableOrders.ctlTable.includes(label)&&tableOrders.ctlTable.includes(after))tableOrders.ctlTable.splice(tableOrders.ctlTable.indexOf(after)+1,0,label);
+  for(const [label,after]of [['Elapsed Days','Created Date'],['CTL Notes','Root Cause'],['Sub Reason','CTL Notes'],
+    ['RD At Create','Sales Ops Approval'],['MCSD@Create','RD At Create'],['SRD @ SOPs Approval','MCSD@Create'],['MCSD At SOps Approval','SRD @ SOPs Approval'],['TSD @ SOPs Approval','MCSD At SOps Approval'],['SRD @ Current','TSD @ SOPs Approval'],['MCSD @ Current','SRD @ Current'],['Mfg Upgrade Type','Config Frz']
+  ])if(!tableOrders.ctlTable.includes(label)&&tableOrders.ctlTable.includes(after))tableOrders.ctlTable.splice(tableOrders.ctlTable.indexOf(after)+1,0,label);
+  for(const [label,before]of [['Change Summary','Root Cause'],['Reason for Chg','Sub Reason']])if(!tableOrders.ctlTable.includes(label)&&tableOrders.ctlTable.includes(before))tableOrders.ctlTable.splice(tableOrders.ctlTable.indexOf(before),0,label);
 }
 const nsrData=createNsrDataService((range,count)=>sourceMessage('nsr',`Loading SAP · ${range.from} to ${range.to} · ${count} rows`,'loading')); let nsrRange=nsrData.sapRange();
 const nsrRecords=createNsrRecords(),accountMapping=createFidAccountMapping(),report=createFidSourceReaders(sources);
 const gridModule={exports:{}};new Function('module','exports',GM_getResourceText('tabulatorJs'))(gridModule,gridModule.exports);const Tabulator=gridModule.exports;
 const filterDefs=[
-  ['fAccount','Account','account','common'],['fQuarter','Calendar Quarter','quarter','fid'],['fOwner','FID Owner','owner','fidOwner'],
+  ['fAccount','Account','account','common'],['fQuarter','Quarter','quarter','fid'],['fOwner','FID Owner','owner','fidOwner'],
   ['fCustomer','FID Customer','customer','fid'],['fSystem','System Description','system','fid'],['fBusinessUnit','Business Unit','businessUnit','fid'],['fSalesAdmin','Sales Admin','salesAdmin','fidSalesAdmin'],
   ['fSlotInitiator','Slot Initiator','slot.initiator','fidSlot'],['fFidStatus','FID Status','fidStatus','fidCtl'],['fRisk','Risk Drivers','riskType','fidRisk'],
   ['fCtlStage','CTL Stage','ctl.stage','ctl'],['fCtlInitiator','CTL Initiator','ctl.initiator','ctl'],['fCtlCreatedDate','CTL Created Date','ctl.created','ctl'],['fCtlChange','CTL Type','ctl.change','ctl'],['fCtlCustomer','CTL Customer','ctl.customer','ctl'],
@@ -2343,6 +2346,7 @@ function ctlDateRange(period){
 }
 const ownerHint="Inferred from CTL/NSR records based on the highest operation count, with the Slot Initiator preferred when counts are equal. For reference only; may be inaccurate.";
 const salesAdminHint="Inferred from Pull/Push CTL records based on the highest operation count. For reference only; may be inaccurate.";
+const quarterHint="Quarter prioritizes current MCSD (SRD fallback). Approved Drop snapshots add quarters when created within 19 weeks of MCSD@Create (RD At Create fallback); overdue snapshots remain eligible. An original rejected attempt can supply the paired creation date and snapshot. Drop quarters never replace the current quarter. Additional Initial Slot, cross-quarter Pull and Push MCSD@Create quarters require approval from the preceding fiscal quarter onward. Initial Slot uses Initial MCSD, then Initial SRD. With current MCSD, RD-based Pulls need matching creation MCSD; early RD-only Push plans need stronger corroboration. Existing supported Push/history quarters remain; source quarter labels alone are insufficient. Supported split deliveries can add quarters. Membership is independent of Late. Selected quarters count each FID once; any Late wins. Summary evaluates each quarter separately. Inferred quarters may differ from HQ.";
 const inferenceHelp=tip=>`<span class="inference-help" title="" aria-label="${escapeHtml(tip)}"></span>`;
 const lifecycleNames={'open':'Pending NSR','discarded':'Cancelled / Rejected','completed-5d':'Completed 5D NSR','completed-unlinked':'Completed NSR but no CTL','ctl-pending':'CTL pending approval','implemented':'CTL approved','ctl-unavailable':'CTL status unknown',ignore:'⊘ Ignore','ignore-completed':'⊘ Ignore',important:'★ Star'};
 const markLabels={all:'All',normal:'Unmarked',ignore:'⊘ Ignore',important:'★ Star'},markOptions=['important','ignore','normal'];
@@ -2377,9 +2381,9 @@ function selectTaskFilter(kind,key,types){
   }else changeFilter(path,key==='all'?[]:active?selected.filter(value=>!parts.includes(value)):[...selected,...parts]);
 }
 function normalizeNsrTasks(values){const selected=[...new Set(values)],previous=filterValues['nsr.taskStatus']||[];if(selected.includes('15-Completed')&&selected.some(value=>Object.hasOwn(nsrCompletedTasks,value)))return selected.filter(value=>!previous.includes('15-Completed')?!Object.hasOwn(nsrCompletedTasks,value):value!=='15-Completed');return selected}
-const fidStatusNames={'no-slot':'No Slot','slot-ready':'Slotted FID','stable-slot':'Stable Slot','late-slot':'Late Slot','stable-ctl':'Stable CTL/NSR','late-ctl-nsr':'Late CTL/NSR','late-ctl':'Late CTL','open-nsr':'Late NSR','slot-unknown':'Slot status unknown','slot-date-unknown':'Slot date unknown','ctl-unknown':'CTL/NSR status unknown','risk-fid':'Risk FID','risk-free':'No Late Flags','risk-unknown':'Risk Status Unknown','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'No Slot · drop slot'};
-const fidCellNames={'stable-slot|stable-ctl':'No Late Flags (Stable Slot & CTL/NSR)','late-slot|stable-ctl':'Late Slot with Stable CTL/NSR','stable-slot|late-ctl-nsr':'Stable Slot with Late CTL/NSR','late-slot|late-ctl-nsr':'Late Slot with Late CTL/NSR','stable-slot|ctl-unknown':'Stable Slot · CTL/NSR unknown','late-slot|ctl-unknown':'Late Slot · CTL/NSR unknown','slot-date-unknown|stable-ctl':'Slot date unknown · Stable CTL/NSR','slot-date-unknown|late-ctl-nsr':'Late CTL/NSR · Slot unknown','slot-date-unknown|ctl-unknown':'Slot & CTL/NSR status unknown'};
-const fidCauseNames={'late-ctl':'Late CTL','open-nsr':'Late NSR','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'No Slot · drop slot'};
+const fidStatusNames={'no-slot':'No Slot','slot-ready':'Slotted FID','stable-slot':'Stable Slot','late-slot':'Late Slot','stable-ctl':'Stable CTL','late-ctl-nsr':'Late CTL','late-ctl':'Late CTL','slot-unknown':'Slot status unknown','slot-date-unknown':'Slot date unknown','ctl-unknown':'CTL status unknown','risk-fid':'Risk FID','risk-free':'Stable Slot & CTL','risk-unknown':'Risk Status Unknown','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'Slotted FID · drop slot'};
+const fidCellNames={'stable-slot|stable-ctl':'Stable Slot & CTL','late-slot|stable-ctl':'Late Slot with Stable CTL','stable-slot|late-ctl-nsr':'Stable Slot with Late CTL','late-slot|late-ctl-nsr':'Late Slot with Late CTL','stable-slot|ctl-unknown':'Stable Slot · CTL unknown','late-slot|ctl-unknown':'Late Slot · CTL unknown','slot-date-unknown|stable-ctl':'Slot date unknown · Stable CTL','slot-date-unknown|late-ctl-nsr':'Late CTL · Slot unknown','slot-date-unknown|ctl-unknown':'Slot & CTL status unknown'};
+const fidCauseNames={'slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'Slotted FID · drop slot'};
 const fidCauseKeys=Object.keys(fidCauseNames);
 const fidSelection={order:[],groups:{}};
 const css=GM_getResourceText('tabulatorCss')+DASHBOARD_BASE_CSS+`
@@ -2387,8 +2391,8 @@ body.fcid-app{--side:370px;--fid-ink:#2458a6;--fid-tint:#eaf1ff;--fid-line:#bed0
 .fc-hero{padding:15px 18px;background:linear-gradient(110deg,#e8f3ff,#f0ebff 57%,#fff0e4);border-bottom:1px solid #ccd9ed}.fc-hero-inner{max-width:1900px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px}.fc-brand{font-size:12px;letter-spacing:1.5px;color:#4d5b89}.fc-hero h1{font-size:27px;margin-top:3px;letter-spacing:-.5px}.fc-heading{display:flex;align-items:center;gap:13px}#fcToggleSide{font-size:21px;padding:4px 10px;line-height:1.3}
 .fcid-app .layout{max-width:1948px;margin:auto;display:grid;grid-template-columns:var(--side) minmax(0,1fr);gap:14px;padding:14px;align-items:start}.fcid-app .main{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.fcid-app .side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin;padding:13px;min-width:0}.side-collapsed .layout{grid-template-columns:minmax(0,1fr)}.side-collapsed .side{display:none}
 .fc-source{position:relative;border:1px solid #dce7ed;background:#fbfdfe;border-radius:9px;padding:9px 8px;margin-top:8px}.fc-source-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:7px}.fc-source h3{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;color:#24364b}.fc-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fc-source-bobj{flex:none;border:1px solid #d5e0e8;border-radius:4px;padding:1px 4px;color:#64748b;font-size:9px;font-weight:600}.fc-source-number{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;background:#376bd2;color:#fff;border-radius:6px;font-size:12px;font-weight:600}.fc-source[data-source=ctl] .fc-source-number{background:#8152bf}.fc-source[data-source=ctlNsr] .fc-source-number{background:#a85c07}.fc-source[data-source=nsr] .fc-source-number{background:#bf3d74}.fc-source[data-source=nce] .fc-source-number{background:#087e70}.fc-source-state{display:inline-flex;align-items:center;gap:5px;flex:none;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}.fc-source-state.has-range{max-width:none}.fc-source-state::before{content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:#94a3b8}.fc-source-state.ok{color:#166534}.fc-source-state.ok::before{background:#158653}.fc-source-state.stale{color:#d97706}.fc-source-state.stale::before{background:#d97706}.fc-source-state.loading{color:#92400e}.fc-source-state.loading::before{background:#d97706}.fc-source-state.error{cursor:help}.fc-source-toolbar{display:flex;align-items:center;gap:6px;min-width:0}.fc-source-toolbar>.btn{flex:none}.fc-source-file{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5}.fc-source-help{position:relative}.fc-source-help summary{list-style:none}.fc-source-help-bubble{position:absolute;right:0;top:30px;width:235px;z-index:30;padding:10px;background:#fff;border:1px solid #c4d0e4;border-radius:8px;box-shadow:0 8px 26px #23395630;font-size:12px}.fc-source-help a,.fc-nsr-help a{color:#265dbb}.fc-note{font-size:12px;color:#a73047;white-space:pre-line}.fc-note:empty{display:none}
-.filter-head{display:flex;align-items:center;justify-content:space-between;margin:17px 0 10px}.fc-filter{margin-top:9px}.filter-head h2{font-size:18px;color:#30445f}.fc-filter[data-filter-needs=common]{--filter-ink:#52647d;--filter-tint:#f4f6fa;--filter-line:#cbd5e1}.fc-filter[data-filter-needs^=fid]{--filter-ink:var(--fid-ink);--filter-tint:var(--fid-tint);--filter-line:var(--fid-line)}.fc-filter[data-filter-needs=nsr]{--filter-ink:var(--nsr-ink);--filter-tint:var(--nsr-tint);--filter-line:var(--nsr-line)}.fc-filter label{display:block;font-size:12px;font-weight:600;color:var(--filter-ink,#435775);margin-bottom:4px}.fc-filter select{font-size:12px;width:100%;min-height:32px;border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:5px;background:#fff;color:var(--filter-ink,#263e60)}.fc-filter .chosen-container,.fc-filter .chosen-container-multi .chosen-choices li.search-field input.chosen-search-input{font-size:12px}.fc-filter .chosen-choices{border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:2px;background:#fff;box-shadow:none;min-height:32px}.fc-filter .chosen-choices li.search-choice{color:var(--filter-ink,#294c88);background:var(--filter-tint,#e8effd);border-color:var(--filter-line,#bacdee);padding:4px 22px 4px 6px}.fc-filter .chosen-results li{font-size:12px;line-height:1.4;padding:5px 7px}.fc-filter .chosen-results li.highlighted{background:var(--filter-ink,#2f64ca);color:#fff}.fc-filter input::placeholder{color:#526782}.fc-filter-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.fc-filter-head>label{min-width:0;margin-bottom:0}.fc-filter-actions{display:flex;flex:none;gap:6px;justify-content:flex-end}.fc-filter-actions button{border:0;background:none;color:var(--filter-ink,#365c97);font-size:12px;padding:1px 2px;cursor:pointer}.fcid-app .filter-group-title{font-size:16px;font-weight:600;color:var(--fid-ink);border-top:1px solid #dde5f1;margin-top:18px;padding-top:13px}.filter-group-title[data-filter-needs=nsr]{color:var(--nsr-ink);border-top-color:var(--nsr-line)}.fc-filter.primary-filter{border-left:3px solid var(--filter-line,#83a8e8);padding:7px 8px;background:var(--filter-tint,#f1f5fd);border-radius:0 6px 6px 0}.fc-filter.primary-filter .fc-filter-head>label{color:var(--filter-ink,#2f5590)}.quick-search,.fid-lookup input{width:100%;border:1px solid #cbd6e6;border-radius:6px;padding:7px;color:#243b5c;font-size:13px}.quick-search{resize:vertical;min-height:52px}.nsr-year-picks{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.nsr-year-picks button{font-size:12px;border:1px solid var(--filter-line,#cbd8e9);border-radius:5px;color:var(--filter-ink,#405a80);background:var(--filter-tint,#f4f7fc);padding:2px 6px;cursor:pointer}.nsr-year-picks button.active{background:var(--filter-ink,#315b96);border-color:var(--filter-ink,#315b96);color:#fff}.nsr-year-picks button.partial{background:#eaf3fc;border-color:#8db3d9;color:#285982}
-.fid-lookup{display:flex;align-items:center;gap:7px}.fid-lookup input{flex:1;min-width:0;width:0}.fid-lookup .btn{flex:none;padding:6px 8px}
+.filter-head{display:flex;align-items:center;justify-content:space-between;margin:17px 0 10px}.fc-filter{margin-top:9px}.filter-head h2{font-size:18px;color:#30445f}.fc-filter[data-filter-needs=common]{--filter-ink:#52647d;--filter-tint:#f4f6fa;--filter-line:#cbd5e1}.fc-filter[data-filter-needs^=fid]{--filter-ink:var(--fid-ink);--filter-tint:var(--fid-tint);--filter-line:var(--fid-line)}.fc-filter[data-filter-needs=nsr]{--filter-ink:var(--nsr-ink);--filter-tint:var(--nsr-tint);--filter-line:var(--nsr-line)}.fc-filter label{display:block;font-size:12px;font-weight:600;color:var(--filter-ink,#435775);margin-bottom:4px}.fc-filter select{font-size:12px;width:100%;min-height:32px;border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:5px;background:#fff;color:var(--filter-ink,#263e60)}.fc-filter .chosen-container,.fc-filter .chosen-container-multi .chosen-choices li.search-field input.chosen-search-input{font-size:12px}.fc-filter .chosen-choices{border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:2px;background:#fff;box-shadow:none;min-height:32px}.fc-filter .chosen-choices li.search-choice{color:var(--filter-ink,#294c88);background:var(--filter-tint,#e8effd);border-color:var(--filter-line,#bacdee);padding:4px 22px 4px 6px}.fc-filter .chosen-results li{font-size:12px;line-height:1.4;padding:5px 7px}.fc-filter .chosen-results li.highlighted{background:var(--filter-ink,#2f64ca);color:#fff}.fc-filter input::placeholder{color:#526782}.fc-filter-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.fc-filter-head>label{min-width:0;margin-bottom:0}.fc-filter-actions{display:flex;flex:none;gap:6px;justify-content:flex-end}.fc-filter-actions button{border:0;background:none;color:var(--filter-ink,#365c97);font-size:12px;padding:1px 2px;cursor:pointer}.fcid-app .filter-group-title{font-size:16px;font-weight:600;color:var(--fid-ink);border-top:1px solid #dde5f1;margin-top:18px;padding-top:13px}.filter-group-title[data-filter-needs=nsr]{color:var(--nsr-ink);border-top-color:var(--nsr-line)}.fc-filter.primary-filter{border-left:3px solid var(--filter-line,#83a8e8);padding:7px 8px;background:var(--filter-tint,#f1f5fd);border-radius:0 6px 6px 0}.fc-filter.primary-filter .fc-filter-head>label{color:var(--filter-ink,#2f5590)}.quick-search{width:100%;border:1px solid #cbd6e6;border-radius:6px;padding:7px;color:#243b5c;font-size:13px}.quick-search{resize:vertical;min-height:52px}.nsr-year-picks{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.nsr-year-picks button{font-size:12px;border:1px solid var(--filter-line,#cbd8e9);border-radius:5px;color:var(--filter-ink,#405a80);background:var(--filter-tint,#f4f7fc);padding:2px 6px;cursor:pointer}.nsr-year-picks button.active{background:var(--filter-ink,#315b96);border-color:var(--filter-ink,#315b96);color:#fff}.nsr-year-picks button.partial{background:#eaf3fc;border-color:#8db3d9;color:#285982}
+.fid-lookup{display:flex;align-items:center;gap:7px}.fid-lookup textarea{flex:1;min-width:0;width:0}.fid-lookup .btn{flex:none;padding:6px 8px}
 .fc-filter[data-filter-needs] .chosen-drop{border-color:var(--filter-line)}.fc-filter[data-filter-needs] .chosen-container-active .chosen-choices{border-color:var(--filter-ink);box-shadow:0 0 0 2px var(--filter-tint)}
 body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fc-filter[data-filter-needs=ctl]{--filter-ink:var(--ctl-ink);--filter-tint:var(--ctl-tint);--filter-line:var(--ctl-line)}.filter-group-title[data-filter-needs=ctl]{color:var(--ctl-ink);border-top-color:var(--ctl-line)}
@@ -2477,7 +2481,8 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fid-matrix-cell[data-assessment=risk-unknown]{background:#f3f5f8;color:#536275}
 .fid-matrix-cell small{font-size:12px;line-height:1.45;font-weight:600;white-space:normal}.fid-matrix-cell b{font-size:26px;line-height:1.2;font-weight:600;margin:2px 0}.fid-matrix-cell .fid-percent{font-size:14px;line-height:1.4;color:#52657e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .fid-selection-outline{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:2}
-.fid-overview :is(.nsr-kpi,.fid-risk-label,.fid-cause-list button)[aria-pressed=true],.fid-no-slot:has(>.fid-no-slot-main[aria-pressed=true]){outline:2px solid #3566b0;outline-offset:2px}
+.fid-overview :is(.nsr-kpi,.fid-risk-label)[aria-pressed=true],.fid-no-slot:has(>.fid-no-slot-main[aria-pressed=true]){outline:2px solid #3566b0;outline-offset:2px}
+.fid-slotted:has(>.fid-slotted-main[aria-pressed=true]){outline:2px solid #c75970;outline-offset:2px}
 .fid-overview button:is(.fid-aggregate,.fid-risk-label)[aria-pressed=true]{outline-color:#c75970}
 .fid-overview [data-fid-status=all][aria-pressed=true]{outline-color:#94a3b8}
 .fid-axis-item:has(>.nsr-kpi[aria-pressed=true]){z-index:2}
@@ -2491,15 +2496,6 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fid-pre-axis::before,.fid-post-axis::before{content:'';position:absolute;background:#9cb1ca}.fid-pre-axis::before{height:1px;left:0;right:4px}.fid-post-axis::before{width:1px;top:4px;bottom:0}
 .fid-pre-axis::after,.fid-post-axis::after{content:'';position:absolute;width:6px;height:6px;border-top:1px solid #718fb2;border-right:1px solid #718fb2}.fid-pre-axis::after{right:2px;transform:rotate(45deg)}.fid-post-axis::after{top:2px;transform:rotate(-45deg)}
 .fid-pre-axis span,.fid-post-axis span{position:relative;background:#fff;padding:0 10px;white-space:nowrap}.fid-post-axis span{writing-mode:vertical-rl;transform:rotate(180deg);padding:10px 0}
-.fid-late-causes{flex-direction:column;background:#f4f7fb}
-.fid-breakdown .fid-late-causes:first-child{border-radius:9px 9px 0 0}.fid-breakdown .fid-late-causes:last-of-type{border-radius:0 0 9px 9px}
-.fid-flow .fid-late-causes>.nsr-kpi{flex:1;padding:6px 10px 2px}.fid-flow .fid-late-causes>.nsr-kpi b{margin:2px 0}
-.fid-overview .fid-late-causes:has(>.nsr-kpi[aria-pressed=true]){outline:2px solid #c75970;outline-offset:2px}.fid-overview .fid-late-causes>.nsr-kpi[aria-pressed=true]{outline:none}
-.fid-causes{margin:0 10px 6px;color:#64748b;font-size:11px;line-height:1.45}
-.fid-causes summary{width:fit-content;padding:1px 0;cursor:pointer}.fid-causes summary::marker{font-size:9px;color:#8190a4}.fid-causes summary:hover{color:#405972}.fid-causes summary>span:last-child,.fid-causes[open] summary>span:first-child{display:none}.fid-causes[open] summary>span:last-child{display:inline}
-.fid-cause-list{margin-top:4px;border-radius:3px}.fid-cause-list button{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-width:0;border:0;border-radius:3px;padding:2px 4px;background:none;color:#53657d;font:inherit;font-size:12px;cursor:pointer}
-.fid-cause-list button small{font:inherit}.fid-cause-list b{font-weight:600;font-variant-numeric:tabular-nums}.fid-cause-list .fid-percent{display:none}
-.fid-cause-list button:hover{background:#e9eff6}.fid-cause-list button[aria-pressed=true]{background:#edf2f6;color:#425b70}
 .fid-flow .nsr-kpi{position:relative;display:flex;flex-direction:column;justify-content:center;padding:10px}
 .fid-flow .nsr-kpi b{font-size:26px;margin:4px 0 2px;white-space:nowrap}
 .fid-flow .nsr-kpi small{white-space:normal}
@@ -2511,14 +2507,16 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fid-flow-inner.has-breakdown .fid-equation>:is([data-fid-status=all],.fid-no-slot) small{margin-bottom:20px}
 .fid-flow [data-fid-status=slot-ready] .fid-percent{white-space:nowrap}
 .fid-slot-sum .fid-percent,.fid-breakdown .fid-percent{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4}
-.fid-flow [data-fid-status=slot-ready]{background:#eff5ff;border-color:#9fbae7;justify-content:center;padding-top:10px}
+.fid-flow .fid-slotted{background:#eff5ff;border-color:#9fbae7;justify-content:center;padding-top:10px;--subcount-line:#cbdaf0;--subcount-ink:#456487}
 .fid-no-slot{cursor:default;background:#fff1cf;border-color:#e4c381;border-top-color:#c58b2a}.fid-no-slot .fid-no-slot-main small,.fid-no-slot .fid-percent{color:var(--kpi-color)}
-.fid-no-slot-main{position:relative;display:flex;flex-direction:column;align-items:stretch;width:100%;border:0;background:none;padding:0;color:inherit;text-align:left;font:inherit;cursor:pointer}
-.fid-flow .fid-no-slot .fid-subcount{margin-top:4px;border-top:1px solid #e4c381;padding-top:3px;font-size:11px;line-height:1.45;color:#8d651e;white-space:nowrap}
+.fid-no-slot-main,.fid-slotted-main{position:relative;display:flex;flex-direction:column;align-items:stretch;width:100%;border:0;background:none;padding:0;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.fid-slotted-main{flex:1;justify-content:center}
+.fid-flow .fid-subcount{margin-top:4px;border-top:1px solid var(--subcount-line,#e4c381);padding-top:3px;font-size:11px;line-height:1.45;color:var(--subcount-ink,#8d651e);white-space:nowrap}
+.fid-slotted .fid-subcount{position:absolute;left:10px;right:10px;bottom:4px}
 .fid-subcount-filter{display:block;width:100%;border:0;border-radius:3px;background:none;padding:0;color:inherit;text-align:left;font:inherit;white-space:nowrap;cursor:pointer}
 .fid-subcount-filter[aria-pressed=true],.fid-subcount:has(>button[aria-pressed=true]):not(:has(>button[aria-pressed=false])){outline:2px solid #3566b0;outline-offset:1px}
 .fid-subcount:not(:has(>button[aria-pressed=false]))>button[aria-pressed=true]{outline:none}
-.fid-overview :is(.fid-subcount,.fid-cause-list)>button[aria-pressed=true]:focus-visible{outline:2px solid #6f839a;outline-offset:-2px}
+.fid-overview .fid-subcount>button[aria-pressed=true]:focus-visible{outline:2px solid #6f839a;outline-offset:-2px}
 .fid-subcount-filter:hover{color:#405972;text-decoration:underline;text-underline-offset:2px}
 .fid-waiting{margin-top:12px;font-size:12px;color:#7c5514}
 .notice{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 13px;border:1px solid #e6a5b5;border-left:4px solid #c43c5c;background:#fff0f3;color:#992f48;border-radius:9px;font-size:13px}.notice small{display:block;font-size:12px;margin-top:3px}.statistics-state{margin-top:8px;color:#196b50;font-size:12px}.statistics-state.error{color:#ac3049}.ag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.marked-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.nsr-mark-editors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ag-box label{display:block;font-size:13px;font-weight:600;margin:6px 0}.ag-box textarea{width:100%;min-height:150px;resize:vertical;border:1px solid #cbd7e9;border-radius:7px;padding:8px;color:#345073}.ag-notice{white-space:pre-line;background:#fff3d7;color:#805b16;border:1px solid #debf79;border-radius:7px;padding:10px;margin:10px 0;font-size:13px}
@@ -2531,21 +2529,22 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 @container(max-width:700px){.nsr-stage-sum::before{display:none}.nsr-flow{grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr)}.nsr-equation>[data-nsr-group=all]{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:1fr auto;align-items:center}.nsr-equation>[data-nsr-group=all] b{grid-column:2;grid-row:1/3;margin:0}.nsr-equation>.math-sign:nth-child(2){grid-column:1;grid-row:2}.nsr-equation>[data-nsr-group=completed]{grid-column:2;grid-row:2}.nsr-equation>.math-sign:nth-child(4){grid-column:3;grid-row:2}.nsr-equation>[data-nsr-group=workflow]{grid-column:4;grid-row:2}.nsr-equation>.math-sign:nth-child(6){grid-column:1;grid-row:3}.nsr-equation>[data-nsr-group=rejected]{grid-column:2;grid-row:3}.nsr-equation>.math-sign:nth-child(8){grid-column:3;grid-row:3}.nsr-equation>[data-nsr-group=cancelled]{grid-column:4;grid-row:3}.has-completed .nsr-equation>[data-nsr-group=completed]{grid-column:2/-1;display:grid;grid-template-columns:1fr auto;align-items:center}.has-completed .nsr-equation>[data-nsr-group=completed] b{grid-column:2;grid-row:1/3;margin:0}.nsr-completed-arrow{grid-column:2;grid-row:3;margin:0;height:22px}.nsr-completed-arrow::before{top:-7px}.nsr-breakdown-equals{grid-column:3;grid-row:3;margin:0}.nsr-stage-sum{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr);margin:0}.nsr-stage-spacer{display:block}.nsr-stage:only-of-type{grid-column:2/-1}.has-completed .nsr-equation>.math-sign:nth-child(4){grid-column:1;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=workflow]{grid-column:2;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(6){grid-column:3;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=rejected]{grid-column:4;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(8){grid-column:1;grid-row:6}.has-completed .nsr-equation>[data-nsr-group=cancelled]{grid-column:2;grid-row:6}}
 
 @media(max-width:1250px){body.fcid-app{--side:360px}.nsr-pivots{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-hero h1{font-size:25px}}@media(max-width:1000px){.marked-settings{grid-template-columns:minmax(0,1fr)}.ag-grid,.fid-dialog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.fcid-app .layout{grid-template-columns:minmax(0,1fr);padding:10px;gap:10px}.fcid-app .side{position:static;max-height:none}.fc-hero{padding:12px}.fc-hero h1{font-size:21px}.fc-hero-inner{align-items:flex-start;flex-wrap:wrap}.fc-hero-actions{margin-left:auto}.fcid-app .nsr-pivots,.ag-grid,.fid-evidence{grid-template-columns:minmax(0,1fr)}.workspace-nav button{padding:7px}.scope-note{margin-left:0}.fid-dialog>.section-head{flex-wrap:nowrap}.fid-header-status{flex-basis:100%}.section-head{flex-wrap:wrap}}
+.fid-quarter-state{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:4px;min-width:0}.fid-quarter-state>span:first-child{font-weight:400}.fid-quarter-state.is-current>span:first-child{font-weight:600}.fid-date-value{display:grid;grid-template-rows:subgrid;grid-row:span var(--fid-date-rows);row-gap:4px}.fid-date-value>small,.fid-date-value>.fid-quarter-state{margin:0}
 `;
 const sourceHtml=Object.entries(sources).map(([key,source],index)=>{
   const importLabel=key==='ctlNsr'?'Append':'Import';
   const help=BOBJ_SOURCES[key]?`Open SAPGUIcontrol.exe. <a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.7z" target="_blank" rel="noopener noreferrer">Download SAPGUIcontrol</a>.`:key==='ctlNsr'?'Download from the CTL system: <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">Open download page</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
   return `<section class="fc-source" data-source="${key}" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span>${BOBJ_SOURCES[key]?'<small class="fc-source-bobj">BOBJ</small>':''}</h3><span id="fcSource-${key}" class="fc-source-state" role="status">Unavailable</span></div><div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>${BOBJ_SOURCES[key]?`<button class="btn small" data-source-action="${key==='fcid'?'bobj-update':'ctl-bobj-update'}">Update</button>`:key==='nsr'?'<button class="btn small light" data-source-action="nsr-open">Load NSR</button>':''}<button id="fcImport-${key}" class="btn small light" data-import-source="${key}">${importLabel}</button>${help?`<details class="fc-source-help" id="fcHelp-${key}"${BOBJ_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble">${help}</div></details>`:''}</div><input type="file" id="fcFile-${key}" data-source-file="${key}" aria-label="${importLabel} ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden></section>`;
 }).join('');
-const filterHtml=([name,label,path,needs])=>dateFilters.includes(path)?`<div class="fc-filter primary-filter" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name.slice(0,-4)}From">${label}</label><div class="fc-filter-actions"><button type="button" data-clear-filter="${name}">Clear</button></div></div><div id="${name.slice(0,-4)}${needs==='ctl'?'Periods':'Years'}" class="nsr-year-picks date-picks"></div><div id="${name}" class="fc-range" role="group" aria-label="${label}"><label>From<input id="${name.slice(0,-4)}From" type="date" aria-label="${label} from"></label><label>To<input id="${name.slice(0,-4)}To" type="date" aria-label="${label} to"></label></div></div>`:`<div class="fc-filter${['fAccount','fQuarter','fOwner','fSlotInitiator','fNsrInitiator','fCtlStage','fCtlInitiator'].includes(name)?' primary-filter':''}" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name}" title="${path==='owner'?escapeHtml(ownerHint):path.startsWith('nsr.')?'All selected NSR conditions must match the same NSR':''}">${label}${path==='owner'?inferenceHelp(ownerHint):path==='salesAdmin'?inferenceHelp(salesAdminHint):''}</label><div class="fc-filter-actions">${name==='fAccount'?'<button type="button" data-mapping-rule title="Fab / Account Mapping">Rule</button>':''}${name==='fQuarter'?'<button type="button" data-reset-quarter>Reset</button>':''}<button type="button" data-select-all="${name}">All</button><button type="button" data-clear-filter="${name}">Clear</button></div></div><select id="${name}" multiple aria-label="${label}"></select></div>`;
+const filterHtml=([name,label,path,needs])=>dateFilters.includes(path)?`<div class="fc-filter primary-filter" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name.slice(0,-4)}From">${label}</label><div class="fc-filter-actions"><button type="button" data-clear-filter="${name}">Clear</button></div></div><div id="${name.slice(0,-4)}${needs==='ctl'?'Periods':'Years'}" class="nsr-year-picks date-picks"></div><div id="${name}" class="fc-range" role="group" aria-label="${label}"><label>From<input id="${name.slice(0,-4)}From" type="date" aria-label="${label} from"></label><label>To<input id="${name.slice(0,-4)}To" type="date" aria-label="${label} to"></label></div></div>`:`<div class="fc-filter${['fAccount','fQuarter','fOwner','fSlotInitiator','fNsrInitiator','fCtlStage','fCtlInitiator'].includes(name)?' primary-filter':''}" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name}" title="${path==='owner'?escapeHtml(ownerHint):path.startsWith('nsr.')?'All selected NSR conditions must match the same NSR':''}">${label}${path==='quarter'?inferenceHelp(quarterHint):path==='owner'?inferenceHelp(ownerHint):path==='salesAdmin'?inferenceHelp(salesAdminHint):''}</label><div class="fc-filter-actions">${name==='fAccount'?'<button type="button" data-mapping-rule title="Fab / Account Mapping">Rule</button>':''}${name==='fQuarter'?'<button type="button" data-reset-quarter>Reset</button>':''}<button type="button" data-select-all="${name}">All</button><button type="button" data-clear-filter="${name}">Clear</button></div></div><select id="${name}" multiple aria-label="${label}"></select></div>`;
 const views=[['portfolio','FID Portfolio'],['changes','Slot / CTL'],['nsr','NSR List'],['cycle','NSR Cycle Time'],['summary','Summary Metrics'],['rules','Rules & Settings']];
 
 const charset=document.createElement('meta');charset.charset='utf-8';const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1';const title=document.createElement('title');title.textContent=FID_DASHBOARD_TITLE.replace(/^🏭\s*/,'');const style=document.createElement('style');style.textContent=css;
 document.head.replaceChildren(charset,viewport,title,emojiFavicon('🏭'),style);document.body.className='fcid-app';
 document.body.innerHTML=`<header class="fc-hero"><div class="fc-hero-inner"><div class="fc-heading"><button id="fcToggleSide" class="btn light" aria-label="Toggle Data Sources and Filters" aria-expanded="true" title="Data Sources / Filters">☰</button><div><div class="fc-brand">TOOLKIT</div><h1>${escapeHtml(FID_DASHBOARD_TITLE).replace(' Tracking','<span class="title-tracking"> Tracking</span>')}</h1></div></div><div class="fc-hero-actions"><button id="fcRefresh" class="btn light" disabled>Refresh</button><a class="btn light" href="${GUIDE_URL}" target="_blank" rel="noopener noreferrer">Help</a></div></div></header>
 <div class="layout" id="dashboardWorkspace"><aside class="side card"><div class="section-head"><h2>Data Sources</h2><span class="badge" id="fcSourceCount">0 / 5</span></div>${sourceHtml}<div id="fcActionStatus" class="fc-note" role="status"></div>
-<div class="filter-head"><h2>Filters</h2><button class="btn small light" id="fcReset">Reset</button></div><div class="fc-filter"><textarea id="fSearch" class="quick-search" placeholder="Search FIDs / CTLs / NSRs" aria-label="Search FIDs / CTLs / NSRs" rows="2"></textarea></div>
-<form id="fidLookup" class="fc-filter fid-lookup"><input id="fFid360" type="text" inputmode="numeric" placeholder="FID 360°" aria-label="FID 360°" autocomplete="off"><button class="btn light" type="submit" aria-label="Open FID 360°" title="Open FID 360°"><span aria-hidden="true">🔍</span></button></form>
+<div class="filter-head"><h2>Filters</h2><button class="btn small light" id="fcReset" title="Restore default filters">Reset</button></div>
+<form id="fidLookup" class="fc-filter fid-lookup"><textarea id="fSearch" class="quick-search" placeholder="Search multiple FIDs, CTLs, or NSRs&#10;Single FID/CTL enables FID 360" aria-label="Search multiple FIDs, CTLs, or NSRs&#10;Single FID/CTL enables FID 360" rows="2"></textarea><button class="btn light" type="submit" aria-label="Open FID 360°" title="Open FID 360°" hidden><span aria-hidden="true">🔍</span></button></form>
 ${['fAccount'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="fid">FID Filters</h3>${['fQuarter','fOwner','fSlotInitiator','fFidStatus','fRisk','fCustomer','fSystem','fBusinessUnit','fSalesAdmin'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="ctl">CTL Filters</h3>${['fCtlStage','fCtlInitiator','fCtlCreatedDate','fCtlChange','fCtlCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="nsr">NSR Filters</h3>${['fNsrInitiator','fNsrSubmitDate','fNsrTaskStatus','fNsrType','fNsrOrg','fNsrSubsystem','fNsrProduct','fNsrCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}</aside>
 <main class="main"><nav class="workspace-nav" id="workspaceNav" aria-label="Dashboard views">${views.map(([view,label])=>`<button type="button" data-view="${view}" aria-selected="${view==='nsr'}"${view==='nsr'?' class="active"':''}${['nsr','cycle','rules'].includes(view)?'':' hidden'}>${label}</button>`).join('')}</nav><div id="filterContext" class="filter-context"></div>${views.map(([view])=>`<section id="view-${view}" class="fc-view"${view==='nsr'?'':' hidden'}></section>`).join('')}</main></div>
 <dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card column-filter-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="markFilterPopup" class="card column-filter-popup mark-filter-popup" popover role="dialog" aria-label="Mark filter"><div role="group" aria-label="Mark status"></div></div><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
@@ -2558,18 +2557,19 @@ const pill=(value,kind='info',tip='')=>`<span class="pill ${kind}"${tip?` title=
 const fidLink=value=>value?`<button type="button" class="fc-link" data-fid="${escapeHtml(value)}">${escapeHtml(value)}</button>`:'—';
 const quarterYear=value=>nsrRecords.periodYear(value)||String(value).match(/'(\d{2})$/)?.[1]?.replace(/^(\d{2})$/,'20$1')||'';
 function defaultQuarters(){
-  const now=new Date(),first=now.getFullYear()*4+Math.floor(now.getMonth()/3);
-  return Array.from({length:5},(_,offset)=>{const quarter=first+offset;return ['QMar','QJun','QSep','QDec'][quarter%4]+"'"+String(Math.floor(quarter/4)).slice(-2)});
+  const current=fidQuarterFromDate(new Date()),first=Number(current.slice(-2))*4+['Mar','Jun','Sep','Dec'].indexOf(current.slice(1,4));
+  return Array.from({length:5},(_,offset)=>{const quarter=first+offset;return ['QMar','QJun','QSep','QDec'][quarter%4]+"'"+String(Math.floor(quarter/4)).slice(-2).padStart(2,'0')});
 }
 const setPath=(value,path,next)=>{const keys=path.split('.'),last=keys.pop();let target=value;keys.forEach(key=>target=target[key]??={});target[last]=next;};
 function toast(message){clearTimeout(toastTimer);id('fcToast').innerHTML=`<span>${escapeHtml(message)}</span><button type="button" data-toast-close aria-label="Dismiss">×</button>`;id('fcToast').hidden=false;toastTimer=setTimeout(()=>id('fcToast').hidden=true,4500)}
 function buildFilters(paths){
   const nodes=graph.population,statNsrs=graph.nsrs.filter(nsr=>nsr.eligible),statCtls=graph.ctls;let observations;
-  const slotUnknown=nodes.some(node=>node.portfolioCell.startsWith('slot-date-unknown|')),ctlUnknown=nodes.some(node=>node.portfolioCell.endsWith('|ctl-unknown'));
+  const assessments=nodes.flatMap(node=>node.quarterStates);
+  const slotUnknown=assessments.some(node=>node.portfolioCell.startsWith('slot-date-unknown|')),ctlUnknown=assessments.some(node=>node.portfolioCell.endsWith('|ctl-unknown'));
   const cells=Object.keys(fidCellNames).filter(key=>(!key.startsWith('slot-date-unknown|')||slotUnknown)&&(!key.endsWith('|ctl-unknown')||ctlUnknown));
   const normalCells=['stable-slot|stable-ctl','stable-slot|late-ctl-nsr','late-slot|late-ctl-nsr','late-slot|stable-ctl'];
-  const options=[['no-slot',0],['cause:slot-pending',1],['cause:slot-dropped',1],['slot-ready',0],
-    ...normalCells.map(key=>[key,1]),['cause:late-ctl',2],['cause:open-nsr',2],
+  const options=[['no-slot',0],['cause:slot-pending',1],['slot-ready',0],['cause:slot-dropped',1],
+    ...normalCells.map(key=>[key,1]),
     ...cells.filter(key=>!normalCells.includes(key)).map(key=>[key,1]),
     ...(nodes.some(node=>node.portfolioCell==='slot-unknown')?[['slot-unknown',0]]:[])];
   fidSelection.order=options.map(([value])=>value).filter(value=>value!=='slot-ready');
@@ -2591,7 +2591,7 @@ function buildFilters(paths){
         return `<button type="button" data-nsr-year="${year}" class="${active?'active':''}" aria-pressed="${active}" title="Select January 1 through December 31, ${year}">${year}</button>`;
       }).join('');continue;
     }
-    const values=path==='fidStatus'?[]:path==='account'?[...nodes.map(node=>node.account),...statNsrs.flatMap(nsr=>nsr.accounts.length?nsr.accounts:[''])]:path==='riskType'?nodes.flatMap(node=>node.risks.map(risk=>risk.label)).filter(value=>riskOrder.includes(value)):path.startsWith('ctl.')?statCtls.map(ctl=>ctl[path.slice(4)]):path.startsWith('nsr.')?(observations??=statNsrs.flatMap(nsr=>nsr.observations.length?nsr.observations:[nsr])).map(observation=>observation[path.slice(4)]):path==='slot.initiator'?nodes.map(node=>node.slot.initiator):nodes.map(node=>node[path]);
+    const values=path==='fidStatus'?[]:path==='quarter'?assessments.map(state=>state.quarter):path==='account'?[...nodes.map(node=>node.account),...statNsrs.flatMap(nsr=>nsr.accounts.length?nsr.accounts:[''])]:path==='riskType'?nodes.flatMap(node=>node.risks.map(risk=>risk.label)).filter(value=>riskOrder.includes(value)):path.startsWith('ctl.')?statCtls.map(ctl=>ctl[path.slice(4)]):path.startsWith('nsr.')?(observations??=statNsrs.flatMap(nsr=>nsr.observations.length?nsr.observations:[nsr])).map(observation=>observation[path.slice(4)]):path==='slot.initiator'?nodes.map(node=>node.slot.initiator):nodes.map(node=>node[path]);
     const quarters=path==='quarter'?[...(store.raw.fcid.length?defaultQuarters():[]),...(filterValues.quarter||[])]:path==='ctl.change'&&(store.meta.ctl||store.meta.ctlNsr)?[...defaultCtlTypes,...Object.values(pendingCtlTypes).flat()]:[];
     const available=path==='fidStatus'?fidStatuses:[...new Set([...values.map(value=>value||'[Unknown]'),...quarters])].sort((a,b)=>Number(a==='[Unknown]')-Number(b==='[Unknown]')||(path==='nsr.taskStatus'?nsrRecords.compareStatus(a,b):path==='ctl.stage'?compareCtlStages(a,b):path==='riskType'?riskOrder.indexOf(a)-riskOrder.indexOf(b):path.toLowerCase().includes('quarter')?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||a.localeCompare(b):a.localeCompare(b,undefined,{numeric:true})));
     if(path==='nsr.taskStatus'&&available.includes('15-Completed'))available.splice(available.indexOf('15-Completed')+1,0,...Object.keys(nsrCompletedTasks));
@@ -2601,7 +2601,7 @@ function buildFilters(paths){
       const classes=path==='fidStatus'
         ? [depth===1?'fid-status-child':depth===2?'fid-status-detail':'',['no-slot','slot-ready'].includes(value)?'fid-status-parent':''].filter(Boolean).join(' ')
         : path==='nsr.taskStatus'&&Object.hasOwn(nsrCompletedTasks,value)?'group-option':'';
-      const label=path==='fidStatus'&&['cause:slot-pending','cause:slot-dropped'].includes(value)?pretty(value,path).replace(/^No Slot · /,''):pretty(value,path);
+      const label=path==='fidStatus'&&['cause:slot-pending','cause:slot-dropped'].includes(value)?pretty(value,path).replace(/^(?:No Slot|Slotted FID) · /,''):pretty(value,path);
       return `<option value="${escapeHtml(value)}"${classes?` class="${classes}"`:''}${saved.includes(value)?' selected':''}>${escapeHtml(label)}</option>`;
     };
     select.innerHTML=available.map(option).join('');
@@ -2617,12 +2617,18 @@ function syncFilters(){
   const fid=store.raw.fcid.length>0,nsr=store.raw.nsr.length>0,ctl=store.raw.ctl.length>0||store.raw.ctlNsr.length>0;
   const needs={common:fid||nsr,fid,fidCtl:fid&&ctl,fidOwner:fid&&ctl&&graph.population.some(node=>node.owner),fidSlot:fid&&ctl&&graph.population.some(node=>node.slot.initiator),fidSalesAdmin:fid&&ctl&&graph.population.some(node=>node.salesAdmin),fidRisk:fid&&graph.population.some(node=>node.risks.some(risk=>['MCSD pending','NCE / FA signal'].includes(risk.label))),ctl,nsr};document.querySelectorAll('[data-filter-needs]').forEach(group=>group.hidden=!needs[group.dataset.filterNeeds]);
 }
+function syncFidLookup(){
+  const tokens=id('fSearch').value.trim().split(/[\s,;|/]+/).filter(Boolean),value=tokens.length===1&&/^\d{5,10}$/.test(tokens[0])?tokens[0]:'';
+  const fid=value&&(graph.fids.has(value)?value:graph.ctls.find(ctl=>ctl.number===value)?.fidId||'');
+  id('fidLookup').querySelector('button').hidden=!fid;return fid;
+}
 function recalculate(updateMarks=false){
   const started=performance.now();graph=createFidGraph(store.raw,{fidMarks:currentMarks('fid'),accountMap:accountMapping.match,ignoredNsrs,importantNsrs,loadedSources:Object.fromEntries(Object.keys(store.meta).map(key=>[key,true])),today:nsrData.localDate(new Date())});modelRevision++;
   buildFilters();syncFilters();applyFilters(updateMarks);store.dirty=false;store.buildMs=performance.now()-started;
 }
 function queryFilters(){const filters={search:id('fSearch').value,fidStatus:[],signal:store.raw.fcid.length?filterValues.signal||[]:[],includeIgnored};for(const [name,,path] of filterDefs)if(!id(name).closest('.fc-filter').hidden&&filterValues[path]?.length)setPath(filters,path,dateFilters.includes(path)?{from:filterValues[path][0],to:filterValues[path][1]}:filterValues[path]);return filters}
 function applyFilters(updateMarks=false,changedNsr=''){
+  syncFidLookup();
   const detailFid=id('fidDetail').open?id('fidDetail').dataset.fid:'',view=id('view-'+selectedView),anchor=changedNsr&&!detailFid&&selectedView==='nsr'?id('nsrTable'):view,position=updateMarks?anchor?.getBoundingClientRect():null;
   current=graph.query(queryFilters());revision++;
   for(const [name,state] of tables){if(name==='cycleTable'||name==='wfTable'||updateMarks&&(changedNsr||state.grid.element.closest('.fc-view')?.hidden===false||state.grid.element.closest('.fid-dialog')?.open))continue;tableResize.unobserve(state.grid.element);state.grid.destroy();tables.delete(name)}
@@ -2654,8 +2660,7 @@ function showView(name,updateMarks=false,changedNsr=''){
 // Persist only leaf selections. Every aggregate is the same set of cells, regardless of entry point.
 function normalizeFidStatus(values){
   const selected=new Set(values.flatMap(value=>fidSelection.groups[value]||[value])),postRisk=fidSelection.groups['late-ctl-nsr'];
-  if(selected.has('cause:late-ctl')&&selected.has('cause:open-nsr'))postRisk.forEach(cell=>selected.add(cell));
-  if(postRisk.every(cell=>selected.has(cell))){selected.delete('cause:late-ctl');selected.delete('cause:open-nsr')}
+  if(selected.delete('cause:late-ctl'))postRisk.forEach(cell=>selected.add(cell));
   return fidSelection.order.filter(value=>selected.has(value));
 }
 function fidStatusSelected(value){
@@ -2683,27 +2688,35 @@ function positionFilterChoices(select){
 }
 const portfolioColumns=[markColumn('fid'),
   ['FID',node=>node.id,fidLink],['FID Status & Risks',node=>fidDetailStatus(node,false).map(([label])=>label).join(' · '),(_,node)=>`<span class="fid-status-tags">${fidDetailStatus(node).map(([label,kind,tip])=>pill(label,kind,tip)).join('')}</span>`],
-  ['Quarter',node=>node.quarter],['System Description',node=>node.system],['CRD',node=>node.crd],['SRD',node=>node.pre.referenceDate||node.rd],['MCSD',node=>node.mcsd],
+  ['Quarter',node=>fidQuarterRows(node).map(state=>state.quarter||'[Unknown]').join(', ')],['System Description',node=>node.system],['CRD',node=>node.crd],['SRD',node=>fidQuarterRows(node).map(state=>state.dates.rd||'—').join(', ')],['MCSD',node=>fidQuarterRows(node).map(state=>state.dates.mcsd||'—').join(', ')],
   ['Account',node=>node.account],['Customer',node=>node.customer],['FID Owner',node=>node.owner,(value,node)=>`<span title="${escapeHtml(ownerTip(node))}">${escapeHtml(value||'[Unknown]')}</span>`],['Slot Initiator',node=>node.slot.initiator],['Active CTL',node=>node.slot.active?.number],
   ['Note',node=>fidNotes[node.id]||'',(value,node)=>`<button type="button" class="fc-link fid-note-cell${value?'':' fid-note-add'}" data-note-fid="${escapeHtml(node.id)}" aria-label="${value?'Edit':'Add'} note for FID ${escapeHtml(node.id)}" title="${escapeHtml(value||'Add note')}">${escapeHtml(value?value.replace(/\r\n?|\n/g,' '):'…')}</button>`]
 ];
 function fidDetailStatus(node,withTips=true){
   const tags=[];
-  if(node.portfolioStates.includes('risk-free'))tags.push(['No Late Flags','clear',withTips?[riskTip(node.pre),riskTip(node.post)].join('\n'):'']);
-  if(!node.slot.active)tags.push([fidStatusNames[node.portfolioStates[0]],'unknown',withTips?riskTip(node.pre):'']);
+  if(node.portfolioStates.includes('risk-free'))tags.push(['Stable Slot & CTL','clear',withTips?[riskTip(node.pre),riskTip(node.post)].join('\n'):'']);
+  if(!node.portfolioStates.includes('slot-ready'))tags.push([fidStatusNames[node.portfolioStates[0]],'unknown',withTips?riskTip(node.pre):'']);
   else if(node.pre.state==='risk')tags.push(['Late Slot','risk',withTips?riskTip(node.pre):'']);
   else if(node.pre.state==='unknown')tags.push(['Slot date unknown','unknown',withTips?riskTip(node.pre):'']);
+  if(node.slot.state==='dropped')tags.push(['Drop Slot','neutral',withTips?'Included in Slotted FID; risk uses the last approved Slot evidence.':'']);
   if(node.post.ctls.length)tags.push(['Late CTL ('+node.post.ctls.length+')','risk',withTips?riskTip(node.post):'']);
-  const late=node.post.nsrs,count=late.length||node.risks.find(risk=>risk.label==='Pending NSR')?.count||0,label=late.length?'Late NSR':'Pending NSR';
-  if(count)tags.push([label+' ('+count+')',late.length?'risk':'pending',withTips?label+' for this FID'+(late.length?' (<20 weeks to MCSD / SRD, including overdue)':' (in workflow)')+': '+(late.length?late:node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open')).map(nsr=>nsr.number).join(', '):'']);
+  const pending=node.post.nsrs.filter(nsr=>includeIgnored||!nsr.ignored);
+  if(pending.length)tags.push(['Pending NSR ('+pending.length+')','pending',withTips?'In-work NSRs for this FID: '+pending.map(nsr=>nsr.number).join(', ')+'. Pending NSRs do not change Slot / CTL stability.':'']);
   for(const [label,kind]of [['Pending Config CTL','pending'],['Pending Pull/Push CTL','neutral']]){
     const risk=node.risks.find(risk=>risk.label===label);
     if(risk)tags.push([label+' ('+risk.count+')',kind,withTips?label+' for this FID: Submitted '+(kind==='pending'?'Slot / Config':'Pull / Push')+' CTLs.':'']);
   }
-  if(node.slot.active&&node.post.state==='unknown')tags.push(['CTL/NSR status unknown','unknown',withTips?riskTip(node.post):'']);
+  if(node.portfolioStates.includes('slot-ready')&&node.post.state==='unknown')tags.push(['CTL status unknown','unknown',withTips?riskTip(node.post):'']);
+  const selected=node.selectedQuarterStates||node.quarterStates,current=node.quarterStates.find(state=>state.quarter===node.currentQuarter);
+  if(current&&selected?.length&&(node.pre.state!==current.pre.state||node.post.state!==current.post.state))tags.push(['Current: '+fidQuarterStatus(current),'neutral',withTips?'Current quarter '+(node.currentQuarter||'[Unknown]')+': '+fidQuarterStatus(current):'']);
+  if(withTips&&selected?.length)for(const tag of tags)tag[2]=[tag[2],selected.map(state=>(state.quarter||'[Unknown]')+': '+fidQuarterStatus(state)).join('\n')].filter(Boolean).join('\n');
   return tags;
 }
-function riskTip(risk){return [risk.reason,risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:'',risk.ctlIds?.length?'CTL: '+risk.ctlIds.slice(0,4).join(', '):'',risk.nsrEvidence?.length?'NSR: '+risk.nsrEvidence.slice(0,4).map(event=>event.nsr.number+' ('+(event.dateBasis==='unlinked'?'unlinked':event.dateBasis==='today'?'today':event.eventDate)+')').join(', '):''].filter(Boolean).join('\n')}
+function fidQuarterStatus(state){
+  if(!state.portfolioStates.includes('slot-ready'))return fidStatusNames[state.portfolioStates[0]];
+  return [state.pre.state==='risk'?'Late Slot':'',state.post.state==='risk'?'Late CTL':''].filter(Boolean).join(' + ')||(state.portfolioStates.includes('risk-free')?'Stable Slot & CTL':'Risk Status Unknown');
+}
+function riskTip(risk){return [risk.reason,risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:'',risk.ctlIds?.length?'CTL: '+risk.ctlIds.slice(0,4).join(', '):''].filter(Boolean).join('\n')}
 function ownerTip(node){
   const evidence=node.ownerEvidence,nsrFallback=evidence&&!evidence.ctlCandidates.length&&evidence.nsrCandidates.length;return [`Inferred owner · Account: ${node.account||'[Unknown]'} · people learned from Slot authors`,
     'CTL (Slot / Config): '+((evidence?.ctlCandidates||[]).map(candidate=>candidate.name+': '+candidate.count).join(' · ')||'No eligible CTL votes'),
@@ -2733,27 +2746,27 @@ function renderPortfolio(target,updateMarks=false){
   const filters=queryFilters(),selected=filterValues.fidStatus||[],causes=(filterValues.signal||[]).filter(key=>fidCauseKeys.includes(key));delete filters.fidStatus;
   filters.signal=filters.signal.filter(key=>!fidCauseKeys.includes(key));
   const rows=selected.length||causes.length?graph.query(filters,'fids'):current.fids,counts=Object.fromEntries(Object.keys(fidStatusNames).map(key=>[key,0]));
-  let lateNsrCount=0;
   for(const node of rows){
     for(const key of node.portfolioStates)counts[key]++;
     if(node.portfolioCell.includes('|'))counts[node.portfolioCell]=(counts[node.portfolioCell]||0)+1;
-    lateNsrCount+=Boolean(node.slot.active&&node.post.nsrs.length);
   }
-  counts['late-ctl-nsr']=counts['late-ctl']+counts['open-nsr'];
-  counts['open-nsr']=lateNsrCount;
+  counts['late-ctl-nsr']=counts['late-ctl'];
   const ctlReady=Boolean(store.meta.ctl||store.meta.ctlNsr);
   const slotKeys=['stable-slot','late-slot',...(counts['slot-date-unknown']?['slot-date-unknown']:[])];
-  const postKeys=[!counts['stable-ctl']&&(!store.meta.nsr||counts['ctl-unknown'])?'ctl-unknown':'stable-ctl','late-ctl-nsr'];if(counts['ctl-unknown']&&!postKeys.includes('ctl-unknown'))postKeys.push('ctl-unknown');postKeys.reverse();
+  const postKeys=[!counts['stable-ctl']&&counts['ctl-unknown']?'ctl-unknown':'stable-ctl','late-ctl-nsr'];if(counts['ctl-unknown']&&!postKeys.includes('ctl-unknown'))postKeys.push('ctl-unknown');postKeys.reverse();
   const selectedCells=new Set(selected);
   const card=(key,label,count,color,denominator=rows.length,tip='')=>{
     const value=fidCauseKeys.includes(key)?'cause:'+key:key,active=key==='all'?!selected.length&&!causes.length:fidStatusSelected(value),percent=denominator?(100*count/denominator).toFixed(1):'0.0',base=['all','no-slot','slot-ready'].includes(key)?'Total FID':'Slotted FID';
-    const titleName=key==='open-nsr'?label:fidStatusNames[key]||label;
+    const titleName=fidStatusNames[key]||label;
     const title=titleName+' / '+base+' = '+count+' / '+denominator+' = '+percent+'%'+(tip?'\n'+tip:'');
     const shareLabel={'slot-ready':'Slot Completion','stable-slot':'Pre-slot Stability','late-slot':'Pre-slot Risk','stable-ctl':'Post-slot Stability','late-ctl-nsr':'Post-slot Risk'}[key];
     const share=`${percent}%${shareLabel?' '+shareLabel:''}`;
-    const buttonClass=['late-ctl','open-nsr'].includes(key)?'':'nsr-kpi'+(fidSelection.groups[key]?' fid-aggregate':'');
-    const button=`<button class="${key==='no-slot'?'fid-no-slot-main':buttonClass}" style="--kpi-color:${color}" type="button" data-fid-status="${key}" data-fid-value="${value}" data-count="${count}" aria-pressed="${active}" title="${escapeHtml(title)}"><small>${label}</small><b>${number(count)}</b><span class="fid-percent">${share}</span></button>`;
-    return key==='no-slot'?`<div class="nsr-kpi fid-no-slot" style="--kpi-color:${color}">${button}<div class="fid-subcount">${[['slot-pending','pending approval','No Slot with a pending Slot request.'],['slot-dropped','drop slot','No Slot whose latest effective event is Drop Slot.']].map(([cause,name,description])=>`<button class="fid-subcount-filter" type="button" data-fid-status="${cause}" data-fid-value="cause:${cause}" data-count="${counts[cause]}" aria-pressed="${selected.includes('cause:'+cause)}" title="${description} Pending approval and drop slot may overlap.">${number(counts[cause])} ${name}</button>`).join('')}</div></div>`:button;
+    const buttonClass=key==='no-slot'?'fid-no-slot-main':key==='slot-ready'?'fid-slotted-main fid-aggregate':'nsr-kpi'+(fidSelection.groups[key]?' fid-aggregate':'');
+    const button=`<button class="${buttonClass}" style="--kpi-color:${color}" type="button" data-fid-status="${key}" data-fid-value="${value}" data-count="${count}" aria-pressed="${active}" title="${escapeHtml(title)}"><small>${label}</small><b>${number(count)}</b><span class="fid-percent">${share}</span></button>`;
+    const subcount=key==='no-slot'?['slot-pending','pending approval','No Slot with a pending Slot request.']:key==='slot-ready'?['slot-dropped','drop slot','Included in Slotted FID. The latest effective event is Drop Slot; risk uses the last approved Slot evidence.']:null;
+    if(!subcount)return button;
+    const [cause,name,description]=subcount;
+    return `<div class="nsr-kpi ${key==='no-slot'?'fid-no-slot':'fid-slotted'}" style="--kpi-color:${color}">${button}<div class="fid-subcount"><button class="fid-subcount-filter" type="button" data-fid-status="${cause}" data-fid-value="cause:${cause}" data-count="${counts[cause]}" aria-pressed="${selected.includes('cause:'+cause)}" title="${description}">${number(counts[cause])} ${name}</button></div></div>`;
   };
   const sign=value=>`<span class="math-sign" aria-hidden="true">${value}</span>`;
   const riskLabelOffset=postKeys[0]==='late-ctl-nsr'?0:(slotKeys.length-1-slotKeys.indexOf('late-slot'))*100/slotKeys.length;
@@ -2767,7 +2780,7 @@ function renderPortfolio(target,updateMarks=false){
     const count=counts[slot+'|'+post]||0,percent=counts['slot-ready']?(100*count/counts['slot-ready']).toFixed(1):'0.0';
     const active=selectedCells.has(slot+'|'+post);
     if(active)selection.push(`<rect data-selection-cell="${slot}|${post}" x="${column*100/slotKeys.length}%" y="${row*100/postKeys.length}%" width="${100/slotKeys.length}%" height="${100/postKeys.length}%"/>`);
-    cells.push(`<button class="fid-matrix-cell" type="button" data-fid-cell="${slot}|${post}" data-matrix-slot="${slot}" data-matrix-post="${post}" data-assessment="${assessment}" data-count="${count}" aria-pressed="${active}" title="${escapeHtml(fidStatusNames[slot]+' ∩ '+fidStatusNames[post]+'\n'+count+' / '+counts['slot-ready']+' Slotted FID = '+percent+'%\n'+(assessment==='risk-fid'?'A known Late condition takes priority over missing evidence.':assessment==='risk-unknown'?'No known Late condition; more source data or dates are needed.':'Both Slot and CTL/NSR are confirmed Stable.'))}"><small>${escapeHtml(label)}</small><b>${number(count)}</b><span class="fid-percent">${percent}%${assessment==='risk-free'?' Stable FID':''}</span></button>`);
+    cells.push(`<button class="fid-matrix-cell" type="button" data-fid-cell="${slot}|${post}" data-matrix-slot="${slot}" data-matrix-post="${post}" data-assessment="${assessment}" data-count="${count}" aria-pressed="${active}" title="${escapeHtml(fidStatusNames[slot]+' ∩ '+fidStatusNames[post]+'\n'+count+' / '+counts['slot-ready']+' Slotted FID = '+percent+'%\n'+(assessment==='risk-fid'?'A known Late condition takes priority over missing evidence.':assessment==='risk-unknown'?'No known Late condition; more source data or dates are needed.':'Both Slot and CTL are confirmed Stable. Pending NSRs may still exist.'))}"><small>${escapeHtml(label)}</small><b>${number(count)}</b><span class="fid-percent">${percent}%${assessment==='risk-free'?' Stable FID':''}</span></button>`);
     if(column<slotKeys.length-1)cellOperators.push(relation('+','post:'+post+(isRisk(row,column)&&isRisk(row,column+1)?' risk-fid':''),`left:${(column+1)*100/slotKeys.length}%;top:${(row+.5)*100/postKeys.length}%`));
     if(row<postKeys.length-1)cellOperators.push(relation('+','slot:'+slot+(isRisk(row,column)&&isRisk(row+1,column)?' risk-fid':''),`left:${(column+.5)*100/slotKeys.length}%;top:${(row+1)*100/postKeys.length}%`));
     if(!isRisk(row,column))continue;
@@ -2780,23 +2793,18 @@ function renderPortfolio(target,updateMarks=false){
   }
   // Dilate the combined cells in screen pixels, then subtract the inner area: adjacent cells share one outer border.
   const selectionOutline=selection.length?`<svg class="fid-selection-outline" aria-hidden="true"><defs><filter id="fid-selection-border" x="-10%" y="-10%" width="120%" height="120%" primitiveUnits="userSpaceOnUse"><feMorphology in="SourceAlpha" operator="dilate" radius="4" result="outer"/><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="inner"/><feComposite in="outer" in2="inner" operator="out" result="border"/><feFlood flood-color="#3566b0" result="color"/><feComposite in="color" in2="border" operator="in"/></filter></defs><g fill="#fff" filter="url(#fid-selection-border)">${selection.join('')}</g></svg>`:'';
-  const tips={'stable-slot':'Slot submitted on time. SRD / RD − approved Slot effective date: ≥20 weeks; No Labor: ≥12 weeks. Approval confirms completion.','late-slot':'Slot submitted too late. SRD / RD − approved Slot effective date: <20 weeks; No Labor: <12 weeks. Approval confirms completion.','slot-date-unknown':'Active approved Slot, but its SRD / RD is missing.','stable-ctl':'No late approved Config Change and no Late NSR. Both sources and a reference date must be available.','late-ctl-nsr':'Late CTL ∪ Late NSR, counted once per FID. MCSD is used first, with SRD as fallback.','ctl-unknown':'CTL/NSR sources or MCSD / SRD are insufficient. A known Late condition still belongs to Late CTL/NSR.'};
-  const causesOpen=target.querySelector('.fid-causes')?.open;
-  const axis=key=>`<div class="fid-axis-item${key==='late-ctl-nsr'?' fid-late-causes':''}">${card(key,fidStatusNames[key],counts[key],key.includes('unknown')?'#64748b':key.startsWith('late')?'#b3314c':'#16843f',counts['slot-ready'],tips[key])}${key==='late-ctl-nsr'?`
-    <details class="fid-causes"${causesOpen?' open':''}><summary><span>Causes</span><span>Causes (may overlap)</span></summary><div class="fid-cause-list">
-      ${card('late-ctl','Late CTL',counts['late-ctl'],'#b3314c',counts['slot-ready'],'Approved Config Change <20 weeks before MCSD / SRD. Pull / Push excluded. May overlap Late NSR.')}
-      ${card('open-nsr','Late NSR',counts['open-nsr'],'#93600b',counts['slot-ready'],'In-work NSR with <20 weeks to MCSD / SRD, including overdue. May overlap Late CTL. Completed NSRs do not participate.')}
-    </div></details>`:''}</div>`;
+  const tips={'stable-slot':'Slot submitted on time. SRD / RD − approved Slot effective date: >20 weeks; No Labor: >12 weeks. Approval confirms completion.','late-slot':'Slot submitted too late. SRD / RD − approved Slot effective date: ≤20 weeks; No Labor: ≤12 weeks. Approval confirms completion.','slot-date-unknown':'Approved Slot history exists, but its original Slot or SRD / RD evidence is missing.','stable-ctl':'No qualifying Late CTL. Each CTL uses its MCSD At SOps Approval, then MCSD@Create, then current MCSD / SRD. Pending NSRs do not change stability.','late-ctl-nsr':'Approved Config CTL with (its MCSD At SOps Approval − Sales Ops approval) / 7 <20 weeks; fallback: its MCSD@Create, then current MCSD / SRD. Reason = Customer Config Chg and one of the seven allowed Sub Reasons. Counted once per FID; Pending NSRs do not change stability.','ctl-unknown':'CTL sources or reference dates are insufficient. A known Late CTL still belongs to Late CTL.'};
+  const axis=key=>`<div class="fid-axis-item">${card(key,fidStatusNames[key],counts[key],key.includes('unknown')?'#64748b':key.startsWith('late')?'#b3314c':'#16843f',counts['slot-ready'],tips[key])}</div>`;
   const overview=`${overviewHead('portfolio',current.fids.length,rows.length,selected.length||causes.length)}
     <div class="fid-flow"><div class="fid-flow-inner${ctlReady?' has-breakdown':''}${counts['slot-date-unknown']?' has-slot-unknown':''}" style="--matrix-cols:${slotKeys.length};--matrix-rows:${postKeys.length}"><div class="fid-equation" aria-label="${ctlReady?'Total FID − No Slot = Slotted FID':'Total FID'}">
-    ${card('all','Total FID',rows.length,'#94a3b8')}${ctlReady?`${sign('−')}${card('no-slot','No Slot',counts['no-slot'],'#8d5514',rows.length,'No active approved Slot. Pending approval and Drop Slot subcounts may overlap when a replacement Slot is pending.')}${sign('=')}${card('slot-ready','Slotted FID',counts['slot-ready'],'#2563eb',rows.length,'FID has an active, Sales Ops approved Slot.')}`:''}</div>
+    ${card('all','Total FID',rows.length,'#94a3b8')}${ctlReady?`${sign('−')}${card('no-slot','No Slot',counts['no-slot'],'#8d5514',rows.length,'No approved Slot or effective Drop Slot evidence.')}${sign('=')}${card('slot-ready','Slotted FID',counts['slot-ready'],'#2563eb',rows.length,'FID has an approved Slot or an effective Drop Slot. Drop Slot remains included in Pre/Post risk classification.')}`:''}</div>
     ${ctlReady?`<div class="fid-origin-pre">${relation('=','origin-pre')}</div><div class="fid-slot-sum" aria-label="Column totals: ${slotKeys.map(key=>fidStatusNames[key]).join(' + ')} = Slotted FID">${slotKeys.map(axis).join('')}${slotKeys.slice(1).map((_,index)=>relation('+','origin-pre',`left:${(index+1)*100/slotKeys.length}%;top:50%`)).join('')}</div>
     <div class="fid-origin-post">${relation('=','origin-post')}</div><div class="fid-breakdown" aria-label="Row totals: ${postKeys.map(key=>fidStatusNames[key]).join(' + ')} = Slotted FID">${postKeys.map(axis).join('')}${postKeys.slice(1).map((_,index)=>relation('+','origin-post',`left:50%;top:${(index+1)*100/postKeys.length}%`)).join('')}</div>
     <div class="fid-row-equals">${postKeys.map(key=>relation('=','post:'+key)).join('')}</div><div class="fid-col-equals">${slotKeys.map(key=>relation('=','slot:'+key)).join('')}</div>
-    <div class="fid-matrix" aria-label="Pre-slot Risk × Post-slot Risk matrix"><div class="fid-matrix-grid">${cells.join('')}</div><svg class="fid-risk-outline" viewBox="0 0 ${slotKeys.length*100} ${postKeys.length*100}" preserveAspectRatio="none" aria-hidden="true"><path d="${outline.join('')}"/></svg>${selectionOutline}${cellOperators.join('')}<button class="fid-risk-label" style="right:calc(${riskLabelOffset}% + 14px)" type="button" data-fid-region="risk-fid" data-fid-value="risk-fid" aria-pressed="${fidStatusSelected('risk-fid')}" title="Risk FID = Late Slot ∪ Late CTL ∪ Late NSR&#10;Risk FID / Slotted FID = ${number(counts['risk-fid'])} / ${number(counts['slot-ready'])} = ${riskPercent}%"><span>Risk FID · ${number(counts['risk-fid'])}</span><span class="fid-percent">${riskPercent}%</span></button></div>
-    <div class="fid-pre-axis" data-fid-axis="pre" title="Pre: was the Slot submitted on time?"><span>Pre-slot Risk</span></div><div class="fid-post-axis" data-fid-axis="post" title="Post: any Late CTL or Late NSR in the delivery risk window?"><span>Post-slot Risk</span></div>
+    <div class="fid-matrix" aria-label="Pre-slot Risk × Post-slot Risk matrix"><div class="fid-matrix-grid">${cells.join('')}</div><svg class="fid-risk-outline" viewBox="0 0 ${slotKeys.length*100} ${postKeys.length*100}" preserveAspectRatio="none" aria-hidden="true"><path d="${outline.join('')}"/></svg>${selectionOutline}${cellOperators.join('')}<button class="fid-risk-label" style="right:calc(${riskLabelOffset}% + 14px)" type="button" data-fid-region="risk-fid" data-fid-value="risk-fid" aria-pressed="${fidStatusSelected('risk-fid')}" title="Risk FID = Late Slot ∪ Late CTL&#10;Risk FID / Slotted FID = ${number(counts['risk-fid'])} / ${number(counts['slot-ready'])} = ${riskPercent}%"><span>Risk FID · ${number(counts['risk-fid'])}</span><span class="fid-percent">${riskPercent}%</span></button></div>
+    <div class="fid-pre-axis" data-fid-axis="pre" title="Pre: was the Slot submitted on time?"><span>Pre-slot Risk</span></div><div class="fid-post-axis" data-fid-axis="post" title="Post: any qualifying Late CTL in the delivery risk window?"><span>Post-slot Risk</span></div>
     `:''}</div></div>
-    ${!ctlReady?'<div class="fid-waiting" role="status">Load a CTL source to determine Slot Completion.</div>':!store.meta.nsr?'<div class="fid-waiting" role="status">Load NSR data to complete the CTL/NSR classification.</div>':''}`,drivers=`<div class="section-head"><h2>Risk Drivers</h2><span class="badge">Drivers can overlap</span></div><div class="signal-strip">${[...riskCounts].map(([label,{count,fids}])=>`<button class="signal" ${label==='Pending NSR'?'data-nsr-lifecycle="open"':pendingCtlTypes[label]?`data-ctl-status="workflow" data-ctl-types="${pendingCtlTypes[label].join(',')}" data-group-value="${escapeHtml(label)}"${taskFilterValues('ctl','workflow').length?'':' disabled'}`:`data-group-path="riskType" data-group-value="${escapeHtml(label)}"`} aria-pressed="${label==='Pending NSR'?taskFilterSelected('nsr','workflow'):pendingCtlTypes[label]?taskFilterSelected('ctl','workflow',pendingCtlTypes[label]):(filterValues.riskType||[]).includes(label)}" title="${escapeHtml(pretty(label,'riskType'))} = ${count} ${label==='Pending NSR'?'pending NSR':pendingCtlTypes[label]?'in-work CTL documents':'distinct FIDs'}${label.startsWith('Pending ')?' across '+fids+' distinct FID':''}"><b>${number(count)}</b> ${escapeHtml(pretty(label,'riskType'))}${label.startsWith('Pending ')?' <small>| in '+number(fids)+' FID</small>':''}</button>`).join('')||'<span class="muted">No risk drivers in this selection</span>'}</div>`,signals=`<button class="signal" data-nce-signal${store.meta.nce?'':' hidden'}><b>${number(m.nceFids)}</b>FIDs with NCE / FA</button>`;
+    ${!ctlReady?'<div class="fid-waiting" role="status">Load a CTL source to determine Slot Completion.</div>':''}`,drivers=`<div class="section-head"><h2>Risk Drivers</h2><span class="badge">Drivers can overlap</span></div><div class="signal-strip">${[...riskCounts].map(([label,{count,fids}])=>`<button class="signal" ${label==='Pending NSR'?'data-nsr-lifecycle="open"':pendingCtlTypes[label]?`data-ctl-status="workflow" data-ctl-types="${pendingCtlTypes[label].join(',')}" data-group-value="${escapeHtml(label)}"${taskFilterValues('ctl','workflow').length?'':' disabled'}`:`data-group-path="riskType" data-group-value="${escapeHtml(label)}"`} aria-pressed="${label==='Pending NSR'?taskFilterSelected('nsr','workflow'):pendingCtlTypes[label]?taskFilterSelected('ctl','workflow',pendingCtlTypes[label]):(filterValues.riskType||[]).includes(label)}" title="${escapeHtml(pretty(label,'riskType'))} = ${count} ${label==='Pending NSR'?'pending NSR':pendingCtlTypes[label]?'in-work CTL documents':'distinct FIDs'}${label.startsWith('Pending ')?' across '+fids+' distinct FID':''}"><b>${number(count)}</b> ${escapeHtml(pretty(label,'riskType'))}${label.startsWith('Pending ')?' <small>| in '+number(fids)+' FID</small>':''}</button>`).join('')||'<span class="muted">No risk drivers in this selection</span>'}</div>`,signals=`<button class="signal" data-nce-signal${store.meta.nce?'':' hidden'}><b>${number(m.nceFids)}</b>FIDs with NCE / FA</button>`;
   if(updateMarks){
     const scroll=target.querySelector('.fid-flow').scrollLeft;
     target.querySelector('.fid-overview').innerHTML=overview;
@@ -2804,14 +2812,17 @@ function renderPortfolio(target,updateMarks=false){
     target.querySelector('.fid-risk-drivers').innerHTML=drivers;
     target.querySelector('[data-nce-signal]').parentElement.innerHTML=signals;
   }else target.innerHTML=`<section class="card fid-overview">${overview}</section><section class="card fid-risk-drivers">${drivers}</section>${pivotHtml('fid',current.fids.length,'FIDs',target)}<div class="signal-strip">${signals}</div><section class="card"><div class="section-head detail-head"><h2>FID Details</h2></div><div id="portfolioTable"></div></section>`;
-  renderPivots('fidPivots',current.fids,[['quarter','Calendar Quarter','fQuarter','#4679cf'],['customer','FID Customer','fCustomer','#b44771'],['account','Account','fAccount','#347d50'],['businessUnit','Business Unit','fBusinessUnit','#8251bb'],['system','System Description','fSystem','#14869a']],'FIDs',updateMarks);
+  renderPivots('fidPivots',current.fids,[['quarter','Quarter','fQuarter','#4679cf'],['customer','FID Customer','fCustomer','#b44771'],['account','Account','fAccount','#347d50'],['businessUnit','Business Unit','fBusinessUnit','#8251bb'],['system','System Description','fSystem','#14869a']],'FIDs',updateMarks);
   table('portfolioTable',portfolioColumns,current.fids,{file:'FID_Portfolio',fid:true,markFilter:'fid',defaultSort:'FID',ascending:false,frozen:['FID'],exportRows:fidDetailRows,copyRows:fidCopyRows,widths:{FID:80,'FID Status & Risks':175,Note:220}},updateMarks);
 }
 const ctlColumns=[['CTL',ctl=>ctl.number||ctl.id,(value,ctl)=>ctl.number?`<a class="fc-link" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=CRM_SRQM_RFC&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(ctl.number)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`:escapeHtml(value)],['FID',ctl=>ctl.fidId,fidLink],
   ['Stage',ctl=>ctlStageName(ctl.stage),value=>value?`<span class="status-pill ${value.startsWith('0-')?'stop':value==='15-Completed'?'terminal':value==='Draft'?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
   ['Change',ctl=>ctl.change],['Created Date',ctl=>ctl.created],
   ['Elapsed Days',ctl=>taskGroup(ctlStageName(ctl.stage),true)==='workflow'&&ctl.created?(nsrRecords.dateNumber(nsrData.localDate(new Date()))-nsrRecords.dateNumber(ctl.created))/86400000:''],
-  ['Sales Ops Approval',ctl=>ctl.approved],['Config Frz',ctl=>ctl.configFrz],['Initiator',ctl=>ctl.initiator],['Customer',ctl=>ctl.customer],['Quote ID',ctl=>ctl.quote],['NSR Reference',ctl=>ctl.nsrReferences.join(', ')],['Root Cause',ctl=>ctl.rootCause],['CTL Notes',ctl=>ctl.notes],['Sub Reason',ctl=>ctl.subReason]
+  ['Sales Ops Approval',ctl=>ctl.approved],['RD At Create',ctl=>ctl.rdCreate],['MCSD@Create',ctl=>ctl.mcsdCreate],
+  ['SRD @ SOPs Approval',ctl=>ctl.srdApproval],['MCSD At SOps Approval',ctl=>ctl.mcsdApproval],['TSD @ SOPs Approval',ctl=>ctl.tsdApproval],
+  ['SRD @ Current',ctl=>ctl.srd],['MCSD @ Current',ctl=>ctl.mcsd],['Config Frz',ctl=>ctl.configFrz],['Mfg Upgrade Type',ctl=>ctl.mfg],
+  ['Initiator',ctl=>ctl.initiator],['Customer',ctl=>ctl.customer],['Quote ID',ctl=>ctl.quote],['NSR Reference',ctl=>ctl.nsrReferences.join(', ')],['Change Summary',ctl=>ctl.changeSummary],['Root Cause',ctl=>ctl.rootCause],['CTL Notes',ctl=>ctl.notes],['Reason for Chg',ctl=>ctl.reason],['Sub Reason',ctl=>ctl.subReason],['Sales OPs Approver',ctl=>ctl.salesOpsApprover]
 ];
 function renderChanges(target,updateMarks=false){
   updateMarks=updateMarks&&tables.has('ctlTable');
@@ -2822,8 +2833,8 @@ function renderChanges(target,updateMarks=false){
   const overview=`<div class="section-head"><h2>CTL Overview</h2><span class="badge">${selected.length?number(rows.length)+' / '+number(overviewRows.length)+' selected CTL':number(rows.length)+' filtered CTL'}</span></div><div class="ctl-flow" style="--ctl-terms:${terms.length}" aria-label="Total CTL = ${terms.map(([,label])=>label).join(' + ')}">${taskOverview('ctl',terms,groups,overviewRows.length)}</div>`;
   if(updateMarks)target.querySelector('.ctl-overview').innerHTML=overview;
   else target.innerHTML=`<section class="card ctl-overview">${overview}</section>${pivotHtml('ctl',rows.length,'CTL',target)}<section class="card"><div class="section-head detail-head"><h2>CTL Details</h2></div><div id="ctlTable"></div></section>`;
-  renderPivots('ctlPivots',rows,[['quarter','Calendar Quarter','fQuarter','#7950a1'],['stage','CTL Stage','fCtlStage','#9468bc'],['customer','Customer','fCtlCustomer','#b491cf']],'CTL',updateMarks);
-  table('ctlTable',ctlColumns,rows,{file:pendingOnly?'Pending_CTL':'CTL_Details',defaultSort:'CTL',ascending:false,widths:{CTL:115,FID:85,Stage:145,Change:105,'Created Date':130,'Elapsed Days':130,'Sales Ops Approval':170,'Config Frz':115,Initiator:155,Customer:185,'Quote ID':120,'NSR Reference':180,'Root Cause':300,'CTL Notes':300,'Sub Reason':190}},updateMarks);
+  renderPivots('ctlPivots',rows,[['quarter','Quarter','fQuarter','#7950a1'],['stage','CTL Stage','fCtlStage','#9468bc'],['customer','Customer','fCtlCustomer','#b491cf']],'CTL',updateMarks);
+  table('ctlTable',ctlColumns,rows,{file:pendingOnly?'Pending_CTL':'CTL_Details',defaultSort:'CTL',ascending:false,widths:{CTL:115,FID:85,Stage:145,Change:105,'Created Date':130,'Elapsed Days':130,'Sales Ops Approval':170,'RD At Create':135,'MCSD@Create':135,'SRD @ SOPs Approval':180,'MCSD At SOps Approval':190,'TSD @ SOPs Approval':180,'SRD @ Current':145,'MCSD @ Current':145,'Config Frz':115,'Mfg Upgrade Type':170,Initiator:155,Customer:185,'Quote ID':120,'NSR Reference':180,'Root Cause':300,'CTL Notes':300,'Reason for Chg':180,'Sub Reason':190,'Sales OPs Approver':180}},updateMarks);
 }
 function recordMark(kind,number){const config=markKinds[kind];return config.ignored.has(number)?'ignore':config.important.has(number)?'important':''}
 function currentMarks(kind){const config=markKinds[kind];return Object.fromEntries([...config.ignored,...config.important].sort().map(number=>[number,recordMark(kind,number)]))}
@@ -2868,7 +2879,8 @@ function renderPivots(name,rows,pivots,unit,updateMarks=false){
   const target=id(name);
   if(updateMarks)target.previousElementSibling.querySelector('.badge').textContent=number(rows.length)+' filtered '+unit;
   pivots.forEach(([path,label,filter,color],index)=>{
-    const counts=new Map();rows.forEach(row=>{const value=row[path]||'[Unknown]';counts.set(value,(counts.get(value)||0)+1)});
+    const counts=new Map(),pivotRows=path==='quarter'&&name==='fidPivots'?quarterResult().fids:path==='quarter'&&name==='ctlPivots'?quarterResult().ctls:rows;
+    pivotRows.forEach(row=>{for(const value of new Set(path==='quarter'?(row.selectedQuarterStates?.map(state=>state.quarter)||row.quarters||[row.quarter]).map(value=>value||'[Unknown]'):[row[path]||'[Unknown]']))counts.set(value,(counts.get(value)||0)+1)});
     const entries=[...counts].sort((a,b)=>path==='taskStatus'?nsrRecords.compareStatus(a[0],b[0]):path==='stage'?compareCtlStages(a[0],b[0]):path==='quarter'?Number(a[0]==='[Unknown]')-Number(b[0]==='[Unknown]')||nsrRecords.periodRank(a[0])-nsrRecords.periodRank(b[0])||a[0].localeCompare(b[0]):b[1]-a[1]||a[0].localeCompare(b[0])),max=Math.max(1,...counts.values());
     const content=entries.map(([value,count])=>`<div class="pivot-row"><span class="pivot-label" title="${escapeHtml(path==='stage'?ctlStageName(value):value)}">${escapeHtml(path==='stage'?ctlStageName(value):value)}</span><span class="pivot-bar"><i style="width:${100*count/max}%;--bar:${color}"></i></span><button class="pivot-count" data-pivot-filter="${filter}" data-pivot-value="${escapeHtml(value)}" title="Filter ${escapeHtml(value)}">${number(count)}</button></div>`).join('')||'<span class="muted">No matching '+unit+'</span>';
     if(updateMarks){const card=target.children[index],list=card.querySelector('.pivot-list'),scroll=list.scrollTop;card.querySelector('.pivot-head span').textContent=counts.size+' values';list.innerHTML=content;list.scrollTop=scroll}
@@ -2895,30 +2907,39 @@ function renderNsrs(target,updateMarks=false,changedNsr=''){
 const summaryDimensions=[['quarter','Quarter'],['account','Account'],['customer','FID Customer'],['owner','Owner']];
 const summaryMetricDefs=[
   ['Slot Completion%','slotted','fid','slot','slot-ready'],['Pre-slot Stability%','stableSlot','slotted','slot','stable-slot'],['Post-slot Stability%','stablePost','slotted','post','stable-ctl'],
-  ['FID','fid','','fcid'],['Risk FID%','riskFid','slotted','slot','risk-fid'],['No Late Flags%','noLate','slotted','post','risk-free'],
+  ['FID','fid','','fcid'],['Risk FID%','riskFid','slotted','slot','risk-fid'],['Stable Slot & CTL%','noLate','slotted','post','risk-free'],
   ['NSR','nsr','','nsr'],['In work NSR','open','','nsr'],['Completed NSR','completed','','nsr'],['Cancelled/Rejected NSR','discardedNsr','','nsr'],['Completed NSR but no CTL','unlinked','','linked'],
   ['CTL','ctl','','ctl'],['Submitted CTL','submitted','','ctl'],['Completed CTL','ctlCompleted','','ctl'],['Draft CTL','draft','','ctl'],['Cancelled/Rejected CTL','discardedCtl','','ctl'],['Pending Config CTL','pending','','ctl'],['Pending Pull/Push CTL','pendingPullPush','','ctl']
 ];
-let summaryGroup='quarter',summaryPreviousGroup='quarter',summarySelected=['slotted','stableSlot','stablePost','fid','nsr','ctl'],summarySort={key:'',dir:-1},summaryCache={},summaryReport=[];
+let summaryGroup='quarter',summaryPreviousGroup='quarter',summarySelected=['slotted','stableSlot','stablePost','fid','nsr','ctl'],summarySort={key:'',dir:-1},summaryCache={},summaryReport=[],quarterCache={};
+function quarterResult(){
+  if(quarterCache.revision!==revision)quarterCache={revision,result:graph.query(queryFilters(),'periods')};
+  return quarterCache.result;
+}
 function summaryGroups(path){
+  const result=path==='quarter'?quarterResult():current,quartersByFid=new Map();
+  if(path==='quarter')for(const node of result.fids){if(!quartersByFid.has(node.id))quartersByFid.set(node.id,[]);quartersByFid.get(node.id).push(node.quarter||'[Unknown]');}
+  const fidNames=fid=>path==='quarter'?quartersByFid.get(fid)||graph.fids.get(fid)?.quarterStates.map(state=>state.quarter||'[Unknown]')||['[Unknown]']:[graph.fids.get(fid)?.[path]||'[Unknown]'];
   const groups=new Map(),fidMetrics=summaryMetricDefs.filter(([,,,,state])=>state),entry=name=>{
     name=name||'[Unknown]';if(!groups.has(name))groups.set(name,{name,...Object.fromEntries(summaryMetricDefs.map(([,key])=>[key,0]))});return groups.get(name);
   };
-  for(const node of current.fids){
+  for(const node of result.fids){
     const row=entry(node[path]);row.fid++;
     for(const [,key,,,state]of fidMetrics)row[key]+=node.portfolioStates.includes(state);
   }
-  for(const nsr of current.nsrs){
-    const fids=nsr.matchedFidIds||nsr.fidIds,groupName=fid=>graph.fids.get(fid)?.[path]||(path==='account'?nsr.account:'')||'[Unknown]';
-    const names=new Set(path==='owner'?[nsr.initiator||'[Unknown]']:fids.length?fids.map(groupName):[path==='account'?nsr.account||'[Unknown]':'[Unknown]']),status=taskGroup(nsr.taskStatus);
+  for(const nsr of result.nsrs){
+    const fids=nsr.matchedFidIds||nsr.fidIds,groupNames=fid=>{const names=fidNames(fid);return path==='account'&&names[0]==='[Unknown]'?[nsr.account||'[Unknown]']:names;};
+    const names=new Set(path==='owner'?[nsr.initiator||'[Unknown]']:fids.length?fids.flatMap(groupNames):[path==='account'?nsr.account||'[Unknown]':'[Unknown]']),status=taskGroup(nsr.taskStatus);
     for(const name of names){
       const row=entry(name);row.nsr++;row.open+=status==='workflow';row.completed+=status==='completed';row.discardedNsr+=status==='cancelled'||status==='rejected';
-      row.unlinked+=nsr.taskLifecycle==='completed-unlinked'&&(path==='owner'||!fids.length||fids.some(fid=>groupName(fid)===name&&nsr.implementationByFid[fid]==='completed-unlinked'));
+      row.unlinked+=nsr.taskLifecycle==='completed-unlinked'&&(path==='owner'||!fids.length||fids.some(fid=>groupNames(fid).includes(name)&&nsr.implementationByFid[fid]==='completed-unlinked'));
     }
   }
-  for(const ctl of current.ctls){
-    const row=entry(path==='owner'?ctl.initiator:graph.fids.get(ctl.fidId)?.[path]);row.ctl++;row.pending+=ctl.pending;row.pendingPullPush+=ctl.pendingPullPush;
-    if(ctl.statusKind==='completed')row.ctlCompleted++;else if(ctl.statusKind==='discarded')row.discardedCtl++;else if(ctl.status==='Submitted')row.submitted++;else if(ctl.status==='Draft')row.draft++;
+  for(const ctl of result.ctls){
+    for(const name of path==='owner'?[ctl.initiator]:fidNames(ctl.fidId)){
+      const row=entry(name);row.ctl++;row.pending+=ctl.pending;row.pendingPullPush+=ctl.pendingPullPush;
+      if(ctl.statusKind==='completed')row.ctlCompleted++;else if(ctl.statusKind==='discarded')row.discardedCtl++;else if(ctl.status==='Submitted')row.submitted++;else if(ctl.status==='Draft')row.draft++;
+    }
   }
   return [...groups.values()].sort((a,b)=>Number(a.name==='[Unknown]')-Number(b.name==='[Unknown]')||(path==='owner'?b.riskFid-a.riskFid||b.fid-a.fid||b.nsr-a.nsr||b.ctl-a.ctl:path==='quarter'?nsrRecords.periodRank(a.name)-nsrRecords.periodRank(b.name):0)||tableCollator.compare(a.name,b.name));
 }
@@ -2934,8 +2955,11 @@ function renderSummaryMetrics(target){
   if(!summarySelected.includes(summarySort.key))summarySort.key='';
   for(const button of target.querySelectorAll('[data-summary-export]'))button.disabled=true;
   if(!summarySelected.length){chart.innerHTML='<div class="summary-empty">Select at least one metric.</div>';id('summaryCount').textContent='';return}
-  if(summaryCache.revision!==revision||summaryCache.group!==summaryGroup)summaryCache={revision,group:summaryGroup,rows:summaryGroups(summaryGroup)};
-  const rows=summaryCache.rows.slice(),ctlReady=Boolean(store.meta.ctl||store.meta.ctlNsr),ready={fcid:!!store.meta.fcid,ctl:ctlReady,nsr:!!store.meta.nsr,slot:!!store.meta.fcid&&ctlReady,post:!!store.meta.fcid&&ctlReady&&!!store.meta.nsr,linked:ctlReady&&!!store.meta.nsr};
+  if(summaryCache.revision!==revision||summaryCache.group!==summaryGroup){
+    summaryCache={revision,group:summaryGroup,rows:summaryGroups(summaryGroup)};
+    if(summaryGroup==='quarter')summarySort.key='';
+  }
+  const rows=summaryCache.rows.slice(),ctlReady=Boolean(store.meta.ctl||store.meta.ctlNsr),ready={fcid:!!store.meta.fcid,ctl:ctlReady,nsr:!!store.meta.nsr,slot:!!store.meta.fcid&&ctlReady,post:!!store.meta.fcid&&ctlReady,linked:ctlReady&&!!store.meta.nsr};
   id('summaryCount').textContent=rows.length+' groups';
   if(!rows.length){chart.innerHTML='<div class="summary-empty">No matching records.</div>';return}
   const metrics=summaryMetricDefs.filter(([,key])=>summarySelected.includes(key)),dimension=summaryDimensions.find(([key])=>key===summaryGroup)[1];
@@ -3065,7 +3089,7 @@ function paintTable(state){state.grid.refreshFilter()}
 
 
 function exportTableRows(state,copy=false){const rows=tableResult(state),columns=state.grid.getColumns().filter(column=>column.isVisible()).map(column=>state.columns[Number(column.getField().slice(1))]),format=copy?state.options.copyRows:state.options.exportRows;return format?format(rows,columns):rows.map(row=>Object.fromEntries(columns.map(([label,get])=>[label,get(row)??''])))}
-function exportWorkbook(filename,sheets,rowFormats={}){
+function exportWorkbook(filename,sheets,rowFormats={},options={}){
   try{
     const workbook=XLSX.utils.book_new();
     for(const [name,rows]of Object.entries(sheets)){
@@ -3076,15 +3100,21 @@ function exportWorkbook(filename,sheets,rowFormats={}){
       }
       XLSX.utils.book_append_sheet(workbook,sheet,name.slice(0,31));
     }
-    XLSX.writeFile(workbook,filename+'.xlsx');
+    XLSX.writeFile(workbook,filename+'.xlsx',options);
   }
   catch(error){toast('Export failed: '+error.message)}
+}
+function exportAllDataSources(){
+  if(store.refreshing||store.busy.size){toast('Wait for data sources to finish loading before exporting.');return}
+  const sheets=Object.fromEntries(Object.entries(sources).filter(([key])=>store.raw[key].length).map(([key,source])=>[key==='nce'?'NCE FA Review':source.label,store.raw[key]]));
+  if(!Object.keys(sheets).length){toast('No data sources to export.');return}
+  exportWorkbook('ToolkitKyra_Data_Sources_'+nsrData.localDate(new Date()),sheets,{},{compression:true});
 }
 async function copyRows(rows){const matrix=Array.isArray(rows[0]),fields=matrix?[]:[...new Set(rows.flatMap(Object.keys))],content=(matrix?rows:[fields,...rows.map(row=>fields.map(key=>row[key]??''))]).map(row=>row.map(value=>(/[\r\n\t"]/.test(String(value))?'"'+String(value).replace(/"/g,'""')+'"':String(value))).join('\t')).join('\r\n');try{if(navigator.clipboard&&unsafeWindow.isSecureContext)await navigator.clipboard.writeText(content);else GM_setClipboard(content,'text');toast(number(rows.length-(matrix?1:0))+' rows copied')}catch(error){toast('Copy failed: '+error.message)}}
 function renderRules(target,updateMarks=false){
   const excluded=graph.query({...queryFilters(),excluded:true},'fids'),reasons=new Map();for(const node of excluded)reasons.set(node.excludedReason,(reasons.get(node.excludedReason)||0)+1);
-  if(!updateMarks)target.innerHTML=`<div class="btnrow" style="justify-content:flex-end"><button class="btn light small" data-import-settings>Import Settings</button><button class="btn light small" data-export-settings>Export Settings</button><input id="fcSettingsFile" type="file" accept=".json,application/json" hidden></div><details class="card"><summary>Excluded Commit FIDs · ${number(excluded.length)}</summary><div class="signal-strip" style="margin-top:10px">${[...reasons].map(([reason,count])=>`<span class="signal"><b>${number(count)}</b>${escapeHtml(reason)}</span>`).join('')}</div><div id="excludedTable"></div></details><div class="marked-settings">${markListHtml('nsr')}${markListHtml('fid')}</div><section class="card" id="fabAccountMapping"><div class="section-head"><h2>Fab / Account Mapping</h2><div class="btnrow"><button class="btn blue small" data-save-mapping>Save</button><button class="btn light small" data-reset-mapping>Restore Defaults</button></div></div><p class="muted">Use Fab names and FID / NSR Customer names. Exact names take priority over * wildcards.</p><div id="agNotice"></div><div id="agGrid" class="ag-grid"></div></section>`;
-  table('excludedTable',[['FID',node=>node.id,fidLink],['Reason',node=>node.excludedReason],['System',node=>node.system],['Account',node=>node.account],['Calendar Quarter',node=>node.quarter]],excluded,{file:'Excluded_Commit_FIDs'},updateMarks);
+  if(!updateMarks)target.innerHTML=`<div class="btnrow" style="justify-content:flex-end"><button class="btn light small" data-import-settings>Import Settings</button><button class="btn light small" data-export-settings>Export Settings</button><button class="btn light small" data-export-data-sources>Export All Data Sources</button><input id="fcSettingsFile" type="file" accept=".json,application/json" hidden></div><details class="card"><summary>Excluded Commit FIDs · ${number(excluded.length)}</summary><div class="signal-strip" style="margin-top:10px">${[...reasons].map(([reason,count])=>`<span class="signal"><b>${number(count)}</b>${escapeHtml(reason)}</span>`).join('')}</div><div id="excludedTable"></div></details><div class="marked-settings">${markListHtml('nsr')}${markListHtml('fid')}</div><section class="card" id="fabAccountMapping"><div class="section-head"><h2>Fab / Account Mapping</h2><div class="btnrow"><button class="btn blue small" data-save-mapping>Save</button><button class="btn light small" data-reset-mapping>Restore Defaults</button></div></div><p class="muted">Use Fab names and FID / NSR Customer names. Exact names take priority over * wildcards.</p><div id="agNotice"></div><div id="agGrid" class="ag-grid"></div></section>`;
+  table('excludedTable',[['FID',node=>node.id,fidLink],['Reason',node=>node.excludedReason],['System',node=>node.system],['Account',node=>node.account],['Quarter',node=>node.quarter]],excluded,{file:'Excluded_Commit_FIDs'},updateMarks);
   for(const [kind,config]of Object.entries(markKinds))for(const textarea of target.querySelectorAll(`[data-${kind}-marks]`)){const mark=textarea.dataset[kind+'Marks'];textarea.value=markDrafts[kind]?.[mark]??[...(mark==='ignore'?config.ignored:config.important)].sort(tableCollator.compare).reverse().join('\n')}
   if(!updateMarks)paintMapping();
 }
@@ -3163,29 +3193,38 @@ async function saveFidNote(){
   try{GM_setValue(FID_NOTES_KEY,JSON.stringify(next))}catch(error){id('fidNoteStatus').className='statistics-state error';id('fidNoteStatus').textContent='Could not save: '+error.message;return}
   fidNotes=next;await refreshFidPersonal(fid);closeFidNote();
 }
+function fidQuarterRows(node){return [...node.quarterStates].sort((a,b)=>Number(b.quarter===node.currentQuarter)-Number(a.quarter===node.currentQuarter))}
 function showFid(fid,updateMarks=false,changedNsr=''){
-  const node=graph.fids.get(fid);if(!node)return;const dialog=id('fidDetail');if(dialog.dataset.fid!==fid)['fidNsrTable','fidCtlTable','fidNceTable'].forEach(name=>localTables.delete(name));
+  const original=graph.fids.get(fid);if(!original)return;const node=graph.projectFid(original,queryFilters().quarter)||graph.projectFid(original),dialog=id('fidDetail');if(dialog.dataset.fid!==fid)['fidNsrTable','fidCtlTable','fidNceTable'].forEach(name=>localTables.delete(name));
   const updateDetail=updateMarks&&dialog.dataset.fid===fid&&tables.has('fidNsrTable');dialog.dataset.fid=fid;
-  const lateNsrIds=new Set(node.post.nsrs.map(nsr=>nsr.number)),lateCtlIds=new Set(node.post.ctls.map(ctl=>ctl.id));
-  const riskLabels={'On time':'Stable Slot','Pre late risk':'Late Slot','Post config risk':'Late CTL','No post risk':'Stable CTL/NSR'};
-  const summary=`<div class="fid-dialog-grid">${[
+  const lateCtlIds=new Set(original.lateCtls.map(ctl=>ctl.id)),lateSlotIds=new Set(original.quarterStates.flatMap(state=>state.slotEvidence.filter(pre=>pre.state==='risk').map(pre=>pre.ctlId)));
+  const riskLabels={'On time':'Stable Slot','Pre late risk':'Late Slot','Post config risk':'Late CTL','No post risk':'Stable CTL'};
+  const quarters=fidQuarterRows(original),multiple=quarters.length>1;
+  const quarterLines=quarters.map(state=>`<div class="fid-quarter-state${state.quarter===original.currentQuarter?' is-current':''}" data-quarter-state="${escapeHtml(state.quarter)}" data-selected-quarter="${node.selectedQuarterStates.includes(state)}" title="${escapeHtml(state.basis.join('\n'))}"><span>${escapeHtml(state.quarter||'[Unknown]')}</span>${multiple?pill(fidQuarterStatus(state),state.portfolioStates.includes('risk-fid')?'risk':state.portfolioStates.includes('risk-free')?'clear':'unknown',[riskTip(state.pre),riskTip(state.post)].join('\n')):''}</div>`).join('');
+  const summary=`<div class="fid-dialog-grid" style="--fid-date-rows:${quarters.length+1}">${[
     ['Slot',node.slot.state.replace(/^./,letter=>letter.toUpperCase())],['Commit: Field',node.commit],['Account',node.account],['Business Unit',node.businessUnit],
     ['System Description',node.system],['FID Description',node.fidDescription],['Customer',node.customer],['Fab Name',node.fab],
-    ['Calendar Quarter',node.quarter],['Sales Ops RD',node.rd],['MCSD',node.mcsd],['Customer Request Date',node.crd],
+    ['Quarter',node.quarter,'quarter'],['Sales Ops RD',node.rd,'rd'],['MCSD',node.mcsd,'mcsd'],['Customer Request Date',node.crd,'crd'],
     ['FID Owner',node.owner],['Slot Initiator',node.slot.initiator],['Sales Admin',node.salesAdmin]
-  ].map(([label,value])=>`<div class="fid-detail-value${label==='Slot'&&node.portfolioStates.includes('no-slot')?' no-slot':''}"${label==='FID Owner'?` title="${escapeHtml(ownerTip(node))}"`:label.startsWith('Sales Admin')?' title="Unique Pull / Push CTL votes; ties remain unknown"':''}><small>${label}${label==='FID Owner'?inferenceHelp(ownerHint):label==='Sales Admin'?inferenceHelp(salesAdminHint):''}</small>${escapeHtml(value||'[Unknown]')}</div>`).join('')}</div><div class="fid-evidence">${[['Pre-slot',node.pre],['Post-slot',node.post]].map(([name,risk])=>`<div class="notice ${name==='Pre-slot'&&node.portfolioStates.includes('no-slot')?'no-slot':risk.state}"><b>${escapeHtml(name+': '+(riskLabels[risk.label]||risk.label.replace(/^(?:Pre|Post) /i,'')))}</b><p>${escapeHtml(risk.reason)}</p><p class="muted">${escapeHtml([risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:''].filter(Boolean).join(' · '))}</p></div>`).join('')}</div>`;
+  ].map(([label,value,dateKey])=>{
+    const lines=multiple&&dateKey&&dateKey!=='quarter'?(dateKey==='crd'?`<div class="fid-quarter-state"><span>${escapeHtml(value||'[Unknown]')}</span></div>`:quarters.map(state=>`<div class="fid-quarter-state${state.quarter===original.currentQuarter?' is-current':''}" data-quarter-date="${escapeHtml(state.quarter)}" title="${escapeHtml((state.quarter||'[Unknown]')+' · '+state.dateSource+(!state.dates[dateKey]?'\nDate unavailable.':''))}"><span>${escapeHtml(state.dates[dateKey]||'—')}</span></div>`).join('')):'';
+    return `<div class="fid-detail-value${multiple&&dateKey?' fid-date-value':''}${label==='Slot'&&node.portfolioStates.includes('no-slot')?' no-slot':''}"${dateKey?` data-date-field="${dateKey}"`:''}${label==='FID Owner'?` title="${escapeHtml(ownerTip(node))}"`:label.startsWith('Sales Admin')?' title="Unique Pull / Push CTL votes; ties remain unknown"':''}><small>${label}${label==='Quarter'?inferenceHelp(quarterHint):label==='FID Owner'?inferenceHelp(ownerHint):label==='Sales Admin'?inferenceHelp(salesAdminHint):''}</small>${label==='Quarter'?quarterLines:lines||escapeHtml(value||'[Unknown]')}</div>`;
+  }).join('')}</div><div class="fid-evidence">${[['Pre-slot',node.pre],['Post-slot',node.post]].map(([name,risk])=>`<div class="notice ${name==='Pre-slot'&&node.portfolioStates.includes('no-slot')?'no-slot':risk.state}"><b>${escapeHtml(name+(original.quarterStates.length>1?' · '+node.quarter:'')+': '+(riskLabels[risk.label]||risk.label.replace(/^(?:Pre|Post) /i,'')))}</b><p>${escapeHtml(risk.reason)}</p><p class="muted">${escapeHtml([risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:''].filter(Boolean).join(' · '))}</p></div>`).join('')}</div>`;
   if(updateDetail)id('fidSummary').innerHTML=summary;
   else dialog.innerHTML=`<div class="section-head"><div><h1 id="fidDetailTitle"><span id="fidPersonalMark" class="fid-personal-mark"></span>FID ${escapeHtml(fid)} <a class="fid-action" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=BT111_OPPT&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(fid)}" target="_blank" rel="noopener noreferrer">CRM ↗</a><span id="fidHeaderStatus" class="fid-header-status" role="group" aria-label="FID Status &amp; Risks"></span></h1><span class="muted">${node.inPopulation?'Commit portfolio':'Observed in source data'}</span></div><a class="fid-action" href="#" data-export-fid="${escapeHtml(fid)}">Export FID 360°</a><button class="fid-close" type="button" data-close-fid aria-label="Close FID 360" title="Close">×</button></div><div id="fidSummary">${summary}</div><section id="fidNotePanel" class="fid-note-panel"></section><div id="fidNsrTable"></div><div id="fidCtlTable"></div><div id="fidNceTable"></div>`;
   id('fidHeaderStatus').innerHTML=fidDetailStatus(node).map(([label,kind,tip])=>pill(label,kind,tip)).join('');
   paintFidPersonal(fid);
-  renderNsrDetail('fidNsrTable',node.nsrs,{title:'📋 NSR History',file:'FID_'+fid+'_NSR',defaultSort:'Submit Date',rowRisk:nsr=>lateNsrIds.has(nsr.number)?'late-nsr':nsr.eligible&&nsr.lifecycle==='open'?'pending-nsr':''},updateDetail,changedNsr);
-  if(!updateDetail){table('fidCtlTable',ctlColumns.filter(([label])=>label!=='FID'),node.ctls,{title:'🔄 Slot / CTL History',file:'FID_'+fid+'_CTL',rowRisk:ctl=>node.pre.state==='risk'&&node.slot.active?.id===ctl.id?'late-slot':lateCtlIds.has(ctl.id)?'late-ctl':ctl.pending?'pending-config':ctl.pendingPullPush?'pending-pull-push':'',widths:{CTL:105,Stage:140,Change:90,'Created Date':115,'Elapsed Days':110,'Sales Ops Approval':135,'Config Frz':100,Initiator:135,Customer:160,'Quote ID':105,'NSR Reference':150,'Root Cause':180,'CTL Notes':220,'Sub Reason':160}});table('fidNceTable',nceColumns,node.nces,{title:'🔎 NCE / FA History',file:'FID_'+fid+'_NCE',widths:{NCE:90,State:80,Title:140,Impact:75,Opened:95,'Damage Group':95,'Damage Code':90,'Part Number':105,'Part Description':140}})}
+  renderNsrDetail('fidNsrTable',node.nsrs,{title:'📋 NSR History',file:'FID_'+fid+'_NSR',defaultSort:'Submit Date',rowRisk:nsr=>nsr.eligible&&nsr.lifecycle==='open'?'pending-nsr':''},updateDetail,changedNsr);
+  if(!updateDetail){table('fidCtlTable',ctlColumns.filter(([label])=>label!=='FID'),node.ctls,{title:'🔄 Slot / CTL History',file:'FID_'+fid+'_CTL',rowRisk:ctl=>lateSlotIds.has(ctl.id)?'late-slot':lateCtlIds.has(ctl.id)?'late-ctl':ctl.pending?'pending-config':ctl.pendingPullPush?'pending-pull-push':'',widths:{CTL:105,Stage:140,Change:90,'Created Date':115,'Elapsed Days':110,'Sales Ops Approval':135,'RD At Create':125,'MCSD@Create':125,'SRD @ SOPs Approval':165,'MCSD At SOps Approval':175,'TSD @ SOPs Approval':165,'SRD @ Current':135,'MCSD @ Current':135,'Config Frz':100,'Mfg Upgrade Type':155,Initiator:135,Customer:160,'Quote ID':105,'NSR Reference':150,'Root Cause':180,'CTL Notes':220,'Reason for Chg':160,'Sub Reason':160,'Sales OPs Approver':170}});table('fidNceTable',nceColumns,node.nces,{title:'🔎 NCE / FA History',file:'FID_'+fid+'_NCE',widths:{NCE:90,State:80,Title:140,Impact:75,Opened:95,'Damage Group':95,'Damage Code':90,'Part Number':105,'Part Description':140}})}
   if(!dialog.open)dialog.showModal();
 }
 function exportFid(fid){
-  const node=graph.fids.get(fid),summary=fidDetailRows([node])[0],elapsedDays=ctlColumns.find(([label])=>label==='Elapsed Days')[1];
+  const original=graph.fids.get(fid),node=graph.projectFid(original,queryFilters().quarter)||graph.projectFid(original),summary=fidDetailRows([node])[0],elapsedDays=ctlColumns.find(([label])=>label==='Elapsed Days')[1];
+  const quarters=fidQuarterRows(original);
+  summary['Assessment quarters']=node.quarter;summary.Quarter=quarters.map(state=>state.quarter||'[Unknown]').join('\n');summary['Quarter assessments']=quarters.map(state=>(state.quarter||'[Unknown]')+': '+fidQuarterStatus(state)).join('\n');
+  if(quarters.length>1)for(const [label,key]of [['Sales Ops RD','rd'],['MCSD','mcsd']])summary[label]=quarters.map(state=>state.dates[key]||'—').join('\n');
   summary['Fab Name']=node.fab;summary['Business Unit']=node.businessUnit;summary['Sales Admin']=node.salesAdmin;summary['Owner rule']='Slot-derived Account membership → Slot / Config CTL counts → tied candidates\' NSR counts (all eligible CTL counts are 0: NSR fallback within Account) → current Slot submitter';
-  summary['Pending NSR']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open').length;summary['Late NSR']=node.post.nsrs.length;summary['Completed 5D NSR']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-5d').length;summary['Completed NSR but no CTL']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-unlinked').length;
+  summary['Pending NSR']=node.post.nsrs.filter(nsr=>includeIgnored||!nsr.ignored).length;summary['Completed 5D NSR']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-5d').length;summary['Completed NSR but no CTL']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-unlinked').length;
   exportWorkbook('FID_'+fid,{FID:[summary],NSR:exportTableRows(tables.get('fidNsrTable')),NSR_Source:node.nsrs.flatMap(nsr=>nsr.rows||[]),CTL:node.ctls.flatMap(ctl=>{const days=elapsedDays(ctl);return (ctl.rows||ctl.rawRows||[]).map(row=>({...row,'Elapsed Days':days}))}),NCE:node.nces.flatMap(nce=>nce.rows||nce.rawRows||[]),FID_Source:node.rawRows||[node.record]})
 }
 function exportSettings(){
@@ -3317,7 +3356,13 @@ document.addEventListener('click',event=>{
   if(button.hasAttribute('data-reset-mapping')){if(!unsafeWindow.confirm('Restore the default Fab / Account mapping?'))return;const result=accountMapping.reset();if(result.ok){mappingDraft=null;recalculate()}else toast(result.error);return}
   if(button.hasAttribute('data-import-settings')){id('fcSettingsFile').click();return}
   if(button.hasAttribute('data-export-settings')){exportSettings();return}
-  if(button.id==='fcRefresh')restoreSources(true);else if(button.id==='fcReset'){includeIgnored=true;clearTimeout(searchTimer);for(const key of Object.keys(filterValues))delete filterValues[key];id('fSearch').value='';for(const local of localTables.values()){local.scroll=0;local.marks=null;local.headerFilters=[]}for(const state of tables.values())if(state.ready)state.grid.clearHeaderFilter();buildFilters();applyFilters()}
+  if(button.hasAttribute('data-export-data-sources')){exportAllDataSources();return}
+  if(button.id==='fcRefresh')restoreSources(true);else if(button.id==='fcReset'){
+    includeIgnored=true;clearTimeout(searchTimer);for(const key of Object.keys(filterValues))delete filterValues[key];
+    if(store.raw.fcid.length)filterValues.quarter=defaultQuarters();
+    if(store.meta.ctl||store.meta.ctlNsr)filterValues['ctl.change']=[...defaultCtlTypes];
+    id('fSearch').value='';for(const local of localTables.values()){local.scroll=0;local.marks=null;local.headerFilters=[]}for(const state of tables.values())if(state.ready)state.grid.clearHeaderFilter();buildFilters();applyFilters();
+  }
 });
 document.addEventListener('keydown',event=>{
   if(event.ctrlKey&&event.shiftKey&&event.altKey&&event.code==='KeyD'){
@@ -3349,8 +3394,8 @@ document.addEventListener('scroll',event=>{if(columnPopup.column&&!columnPopup.c
 id('fidDetail').addEventListener('close',()=>{id('fidNotePanel')?.querySelector('form')?.remove();highlightLinkedHistory('fidCtlTable');highlightLinkedHistory('fidNsrTable')});
 id('fidNoteDialog').addEventListener('close',()=>id('fidNoteDialog').replaceChildren());
 document.addEventListener('submit',event=>{if(event.target.id==='fidNoteForm'){event.preventDefault();saveFidNote()}});
-id('fSearch').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(applyFilters,180)});
-id('fidLookup').addEventListener('submit',event=>{event.preventDefault();showFid(id('fFid360').value.trim())});
+id('fSearch').addEventListener('input',()=>{syncFidLookup();clearTimeout(searchTimer);searchTimer=setTimeout(applyFilters,180)});
+id('fidLookup').addEventListener('submit',event=>{event.preventDefault();const fid=syncFidLookup();if(fid)showFid(fid)});
 id('fcNsrFrom').addEventListener('input',()=>id('fcNsrTo').min=id('fcNsrFrom').value);id('fcNsrCancel').addEventListener('click',()=>id('fcNsrDialog').close());id('fcNsrForm').addEventListener('submit',event=>{event.preventDefault();if(store.busy.has('nsr'))return;id('fcNsrDialog').close();loadSharedNsr(false)});
 
 function normalizeNsrRows(rows){return rows.map(raw=>{const row=nsrRecords.canonicalRow(raw);row['REF FCID']||=text(raw['Reference FID']??raw.FID);row['Submit Date']=sourceDate(row['Submit Date'])||row['Submit Date'];return {...raw,...row,'Reference Fcid':row['REF FCID'],'Workflow Status':raw['Workflow Status']||row['NSR Status']||row['Task Name'],'Task Status':nsrRecords.deriveTaskStatus(row)}}).filter(row=>row['Reference Fcid']||row['NSR#'])}
@@ -3375,7 +3420,7 @@ function sourceMessage(key,message,kind='ok',transport=false){
   target.textContent=label;target.className='fc-source-state '+(kind==='loading'?'loading':meta?'ok':'')+(hasRange?' has-range':'')+(kind!=='loading'&&stale?' stale':'')+(kind==='error'?' error':'');
   target.title=meta?.cached&&kind!=='loading'?['Using cache · '+new Date(meta.savedAt).toLocaleString('en-GB'),meta.modifiedAt?(BOBJ_SOURCES[key]?'Workbook updated · ':'Source updated · ')+new Date(meta.modifiedAt).toLocaleString('en-GB'):'',kind==='error'?message:meta.cacheReason].filter(Boolean).join('\n'):kind==='error'?message:hasRange?'Data range · '+meta.dateField:message;
   target.setAttribute('aria-label',label);target.tabIndex=kind==='error'||meta?.cached?0:-1;
-  if(BOBJ_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=kind!=='error'||!transport;if(help.hidden)help.open=false}
+  if(BOBJ_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=!transport;if(help.hidden)help.open=false}
 }
 function actionMessage(message){id('fcActionStatus').textContent=message}
 function sourceMeta(key){const meta=store.meta[key],target=id('fcMeta-'+key);target.textContent=meta?text(meta.file).split(/[\\/]/).pop():'';target.title=meta?.file||'';id('fcSourceCount').textContent=Object.keys(store.meta).length+' / 5'}
@@ -3608,7 +3653,7 @@ setNsrRange(nsrRange);recalculate();restoreSources();
 // Source parsing is independent of dashboard state and does not change source records.
 function createFidSourceReaders(sources){
   const weights={
-    fcid:{fid:[40,1],commit:[20,1],calendarQuarter:[10,0],customer:[5,0],system:[5,0],targetShip:[5,0],rd:[5,0],account:[5,0]},
+    fcid:{fid:[40,1],commit:[20,1],mcsd:[5,0],customer:[5,0],system:[5,0],targetShip:[5,0],rd:[5,0],account:[5,0]},
     ctl:{fid:[35,1],number:[25,1],change:[10,0],mcsd:[5,0],srd:[5,0],approved:[5,0],summary:[5,0]},
     ctlNsr:{fid:[35,1],number:[25,1],change:[10,0],mcsd:[5,0],srd:[5,0],approved:[5,0],stage:[5,0]},
     nsr:{number:[70,1],status:[10,0],task:[10,0],title:[10,0]},
@@ -3625,9 +3670,10 @@ function createFidSourceReaders(sources){
   function profileFor(key){const profile=profiles[key];if(!profile)throw new Error('Unknown data source: '+key);return profile;}
 
   function scoreSourceHeader(values,key){
-    const profile=profileFor(key),headers=new Set((values||[]).map(norm).filter(Boolean)),missing=[];let score=0;
-    profile.fields.forEach(field=>{if(field.aliases.some(alias=>headers.has(alias)))score+=field.weight;else if(field.required)missing.push(field.label);});
-    return {score,missing,requiredOk:!missing.length};
+    const profile=profileFor(key),headers=new Set((values||[]).map(norm).filter(Boolean)),missing=[];let score=0,exactScore=0;
+    profile.fields.forEach(field=>{if(field.aliases.some(alias=>headers.has(alias))){score+=field.weight;if(headers.has(norm(field.label)))exactScore+=field.weight}else if(field.required)missing.push(field.label);});
+    // Keep the existing coverage threshold before rewarding native column names.
+    return {score:score<profile.minimum?score:score+exactScore,missing,requiredOk:!missing.length};
   }
   function betterHeader(candidate,previous){return !previous||Number(candidate.requiredOk)>Number(previous.requiredOk)||(candidate.requiredOk===previous.requiredOk&&candidate.score>previous.score);}
   function bestHeaderFromMatrix(matrix,key,startRow=0){
@@ -3644,7 +3690,7 @@ function createFidSourceReaders(sources){
       const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',blankrows:true,raw:false,range:previewRange}),best=bestHeaderFromMatrix(matrix,key,fullRange.s.r);
       candidates.push({...best,sheet:sheetName,dataRows:Math.max(0,fullRange.e.r-best.headerRow),configured:sheetName===profile.sheet,sheetOrder});
     });
-    candidates.sort((a,b)=>Number(b.requiredOk)-Number(a.requiredOk)||b.score-a.score||b.dataRows-a.dataRows||Number(b.configured)-Number(a.configured)||a.sheetOrder-b.sheetOrder);
+    candidates.sort((a,b)=>Number(b.requiredOk)-Number(a.requiredOk)||b.score-a.score||Number(b.configured)-Number(a.configured)||b.dataRows-a.dataRows||a.sheetOrder-b.sheetOrder);
     return validateSourceCandidate(key,candidates[0]);
   }
   function canonicalize(rows,key){const profile=profileFor(key),headers=new Map(Object.keys(rows[0]||{}).map(name=>[norm(name),name])),columns=profile.fields.map(field=>[field.label,field.aliases.map(alias=>headers.get(alias)).find(Boolean)]);return rows.map(source=>{const row={...source};for(const [label,alias] of columns)if(!clean(row[label])&&alias)row[label]=source[alias];return row}).filter(row=>clean(row[profile.key])||(key==='nsr'&&clean(row[profile.number])));}
@@ -3995,9 +4041,9 @@ function createFidGraph(raw, options = {}) {
   const ownerPolicy='majority';
   const effectivePolicy='approved';
   const riskPolicy='approved';
-  const postNsrPolicy='open-today';
+  const dropQuarterLeadWeeks=19; // Inferred reporting window; use the Drop's creation snapshot, including overdue schedules.
   const ignoredNsrs = new Set(Array.from(options.ignoredNsrs||[],value=>clean(value).toUpperCase())),importantNsrs = new Set(Array.from(options.importantNsrs||[],value=>clean(value).toUpperCase()));
-  const parsedDates=new Map(),isoDates=new Map();
+  const parsedDates=new Map(),isoDates=new Map(),quarterDates=new Map();
   const date = value => {
     const text = clean(value); if (!text) return null;
     if(parsedDates.has(text))return parsedDates.get(text);
@@ -4109,18 +4155,20 @@ function createFidGraph(raw, options = {}) {
   }
     const ctlValueFields=Object.entries({
       fidId:['Opportunity ID','FCID','FID'],change:['Change Cat','Change Type','Change Category'],initiator:['Initiator','Created By','Initiated By','Requester'],businessUnit:['Business Unit','BU'],
-      summary:['Change Summary','Summary'],created:['Creation Date','Create Date'],approved:['1st SOps Appr Dt','Sales Ops Approval Date','SOPS Approval Date'],mcsd:['MCSD @ Current','MCSD'],
+      summary:['Change Summary','Summary'],created:['Creation Date','Create Date'],approved:['1st SOps Appr Dt','Sales Ops Approval Date','SOPS Approval Date'],mcsd:['MCSD @ Current','MCSD'],mcsdCreate:['MCSD@Create','MCSD At Create'],rdCreate:['RD At Create'],mcsdApproval:['MCSD At SOps Approval'],tsdApproval:['TSD @ SOPs Approval'],
       srd:['SRD @ Current','Sales Ops RD','SRD'],srdApproval:['SRD @ SOPs Approval'],fieldCrd:['Field CRD','CRD @ Current','CRD'],mfg:['Mfg Upgrade Type','Manufacturing Upgrade Type'],stage:['Stage','CTL Stage'],quote:['Quote ID','Quote Number'],sourceQuote:['Source Quote','Source Quote Number'],
-      customer:['Customer group 2','Customer','Customer Name','End Customer'],configFrz:['Config Frz@Current','Config Frz','Config Frozen Date','Config Freeze Date'],rootCause:['Root Cause','Root Cause of Late Change']
+      customer:['Customer group 2','Customer','Customer Name','End Customer'],configFrz:['Config Frz@Current','Config Frz','Config Frozen Date','Config Freeze Date'],rootCause:['Root Cause','Root Cause of Late Change'],reason:['Reason for Chg','Reason for Change'],salesOpsApprover:['Sales OPs Approver']
     });
-  const ctlDateFields=['created','approved','mcsd','srd','srdApproval','fieldCrd','configFrz'];
+  const ctlDateFields=['created','approved','mcsd','mcsdCreate','rdCreate','mcsdApproval','tsdApproval','srd','srdApproval','fieldCrd','configFrz'];
+  // BOBJ truncates Sub Reason at 20 characters; match stable prefixes and retain raw values.
+  const lateCtlSubReasonPrefixes=['Application Change','Build Type Change (N','Fab Change – Config','Install Base Issue R','New Feature CIP','Demand Reallocation','Common SPEC/Safety'];
   for (const [key,entries] of ctlGroups) {
     const rows = entries.map(entry=>entry.row), read = names => { for (const entry of entries) { const value=field(entry.row,names); if (value) return value; } return ''; };
 
     const reference=entries.find(entry=>entry.source==='ctlNsr')?.row;
-    const ctl={id:key,number:read(['CTL ID','CTL#']),record:rows.length===1?rows[0]:mergeRows(rows),rows,rawRows:rows,sources:unique(entries.map(entry=>entry.source)),conflicts:[],links:[],notes:field(reference,['Notes','CTL Notes'])||read(['Notes','CTL Notes']),subReason:field(reference,['Sub Reason'])||read(['Sub Reason'])};
+    const ctl={id:key,number:read(['CTL ID','CTL#']),record:rows.length===1?rows[0]:mergeRows(rows),rows,rawRows:rows,sources:unique(entries.map(entry=>entry.source)),conflicts:[],links:[],changeSummary:field(reference,['Change Summary','Summary'])||read(['Change Summary','Summary']),notes:field(reference,['Notes','CTL Notes'])||read(['Notes','CTL Notes']),subReason:field(reference,['Sub Reason'])||read(['Sub Reason'])};
     for (const [name,names] of ctlValueFields) {
-      ctl[name]=read(names);
+      ctl[name]=(name==='rootCause'&&field(reference,names))||read(names);
       if(entries.length>1){const alternatives=unique(entries.map(entry=>field(entry.row,names)).filter(Boolean)),comparison=alternatives.map(value=>ctlDateFields.includes(name)?iso(value)||textKey(value):textKey(value));if(unique(comparison).length>1)ctl.conflicts.push({field:name,values:alternatives})}
     }
     ctl.fidId=validFid(ctl.fidId); ctl.initiator=person(ctl.initiator); for(const name of ctlDateFields)ctl[name]=iso(ctl[name]);
@@ -4170,7 +4218,7 @@ function createFidGraph(raw, options = {}) {
   const tokenPattern=/(?<![A-Z0-9])([NDL]\d{5,8})(?![A-Z0-9])/gi;
   for (const ctl of ctls) {
     const tokens=new Map();
-    for (const row of ctl.rows) for (const name of ['Change Summary','Summary','Root Cause','Root Cause of Late Change','Notes']) {
+    for (const row of ctl.rows) for (const name of ['Change Summary','Summary','Root Cause','Root Cause of Late Change','Notes','CTL Notes']) {
       const value=field(row,[name]); if (!value) continue;
       for (const match of value.matchAll(tokenPattern)) { const number=match[1].toUpperCase(); if (!tokens.has(number)) tokens.set(number,new Set()); tokens.get(number).add(name); }
     }
@@ -4220,6 +4268,60 @@ function createFidGraph(raw, options = {}) {
     const owner=tied?tieBreaker:candidates[0]?.name||'';
     return {owner,evidence:{policy:ownerPolicy,inferred:true,account:node.account,accountPeople:[...people.values()],source:!people.size?'account-unavailable':!candidates.length?'no-eligible-votes':tied?tieBreakerSource||'unresolved-tie':ctlCandidates.length?'ctl':'nsr-fallback',confidence:!owner?'unknown':!ctlCandidates.length||tieBreakerSource==='nsr-tiebreaker'?'medium':'low',candidates,nsrCandidates,ctlCandidates,tied,tiedCandidates,tieBreaker,documents:candidates.reduce((sum,candidate)=>sum+candidate.count,0),excludedCandidates:tally(actions.filter(action=>!eligible(action))),aliases:[...aliasEvidence.values()].filter(evidence=>candidates.some(candidate=>candidate.name===evidence.name))}};
   };
+  function quarterOf(day){
+    if(!quarterDates.has(day))quarterDates.set(day,fidQuarterFromDate(date(day)));
+    return quarterDates.get(day);
+  }
+  function quarterRank(value){
+    const match=String(value||'').replace(/[^a-z0-9]/gi,'').match(/^Q(MAR|JUN|SEP|DEC)(\d{2})$/i);
+    return match?Number(match[2])*4+['MAR','JUN','SEP','DEC'].indexOf(match[1].toUpperCase()):NaN;
+  }
+  function assessSlot(node,current,riskActive,nativeFallback=true){
+    const ready=loaded.ctl||loaded.ctlNsr,mfg=(riskActive?.mfg||field(node.record,['Mfg Upgrade Type','Manufacturing Upgrade Type'])).toUpperCase(),threshold=mfg.includes('NO LABOR')?12:20;
+    const nativeRd=nativeFallback&&!current?.isDrop?node.rd:'',referenceDate=riskActive?.srdApproval||riskActive?.srd||riskActive?.fieldCrd||nativeRd,referenceField=riskActive?.srdApproval?'SRD @ SOPs Approval':riskActive?.srd?'Sales Ops RD':riskActive?.fieldCrd?'Field CRD':nativeRd?'Date: Sales Ops Request Date (RD)':'';
+    const span=weeks(riskActive?.eventDate,referenceDate),onTime=span>threshold;
+    const pre={state:'unknown',label:'Pre risk unknown',weeks:span,threshold,reason:'CTL source not loaded.',eventDate:riskActive?.eventDate||'',eventDateField:riskActive?.eventDateField||'',referenceDate:referenceDate||'',referenceField,created:riskActive?.created||'',approved:riskActive?.approved||'',ctlId:riskActive?.id||'',policy:riskPolicy};
+    if(ready&&!current)Object.assign(pre,{state:'risk',label:'No Slot CTL',reason:'No approved Slot CTL found.'});
+    else if(ready&&!riskActive)pre.reason='Original approved Slot evidence is missing after Drop Slot.';
+    else if(riskActive&&span===null)pre.reason=current?.isDrop?'Original Slot RD / SRD missing after Drop Slot.':'Slot RD / SRD missing.';
+    else if(riskActive)Object.assign(pre,{state:onTime?'clear':'risk',label:onTime?'On time':'Pre late risk',reason:`Slot ${onTime?'submitted on time':'submitted too late'}; (${referenceField==='Field CRD'?'CRD':'SRD'} − Slot approved date) / 7 = ${span.toFixed(1)} weeks ${onTime?'>':'≤'}${threshold} weeks.`});
+    return pre;
+  }
+  function assessPortfolio(target,node,slotted){
+    const ready=loaded.ctl||loaded.ctlNsr;
+    target.slotted=slotted;target.portfolioStatus=target.post.ctls.length?'late-ctl':target.post.state==='clear'?'stable-ctl':'ctl-unknown';
+    target.portfolioStates=!ready?['slot-unknown']:!slotted?['no-slot']:['slot-ready',target.pre.state==='clear'?'stable-slot':target.pre.state==='risk'?'late-slot':'slot-date-unknown',target.portfolioStatus];
+    target.portfolioCell=ready&&slotted?target.portfolioStates[1]+'|'+(target.portfolioStatus==='late-ctl'?'late-ctl-nsr':target.portfolioStatus):target.portfolioStates[0];
+    if(ready&&!slotted&&node.slot.pending.some(ctl=>ctl.isSlot))target.portfolioStates.push('slot-pending');
+    if(ready&&slotted){
+      if(node.slot.state==='dropped')target.portfolioStates.push('slot-dropped');
+      target.portfolioStates.push(fidRiskAssessment(target.portfolioCell));
+      if(!node.mcsd)target.portfolioStates.push('slot-no-mcsd');
+    }
+    target.risks=[];
+    if(target.pre.state==='risk')target.risks.push({type:'pre',label:target.pre.label,reason:target.pre.reason});
+    if(target.post.ctls.length)target.risks.push({type:'post',label:'Post config risk',reason:target.post.reason});
+    if(target.post.nsrs.length)target.risks.push({type:'nsr',label:'Pending NSR',count:target.post.nsrs.length});
+    for(const [label,predicate]of [['Pending Config CTL',ctl=>ctl.pending],['Pending Pull/Push CTL',ctl=>ctl.pendingPullPush]]){
+      const count=node.ctls.filter(predicate).length;if(count)target.risks.push({type:'ctl',label,count});
+    }
+    if(target.portfolioStates.includes('slot-no-mcsd'))target.risks.push({type:'mcsd',label:'MCSD pending',reason:'Slotted FID without MCSD.'});
+    if(node.nces.length)target.risks.push({type:'nce',label:'NCE / FA signal',count:node.nces.length});
+    target.category=target.pre.state==='risk'||target.post.state==='risk'?'risk':target.pre.state==='unknown'||target.post.state==='unknown'?'review':'clear';
+    return target;
+  }
+  function mergeQuarterStates(node,states){
+    const slotted=states.filter(state=>state.slotted),evidence=slotted.length?slotted:states;
+    const worst=key=>evidence.find(state=>state[key].state==='risk')?.[key]||evidence.find(state=>state[key].state==='unknown')?.[key]||evidence[0][key];
+    const pre=worst('pre'),ctls=[...new Map(evidence.flatMap(state=>state.post.ctls).map(ctl=>[ctl.id,ctl])).values()],post={...worst('post'),ctls,ctlIds:ctls.map(ctl=>ctl.id)};
+    return assessPortfolio({pre,post},node,slotted.length>0);
+  }
+  function projectFid(node,quarters=[],systemQuarters=[]){
+    const selected=node.quarterStates.filter(state=>match(state.quarter,quarters)&&match(state.quarter,systemQuarters));if(!selected.length)return null;
+    if(node.quarterStates.length===1)return node;
+    const assessment=selected.length===1?selected[0]:mergeQuarterStates(node,selected);
+    return {...node,...assessment,quarter:selected.map(state=>state.quarter).join(', '),selectedQuarterStates:selected};
+  }
   function refreshFid(node) {
     node.risks=[];
     node.nsrs=node.nsrs.map(nsr=>{
@@ -4233,59 +4335,118 @@ function createFidGraph(raw, options = {}) {
     node.system=field(record,['System Description','System Desc','System']); node.quote=field(record,['Active Quote Number','Quote Number','Active Quote']);
     node.fab=field(record,['Fab Name','Fab']); node.fidDescription=field(record,['FID Description']); node.commit=field(record,['Commit: Field','Commit Field','Field Commit','Commit Status']); node.crd=firstDate(record,['Date: Customer Request','Customer Request Date']).date;
     node.businessUnit=field(record,['Business Unit','BU'])||node.ctls.find(ctl=>ctl.businessUnit)?.businessUnit||'';
-    node.quarter=field(record,['Time: Calendar Quarter','Calendar Quarter','Cal Quarter','Quarter']); node.mcsd=nativeMcsd.date||node.ctls.find(ctl=>ctl.mcsd)?.mcsd||'';
-    node.rd=firstDate(record,['Date: Sales Ops Request Date (RD)','Sales Ops Request Date','Sales Ops RD','RD']).date; node.targetShip=firstDate(record,['Date: Target Ship','Target Ship Date','Target Ship']).date;
+    node.mcsd=nativeMcsd.date||node.ctls.find(ctl=>ctl.mcsd)?.mcsd||'';
+    node.rd=firstDate(record,['Date: Sales Ops Request Date (RD)','Sales Ops Request Date','Sales Ops RD','SRD','RD']).date; node.targetShip=firstDate(record,['Date: Target Ship','Target Ship Date','Target Ship']).date;
     const events=node.ctls.filter(ctl=>(ctl.isSlot||ctl.isDrop)&&ctl.effective).sort((a,b)=>(b.eventDate||'').localeCompare(a.eventDate||''));
-    const current=events[0]||null,active=current?.isSlot?current:null,pending=node.ctls.filter(ctl=>(ctl.isSlot||ctl.isDrop)&&ctl.statusKind!=='discarded'&&!ctl.effective);
+    const current=events[0]||null,active=current?.isSlot?current:null,riskActive=active||(current?.isDrop?events.find(ctl=>ctl.isSlot):null)||null,pending=node.ctls.filter(ctl=>(ctl.isSlot||ctl.isDrop)&&ctl.statusKind!=='discarded'&&!ctl.effective);
+    const effectiveCtls=node.ctls.filter(ctl=>ctl.effective&&ctl.eventDate<=today);
+    const quarterDate=nativeMcsd.date||node.rd,quarterField=nativeMcsd.date?'Current MCSD':'Current SRD';
+    node.quarter=node.currentQuarter=quarterOf(quarterDate);
+    node.quarterBasis=[quarterField+': '+(quarterDate||'[Unknown]')];
     const slotReady=loaded.ctl||loaded.ctlNsr;
-    node.slot={active,current,pending,riskCurrent:current,riskActive:active,state:!slotReady?'unknown':current?.isDrop?'dropped':active?'active':'none',initiator:active?.initiator||'',number:active?.number||current?.number||'',quarter:node.quarter,effectivePolicy,riskPolicy,sourceReady:slotReady};
+    node.slot={active,current,pending,riskCurrent:current,riskActive,state:!slotReady?'unknown':current?.isDrop?'dropped':active?'active':'none',initiator:active?.initiator||'',number:active?.number||current?.number||'',quarter:node.quarter,effectivePolicy,riskPolicy,sourceReady:slotReady};
     const ownership=inferOwner(node); node.owner=ownership.owner; node.ownerEvidence=ownership.evidence;
     const salesAdminActions=node.ctls.filter(ctl=>ctl.initiator&&(ctl.changeKey==='pull'||ctl.changeKey==='push')).map(ctl=>({id:ctl.id,name:ctl.initiator,source:'ctl'})),salesAdminCandidates=tally(salesAdminActions);
     const salesAdminTied=salesAdminCandidates.length>1&&salesAdminCandidates[0].count===salesAdminCandidates[1].count;
     node.salesAdmin=salesAdminTied?'':salesAdminCandidates[0]?.name||'';node.salesAdminEvidence={candidates:salesAdminCandidates,tied:salesAdminTied,documents:salesAdminActions.length};
-    const mfg=(active?.mfg||field(record,['Mfg Upgrade Type','Manufacturing Upgrade Type'])).toUpperCase(),threshold=mfg.includes('NO LABOR')?12:20;
-    const referenceDate=active?.srdApproval||active?.srd||active?.fieldCrd||node.rd,referenceField=active?.srdApproval?'SRD @ SOPs Approval':active?.srd?'Sales Ops RD':active?.fieldCrd?'Field CRD':node.rd?'Date: Sales Ops Request Date (RD)':'';
-    const preWeeks=weeks(active?.eventDate,referenceDate);
-    node.pre={state:'unknown',label:'Pre risk unknown',weeks:preWeeks,threshold,reason:'CTL source not loaded.',eventDate:active?.eventDate||'',eventDateField:active?.eventDateField||'',referenceDate:referenceDate||'',referenceField,created:active?.created||'',approved:active?.approved||'',ctlId:active?.id||'',policy:riskPolicy};
-    if (slotReady&&!active) Object.assign(node.pre,{state:'risk',label:current?.isDrop?'Dropped slot':'No Slot CTL',reason:current?.isDrop?'Latest approved slot event is Drop Slot.':'No approved Slot CTL found.'});
-    else if (active&&preWeeks===null) Object.assign(node.pre,{reason:'Slot RD / SRD missing.'});
-    else if (active) Object.assign(node.pre,{state:preWeeks>=threshold?'clear':'risk',label:preWeeks>=threshold?'On time':'Pre late risk',reason:`Slot ${preWeeks>=threshold?'submitted on time':'submitted too late'}; (RD / SRD − approved Slot effective date) / 7 = ${preWeeks.toFixed(1)} weeks; threshold ${threshold} weeks.`});
-    const postReference=node.mcsd||active?.srd||node.rd||referenceDate,postReferenceField=node.mcsd?'MCSD':active?.srd?'Sales Ops RD':node.rd?'Date: Sales Ops Request Date (RD)':referenceField;
-    const configs=slotReady?node.ctls.filter(ctl=>ctl.isConfig&&ctl.riskEligible):[],qualifying=configs.filter(ctl=>{const span=weeks(ctl.eventDate,postReference);return span!==null&&span<20;});
+    node.pre=assessSlot(node,current,riskActive);
+    const referenceDate=node.pre.referenceDate,referenceField=node.pre.referenceField;
+    const postMcsd=current?.isDrop?nativeMcsd.date||riskActive?.mcsd:node.mcsd;
+    const postReference=postMcsd||(current?.isDrop?referenceDate:active?.srd||node.rd||referenceDate),postReferenceField=postMcsd?'MCSD':current?.isDrop?referenceField:active?.srd?'Sales Ops RD':node.rd?'Date: Sales Ops Request Date (RD)':referenceField;
+    const qualifying=slotReady?node.ctls.filter(ctl=>{
+      if(!ctl.changeKey.includes('config')||!ctl.riskEligible||ctl.reason!=='Customer Config Chg'||!lateCtlSubReasonPrefixes.some(prefix=>ctl.subReason.startsWith(prefix)))return false;
+      const span=weeks(ctl.eventDate,ctl.mcsdApproval||ctl.mcsdCreate||postReference);return span!==null&&span<20;
+    }):[];
+    node.lateCtls=qualifying; // Keep complete event evidence for history, independently of KPI quarter membership.
     const pendingConfigs=node.ctls.filter(ctl=>ctl.isConfig&&ctl.statusKind!=='discarded'&&!ctl.effective);
-    const nsrWeeks=weeks(today,postReference),qualifyingNsrs=loaded.nsr&&nsrWeeks!==null&&nsrWeeks<20?node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open'):[];
-    const nsrEvidence=qualifyingNsrs.map(nsr=>({nsr,eventDate:today,dateBasis:'today',weeks:nsrWeeks}));
-    node.post={state:'unknown',label:'Post risk unknown',weeks:null,threshold:20,reason:!slotReady?'CTL not loaded.':!loaded.nsr?'NSR not loaded.':!postReference?'MCSD / SRD missing.':'',eventDate:qualifying[0]?.eventDate||nsrEvidence[0]?.eventDate||'',referenceDate:postReference||'',referenceField:postReferenceField,created:qualifying[0]?.created||'',approved:qualifying[0]?.approved||'',ctlIds:qualifying.map(ctl=>ctl.id),ctls:qualifying,nsrs:qualifyingNsrs,nsrEvidence,unlinkedNsrs:[],pending:pendingConfigs,policy:riskPolicy,postNsrPolicy};
-    if (postReference&&(qualifying.length||qualifyingNsrs.length)) Object.assign(node.post,{state:'risk',label:qualifying.length?'Post config risk':'Late NSR',weeks:weeks(node.post.eventDate,postReference),reason:`(${postReferenceField} − ${qualifying.length?'Sales Ops approval':'today'}) / 7 < 20 weeks; overdue events are included.`});
-    else if (slotReady&&loaded.nsr&&postReference) Object.assign(node.post,{state:'clear',label:'No post risk',reason:'No approved Config Change or pending NSR within 20 weeks of '+postReferenceField+'.'});
-    node.portfolioStatus=qualifying.length?'late-ctl':!loaded.nsr?'ctl-unknown':qualifyingNsrs.length?'open-nsr':node.post.state==='clear'?'stable-ctl':'ctl-unknown';
-    node.portfolioStates=!slotReady?['slot-unknown']:!active?['no-slot']:['slot-ready',node.pre.state==='clear'?'stable-slot':node.pre.state==='risk'?'late-slot':'slot-date-unknown',node.portfolioStatus];
-    node.portfolioCell=slotReady&&active?node.portfolioStates[1]+'|'+(['late-ctl','open-nsr'].includes(node.portfolioStatus)?'late-ctl-nsr':node.portfolioStatus):node.portfolioStates[0];
-    if(slotReady&&!active){
-      if(pending.some(ctl=>ctl.isSlot))node.portfolioStates.push('slot-pending');
-      if(current?.isDrop)node.portfolioStates.push('slot-dropped');
+    // post.nsrs is shared Pending NSR evidence; it does not determine CTL stability.
+    const pendingNsrs=loaded.nsr?node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open'):[];
+    const groups=new Map([[node.quarter,{quarter:node.quarter,ctls:[],cycles:new Map([[current?.id||'',{current,riskActive}]]),basis:node.quarterBasis.slice(),rd:[],mcsd:[],sources:new Set()}]]);
+    const addQuarter=(q,ctl,reason,rd=ctl.rdCreate,mcsd=ctl.mcsdCreate,at=ctl.eventDate)=>{
+      if(!q)return null;
+      if(!groups.has(q))groups.set(q,{quarter:q,ctls:[],cycles:new Map(),basis:[],rd:[],mcsd:[],sources:new Set()});
+      const group=groups.get(q),historical=events.find(event=>event.eventDate<=at)||null,historicalSlot=historical?.isSlot?historical:historical?.isDrop?events.find(event=>event.isSlot&&event.eventDate<=historical.eventDate)||null:null;
+      group.cycles.set(historical?.id||'',{current:historical,riskActive:historicalSlot});
+      group.basis.push('CTL '+ctl.number+' · '+reason);group.rd.push(rd);group.mcsd.push(mcsd);group.sources.add(ctl.number);
+      return group;
+    };
+    // Drop creation schedules retain historical quarters without replacing the native current schedule.
+    for(const ctl of effectiveCtls)if(ctl.isDrop){
+      const boundary=events.find(event=>event.id!==ctl.id&&event.eventDate<=(ctl.created||ctl.eventDate))?.eventDate||'';
+      const retry=node.ctls.filter(event=>event.isDrop&&event.status==='Rejected'&&event.created>boundary&&event.created<=(ctl.created||ctl.eventDate)&&(event.mcsdCreate||event.rdCreate)).sort((a,b)=>a.created.localeCompare(b.created))[0];
+      const original=retry||ctl,snapshot=original.mcsdCreate||original.rdCreate;
+      if(!snapshot)continue;
+      const lead=weeks(original.created,snapshot);
+      if(lead===null||lead>dropQuarterLeadWeeks)continue;
+      addQuarter(quarterOf(snapshot),ctl,'Drop Slot · '+(retry?'original snapshot from CTL '+retry.number+' · ':'')+(original.mcsdCreate?'MCSD@Create':'RD At Create')+': '+snapshot+'; created '+original.created+'; lead '+lead.toFixed(1)+' weeks (<='+dropQuarterLeadWeeks+').',original.rdCreate,original.mcsdCreate);
     }
-    if(slotReady&&active){
-      node.portfolioStates.push(fidRiskAssessment(node.portfolioCell));
-      if(!node.mcsd)node.portfolioStates.push('slot-no-mcsd');
+    const commitRows=node.rawRows.filter(row=>field(row,['Commit: Field','Commit Field','Field Commit','Commit Status']).toUpperCase()==='COMMIT');
+    const sourceQuarters=new Set((commitRows.length?commitRows:node.rawRows).map(row=>quarterRank(field(row,['Time: Calendar Quarter']))).filter(Number.isFinite));
+    const initialMcsd=firstDate(record,['Date: Initial MCSD at Slot','Initial MCSD at Slot']).date,initialRd=firstDate(record,['Initial SRD at Slot']).date;
+    const initialQuarters=new Set([initialMcsd,initialRd].map(day=>quarterRank(quarterOf(day))).filter(Number.isFinite));
+    for(const ctl of effectiveCtls)if(ctl.changeKey==='push')for(const [before,after,label]of [[ctl.rdCreate,ctl.srdApproval,'RD At Create → SRD @ SOPs Approval'],[ctl.mcsdCreate,ctl.mcsdApproval,'MCSD@Create → MCSD At SOps Approval']]){
+      const q=quarterOf(before),rank=quarterRank(q);
+      if(!before||!after||quarterRank(quarterOf(after))<=rank)continue;
+      // A future RD abandoned before its quarter began is insufficient when a current MCSD exists.
+      if(nativeMcsd.date&&label.startsWith('RD')&&quarterOf(ctl.mcsdCreate)!==q&&rank>quarterRank(quarterOf(ctl.eventDate)))continue;
+      if(rank-quarterRank(quarterOf(ctl.eventDate))<=1||sourceQuarters.has(rank))addQuarter(q,ctl,label+': '+before+' → '+after);
     }
-    if (node.pre.state==='risk') node.risks.push({type:'pre',label:node.pre.label,reason:node.pre.reason});
-    if(node.post.ctls.length)node.risks.push({type:'post',label:'Post config risk',reason:node.post.reason});
-    if(qualifyingNsrs.length)node.risks.push({type:'post',label:'Late NSR',count:qualifyingNsrs.length,reason:'In-work NSR with <20 weeks to '+postReferenceField+', including overdue.'});
-    const open=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='open');
-    if (open.length) node.risks.push({type:'nsr',label:'Pending NSR',count:open.length});
-    const pendingCtls=node.ctls.filter(ctl=>ctl.pending);
-    if(pendingCtls.length)node.risks.push({type:'ctl',label:'Pending Config CTL',count:pendingCtls.length});
-    const pendingPullPushCtls=node.ctls.filter(ctl=>ctl.pendingPullPush);
-    if(pendingPullPushCtls.length)node.risks.push({type:'ctl',label:'Pending Pull/Push CTL',count:pendingPullPushCtls.length});
-    if(node.slot.active&&!node.mcsd)node.risks.push({type:'mcsd',label:'MCSD pending',reason:'Approved Slot without MCSD.'});
+    for(const [createdField,approvalField,label]of [['rdCreate','srdApproval','RD'],['mcsdCreate','mcsdApproval','MCSD']]){
+      if(nativeMcsd.date&&label==='RD')continue;
+      const observations=[];
+      for(const ctl of effectiveCtls){if(ctl.created&&ctl[createdField])observations.push({at:ctl.created,day:ctl[createdField],ctl,order:0});if(ctl[approvalField])observations.push({at:ctl.eventDate,day:ctl[approvalField],ctl,order:1});}
+      observations.sort((a,b)=>a.at.localeCompare(b.at)||a.order-b.order||a.ctl.number.localeCompare(b.ctl.number));
+      for(let index=1;index<observations.length;index++){
+        const before=observations[index-1],after=observations[index],q=quarterOf(before.day),rank=quarterRank(q);
+        if(quarterRank(quarterOf(after.day))<=rank||!sourceQuarters.has(rank)||!initialQuarters.has(rank))continue;
+        const rd=label==='RD'?before.day:before.order?before.ctl.srdApproval:before.ctl.rdCreate,mcsd=label==='MCSD'?before.day:before.order?before.ctl.mcsdApproval:before.ctl.mcsdCreate;
+        addQuarter(q,after.ctl,'Corroborated '+label+' history: '+before.day+' → '+after.day+'; source Quarter and initial Slot date agree.',rd,mcsd,after.at);
+      }
+    }
+    const splitFlag=/^(?:Y|YES|X|TRUE|1)$/i.test(field(record,['Split Ship Flag']));
+    for(const ctl of effectiveCtls){
+      const partial=splitFlag||/\b(?:split|partial)\s+(?:ship(?:ment)?|deliver)|\banother\s+PM(?:x|\b)|\bship\b[\s\S]{0,120}\bfirst\b[\s\S]{0,120}\b(?:later|second)\b/i.test([ctl.rootCause,ctl.summary,ctl.notes].join(' '));
+      if(partial&&ctl.tsdApproval&&ctl.srdApproval&&quarterOf(ctl.tsdApproval)!==quarterOf(ctl.srdApproval))addQuarter(quarterOf(ctl.tsdApproval),ctl,'Split delivery · TSD @ SOPs Approval: '+ctl.tsdApproval+'; SRD @ SOPs Approval: '+ctl.srdApproval);
+    }
+    // Retain additional schedules only once approval reaches their preceding fiscal quarter.
+    const initialDate=initialMcsd||initialRd;
+    if(riskActive&&initialDate&&quarterRank(quarterOf(initialDate))-quarterRank(quarterOf(riskActive.eventDate))<=1){
+      addQuarter(quarterOf(initialDate),riskActive,'Initial Slot '+(initialMcsd?'MCSD':'SRD')+': '+initialDate+'; Slot approved from preceding fiscal quarter onward.',initialRd,initialMcsd);
+    }
+    for(const ctl of effectiveCtls)if(ctl.changeKey==='pull')for(const [before,after,label]of [[ctl.rdCreate,ctl.srdApproval,'RD At Create → SRD @ SOPs Approval'],[ctl.mcsdCreate,ctl.mcsdApproval,'MCSD@Create → MCSD At SOps Approval']]){
+      const q=quarterOf(before),rank=quarterRank(q);
+      if(!before||!after||quarterRank(quarterOf(after))>=rank)continue;
+      if(nativeMcsd.date&&label.startsWith('RD')&&quarterOf(ctl.mcsdCreate)!==q)continue;
+      if(rank-quarterRank(quarterOf(ctl.eventDate))<=1)addQuarter(q,ctl,'Approved cross-quarter Pull · '+label+': '+before+' → '+after);
+    }
+    for(const ctl of effectiveCtls)if(ctl.changeKey==='push'&&ctl.mcsdCreate&&quarterRank(quarterOf(ctl.mcsdCreate))-quarterRank(quarterOf(ctl.eventDate))<=1){
+      addQuarter(quarterOf(ctl.mcsdCreate),ctl,'Push MCSD@Create: '+ctl.mcsdCreate+'; approved from preceding fiscal quarter onward.');
+    }
+    // Classification uses only quarters already supported by schedule evidence; a Late CTL never adds a quarter.
+    for(const ctl of qualifying){
+      const snapshot=ctl.mcsdCreate||ctl.rdCreate,dateBasis=snapshot||postReference,q=snapshot?quarterOf(snapshot)||node.quarter:node.quarter;
+      if(!groups.has(q))continue;
+      const group=q?addQuarter(q,ctl,(ctl.mcsdCreate?'MCSD@Create':ctl.rdCreate?'RD At Create':postReferenceField)+': '+dateBasis):groups.get(q);
+      group.ctls.push(ctl);
+    }
+    node.quarterStates=[...groups.values()].map(group=>{
+      const cycles=[...group.cycles.values()],slotted=cycles.filter(cycle=>cycle.current),preCandidates=(slotted.length?slotted:cycles).map(cycle=>cycle.current===current&&group.quarter===node.currentQuarter?node.pre:assessSlot(node,cycle.current,cycle.riskActive,false));
+      const pre=preCandidates.find(pre=>pre.state==='risk')||preCandidates.find(pre=>pre.state==='unknown')||preCandidates[0];
+      const late=group.ctls,first=late[0],reference=first?.mcsdApproval||first?.mcsdCreate||postReference||'',field=first?.mcsdApproval?'MCSD At SOps Approval':first?.mcsdCreate?'MCSD@Create':postReferenceField,span=first?weeks(first.eventDate,reference):null;
+      const post={state:late.length?'risk':slotReady&&postReference?'clear':'unknown',label:late.length?'Post config risk':slotReady&&postReference?'No post risk':'Post risk unknown',weeks:span,threshold:20,
+        reason:late.length?`(${field} − CTL approved date) / 7 = ${span.toFixed(1)} weeks <20 weeks.`:slotReady&&postReference?'No qualifying Late CTL in this quarter.':!slotReady?'CTL not loaded.':'MCSD / SRD missing.',
+        eventDate:first?.eventDate||'',referenceDate:reference,referenceField:field,created:first?.created||'',approved:first?.approved||'',ctlIds:late.map(ctl=>ctl.id),ctls:late,nsrs:pendingNsrs,pending:pendingConfigs,policy:riskPolicy};
+      const dates=group.quarter===node.currentQuarter?{rd:node.rd,mcsd:node.mcsd}:{rd:unique(group.rd).sort().join(' / '),mcsd:unique(group.mcsd).sort().join(' / ')};
+      const dateSource=group.sources.size?'CTL schedule evidence: '+[...group.sources].join(', ')+'\n'+group.basis.join('\n'):'Current FID / CTL dates';
+      return assessPortfolio({quarter:group.quarter,pre,post,basis:group.basis,slotEvidence:preCandidates,dates,dateSource},node,slotted.length>0);
+    }).sort((a,b)=>a.quarter.slice(-2).localeCompare(b.quarter.slice(-2))||['Mar','Jun','Sep','Dec'].indexOf(a.quarter.slice(1,4))-['Mar','Jun','Sep','Dec'].indexOf(b.quarter.slice(1,4)));
+    Object.assign(node,node.quarterStates.find(state=>state.quarter===node.currentQuarter));
+    if(node.quarterStates.length===1)node.selectedQuarterStates=node.quarterStates;
     node.weeksToMcsd=node.mcsd?Math.round(weeks(today,node.mcsd)):'';
-    if (node.nces.length) node.risks.push({type:'nce',label:'NCE / FA signal',count:node.nces.length});
-    node.category=node.pre.state==='risk'||node.post.state==='risk'?'risk':node.pre.state==='unknown'||node.post.state==='unknown'?'review':'clear';
     node.entitySearchText=[node.id,node.account,node.businessUnit,node.customer,node.system,node.owner,node.salesAdmin,node.quote,...Object.values(record),...node.ctls.flatMap(ctl=>[ctl.number,ctl.summary,ctl.initiator]),...node.nces.flatMap(nce=>[nce.number,nce.title])].join(' ').toLowerCase();
   }
   for(const node of fids.values())refreshFid(node);
-  for(const ctl of ctls){const node=fids.get(ctl.fidId);ctl.quarter=node?.quarter||'';if(!ctl.customer)ctl.customer=field(node?.record||{},['Customer','Customer Name','End Customer'])}
+  for(const ctl of ctls){const node=fids.get(ctl.fidId);ctl.quarter=node?.quarter||'';ctl.quarters=node?.quarterStates.map(state=>state.quarter)||[''];if(!ctl.customer)ctl.customer=field(node?.record||{},['Customer','Customer Name','End Customer'])}
   function setNsrMark(number,mark) {
     const nsr=nsrByNumber.get(number);if(!nsr)return false;
     nsr.ignored=mark==='ignore';nsr.important=mark==='important';
@@ -4324,7 +4485,7 @@ function createFidGraph(raw, options = {}) {
   };
   const matchNsr=(nsr,filters={},fidId='')=>nsr.eligible&&(nsr.observations.length?nsr.observations.some(observation=>matchObservation(nsr,observation,filters,fidId)):matchObservation(nsr,nsr,filters,fidId));
   const matchCtl=(ctl,filters={})=>Object.entries(filters).every(([key,value])=>key==='created'&&value&&typeof value==='object'&&!Array.isArray(value)?matchDateRange(ctl.created,value):match(ctl[key],value));
-  const matchSignal=(node,signal)=>signal==='nce'?node.nces.length>0:signal==='pending-ctl'?node.ctls.some(ctl=>ctl.pending):signal==='open-nsr'?!!node.slot.active&&node.post.nsrs.length>0:['late-ctl','slot-no-mcsd','slot-pending','slot-dropped'].includes(signal)&&node.portfolioStates.includes(signal);
+  const matchSignal=(node,signal,includeIgnored=true)=>signal==='nce'?node.nces.length>0:signal==='pending-ctl'?node.ctls.some(ctl=>ctl.pending):signal==='open-nsr'?node.portfolioStates.includes('slot-ready')&&node.post.nsrs.some(nsr=>includeIgnored||!nsr.ignored):['late-ctl','slot-no-mcsd','slot-pending','slot-dropped'].includes(signal)&&node.portfolioStates.includes(signal);
   const isNsrRisk=label=>label==='Pending NSR'||label==='Late NSR'||label==='Open NSR'||label==='Post NSR risk';
   function query(filters={},rowsOnly='') {
     const includeIgnored=filters.includeIgnored!==false;let base=filters.excluded?observedPopulation.filter(node=>node.excludedReason):population;
@@ -4334,7 +4495,7 @@ function createFidGraph(raw, options = {}) {
     const ctlUnknown=!!ctlFids&&matchCtl({},filters.ctl),matchCtlFid=fidId=>!ctlFids||ctlFids.has(fidId)||ctlUnknown&&!fids.get(fidId)?.ctls.length;
     const directKeys=['quarter','systemQuarter','account','customer','system','businessUnit','salesAdmin','owner','category','preState','postState','slotState','fidStatus','fidMark','signal','riskType'];
     const hasFidPredicates=!!filters.excluded||directKeys.some(key=>key!=='account'&&values(filters[key]).length)||hasPredicates(filters.slot);
-    const scalarKeys=directKeys.filter(key=>!['fidStatus','signal','riskType'].includes(key)&&values(filters[key]).length),fidStatuses=values(filters.fidStatus),signals=values(filters.signal),riskTypes=values(filters.riskType).map(label=>label==='Post NSR risk'?'Late NSR':label==='Open NSR'?'Pending NSR':label==='Pending CTL'?'Pending Config CTL':label),nsrRiskOnly=riskTypes.length>0&&riskTypes.every(isNsrRisk),hasNsrPredicates=hasPredicates(filters.nsr);
+    const scalarKeys=directKeys.filter(key=>!['quarter','systemQuarter','fidStatus','signal','riskType'].includes(key)&&values(filters[key]).length),fidStatuses=values(filters.fidStatus),signals=values(filters.signal),riskTypes=values(filters.riskType).map(label=>['Post NSR risk','Late NSR','Open NSR'].includes(label)?'Pending NSR':label==='Pending CTL'?'Pending Config CTL':label),nsrRiskOnly=riskTypes.length>0&&riskTypes.every(isNsrRisk),hasNsrPredicates=hasPredicates(filters.nsr);
     const search=clean(filters.search).toLowerCase(),tokens=search.split(/[\s,;|/]+/).filter(Boolean),idSearch=!!tokens.length&&tokens.every(token=>/^(?:\d{5,10}|[ndl]\d{5,8})$/i.test(token));
     const entityMatch=node=>idSearch?tokens.some(token=>/^\d+$/.test(token)&&(node.id.toLowerCase()===token||node.ctls.some(ctl=>ctl.number.toLowerCase()===token))):node.entitySearchText.includes(search);
     const nsrSearchMatch=(nsr,observation=nsr)=>!search||(idSearch?tokens.some(token=>nsr.number.toLowerCase()===token||nsr.number.replace(/^[NDL]/,'')===token):observation.searchText.includes(search));
@@ -4342,21 +4503,30 @@ function createFidGraph(raw, options = {}) {
     const observationMatches=(nsr,observation,fidId='')=>matchObservation(nsr,observation,filters.nsr||{},fidId)&&(!hasAccount||match(nsrAccount(observation,fidId||observation.fidId),filters.account));
     const nsrDomainMatch=(nsr,fidId='')=>nsr.eligible&&(includeIgnored||!nsr.ignored)&&(nsr.observations.length?nsr.observations.some(observation=>observationMatches(nsr,observation,fidId)&&nsrSearchMatch(nsr,observation)):observationMatches(nsr,nsr,fidId)&&nsrSearchMatch(nsr));
     const entityHits=search?new Set(observedPopulation.filter(entityMatch).map(node=>node.id)):null,entityHit=fidId=>!entityHits||entityHits.has(fidId);
-    const selectedFids=base.filter(node=>{
-      if(fidStatuses.length&&!fidStatuses.some(status=>status.startsWith('cause:')?matchSignal(node,status.slice(6)):status===node.portfolioCell||node.portfolioStates.includes(status)||node.portfolioCell.endsWith('|'+status)))return false;
-      for(const key of scalarKeys){const value=key==='preState'?node.pre.state:key==='postState'?node.post.state:key==='slotState'?node.slot.state:key==='systemQuarter'?node.quarter:node[key];if(!match(value,filters[key]))return false}
+    const scopedFids=base.flatMap(node=>{
+      const scoped=projectFid(node,filters.quarter,filters.systemQuarter);if(!scoped)return [];
+      return rowsOnly==='periods'?scoped.selectedQuarterStates.map(state=>projectFid(node,[state.quarter||'[Unknown]'])):[scoped];
+    });
+    const selectedFids=scopedFids.filter(node=>{
+      if(fidStatuses.length&&!fidStatuses.some(status=>status.startsWith('cause:')?matchSignal(node,status.slice(6),includeIgnored):status===node.portfolioCell||node.portfolioStates.includes(status)||node.portfolioCell.endsWith('|'+status)))return false;
+      for(const key of scalarKeys){const value=key==='preState'?node.pre.state:key==='postState'?node.post.state:key==='slotState'?node.slot.state:node[key];if(!match(value,filters[key]))return false}
       if(riskTypes.length&&!node.risks.some(risk=>riskTypes.includes(risk.label)))return false;
-      if(signals.length&&!signals.some(signal=>matchSignal(node,signal)))return false;
+      if(signals.length&&!signals.some(signal=>matchSignal(node,signal,includeIgnored)))return false;
       if(!entityHit(node.id)&&!node.nsrs.some(nsr=>nsrDomainMatch(nsr,node.id)))return false;
       if (hasNsrPredicates&&!node.nsrs.some(nsr=>(includeIgnored||!nsr.ignored)&&matchNsr(nsr,filters.nsr,node.id))) return false;
-      if (hasPredicates(filters.slot)) { const slot=node.slot.active; if (!slot||!match(slot.initiator,filters.slot.initiator)||!match(node.quarter,filters.slot.quarter)||!match(slot.status,filters.slot.status)) return false; }
+      if (hasPredicates(filters.slot)) { const slot=node.slot.active; if (!slot||!match(slot.initiator,filters.slot.initiator)||!node.selectedQuarterStates.some(state=>match(state.quarter,filters.slot.quarter))||!match(slot.status,filters.slot.status)) return false; }
       if (!matchCtlFid(node.id)) return false;
       return true;
     });
     // Overview-only queries skip unrelated projections and metric aggregation.
     if(rowsOnly==='fids')return selectedFids;
     const ids=new Set(selectedFids.map(node=>node.id));
-    if(rowsOnly==='ctls')return ctlRows.filter(ctl=>ids.has(ctl.fidId));
+    let selectedCtls;
+    if(rowsOnly!=='nsrs'){
+      const quartersByFid=new Map();for(const node of selectedFids){if(!quartersByFid.has(node.id))quartersByFid.set(node.id,new Set());for(const state of node.selectedQuarterStates)quartersByFid.get(node.id).add(state.quarter);}
+      selectedCtls=ctlRows.filter(ctl=>ids.has(ctl.fidId)).map(ctl=>{const quarters=[...quartersByFid.get(ctl.fidId)];return quarters.length===ctl.quarters.length&&quarters.every(q=>ctl.quarters.includes(q))?ctl:{...ctl,quarters};});
+    }
+    if(rowsOnly==='ctls')return selectedCtls;
     // CTL conditions use loaded CTL relationships, even outside the loaded FID Database range.
     // Only explicit FID conditions restrict NSRs to matching Commit FIDs.
     const selectedNsrs=[];
@@ -4367,7 +4537,7 @@ function createFidGraph(raw, options = {}) {
         if(hasFidPredicates&&!ids.has(fidId))return false;
         if(!matchCtlFid(fidId))return false;
         if(nsrRiskOnly){
-          const node=fids.get(fidId),riskNsrs=riskTypes.includes('Pending NSR')?node.nsrs:node.post.nsrs;
+          const node=fids.get(fidId),riskNsrs=node.post.nsrs;
           if(!riskNsrs.some(row=>row.number===nsr.number&&row.lifecycle==='open'))return false;
         }
         return entityHit(fidId)?(!hasNsrPredicates&&!hasAccount)||(nsr.observations.length?nsr.observations:[nsr]).some(observation=>observationMatches(nsr,observation,fidId)):nsrDomainMatch(nsr,fidId);
@@ -4382,7 +4552,7 @@ function createFidGraph(raw, options = {}) {
       selectedNsrs.push({...nsr,...observation,fidId,lifecycle:hasNsrPredicates?taskLifecycle:lifecycle,taskLifecycle,globalLifecycle:nsr.lifecycle,matchedFidIds,scopeLifecycles});
     }
     if(rowsOnly==='nsrs')return selectedNsrs;
-    const selectedCtls=ctlRows.filter(ctl=>ids.has(ctl.fidId)),selectedNces=nces.filter(nce=>ids.has(nce.fidId));
+    const selectedNces=nces.filter(nce=>ids.has(nce.fidId));
     const metrics={population:selectedFids.length,atRisk:0,needsReview:0,clear:0,preRisk:0,postRisk:0,bothRisk:0,openNsr:0,completed5dNsr:0,completedUnlinked:0,pendingCtl:0,pendingPullPushCtl:0,workflowPendingCtl:0,nceFids:0,nsr:selectedNsrs.length,ignoredNsr:0,importantNsr:0,ignoredCompletedNsr:0,implementedNsr:0,ctlPendingNsr:0,discardedNsr:0,ctlUnavailableNsr:0,orphanNsr:0,ctl:selectedCtls.length,nce:selectedNces.length,riskFid:0,riskFree:0,riskPending:0,slotNoMcsd:0};
     const categoryMetrics={risk:'atRisk',review:'needsReview',clear:'clear'};
     for(const node of selectedFids){
@@ -4397,7 +4567,15 @@ function createFidGraph(raw, options = {}) {
     metrics.pendingCtlFids=pendingCtlFids.size;metrics.pendingPullPushCtlFids=pendingPullPushCtlFids.size;
     return {fids:selectedFids,nsrs:selectedNsrs,ctls:selectedCtls,nces:selectedNces,metrics};
   }
-  return {fids,population,observedPopulation,nsrs,ctls,nces,orphans,query,setNsrMark,setFidMark,isNsrRisk};
+  return {fids,population,observedPopulation,nsrs,ctls,nces,orphans,query,projectFid,setNsrMark,setFidMark,isNsrRisk};
+}
+
+function fidQuarterFromDate(day){
+  if(!day||Number.isNaN(day.getTime()))return '';
+  const year=day.getFullYear(),stamp=Date.UTC(year,day.getMonth(),day.getDate()),march31=new Date(Date.UTC(year,2,31));
+  // Lam's extra week belongs to the March quarter; the following quarters each span 13 weeks.
+  const marchEnd=march31.getTime()-march31.getUTCDay()*86400000,quarter=Math.max(0,Math.ceil((stamp-marchEnd)/(91*86400000)));
+  return ['QMar','QJun','QSep','QDec','QMar'][quarter]+"'"+String(year+(quarter===4?1:0)).slice(-2).padStart(2,'0');
 }
 
 function fidRiskAssessment(cell){
