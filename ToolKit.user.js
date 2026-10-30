@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.10.29
+// @version      26.10.30
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
@@ -50,17 +50,17 @@ function loadExcelJs(){
 const [versionYear,versionMonth,versionDay]=GM_info.script.version.split('.').map(Number);
 const date_v = new Date(2000+versionYear,versionMonth-1,versionDay); const APP_PATH='/k1.png'; const BRIDGE_PATH='/k2.png'; const FCID_PATH='/staceykyra.png'; const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
 const BRIDGE_URLS=[25972,25973,25974,8765].map(port=>'http://127.0.0.1:'+port); let bridgeUrl='',bridgeDiscovery=null;
-const SAPGUICONTROL_DOWNLOAD_URL='https://lamresearch-my.sharepoint.com/:u:/p/kyra_long/IQCAPvhOkNDMQ4pOTdowYccSAdE-W_6rbCWzHrdVjAIc7KM?e=baVxbG'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
+const SAPGUICONTROL_DOWNLOAD_URL='https://lamresearch-my.sharepoint.com/:u:/p/kyra_long/IQAkrJwix3nKTKijNazpuktkAUXL46RCibysVC7XkXJmYcQ?e=UUDyWl'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
 const GUIDE_URL='https://synalocey.github.io/ToolkitKyra/guide';
 const FID_DASHBOARD_TITLE='🏭 FID & NSR Tracking Dashboard';
 const DASHBOARD_BASE_CSS=chosenBaseCss+`
-:root{--bg:#f3f6fc;--panel:#fff;--ink:#24354e;--muted:#53657d;--line:#d8e1ee;--blue:#2563eb;--teal:#0f766e;--green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;--radius:12px;--font-sans:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",Arial,sans-serif;--shadow:0 3px 16px #253c6410}
+:root{--bg:#f3f6fc;--panel:#fff;--ink:#24354e;--muted:#53657d;--line:#d8e1ee;--blue:#2563eb;--teal:#0f766e;--green:#16a34a;--amber:#d97706;--red:#dc2626;--radius:12px;--font-sans:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI",Arial,sans-serif;--shadow:0 3px 16px #253c6410}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 var(--font-sans)}h1,h2,h3,b,strong{font-weight:600}button,input,select,textarea{font:inherit}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid #8ab4f2;outline-offset:2px}.card,.side{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{border:1px solid transparent;border-radius:8px;background:var(--teal);color:#fff;font-weight:600;line-height:1.35;padding:8px 12px;cursor:pointer}.btn:disabled{cursor:not-allowed;opacity:.48}.btn:hover:not(:disabled){filter:brightness(.96)}
 .chosen-container{font-family:var(--font-sans);width:100%!important}.chosen-container-multi .chosen-choices{background-image:none;min-height:34px}.chosen-container-multi .chosen-choices li.search-field input{height:26px;line-height:26px;font-family:inherit}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close{top:50%;right:5px;width:14px;height:14px;margin-top:-7px;background:none;font-size:0}.chosen-container-multi .chosen-choices li.search-choice .search-choice-close::after{content:"×";display:block;color:#365c95;font-size:15px;line-height:13px;text-align:center}.chosen-container .chosen-drop{border-color:#b8c8d8;border-radius:0 0 9px 9px;box-shadow:0 9px 24px #263b6425}.chosen-container .chosen-results{max-height:230px}
-.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-title h2{margin:0}.context-badge{display:inline-flex;align-items:center;background:#e7f6ed;color:#22604b;border:1px solid #b8dcc7;border-radius:18px;padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.row-count{font-size:12px;color:#425a7b;background:#f3f6fa;border:1px solid #dce5ef;border-radius:6px;padding:4px 7px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff;scrollbar-width:thin}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-title h2{margin:0}.context-badge{display:inline-flex;align-items:center;background:#e7f6ed;color:#22604b;border:1px solid #b8dcc7;border-radius:18px;padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap}.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff;scrollbar-width:thin}
 .status-pill{display:inline-flex;border-radius:12px;padding:3px 7px;font-size:12px;line-height:1.3;background:#dbeafe;color:#1d4ed8}.status-pill.terminal{background:#dcfce7;color:#166534}.status-pill.stop{background:#fee2e2;color:#991b1b}.status-pill.unknown{background:#fef3c7;color:#92400e}
-.cycle-shell{display:grid;gap:14px}.cycle-label{display:block;color:#425a7b;font-size:12px;font-weight:600;margin-bottom:6px}.cycle-input{display:block;width:100%;resize:vertical;min-height:110px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:10px;font:13px/1.5 Consolas,"Segoe UI",sans-serif}.cycle-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}.cycle-progress{display:block;width:100%;height:6px;margin-top:12px;accent-color:var(--teal);appearance:none;border:0;border-radius:9px;overflow:hidden;background:#e9eff4}.cycle-progress::-webkit-progress-bar{background:#e9eff4}.cycle-progress::-webkit-progress-value,.cycle-progress::-moz-progress-bar{background:var(--teal)}.cycle-status{margin-top:7px;color:var(--muted);font-size:12px}.cycle-status:empty{display:none}.cycle-wrap{max-height:650px}.ct-link{border:0;background:none;color:#0369a1;padding:0;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.duration-over,.duration-over .ct-link{color:var(--red)!important}
-.wf-modal:not([open]){display:none}.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:18px;border:0;background:transparent;overflow:hidden}.wf-modal::backdrop{background:#152e505c;backdrop-filter:blur(2px)}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.wf-box.fid-dialog{--table-heading-bg:initial;position:relative;width:min(1200px,calc(100vw - 36px));min-width:0;height:auto;min-height:0;max-height:90vh}.wf-head p{margin:4px 0 0;font-size:13px}#wfTable .tabulator-col-title{white-space:normal;line-height:17px}.wf-box .fc-table-wrap .tabulator-row .tabulator-cell{height:auto;white-space:pre-wrap}.wf-box .cell-content{white-space:pre-wrap;max-height:none;overflow-wrap:anywhere}body.wf-open{overflow:hidden}
+.cycle-shell{display:grid;gap:14px}.cycle-label{display:block;color:#425a7b;font-size:12px;font-weight:600;margin-bottom:6px}.cycle-input{display:block;width:100%;resize:vertical;min-height:110px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:10px;font:13px/1.5 Consolas,"Segoe UI",sans-serif}.cycle-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}.cycle-progress{display:block;width:100%;height:6px;margin-top:12px;accent-color:var(--teal);appearance:none;border:0;border-radius:9px;overflow:hidden;background:#e9eff4}.cycle-progress::-webkit-progress-bar{background:#e9eff4}.cycle-progress::-webkit-progress-value,.cycle-progress::-moz-progress-bar{background:var(--teal)}.cycle-status{margin-top:7px;color:var(--muted);font-size:12px}.cycle-status:empty{display:none}.ct-link{border:0;background:none;color:#0369a1;padding:0;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.duration-over,.duration-over .ct-link{color:var(--red)!important}
+.wf-modal:not([open]){display:none}.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:18px;border:0;background:transparent;overflow:hidden}.wf-modal::backdrop{background:#152e505c;backdrop-filter:blur(2px)}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.wf-box.fid-dialog{--table-heading-bg:initial;position:relative;width:min(1200px,calc(100vw - 36px));min-width:0;height:auto;min-height:0;max-height:90vh}.wf-head p{margin:4px 0 0;font-size:13px}#wfTable .tabulator-col-title{white-space:normal;line-height:17px}.wf-box .fc-grid .tabulator-row .tabulator-cell{height:auto;white-space:pre-wrap}.wf-box .cell-content{white-space:pre-wrap;max-height:none;overflow-wrap:anywhere}body.wf-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 `;
 const NSR_CYCLE_HTML=`<section id="cycleTab" class="tab-page" role="tabpanel" aria-label="NSR Cycle Time">
@@ -518,7 +518,7 @@ async function addNsrHeaderButton(){
       button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();unsafeWindow.open(FCID_PATH+'?nsrct=1','_blank','noopener')}); target.insertAdjacentElement('afterend',button);
       if(button.getBoundingClientRect().right>innerWidth)button.textContent=FID_DASHBOARD_TITLE.replace(' Tracking','');
     }
-    await new Promise(resolve=>setTimeout(resolve,500));
+    await new Promise(resolve=>setTimeout(resolve,2000));
   }
 }
 
@@ -2262,31 +2262,31 @@ function runFcidGovernance(){
 if(toolkitExpired())return;
 if(document.documentElement.dataset.fcidMounted)return;
 document.documentElement.dataset.fcidMounted='1';document.documentElement.lang='en'; const id=value=>document.getElementById(value); const text=value=>String(value??'').trim();
-const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character])); const field=(label,aliases=[],required=false)=>({label,aliases:[label,...aliases],required});
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character])); const field=(label,aliases=[])=>({label,aliases:[label,...aliases]});
 const ctlFields={
-  fid:field('Opportunity ID',['FCID','FID'],true),number:field('CTL ID',['CTL#','CTL Number'],true), change:field('Change Cat',['Change Type','Change Category','CTL Change Type'],true),mcsd:field('MCSD @ Current',['MCSD','Current MCSD']),mcsdCreate:field('MCSD@Create',['MCSD At Create']),rdCreate:field('RD At Create'),mcsdApproval:field('MCSD At SOps Approval'),tsdApproval:field('TSD @ SOPs Approval'),
+  fid:field('Opportunity ID',['FCID','FID']),number:field('CTL ID',['CTL#','CTL Number']), change:field('Change Cat',['Change Type','Change Category','CTL Change Type']),mcsd:field('MCSD @ Current',['MCSD','Current MCSD']),mcsdCreate:field('MCSD@Create',['MCSD At Create']),rdCreate:field('RD At Create'),mcsdApproval:field('MCSD At SOps Approval'),tsdApproval:field('TSD @ SOPs Approval'),
     srd:field('SRD @ Current',['Sales Ops RD','Current SRD','SRD']), slotSrd:field('SRD @ SOPs Approval',['SRD at SOPs Approval']),approved:field('1st SOps Appr Dt',['Sales Ops Approval Date','SOPS Approval Date']), created:field('Create Date',['Creation Date']),
-    initiator:field('Initiator',['Created By','Initiated By','Requester']),businessUnit:field('Business Unit',['BU']),modified:field('Last Modified Date',['Modified Date']), summary:field('Change Summary',['Summary']),mfg:field('Mfg Upgrade Type',['Manufacturing Upgrade Type']),
+    initiator:field('Initiator',['Created By','Initiated By','Requester']),businessUnit:field('Business Unit',['BU','Bus Unit']),modified:field('Last Modified Date',['Modified Date']), summary:field('Change Summary',['Summary']),mfg:field('Mfg Upgrade Type',['Manufacturing Upgrade Type']),
     stage:field('Stage',['CTL Stage']),quote:field('Quote ID',['Quote Number']),customer:field('Customer group 2',['Customer','Customer Name','End Customer']),configFrz:field('Config Frz@Current',['Config Frz','Config Frozen Date','Config Freeze Date']),rootCause:field('Root Cause',['Root Cause of Late Change']),notes:field('Notes',['CTL Notes']),subReason:field('Sub Reason')
 };
 const sources={
   fcid:{label:'FID Database',sheet:'BOBJ',fields:{
-    fid:field('FID',['FCID','Field ID'],true),commit:field('Commit: Field',['Commit Field','Field Commit','Commit Status'],true),
+    fid:field('FID',['FCID','Field ID']),commit:field('Commit: Field',['Commit Field','Field Commit','Commit Status']),
     account:field('Account Group',['Account Team','Sales Territory','AT']),businessUnit:field('Business Unit',['BU']),fab:field('Fab Name',['Fab']),fabSegment:field('Fab Segment',['Fab_Segment']), customer:field('Customer',['Customer Name','End Customer']),
     description:field('FID Description'),system:field('System Description',['System Desc','System']),quote:field('Active Quote Number',['Quote Number','Active Quote']),crd:field('Date: Customer Request',['Customer Request Date']),targetShip:field('Date: Target Ship',['Target Ship Date','Target Ship']),mcsd:field('Date: Mfg Commit Ship',['Mfg Commit Ship',
       'Manufacturing Commit Ship Date','MCSD']), rd:field('Date: Sales Ops Request Date (RD)',['Sales Ops Request Date','Sales Ops RD','SRD','RD']),mfg:ctlFields.mfg
   }},
   ctl:{label:'CTL BOBJ',sheet:'CTL BOBJ',fields:ctlFields},
-  ctlNsr:{label:'CTL-NSR List',sheet:'export',fields:{...ctlFields, fid:field('FCID',['FID','Opportunity ID'],true),change:field('Change Type',['Change Cat','CTL Change Type'],true),mcsd:field('MCSD',['MCSD @ Current']),srd:field('Sales Ops RD',
+  ctlNsr:{label:'CTL-NSR List',sheet:'export',fields:{...ctlFields, fid:field('FCID',['FID','Opportunity ID']),change:field('Change Type',['Change Cat','CTL Change Type']),mcsd:field('MCSD',['MCSD @ Current']),srd:field('Sales Ops RD',
     ['SRD','SRD @ Current','Field CRD']), approved:field('Sales Ops Approval Date',['1st SOps Appr Dt','SOPS Approval Date']),stage:field('Stage',['CTL Stage']), quote:field('Quote Number',['Quote ID']),sourceQuote:field('Source Quote',['Source Quote Number'])
   }},
   nsr:{label:'NSR Log',sheet:'Whole list',fields:{
-    fid:field('Reference Fcid',['REF FCID','Reference FID','FCID','FID']),number:field('NSR#',['NSR #','NSR','NSR Number','NSR No','NSR ID'],true), status:field('NSR Status',['Status']),workflow:field('Workflow Status',['Workflow']),task:field('Task Name',['Task','Workflow Task']),
+    fid:field('Reference Fcid',['REF FCID','Reference FID','FCID','FID']),number:field('NSR#',['NSR #','NSR','NSR Number','NSR No','NSR ID']), status:field('NSR Status',['Status']),workflow:field('Workflow Status',['Workflow']),task:field('Task Name',['Task','Workflow Task']),
     title:field('NSR Title',['Title']),leadTime:field('NSR LT',['NSR_LT','LT','Lead Time']),submitted:field('Submit Date',['Submitted Date','Submission Date']), customer:field('Customer',['Customer Name']),product:field('Primary Product',['Product']),tempId:field('Temp Id#',
       ['Temp ID','TempId'])
   }},
   nce:{label:'NCE / FA Review',sheet:'Export',fields:{
-    fid:field('FCID',['FID'],true),number:field('NCe #',['NCE Number','NCE#'],true),state:field('NCe State',['State','Status']), impact:field('Impact',['NCE Impact']),title:field('Title',['NCE Title']),opened:field('Open Date',['Opened Date','Creation Date']),
+    fid:field('FCID',['FID']),number:field('NCe #',['NCE Number','NCE#']),state:field('NCe State',['State','Status']), impact:field('Impact',['NCE Impact']),title:field('Title',['NCE Title']),opened:field('Open Date',['Opened Date','Creation Date']),
     damageGroup:field('Damage Group'),damageCode:field('Damage Code'),partNumber:field('Part_Number',['Part Number']), partDescription:field('Part_Description',['Part Description']),customer:field('Customer',['Customer Name'])
   }}
 };
@@ -2297,7 +2297,7 @@ const HOSTED_ARCHIVE_URLS=[
   'https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/images/Stacey1.png',
   'https://github.com/synalocey/ToolkitKyra/raw/refs/heads/main/images/Stacey1.png'
 ];
-const HOSTED_PASSWORD_URL='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNameDateTimeSet/?$filter=Userid%20eq%20%27LONGKY%27',HOSTED_SOURCE_PREFIXES={ctlNsr:'c',nce:'n'};
+const HOSTED_PASSWORD_URL='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNameDateTimeSet/?$filter=Userid%20eq%20%27LONGKY%27',HOSTED_PREFIXES={ctlNsr:'c',nce:'n'};
 const SOURCE_DATES={
   fcid:{fields:['Slot Actual'],label:'Slot Actual'}, ctl:{fields:['Creation Date','Create Date'],label:'Creation Date'}, ctlNsr:{fields:['Create Date','Creation Date'],label:'Create Date'},
   nsr:{fields:['Submit Date','Submitted Date','Submission Date'],label:'Submit Date'}, nce:{fields:['Open Date'],label:'Open Date'}
@@ -2314,15 +2314,17 @@ for(const [kind,config]of Object.entries(markKinds))try{
   const saved=GM_getValue(config.key,null),legacy=saved===null&&config.legacy?GM_getValue(config.legacy,null):null,parsed=typeof(saved??legacy)==='string'?JSON.parse(saved??legacy):saved??legacy;
   const entries=Array.isArray(parsed)?parsed.map(number=>[number,'ignore']):Object.entries(parsed||{});
   for(const [value,mark]of entries){const number=String(value).trim().toUpperCase();if(!number||kind==='fid'&&!config.pattern.test(number))continue;if(mark==='ignore')config.ignored.add(number);else if(mark==='important')config.important.add(number)}
-}catch(_){/* Keep source data available when personal marks cannot be read. */}
+}catch{/* Keep source data available when personal marks cannot be read. */}
 let fidNotes={};
-try{const saved=GM_getValue(FID_NOTES_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;fidNotes=Object.fromEntries(Object.entries(parsed||{}).filter(([fid,note])=>markKinds.fid.pattern.test(fid)&&typeof note==='string'&&note.trim()).map(([fid,note])=>[fid,note.replace(/\r\n?/g,'\n')]))}catch(_){/* Keep source data available when notes cannot be read. */}
+try{const saved=GM_getValue(FID_NOTES_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;fidNotes=Object.fromEntries(Object.entries(parsed||{}).filter(([fid,note])=>markKinds.fid.pattern.test(fid)&&typeof note==='string'&&note.trim()).map(([fid,note])=>[fid,note.replace(/\r\n?/g,'\n')]))}catch{/* Keep source data available when notes cannot be read. */}
 let tableOrders={};
-try{const saved=GM_getValue(TABLE_ORDERS_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))tableOrders=Object.fromEntries(Object.entries(parsed).filter(([,order])=>Array.isArray(order)&&order.every(label=>typeof label==='string')).map(([name,order])=>[name,[...new Set(order.map(label=>label.replace(/^Calendar (?=Quarter$)/,'')))]]))}catch(_){/* Invalid preferences leave the default column order available. */}
+try{const saved=GM_getValue(TABLE_ORDERS_KEY,null),parsed=typeof saved==='string'?JSON.parse(saved):saved;if(parsed&&typeof parsed==='object'&&!Array.isArray(parsed))tableOrders=Object.fromEntries(Object.entries(parsed).filter(([,order])=>Array.isArray(order)&&order.every(label=>typeof label==='string')).map(([name,order])=>[name,[...new Set(order.map(label=>label.replace(/^Calendar (?=Quarter$)/,'')))]]))}catch{/* Invalid preferences leave the default column order available. */}
+if(tableOrders.portfolioTable)for(const [label,after]of [['CTL History','Note'],['NSR History','CTL History'],['MFG Upgrade Type','Business Unit'],['Active Quote','Active CTL']])
+  if(!tableOrders.portfolioTable.includes(label)&&tableOrders.portfolioTable.includes(after))tableOrders.portfolioTable.splice(tableOrders.portfolioTable.indexOf(after)+1,0,label);
 if(tableOrders.ctlTable){
   tableOrders.ctlTable=tableOrders.ctlTable.map(label=>label==='Created'?'Created Date':label);
   for(const [label,after]of [['Elapsed Days','Created Date'],['CTL Notes','Root Cause'],['Sub Reason','CTL Notes'],
-    ['RD At Create','Sales Ops Approval'],['MCSD@Create','RD At Create'],['SRD @ SOPs Approval','MCSD@Create'],['MCSD At SOps Approval','SRD @ SOPs Approval'],['TSD @ SOPs Approval','MCSD At SOps Approval'],['SRD @ Current','TSD @ SOPs Approval'],['MCSD @ Current','SRD @ Current'],['Mfg Upgrade Type','Config Frz']
+    ['RD At Create','Sales Ops Approval'],['MCSD@Create','RD At Create'],['SRD @ SOPs Approval','MCSD@Create'],['MCSD At SOps Approval','SRD @ SOPs Approval']
   ])if(!tableOrders.ctlTable.includes(label)&&tableOrders.ctlTable.includes(after))tableOrders.ctlTable.splice(tableOrders.ctlTable.indexOf(after)+1,0,label);
   for(const [label,before]of [['Change Summary','Root Cause'],['Reason for Chg','Sub Reason']])if(!tableOrders.ctlTable.includes(label)&&tableOrders.ctlTable.includes(before))tableOrders.ctlTable.splice(tableOrders.ctlTable.indexOf(before),0,label);
 }
@@ -2330,8 +2332,8 @@ const nsrData=createNsrDataService((range,count)=>sourceMessage('nsr',`Loading S
 const nsrRecords=createNsrRecords(),accountMapping=createFidAccountMapping(),report=createFidSourceReaders(sources);
 const gridModule={exports:{}};new Function('module','exports',GM_getResourceText('tabulatorJs'))(gridModule,gridModule.exports);const Tabulator=gridModule.exports;
 const filterDefs=[
-  ['fAccount','Account','account','common'],['fQuarter','Quarter','quarter','fid'],['fOwner','FID Owner','owner','fidOwner'],
-  ['fCustomer','FID Customer','customer','fid'],['fSystem','System Description','system','fid'],['fBusinessUnit','Business Unit','businessUnit','fid'],['fSalesAdmin','Sales Admin','salesAdmin','fidSalesAdmin'],
+  ['fAccount','Account','account','common'],['fCurrentQuarter','Current Quarter','currentQuarter','fid'],['fQuarter','Assessment Quarters','quarter','fid'],['fOwner','FID Owner','owner','fidOwner'],
+  ['fCustomer','FID Customer','customer','fid'],['fSystem','System Description','system','fid'],['fBusinessUnit','Business Unit','businessUnit','fid'],['fMfg','MFG Upgrade Type','mfg','fid'],['fSalesAdmin','Sales Admin','salesAdmin','fidSalesAdmin'],
   ['fSlotInitiator','Slot Initiator','slot.initiator','fidSlot'],['fFidStatus','FID Status','fidStatus','fidCtl'],['fRisk','Risk Drivers','riskType','fidRisk'],
   ['fCtlStage','CTL Stage','ctl.stage','ctl'],['fCtlInitiator','CTL Initiator','ctl.initiator','ctl'],['fCtlCreatedDate','CTL Created Date','ctl.created','ctl'],['fCtlChange','CTL Type','ctl.change','ctl'],['fCtlCustomer','CTL Customer','ctl.customer','ctl'],
   ['fNsrInitiator','NSR Initiator','nsr.initiator','nsr'],['fNsrSubmitDate','NSR Submit Date','nsr.submitted','nsr'],
@@ -2346,41 +2348,41 @@ function ctlDateRange(period){
 }
 const ownerHint="Inferred from CTL/NSR records based on the highest operation count, with the Slot Initiator preferred when counts are equal. For reference only; may be inaccurate.";
 const salesAdminHint="Inferred from Pull/Push CTL records based on the highest operation count. For reference only; may be inaccurate.";
-const quarterHint="Quarter prioritizes current MCSD (SRD fallback). Approved Drop snapshots add quarters when created within 19 weeks of MCSD@Create (RD At Create fallback); overdue snapshots remain eligible. An original rejected attempt can supply the paired creation date and snapshot. Drop quarters never replace the current quarter. Additional Initial Slot, cross-quarter Pull and Push MCSD@Create quarters require approval from the preceding fiscal quarter onward. Initial Slot uses Initial MCSD, then Initial SRD. With current MCSD, RD-based Pulls need matching creation MCSD; early RD-only Push plans need stronger corroboration. Existing supported Push/history quarters remain; source quarter labels alone are insufficient. Supported split deliveries can add quarters. Membership is independent of Late. Selected quarters count each FID once; any Late wins. Summary evaluates each quarter separately. Inferred quarters may differ from HQ.";
-const inferenceHelp=tip=>`<span class="inference-help" title="" aria-label="${escapeHtml(tip)}"></span>`;
+const currentQuarterHint="Each FID has one current quarter from current MCSD, with SRD as fallback, on fiscal calendar.";
+const quarterHint="Each FID has one or more quarters for stability assessment, including its current MCSD / SRD quarter and historical quarters supported by CTL records.";
+const helpIcon=tip=>`<span class="help-icon" title="" aria-label="${escapeHtml(tip)}"></span>`;
 const lifecycleNames={'open':'Pending NSR','discarded':'Cancelled / Rejected','completed-5d':'Completed 5D NSR','completed-unlinked':'Completed NSR but no CTL','ctl-pending':'CTL pending approval','implemented':'CTL approved','ctl-unavailable':'CTL status unknown',ignore:'⊘ Ignore','ignore-completed':'⊘ Ignore',important:'★ Star'};
 const markLabels={all:'All',normal:'Unmarked',ignore:'⊘ Ignore',important:'★ Star'},markOptions=['important','ignore','normal'];
-const nsrCompletedTasks=Object.fromEntries(['completed-unlinked','ctl-pending','implemented','completed-5d'].map(key=>['15-Completed|'+key,lifecycleNames[key]]));
-const defaultCtlTypes=['Config','Slot','Drop Slot','[Unknown]'];
-const pendingCtlTypes={'Pending Config CTL':['Slot','Config'],'Pending Pull/Push CTL':['Pull','Push']};
+const completedTasks=Object.fromEntries(['completed-unlinked','ctl-pending','implemented','completed-5d'].map(key=>['15-Completed|'+key,lifecycleNames[key]]));
+const defaultTypes=['Config','Slot','Drop Slot','[Unknown]'];
+const pendingTypes={'Pending Config CTL':['Slot','Config'],'Pending Pull/Push CTL':['Pull','Push']};
 const overviewColors={total:'#94a3b8',completed:'#16843f',workflow:'#2563eb',draft:'#8a5c0c',rejected:'#c42f48',cancelled:'#52647d',unknown:'#52647d'};
 let includeIgnored=true;
 function ignoredToggle(view){return `<label class="ignore-scope" title="Exclude Ignore-marked FIDs, their linked records and Ignore NSRs from statistics and Details"><input type="checkbox" data-exclude-ignored="${view}"${includeIgnored?'':' checked'}>Exclude ignored FID/NSR</label>`}
 function overviewHead(view,count,total,selected){const unit=view==='portfolio'?'FID':'NSR';return `<div class="section-head overview-head"><h2>${unit} Overview</h2><div class="overview-tools"><span class="badge">${selected?`${number(count)} / ${number(total)} selected ${unit}s`:`${number(count)} filtered ${unit}s`}</span>${ignoredToggle(view)}</div></div>`}
 const ctlStageOrder=['0-Cancelled','0-Rejected','Draft','PM','Sales Ops','NSR PE','CE','MSPM','MS','15-Completed'];
-function ctlStageName(value){const stage=text(value).replace(/^\d+\s*-\s*/,'');return ({cancelled:'0-Cancelled',canceled:'0-Cancelled',rejected:'0-Rejected',draft:'Draft',completed:'15-Completed'})[stage.toLowerCase()]||stage}
-function compareCtlStages(a,b){const rank=value=>!value||value==='[Unknown]'?100:value==='15-Completed'?99:ctlStageOrder.includes(value)?ctlStageOrder.indexOf(value):98;const left=ctlStageName(a),right=ctlStageName(b);return rank(left)-rank(right)||left.localeCompare(right,undefined,{numeric:true})}
+function ctlStageName(value){const stage=text(value).replace(/^\d+\s*-\s*/,'');return ({cancelled:'0-Cancelled',canceled:'0-Cancelled',rejected:'0-Rejected',draft:'Draft',originator:'Draft',completed:'15-Completed'})[stage.toLowerCase()]||stage}
+function compareCtlStages(a,b){const rank=value=>!value||value==='[Unknown]'?100:value==='15-Completed'?99:ctlStageOrder.includes(value)?ctlStageOrder.indexOf(value):98;const left=ctlStageName(a),right=ctlStageName(b);return rank(left)-rank(right)||numericCollator.compare(left,right)}
 function taskGroup(value,ctl=false){return value==='15-Completed'?'completed':value==='0-Rejected'?'rejected':value==='0-Cancelled'?'cancelled':ctl&&value==='Draft'?'draft':ctl&&(!value||value==='[Unknown]')?'unknown':'workflow'}
 function taskOverview(kind,terms,groups,total){
   const unit=kind.toUpperCase(),equation=total+' = '+terms.map(([group])=>groups[group]).join(' + ');
   const card=(group,label,count,color)=>{
-    const active=taskFilterSelected(kind,group),percent=total?(100*count/total).toFixed(1):'0.0';
+    const active=taskSelected(kind,group),percent=total?(100*count/total).toFixed(1):'0.0';
     return `<button class="nsr-kpi" style="--kpi-color:${color}" type="button" data-${kind==='ctl'?'ctl-status':'nsr-group'}="${group}" data-count="${count}" aria-pressed="${active}"${group!=='all'&&!count&&!active?' disabled':''} title="${escapeHtml(group==='all'?equation:`${label} / Total ${unit} = ${count} / ${total} = ${percent}%`)}"><small>${escapeHtml(label)}</small><b>${number(count)}</b><span>${percent}%</span></button>`;
   };
   return card('all','Total '+unit,total,overviewColors.total)+'<span class="math-sign" aria-hidden="true">=</span>'+terms.map(([group,label,color],index)=>(index?'<span class="math-sign" aria-hidden="true">+</span>':'')+card(group,label,groups[group],color)).join('');
 }
-function taskFilterValues(kind,key){if(key==='all')return [];if(kind==='nsr'&&Object.hasOwn(nsrCompletedTasks,'15-Completed|'+key))return ['15-Completed|'+key];return [...id(kind==='ctl'?'fCtlStage':'fNsrTaskStatus').options].map(option=>option.value).filter(value=>!Object.hasOwn(nsrCompletedTasks,value)&&taskGroup(kind==='ctl'?ctlStageName(value):value,kind==='ctl')===key)}
-function taskFilterSelected(kind,key,types){const selected=filterValues[kind==='ctl'?'ctl.stage':'nsr.taskStatus']||[],parts=taskFilterValues(kind,key),changes=filterValues['ctl.change']||[];return key==='all'?!selected.length:parts.length>0&&parts.every(value=>selected.includes(value))&&(!types||!changes.length||types.every(value=>changes.includes(value)))}
+function taskFilterValues(kind,key){if(key==='all')return [];if(kind==='nsr'&&Object.hasOwn(completedTasks,'15-Completed|'+key))return ['15-Completed|'+key];return [...id(kind==='ctl'?'fCtlStage':'fNsrTaskStatus').options].map(option=>option.value).filter(value=>!Object.hasOwn(completedTasks,value)&&taskGroup(kind==='ctl'?ctlStageName(value):value,kind==='ctl')===key)}
+function taskSelected(kind,key,types){const selected=filterValues[kind==='ctl'?'ctl.stage':'nsr.taskStatus']||[],parts=taskFilterValues(kind,key),changes=filterValues['ctl.change']||[];return key==='all'?!selected.length:parts.length>0&&parts.every(value=>selected.includes(value))&&(!types||!changes.length||types.every(value=>changes.includes(value)))}
 function selectTaskFilter(kind,key,types){
-  const path=kind==='ctl'?'ctl.stage':'nsr.taskStatus',selected=filterValues[path]||[],parts=taskFilterValues(kind,key),active=taskFilterSelected(kind,key,types);
+  const path=kind==='ctl'?'ctl.stage':'nsr.taskStatus',selected=filterValues[path]||[],parts=taskFilterValues(kind,key),active=taskSelected(kind,key,types);
   if(types){
     if(!parts.length)return;
-    const changes=taskFilterSelected(kind,key)?filterValues['ctl.change']?.length?filterValues['ctl.change']:[...id('fCtlChange').options].map(option=>option.value):[];
+    const changes=taskSelected(kind,key)?filterValues['ctl.change']?.length?filterValues['ctl.change']:[...id('fCtlChange').options].map(option=>option.value):[];
     const next=active?changes.filter(value=>!types.includes(value)):[...new Set([...changes,...types])];
     changeFilter({[path]:active&&!next.length?selected.filter(value=>!parts.includes(value)):[...new Set([...selected,...parts])],'ctl.change':next});
   }else changeFilter(path,key==='all'?[]:active?selected.filter(value=>!parts.includes(value)):[...selected,...parts]);
 }
-function normalizeNsrTasks(values){const selected=[...new Set(values)],previous=filterValues['nsr.taskStatus']||[];if(selected.includes('15-Completed')&&selected.some(value=>Object.hasOwn(nsrCompletedTasks,value)))return selected.filter(value=>!previous.includes('15-Completed')?!Object.hasOwn(nsrCompletedTasks,value):value!=='15-Completed');return selected}
 const fidStatusNames={'no-slot':'No Slot','slot-ready':'Slotted FID','stable-slot':'Stable Slot','late-slot':'Late Slot','stable-ctl':'Stable CTL','late-ctl-nsr':'Late CTL','late-ctl':'Late CTL','slot-unknown':'Slot status unknown','slot-date-unknown':'Slot date unknown','ctl-unknown':'CTL status unknown','risk-fid':'Risk FID','risk-free':'Stable Slot & CTL','risk-unknown':'Risk Status Unknown','slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'Slotted FID · drop slot'};
 const fidCellNames={'stable-slot|stable-ctl':'Stable Slot & CTL','late-slot|stable-ctl':'Late Slot with Stable CTL','stable-slot|late-ctl-nsr':'Stable Slot with Late CTL','late-slot|late-ctl-nsr':'Late Slot with Late CTL','stable-slot|ctl-unknown':'Stable Slot · CTL unknown','late-slot|ctl-unknown':'Late Slot · CTL unknown','slot-date-unknown|stable-ctl':'Slot date unknown · Stable CTL','slot-date-unknown|late-ctl-nsr':'Late CTL · Slot unknown','slot-date-unknown|ctl-unknown':'Slot & CTL status unknown'};
 const fidCauseNames={'slot-no-mcsd':'Slot + no MCSD','slot-pending':'No Slot · pending approval','slot-dropped':'Slotted FID · drop slot'};
@@ -2390,7 +2392,7 @@ const css=GM_getResourceText('tabulatorCss')+DASHBOARD_BASE_CSS+`
 body.fcid-app{--side:370px;--fid-ink:#2458a6;--fid-tint:#eaf1ff;--fid-line:#bed0ef;--nsr-ink:#b13d53;--nsr-tint:#fceef1;--nsr-line:#e6b6c1;--shadow:0 2px 12px #253c6410;font-size:13px;min-width:0}.fcid-app [hidden]{display:none!important}.fcid-app h1,.fcid-app h2,.fcid-app h3{font-weight:600;line-height:1.3;margin:0}.fcid-app h2{font-size:16px}.fcid-app h3{font-size:13px}.fcid-app .card{padding:14px;min-width:0;border-radius:11px}.fcid-app .btn{color:#fff;font-size:12px;padding:7px 10px;font-weight:600;white-space:nowrap}.fcid-app .btn.small{padding:4px 7px}.fcid-app .btn.light{background:#edf1f6;border:1px solid #ccd6e3;color:#354d6d}.fcid-app .btn.blue{background:#2863d6;color:#fff}.muted,.small{font-size:12px;color:#53657d}.btnrow,.fc-hero-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.badge{font-size:12px;background:#edf2fa;color:#435a7b;border-radius:6px;padding:3px 7px;white-space:nowrap}
 .fc-hero{padding:15px 18px;background:linear-gradient(110deg,#e8f3ff,#f0ebff 57%,#fff0e4);border-bottom:1px solid #ccd9ed}.fc-hero-inner{max-width:1900px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px}.fc-brand{font-size:12px;letter-spacing:1.5px;color:#4d5b89}.fc-hero h1{font-size:27px;margin-top:3px;letter-spacing:-.5px}.fc-heading{display:flex;align-items:center;gap:13px}#fcToggleSide{font-size:21px;padding:4px 10px;line-height:1.3}
 .fcid-app .layout{max-width:1948px;margin:auto;display:grid;grid-template-columns:var(--side) minmax(0,1fr);gap:14px;padding:14px;align-items:start}.fcid-app .main{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.fcid-app .side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin;padding:13px;min-width:0}.side-collapsed .layout{grid-template-columns:minmax(0,1fr)}.side-collapsed .side{display:none}
-.fc-source{position:relative;border:1px solid #dce7ed;background:#fbfdfe;border-radius:9px;padding:9px 8px;margin-top:8px}.fc-source-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:7px}.fc-source h3{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;color:#24364b}.fc-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fc-source-bobj{flex:none;border:1px solid #d5e0e8;border-radius:4px;padding:1px 4px;color:#64748b;font-size:9px;font-weight:600}.fc-source-number{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;background:#376bd2;color:#fff;border-radius:6px;font-size:12px;font-weight:600}.fc-source[data-source=ctl] .fc-source-number{background:#8152bf}.fc-source[data-source=ctlNsr] .fc-source-number{background:#a85c07}.fc-source[data-source=nsr] .fc-source-number{background:#bf3d74}.fc-source[data-source=nce] .fc-source-number{background:#087e70}.fc-source-state{display:inline-flex;align-items:center;gap:5px;flex:none;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}.fc-source-state.has-range{max-width:none}.fc-source-state::before{content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:#94a3b8}.fc-source-state.ok{color:#166534}.fc-source-state.ok::before{background:#158653}.fc-source-state.stale{color:#d97706}.fc-source-state.stale::before{background:#d97706}.fc-source-state.loading{color:#92400e}.fc-source-state.loading::before{background:#d97706}.fc-source-state.error{cursor:help}.fc-source-toolbar{display:flex;align-items:center;gap:6px;min-width:0}.fc-source-toolbar>.btn{flex:none}.fc-source-file{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5}.fc-source-help{position:relative}.fc-source-help summary{list-style:none}.fc-source-help-bubble{position:absolute;right:0;top:30px;width:235px;z-index:30;padding:10px;background:#fff;border:1px solid #c4d0e4;border-radius:8px;box-shadow:0 8px 26px #23395630;font-size:12px}.fc-source-help a,.fc-nsr-help a{color:#265dbb}.fc-note{font-size:12px;color:#a73047;white-space:pre-line}.fc-note:empty{display:none}
+.fc-source{position:relative;border:1px solid #dce7ed;background:#fbfdfe;border-radius:9px;padding:9px 8px;margin-top:8px}.fc-source-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:7px}.fc-source h3{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;color:#24364b}.fc-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fc-source-bobj{flex:none;border:1px solid #d5e0e8;border-radius:4px;padding:1px 4px;color:#64748b;font-size:9px;font-weight:600}.fc-source-number{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;background:#376bd2;color:#fff;border-radius:6px;font-size:12px;font-weight:600}.fc-source[data-source=ctl] .fc-source-number{background:#8152bf}.fc-source[data-source=ctlNsr] .fc-source-number{background:#a85c07}.fc-source[data-source=nsr] .fc-source-number{background:#bf3d74}.fc-source[data-source=nce] .fc-source-number{background:#087e70}.fc-source-state{display:inline-flex;align-items:center;gap:5px;flex:none;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}.fc-source-state.has-range{max-width:none}.fc-source-state::before{content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:#94a3b8}.fc-source-state.ok{color:#166534}.fc-source-state.ok::before{background:#158653}.fc-source-state.stale{color:#d97706}.fc-source-state.stale::before{background:#d97706}.fc-source-state.loading{color:#92400e}.fc-source-state.loading::before{background:#d97706}.fc-source-state.error{cursor:help}.fc-source-toolbar{display:flex;align-items:center;gap:6px;min-width:0}.fc-source-toolbar>.btn{flex:none}.fc-source-file{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5}.fc-source-help{position:relative}.fc-source-help summary{list-style:none}.fc-source-help-bubble{position:absolute;right:0;top:30px;width:275px;z-index:30;padding:10px;background:#fff;border:1px solid #c4d0e4;border-radius:8px;box-shadow:0 8px 26px #23395630;font-size:12px}.fc-source-help a,.fc-nsr-help a{color:#265dbb}.fc-note{font-size:12px;color:#a73047;white-space:pre-line}.fc-note:empty{display:none}
 .filter-head{display:flex;align-items:center;justify-content:space-between;margin:17px 0 10px}.fc-filter{margin-top:9px}.filter-head h2{font-size:18px;color:#30445f}.fc-filter[data-filter-needs=common]{--filter-ink:#52647d;--filter-tint:#f4f6fa;--filter-line:#cbd5e1}.fc-filter[data-filter-needs^=fid]{--filter-ink:var(--fid-ink);--filter-tint:var(--fid-tint);--filter-line:var(--fid-line)}.fc-filter[data-filter-needs=nsr]{--filter-ink:var(--nsr-ink);--filter-tint:var(--nsr-tint);--filter-line:var(--nsr-line)}.fc-filter label{display:block;font-size:12px;font-weight:600;color:var(--filter-ink,#435775);margin-bottom:4px}.fc-filter select{font-size:12px;width:100%;min-height:32px;border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:5px;background:#fff;color:var(--filter-ink,#263e60)}.fc-filter .chosen-container,.fc-filter .chosen-container-multi .chosen-choices li.search-field input.chosen-search-input{font-size:12px}.fc-filter .chosen-choices{border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:2px;background:#fff;box-shadow:none;min-height:32px}.fc-filter .chosen-choices li.search-choice{color:var(--filter-ink,#294c88);background:var(--filter-tint,#e8effd);border-color:var(--filter-line,#bacdee);padding:4px 22px 4px 6px}.fc-filter .chosen-results li{font-size:12px;line-height:1.4;padding:5px 7px}.fc-filter .chosen-results li.highlighted{background:var(--filter-ink,#2f64ca);color:#fff}.fc-filter input::placeholder{color:#526782}.fc-filter-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.fc-filter-head>label{min-width:0;margin-bottom:0}.fc-filter-actions{display:flex;flex:none;gap:6px;justify-content:flex-end}.fc-filter-actions button{border:0;background:none;color:var(--filter-ink,#365c97);font-size:12px;padding:1px 2px;cursor:pointer}.fcid-app .filter-group-title{font-size:16px;font-weight:600;color:var(--fid-ink);border-top:1px solid #dde5f1;margin-top:18px;padding-top:13px}.filter-group-title[data-filter-needs=nsr]{color:var(--nsr-ink);border-top-color:var(--nsr-line)}.fc-filter.primary-filter{border-left:3px solid var(--filter-line,#83a8e8);padding:7px 8px;background:var(--filter-tint,#f1f5fd);border-radius:0 6px 6px 0}.fc-filter.primary-filter .fc-filter-head>label{color:var(--filter-ink,#2f5590)}.quick-search{width:100%;border:1px solid #cbd6e6;border-radius:6px;padding:7px;color:#243b5c;font-size:13px}.quick-search{resize:vertical;min-height:52px}.nsr-year-picks{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.nsr-year-picks button{font-size:12px;border:1px solid var(--filter-line,#cbd8e9);border-radius:5px;color:var(--filter-ink,#405a80);background:var(--filter-tint,#f4f7fc);padding:2px 6px;cursor:pointer}.nsr-year-picks button.active{background:var(--filter-ink,#315b96);border-color:var(--filter-ink,#315b96);color:#fff}.nsr-year-picks button.partial{background:#eaf3fc;border-color:#8db3d9;color:#285982}
 .fid-lookup{display:flex;align-items:center;gap:7px}.fid-lookup textarea{flex:1;min-width:0;width:0}.fid-lookup .btn{flex:none;padding:6px 8px}
 .fc-filter[data-filter-needs] .chosen-drop{border-color:var(--filter-line)}.fc-filter[data-filter-needs] .chosen-container-active .chosen-choices{border-color:var(--filter-ink);box-shadow:0 0 0 2px var(--filter-tint)}
@@ -2406,7 +2408,7 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 #fNsrTaskStatus_chosen{--chosen-group-option-indent:22px}
 #fFidStatus_chosen .chosen-results .fid-status-parent{font-weight:600}
 #fFidStatus_chosen .chosen-results .fid-status-child{padding-inline-start:22px}
-#fFidStatus_chosen .chosen-results .fid-status-detail{padding-inline-start:37px}
+
 .workspace-nav{display:flex;gap:12px;flex-wrap:wrap;padding:6px;background:#fff;border:1px solid var(--line);border-radius:10px}.workspace-nav button{border:0;background:transparent;color:#485d7b;font-size:13px;font-weight:600;padding:8px 10px;border-radius:7px;cursor:pointer}.workspace-nav button.active{background:#e4edff;color:#1e52ad}.workspace-nav button:hover{background:#eef3fd}.workspace-nav button[data-view=rules]{margin-left:auto}.fc-view{display:grid;gap:12px;min-width:0}.filter-context{display:flex;align-items:center;flex-wrap:wrap;gap:7px 10px;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:9px;font-size:12px}.context-title{flex:none;font-weight:600;color:#304d77}.filter-tags{display:flex;align-items:center;min-height:27px;flex:1 1 240px;min-width:0;flex-wrap:wrap;gap:6px}.filter-chip{display:inline-flex;align-items:center;gap:0;max-width:min(360px,100%);min-width:0;border:1px solid #c8d6ed;background:#f5f8ff;color:#31528a;border-radius:16px;padding:0;font-size:12px;line-height:1.4;cursor:pointer}.filter-chip:hover{background:#eaf1ff;border-color:#94b2df}.filter-chip-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:4px 0 4px 9px;cursor:pointer;border-radius:16px 0 0 16px}.filter-chip-remove{flex:none;align-self:stretch;border:0;background:none;font-size:15px;line-height:1;color:#536d95;padding:0 8px 0 6px;cursor:pointer;border-radius:0 16px 16px 0}.filter-chip-remove:hover{background:#dfe9fb;color:#244c87}.scope-note{margin-left:auto;color:#53657d}
 .workspace-nav [data-view=portfolio],#view-portfolio{--view-ink:var(--fid-ink);--view-tint:var(--fid-tint);--view-line:var(--fid-line)}
 .workspace-nav [data-view=nsr],#view-nsr{--view-ink:var(--nsr-ink);--view-tint:var(--nsr-tint);--view-line:var(--nsr-line)}
@@ -2417,37 +2419,42 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fc-view :is(.section-head,.section-title) h2,#wfModal .wf-head h1{color:var(--view-ink)}
 
 .signal-strip{display:flex;gap:7px;flex-wrap:wrap}.signal{border:1px solid #d4deef;background:#fff;color:#3e5575;padding:6px 9px;border-radius:7px;font-size:12px;cursor:pointer}.signal b{margin-right:5px;color:#34539d;font-variant-numeric:tabular-nums}
-.fid-risk-drivers .signal{border:0;border-radius:0;padding:8px 15px;background:#edf2fa;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
-.fid-risk-drivers .signal b{font:inherit;margin:0;color:inherit}.fid-risk-drivers .signal small{font-size:11px;opacity:.8;white-space:nowrap}
-.fid-risk-drivers .signal:hover{background:#e5efff}
-.fid-risk-drivers .signal:disabled{opacity:.55;cursor:default}
+.risk-drivers .signal{border:0;border-radius:0;padding:8px 15px;background:#edf2fa;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+.risk-drivers .signal b{font:inherit;margin:0;color:inherit}.risk-drivers .signal small{font-size:11px;opacity:.8;white-space:nowrap}
+.risk-drivers .signal:hover{background:#e5efff}
+.risk-drivers .signal:disabled{opacity:.55;cursor:default}
 @media(max-width:760px){.fc-heading .title-tracking{display:none}}
 .summary-heading.overview-tools{flex:1;flex-wrap:nowrap;justify-content:flex-start;max-width:100%}.summary-heading>h2{flex:none}.summary-heading .ignore-scope{margin-left:auto}
 .overview-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}.overview-tools>.badge{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ignore-scope{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:12px;color:#758192;white-space:nowrap;cursor:pointer}.ignore-scope input{margin:0;accent-color:#758192}.section-head.overview-head{flex-wrap:nowrap}.overview-head>h2{flex:none}
-.fid-risk-drivers .signal[aria-pressed=true]{background:#3566b0;color:#fff}
-.fid-risk-drivers .signal:focus-visible{outline:0;box-shadow:inset 0 0 0 2px currentColor}
-.fid-risk-drivers .signal[data-nsr-lifecycle="open"]{background:var(--nsr-tint);color:var(--nsr-ink)}
-.fid-risk-drivers .signal[data-nsr-lifecycle="open"]:hover{background:#f8e0e6}
-.fid-risk-drivers .signal[data-nsr-lifecycle="open"][aria-pressed=true]{background:var(--nsr-ink);color:#fff}
-.fid-risk-drivers .signal[data-group-value="Pending Config CTL"][aria-pressed=true]{background:#745097;color:#fff}
-.table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 8px}.detail-head>.table-toolbar,summary>.table-toolbar{margin:0 0 0 auto;justify-content:flex-end}.detail-head>.table-toolbar{flex-wrap:nowrap;flex:0 1 auto}summary>.table-toolbar{float:right}.detail-head{flex-wrap:wrap}.table-count{font-size:12px;color:#4d6383}.fc-table-shell{min-width:0}.fc-table-wrap.tabulator{overflow:hidden;resize:vertical;min-height:105px;border:1px solid #d5dfed;border-radius:8px;scrollbar-width:thin;background:#fff;font:13px/20px var(--font-sans);color:#344c6b}.fid-dialog .fc-table-wrap.tabulator{min-height:0;resize:none}.fid-dialog .tabulator-tableholder{min-height:34px}.fc-table-wrap .tabulator-header{background:var(--table-heading-bg,#edf2fb);border-bottom:1px solid #d5dfed;color:#344c6b;font-weight:600}.fc-table-wrap .tabulator-header .tabulator-col{background:var(--table-heading-bg,#edf2fb);border-right:1px solid #e0e7f1;font-size:12px}.fc-table-wrap .tabulator-header .tabulator-col .tabulator-col-content{padding:7px 9px}.fc-table-wrap .tabulator-row{background:#fff;color:#344c6b;min-height:34px}.fc-table-wrap .tabulator-row.tabulator-row-even{background:#f8faff}.fc-table-wrap .tabulator-row:hover{background:#f0f5fc}.fc-table-wrap .tabulator-row .tabulator-cell{padding:6px 9px;height:34px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid #e8edf5;border-bottom:1px solid #e3e9f3}.fc-table-wrap .tabulator-row .tabulator-cell.tabulator-frozen{background:inherit;border-right:1px solid #d6e0ed}.fc-table-wrap .tabulator-tableholder{scrollbar-width:thin;overflow-anchor:none}.cell-content{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-height:22px}.fid-status-tags{display:inline-flex;gap:4px;vertical-align:top}#portfolioTable .tabulator-cell:has(.fid-status-tags){cursor:pointer}.fid-status-tags .pill{flex:none}.cell-content .pill,.cell-content .status-pill{max-width:100%;white-space:nowrap;vertical-align:top}.fc-link{border:0;background:none;color:#215fbb;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:0;font-size:13px;white-space:nowrap}.pill{display:inline-block;font-size:12px;line-height:17px;padding:2px 6px;border-radius:5px;background:#edf2fa;color:#3e5a80}.pill.risk,.pill.alert{background:#ffe5eb;color:#a12d47}.pill.clear{background:#ddf4e7;color:#196747}.pill.unknown,.fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{background:#fff1cf;color:#7c5514}.pill.info{background:#e7effb;color:#375b91}.fcid-app .status-pill{padding:2px 6px;line-height:17px}
-.record-mark-toggle{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin:0;padding:0;border:1px solid #a9b3c0;border-radius:3px;background:transparent;color:#7d8a9d;font:600 13px/1 var(--font-sans);vertical-align:middle;cursor:pointer}.record-mark-toggle svg{display:block;width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:1.2}.record-mark-toggle[data-record-mark=ignore]{background:#edf0f4}.record-mark-toggle[data-record-mark=important]{border-color:#d99aa5;background:#fff1f3;color:#b8324a}.record-mark-toggle:focus-visible{outline:2px solid #557cae;outline-offset:2px}.fc-table-wrap .tabulator-row[data-record-mark=ignore] .tabulator-cell,.fc-table-wrap .tabulator-row[data-record-mark=ignore] .tabulator-cell *{color:#929aa5}.fc-table-wrap .tabulator-row[data-record-mark=important] .tabulator-cell,.fc-table-wrap .tabulator-row[data-record-mark=important] .tabulator-cell *{color:#b8324a}.pill.ignore{background:#edf0f4;color:#667184}
-.fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]),.pill.pending,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){background:#f2edfb;--fid-history-line:#aa83c6}
-.pill.pending,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){color:#745097}
-.fc-table-wrap .tabulator-header-filter{display:none}.fc-table-wrap.column-filters .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title{padding-right:29px}.fc-table-wrap.column-filters .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter{right:0}.fc-table-wrap.column-filters .tabulator-col-sorter .tabulator-arrow{border-left-width:4px;border-right-width:4px}.column-heading>span{display:block;overflow:hidden;text-overflow:ellipsis}.column-funnel,.mark-filter-trigger{position:absolute;right:11px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:16px;height:18px;padding:2px;border:0;border-radius:3px;background:none;color:#8a97aa;cursor:pointer}.column-funnel svg,.mark-filter-trigger svg{width:12px;height:12px;fill:currentColor}.column-funnel:hover,.column-funnel.active,.mark-filter-trigger:hover,.mark-filter-trigger.active{background:#dceaff;color:#215fbb}.column-funnel:focus-visible,.mark-filter-trigger:focus-visible{outline:2px solid #557cae;outline-offset:-2px}
-.column-filter-bar{display:flex;align-items:center;flex-wrap:wrap;gap:4px;flex:1 1 160px;min-width:0}.column-filter-bar:empty{display:none}.column-filter-bar .pill{max-width:min(220px,100%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;cursor:pointer}
-.column-filter-popup{position:fixed;position-area:bottom;position-try-fallbacks:flip-block;inset:auto;margin:8px;width:min(240px,calc(100vw - 16px));color:#344c6b;box-shadow:0 6px 22px #213a612b}.column-filter-popup label>span{font-weight:600}.column-filter-popup input{display:block;width:100%;margin:7px 0 10px;padding:7px;border:1px solid #c5d2e5;border-radius:5px}.column-filter-popup .btnrow{justify-content:space-between}
-.mark-filter-trigger{position:static;transform:none;display:flex;margin:auto;height:20px}.column-filter-popup.mark-filter-popup{position-area:bottom span-right;justify-self:start;position-try-fallbacks:flip-block,flip-inline;margin:8px 0;padding:7px;width:190px}.mark-filter-popup label{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border-radius:5px;color:#344c6b;cursor:pointer}.mark-filter-popup label:first-child{border-bottom:1px solid #e0e7f1;margin-bottom:4px}.mark-filter-popup label:hover{background:#f0f5fc}.mark-filter-popup label:has(input:checked){background:#e7effb;color:#215fbb}.mark-filter-popup input[type=checkbox]{width:14px;height:14px;margin:0;padding:0;accent-color:#2863d6;flex:none}.mark-filter-popup label>span{flex:1;font-weight:400}.mark-filter-popup b{font-weight:400;font-variant-numeric:tabular-nums}
+.risk-drivers .signal[aria-pressed=true]{background:#3566b0;color:#fff}
+.risk-drivers .signal:focus-visible{outline:0;box-shadow:inset 0 0 0 2px currentColor}
+.risk-drivers .signal[data-nsr-lifecycle="open"]{background:var(--nsr-tint);color:var(--nsr-ink)}
+.risk-drivers .signal[data-nsr-lifecycle="open"]:hover{background:#f8e0e6}
+.risk-drivers .signal[data-nsr-lifecycle="open"][aria-pressed=true]{background:var(--nsr-ink);color:#fff}
+.risk-drivers .signal[data-group-value="Pending Config CTL"][aria-pressed=true]{background:#745097;color:#fff}
+.table-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 8px}.detail-head>.table-toolbar,summary>.table-toolbar{margin:0 0 0 auto;justify-content:flex-end}.detail-head>.table-toolbar{flex-wrap:nowrap;flex:0 1 auto}summary>.table-toolbar{float:right}.table-count{font-size:12px;color:#4d6383}.fc-table-shell{min-width:0}.fc-grid.tabulator{overflow:hidden;resize:vertical;min-height:105px;border:1px solid #d5dfed;border-radius:8px;scrollbar-width:thin;background:#fff;font:13px/20px var(--font-sans);color:#344c6b}.fid-dialog .fc-grid.tabulator{min-height:0;resize:none}.fid-dialog .tabulator-tableholder{min-height:34px}.fc-grid .tabulator-header{background:var(--table-heading-bg,#edf2fb);border-bottom:1px solid #d5dfed;color:#344c6b;font-weight:600}.fc-grid .tabulator-header .tabulator-col{background:var(--table-heading-bg,#edf2fb);border-right:1px solid #e0e7f1;font-size:12px}.fc-grid .tabulator-header .tabulator-col .tabulator-col-content{padding:7px 9px}.fc-grid .tabulator-row{background:#fff;color:#344c6b;min-height:34px}.fc-grid .tabulator-row.tabulator-row-even{background:#f8faff}.fc-grid .tabulator-row:hover{background:#f0f5fc}.fc-grid .tabulator-row .tabulator-cell{padding:6px 9px;height:34px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:1px solid #e8edf5;border-bottom:1px solid #e3e9f3}.fc-grid .tabulator-row .tabulator-cell.tabulator-frozen{background:inherit;border-right:1px solid #d6e0ed}.fc-grid .tabulator-tableholder{scrollbar-width:thin;overflow-anchor:none}.cell-content{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-height:22px}.fid-status-tags{display:inline-flex;gap:4px;vertical-align:top}#portfolioTable .tabulator-cell:has(.fid-status-tags){cursor:pointer}.fid-status-tags .pill{flex:none}.cell-content .pill,.cell-content .status-pill{max-width:100%;white-space:nowrap;vertical-align:top}.fc-link{border:0;background:none;color:#215fbb;text-decoration:underline;text-underline-offset:2px;cursor:pointer;padding:0;font-size:13px;white-space:nowrap}.pill{display:inline-block;font-size:12px;line-height:17px;padding:2px 6px;border-radius:5px;background:#edf2fa;color:#3e5a80}.pill.risk,.pill.alert{background:#ffe5eb;color:#a12d47}.pill.clear{background:#ddf4e7;color:#196747}.pill.unknown,.fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{background:#fff1cf;color:#7c5514}.pill.info{background:#e7effb;color:#375b91}.fcid-app .status-pill{padding:2px 6px;line-height:17px}
+.record-mark-toggle{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin:0;padding:0;border:1px solid #a9b3c0;border-radius:3px;background:transparent;color:#7d8a9d;font:600 13px/1 var(--font-sans);vertical-align:middle;cursor:pointer}.record-mark-toggle svg{display:block;width:12px;height:12px;flex:none;fill:none;stroke:currentColor;stroke-width:1.2}.record-mark-toggle[data-record-mark=ignore]{background:#edf0f4}.record-mark-toggle[data-record-mark=important]{border-color:#d99aa5;background:#fff1f3;color:#b8324a}.record-mark-toggle:focus-visible{outline:2px solid #557cae;outline-offset:2px}.fc-grid .tabulator-row[data-record-mark=ignore] .tabulator-cell,.fc-grid .tabulator-row[data-record-mark=ignore] .tabulator-cell *{color:#929aa5}.fc-grid .tabulator-row[data-record-mark=important] .tabulator-cell,.fc-grid .tabulator-row[data-record-mark=important] .tabulator-cell *{color:#b8324a}.pill.ignore{background:#edf0f4;color:#667184}
+.fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]),.pill.pending,.risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){background:#f2edfb;--fid-history-line:#aa83c6}
+.pill.pending,.risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]){color:#745097}
+.fc-grid .tabulator-header-filter{display:none}.fc-grid.column-filters .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title{padding-right:29px}.fc-grid.column-filters .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter{right:0}.fc-grid.column-filters .tabulator-col-sorter .tabulator-arrow{border-left-width:4px;border-right-width:4px}.column-heading>span{display:block;overflow:hidden;text-overflow:ellipsis}.column-funnel,.mark-trigger{position:absolute;right:11px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:16px;height:18px;padding:2px;border:0;border-radius:3px;background:none;color:#8a97aa;cursor:pointer}.column-funnel svg,.mark-trigger svg{width:12px;height:12px;fill:currentColor}.column-funnel:hover,.column-funnel.active,.mark-trigger:hover,.mark-trigger.active{background:#dceaff;color:#215fbb}.column-funnel:focus-visible,.mark-trigger:focus-visible{outline:2px solid #557cae;outline-offset:-2px}
+.col-bar{display:flex;align-items:center;flex-wrap:wrap;gap:4px;flex:1 1 160px;min-width:0}.col-bar:empty{display:none}.col-bar .pill{max-width:min(220px,100%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;cursor:pointer}
+.col-popup{position:fixed;position-area:bottom;position-try-fallbacks:flip-block;inset:auto;margin:8px;width:min(240px,calc(100vw - 16px));color:#344c6b;box-shadow:0 6px 22px #213a612b}.col-popup label>span{font-weight:600}.col-popup input{display:block;width:100%;margin:7px 0 10px;padding:7px;border:1px solid #c5d2e5;border-radius:5px}.col-popup .btnrow{justify-content:space-between}
+#colChoices{width:100%;max-height:160px;margin:0 0 10px;padding:3px;border:1px solid #c5d2e5;border-radius:5px;color:inherit;background:#fff;font:inherit}#colChoices option{padding:3px 6px}
+.mark-trigger{position:static;transform:none;display:flex;margin:auto;height:20px}.col-popup.mark-popup{position-area:bottom span-right;justify-self:start;position-try-fallbacks:flip-block,flip-inline;margin:8px 0;padding:7px;width:190px}.mark-popup label{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border-radius:5px;color:#344c6b;cursor:pointer}.mark-popup label:first-child{border-bottom:1px solid #e0e7f1;margin-bottom:4px}.mark-popup label:hover{background:#f0f5fc}.mark-popup label:has(input:checked){background:#e7effb;color:#215fbb}.mark-popup input[type=checkbox]{width:14px;height:14px;margin:0;padding:0;accent-color:#2863d6;flex:none}.mark-popup label>span{flex:1;font-weight:400}.mark-popup b{font-weight:400;font-variant-numeric:tabular-nums}
 .fid-dialog .tabulator-row[data-fid-risk^="late-"],.fid-header-status .pill.risk{background:#fff2f5;--fid-history-line:#c75970}
-.fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]):hover,.fid-risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]):hover{background:#e8ddf5}
+.fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]):hover,.risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]):hover{background:#e8ddf5}
 .fid-dialog .tabulator-row[data-fid-risk^="late-"]:hover{background:#ffe0e8}
-.fid-dialog .tabulator-row[data-fid-risk="pending-pull-push"],.pill.neutral,.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]){background:#f1f3f6;--fid-history-line:#a2abb8}
-.pill.neutral,.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]){color:#626e7c}
-.fid-dialog .tabulator-row[data-fid-risk="pending-pull-push"]:hover,.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]):hover{background:#e4e8ed}
-.fid-risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"])[aria-pressed=true]{background:#697586;color:#fff}
+.fid-dialog .tabulator-row:is([data-fid-risk="pending-pull-push"],[data-fid-risk="drop-slot"]),.pill.neutral,.risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]){background:#f1f3f6;--fid-history-line:#a2abb8}
+.pill.neutral,.risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]){color:#626e7c}
+.fid-dialog .tabulator-row:is([data-fid-risk="pending-pull-push"],[data-fid-risk="drop-slot"]):hover,.risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"]):not([aria-pressed=true]):hover{background:#e4e8ed}
+.risk-drivers .signal:is([data-group-value="Pending Pull/Push CTL"],[data-group-value="MCSD pending"],[data-group-value="NCE / FA signal"])[aria-pressed=true]{background:#697586;color:#fff}
 .fid-header-status .pill:is(.pending,.risk,.neutral){border-left:3px solid var(--fid-history-line)}
+.active-ctl-dot{display:inline-block;width:6px;height:6px;margin-left:4px;border-radius:50%;background:#16843f;vertical-align:middle}
 .fid-dialog .tabulator-row[data-fid-risk]:not([data-fid-risk=""]) .tabulator-cell:first-child{background-image:linear-gradient(var(--fid-history-line),var(--fid-history-line));background-size:3px 100%;background-position:0 0;background-repeat:no-repeat}
-.fid-dialog .tabulator-row.nsr-ctl-match{outline:2px solid #3b82f6;outline-offset:-2px}.fid-dialog .nsr-ctl-match .tabulator-frozen{box-shadow:inset 0 2px #3b82f6,inset 0 -2px #3b82f6}.fid-dialog .nsr-ctl-match .tabulator-cell:first-child{box-shadow:inset 2px 0 #3b82f6,inset 0 2px #3b82f6,inset 0 -2px #3b82f6}
+.fid-dialog .tabulator-row.nsr-ctl-match{--fid-link-style:solid;outline:2px var(--fid-link-style) #3b82f6;outline-offset:-2px}
+.fid-dialog .tabulator-row.nsr-ctl-note{--fid-link-style:dashed}
+.fid-dialog .nsr-ctl-match .tabulator-cell:is(.tabulator-frozen,:first-child)::after{content:"";position:absolute;inset:0;pointer-events:none;border-top:2px var(--fid-link-style) #3b82f6;border-bottom:2px var(--fid-link-style) #3b82f6}
+.fid-dialog .nsr-ctl-match .tabulator-cell:first-child::after{border-left:2px var(--fid-link-style) #3b82f6}
 .fid-dialog>.section-head>div{min-width:0;flex:1}.fid-header-status{display:inline-flex;flex-wrap:wrap;gap:6px;min-width:0;max-width:100%;font-weight:400}.fid-header-status .pill{padding:3px 8px;font-size:13px;line-height:20px;white-space:nowrap}
 .fid-dialog>.section-head>[data-export-fid]{align-self:flex-start;flex:none;margin-top:-4px}
 .fid-detail-value.no-slot,.fid-evidence>.notice.no-slot{border-color:#e4c381}.fid-detail-value.no-slot small{color:inherit}
@@ -2520,47 +2527,51 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fid-subcount-filter:hover{color:#405972;text-decoration:underline;text-underline-offset:2px}
 .fid-waiting{margin-top:12px;font-size:12px;color:#7c5514}
 .notice{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 13px;border:1px solid #e6a5b5;border-left:4px solid #c43c5c;background:#fff0f3;color:#992f48;border-radius:9px;font-size:13px}.notice small{display:block;font-size:12px;margin-top:3px}.statistics-state{margin-top:8px;color:#196b50;font-size:12px}.statistics-state.error{color:#ac3049}.ag-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.marked-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.nsr-mark-editors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ag-box label{display:block;font-size:13px;font-weight:600;margin:6px 0}.ag-box textarea{width:100%;min-height:150px;resize:vertical;border:1px solid #cbd7e9;border-radius:7px;padding:8px;color:#345073}.ag-notice{white-space:pre-line;background:#fff3d7;color:#805b16;border:1px solid #debf79;border-radius:7px;padding:10px;margin:10px 0;font-size:13px}
-.fc-nsr-dialog,.fid-dialog,.fc-note-dialog{border:1px solid #b7c7e0;border-radius:12px;padding:17px;background:#f6f8fe;color:#2e486c;box-shadow:0 16px 70px #1e355550}.fc-nsr-dialog{width:min(450px,94vw)}.fc-nsr-dialog::backdrop,.fid-dialog::backdrop,.fc-note-dialog::backdrop{background:#152e505c}.fc-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.fc-range input{width:100%;padding:8px;border:1px solid #c2d0e4;border-radius:6px;margin-top:5px}.fc-nsr-help{font-size:12px;margin:12px 0}.fc-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}.fid-dialog{width:min(1400px,96vw);height:min(860px,92vh);max-width:96vw;max-height:94vh;min-width:min(600px,94vw);min-height:300px;overflow:auto;resize:both}.fid-dialog>.section-head{position:sticky;top:-17px;background:#f6f8fe;z-index:10;padding:10px 0}.fid-dialog h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:20px}.fid-action{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#215fbb;font-size:12px;line-height:1.3;text-decoration:none;white-space:nowrap;cursor:pointer}.fid-close{align-self:flex-start;margin:-8px -8px 0 0;width:36px;height:36px;padding:0;border:0;border-radius:7px;background:transparent;color:#526b8d;font-size:28px;line-height:1;cursor:pointer}.fid-action:hover,.fid-close:hover{background:#e7edf8}.fid-dialog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fid-detail-value{padding:9px;background:#fff;border:1px solid #d6e0ef;border-radius:7px;font-size:13px;overflow-wrap:anywhere}.fid-detail-value small{display:block;font-size:12px;color:#526b8d;margin-bottom:3px}.fid-evidence{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.fid-evidence>.notice{display:block;min-width:0;overflow-wrap:anywhere}.fid-evidence>.notice.clear{border-color:#a8d5bb;border-left-color:#2d8b60;background:#eef9f2;color:#196747}.fid-evidence>.notice.unknown{border-color:#d2dcee;border-left-color:#91a2ba;background:#fff;color:#526b8d}.fid-evidence b{font-weight:600}.fid-evidence p{margin:7px 0 0}.fid-dialog h2{margin:0}.fid-dialog .table-toolbar{margin:16px 0 8px}.fc-toast{position:fixed;right:20px;bottom:20px;z-index:150;background:#244a79;color:#fff;padding:11px 14px;border-radius:9px;font-size:13px;max-width:min(480px,90vw);display:flex;align-items:center;gap:13px}.fc-toast button{color:#fff;border:1px solid #b7cceb;border-radius:5px;background:none;padding:4px 7px;cursor:pointer}.fcid-app .cycle-shell{display:grid;gap:12px}.fcid-app #cycleTab{display:block}.fcid-app #cycleTab:not(.active){display:none}.fcid-app .cycle-status,.fcid-app .cycle-label,.fcid-app .row-count,.fcid-app .context-badge{font-size:12px;color:#425c7f}body:has(#dashboardWorkspace.wf-open){overflow:hidden}
-.inference-help{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;box-sizing:border-box;margin-left:5px;vertical-align:middle;border:1px solid #b6c5da;border-radius:50%;color:#6c809d;font-size:10px;font-weight:600;line-height:1;cursor:help}.inference-help::before{content:"?"}.inference-help:hover{color:#2458a6;border-color:#6d90c2;background:#edf3ff;outline:2px solid #c0d2ed;outline-offset:2px}
-.inference-tooltip{position:fixed;inset:auto;margin:0;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:9px 11px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#344c6b;box-shadow:0 3px 14px #253c6426;font:12px/1.5 var(--font-sans);pointer-events:none}
+.fc-nsr-dialog,.fid-dialog,.fc-note-dialog{border:1px solid #b7c7e0;border-radius:12px;padding:17px;background:#f6f8fe;color:#2e486c;box-shadow:0 16px 70px #1e355550}.fc-nsr-dialog{width:min(450px,94vw)}.fc-nsr-dialog::backdrop,.fid-dialog::backdrop,.fc-note-dialog::backdrop{background:#152e505c}.fc-range{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.fc-range input{width:100%;padding:8px;border:1px solid #c2d0e4;border-radius:6px;margin-top:5px}.fc-nsr-help{font-size:12px;margin:12px 0}.fc-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}.fid-dialog{width:min(1400px,96vw);height:min(860px,92vh);max-width:96vw;max-height:94vh;min-width:min(600px,94vw);min-height:300px;overflow:auto;resize:both}.fid-dialog>.section-head{position:sticky;top:-17px;background:#f6f8fe;z-index:10;padding:10px 0}.fid-dialog h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:20px}.fid-action{display:inline-flex;align-items:center;padding:5px 9px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#215fbb;font-size:12px;line-height:1.3;text-decoration:none;white-space:nowrap;cursor:pointer}.fid-close{align-self:flex-start;margin:-8px -8px 0 0;width:36px;height:36px;padding:0;border:0;border-radius:7px;background:transparent;color:#526b8d;font-size:28px;line-height:1;cursor:pointer}.fid-action:hover,.fid-close:hover{background:#e7edf8}.fid-dialog-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fid-detail-value{padding:9px;background:#fff;border:1px solid #d6e0ef;border-radius:7px;font-size:13px;overflow-wrap:anywhere}.fid-detail-value small{display:block;font-size:12px;color:#526b8d;margin-bottom:3px}.fid-evidence{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.fid-evidence>.notice{display:block;min-width:0;overflow-wrap:anywhere}.fid-evidence>.notice.clear{border-color:#a8d5bb;border-left-color:#2d8b60;background:#eef9f2;color:#196747}.fid-evidence>.notice.unknown{border-color:#d2dcee;border-left-color:#91a2ba;background:#fff;color:#526b8d}.fid-evidence b{font-weight:600}.fid-evidence p{margin:7px 0 0}.fid-dialog h2{margin:0}.fid-dialog .table-toolbar{margin:16px 0 8px}.fc-toast{position:fixed;right:20px;bottom:20px;z-index:150;background:#244a79;color:#fff;padding:11px 14px;border-radius:9px;font-size:13px;max-width:min(480px,90vw);display:flex;align-items:center;gap:13px}.fc-toast button{color:#fff;border:1px solid #b7cceb;border-radius:5px;background:none;padding:4px 7px;cursor:pointer}.fcid-app .cycle-shell{display:grid;gap:12px}.fcid-app #cycleTab{display:block}.fcid-app #cycleTab:not(.active){display:none}.fcid-app .cycle-status,.fcid-app .cycle-label,.fcid-app .context-badge{font-size:12px;color:#425c7f}body:has(#workspace.wf-open){overflow:hidden}
+.help-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;box-sizing:border-box;margin-left:5px;vertical-align:middle;border:1px solid #b6c5da;border-radius:50%;color:#6c809d;font-size:10px;font-weight:600;line-height:1;cursor:help}.help-icon::before{content:"?"}.help-icon:hover{color:#2458a6;border-color:#6d90c2;background:#edf3ff;outline:2px solid #c0d2ed;outline-offset:2px}
+.help-tip{position:fixed;inset:auto;margin:0;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:9px 11px;border:1px solid #c5d2e5;border-radius:7px;background:#fff;color:#344c6b;box-shadow:0 3px 14px #253c6426;font:12px/1.5 var(--font-sans);pointer-events:none}
 .detail-head{justify-content:flex-start;flex-wrap:wrap}.detail-head h2{white-space:nowrap}.fid-note-cell{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.fid-note-add{display:inline-block;min-width:28px;border:1px solid #c5d2e5;border-radius:4px;background:#f5f8fd;line-height:18px;text-align:center;text-decoration:none}.fid-note-panel{margin:12px 0;border:1px solid #d2dcee;border-radius:8px;background:#fff}.fid-note-view{display:block;width:100%;padding:10px 12px;border:0;border-radius:7px;background:none;color:inherit;text-align:left;cursor:text}.fid-note-title{display:block;margin-bottom:6px;font-size:17px;font-weight:600}.fid-note-panel>form{padding:10px 12px}#fidNoteForm .section-head{margin-bottom:6px}.fid-note-text{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5}.fid-personal-mark{display:inline-flex;align-items:center}.fc-note-dialog{position:fixed;inset:auto;margin:0;width:min(520px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto}#fidNoteForm textarea{width:100%;min-height:180px;resize:vertical;border:1px solid #c2d0e4;border-radius:7px;padding:9px;font:13px/1.5 var(--font-sans);color:#263e60;background:#fff}.fc-note-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px}
-.date-picks{margin:0 0 6px}.date-picks:empty{display:none}.fc-filter .fc-range{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:0}.fc-filter .fc-range label{min-width:0;font-weight:400}.fc-filter .fc-range input{min-width:0;min-height:32px;padding:5px 6px;margin-top:0;background:#fff;color:var(--filter-ink,#263e60);border-color:var(--filter-line,#c2d0e4);font:inherit}
+.date-picks{margin:0 0 6px}.date-picks:empty{display:none}.fc-filter .fc-range{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:7px;margin-top:0}.fc-filter .fc-range input{min-width:0;min-height:32px;padding:5px 6px;margin-top:0;background:#fff;color:var(--filter-ink,#263e60);border-color:var(--filter-line,#c2d0e4);font:inherit}
 .summary-heading{display:flex;align-items:center;gap:10px}.summary-controls{display:grid;grid-template-columns:170px minmax(0,1fr);gap:14px;padding:12px;margin-bottom:6px;background:#f5f7fb;border-radius:9px}.summary-controls .fc-filter{margin:0}.summary-chart{overflow:auto}.summary-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0 10px;color:#344c6b}.summary-table th{font-size:12px;font-weight:600}.summary-table .fc-link{color:inherit;font:inherit;text-align:left;white-space:normal;text-decoration:none}.summary-table .fc-link:hover{text-decoration:underline}.summary-table thead th{padding:4px 10px 2px;color:#5b6d85;overflow-wrap:anywhere}.summary-table th:first-child{position:sticky;left:0;z-index:1;text-align:left}.summary-table thead th:first-child{background:#fff;z-index:2}.summary-table tbody tr{--metric-color:var(--fid-ink);--metric-bg:var(--fid-tint)}.summary-table tr[data-summary-source=nsr],.summary-table tr[data-summary-source=linked]{--metric-color:var(--nsr-ink);--metric-bg:var(--nsr-tint)}.summary-table tr[data-summary-source=ctl]{--metric-color:var(--ctl-ink);--metric-bg:var(--ctl-tint)}.summary-table tr:is([data-summary-metric=slotted],[data-summary-metric=stableSlot],[data-summary-metric=stablePost]){--metric-color:#3d805d;--metric-bg:#edf7ef}.summary-table tbody th,.summary-table td{background:var(--metric-bg);border-block:1px solid #e0e6ef}.summary-table tbody th{border-left:3px solid var(--metric-color);border-radius:9px 0 0 9px;padding:16px;color:#304967;font-size:13px;line-height:1.5}.summary-table td{padding:0}.summary-table td:last-child{border-right:1px solid #e0e6ef;border-radius:0 9px 9px 0}.summary-plot{position:relative;height:112px;font-variant-numeric:tabular-nums;text-align:center}.summary-bar{position:absolute;bottom:14px;left:calc(50% - 17px);width:34px;height:var(--bar);background:var(--metric-color);border-radius:4px 4px 0 0}.summary-value{position:absolute;top:10px;left:0;width:100%;font-size:14px;font-weight:600;color:#304967;white-space:nowrap}.summary-plot.unavailable .summary-value{color:#8794a5;font-weight:400}.summary-empty{padding:22px 12px;color:#61738c}.summary-legend{margin-top:6px;font-size:12px;color:#61738c}@media(max-width:760px){.summary-controls{grid-template-columns:minmax(0,1fr)}.summary-heading{flex-wrap:wrap}.summary-table tbody th{padding:12px}}
 @container(max-width:700px){.nsr-stage-sum::before{display:none}.nsr-flow{grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr)}.nsr-equation>[data-nsr-group=all]{grid-column:1/-1;grid-row:1;display:grid;grid-template-columns:1fr auto;align-items:center}.nsr-equation>[data-nsr-group=all] b{grid-column:2;grid-row:1/3;margin:0}.nsr-equation>.math-sign:nth-child(2){grid-column:1;grid-row:2}.nsr-equation>[data-nsr-group=completed]{grid-column:2;grid-row:2}.nsr-equation>.math-sign:nth-child(4){grid-column:3;grid-row:2}.nsr-equation>[data-nsr-group=workflow]{grid-column:4;grid-row:2}.nsr-equation>.math-sign:nth-child(6){grid-column:1;grid-row:3}.nsr-equation>[data-nsr-group=rejected]{grid-column:2;grid-row:3}.nsr-equation>.math-sign:nth-child(8){grid-column:3;grid-row:3}.nsr-equation>[data-nsr-group=cancelled]{grid-column:4;grid-row:3}.has-completed .nsr-equation>[data-nsr-group=completed]{grid-column:2/-1;display:grid;grid-template-columns:1fr auto;align-items:center}.has-completed .nsr-equation>[data-nsr-group=completed] b{grid-column:2;grid-row:1/3;margin:0}.nsr-completed-arrow{grid-column:2;grid-row:3;margin:0;height:22px}.nsr-completed-arrow::before{top:-7px}.nsr-breakdown-equals{grid-column:3;grid-row:3;margin:0}.nsr-stage-sum{grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:16px minmax(0,1fr) 16px minmax(0,1fr);margin:0}.nsr-stage-spacer{display:block}.nsr-stage:only-of-type{grid-column:2/-1}.has-completed .nsr-equation>.math-sign:nth-child(4){grid-column:1;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=workflow]{grid-column:2;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(6){grid-column:3;grid-row:5}.has-completed .nsr-equation>[data-nsr-group=rejected]{grid-column:4;grid-row:5}.has-completed .nsr-equation>.math-sign:nth-child(8){grid-column:1;grid-row:6}.has-completed .nsr-equation>[data-nsr-group=cancelled]{grid-column:2;grid-row:6}}
 
 @media(max-width:1250px){body.fcid-app{--side:360px}.nsr-pivots{grid-template-columns:repeat(2,minmax(0,1fr))}.fc-hero h1{font-size:25px}}@media(max-width:1000px){.marked-settings{grid-template-columns:minmax(0,1fr)}.ag-grid,.fid-dialog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.fcid-app .layout{grid-template-columns:minmax(0,1fr);padding:10px;gap:10px}.fcid-app .side{position:static;max-height:none}.fc-hero{padding:12px}.fc-hero h1{font-size:21px}.fc-hero-inner{align-items:flex-start;flex-wrap:wrap}.fc-hero-actions{margin-left:auto}.fcid-app .nsr-pivots,.ag-grid,.fid-evidence{grid-template-columns:minmax(0,1fr)}.workspace-nav button{padding:7px}.scope-note{margin-left:0}.fid-dialog>.section-head{flex-wrap:nowrap}.fid-header-status{flex-basis:100%}.section-head{flex-wrap:wrap}}
+.fid-ctl-list{list-style:none;padding:0;margin:8px 0 0;overflow-x:auto}.fid-ctl-list>li{white-space:nowrap;line-height:1.8;color:#345073}.fid-ctl-list>.is-late{color:#992f48;font-weight:600}
+button.fid-quarter-state{width:100%;padding:2px 4px;border:0;border-radius:4px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}button.fid-quarter-state:hover{background:#f1f5fb}button.fid-quarter-state[data-selected-quarter=true]{background:#e8f0fb}button.fid-quarter-state:focus-visible{outline:2px solid #648cc2;outline-offset:1px}
 .fid-quarter-state{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:4px;min-width:0}.fid-quarter-state>span:first-child{font-weight:400}.fid-quarter-state.is-current>span:first-child{font-weight:600}.fid-date-value{display:grid;grid-template-rows:subgrid;grid-row:span var(--fid-date-rows);row-gap:4px}.fid-date-value>small,.fid-date-value>.fid-quarter-state{margin:0}
 `;
 const sourceHtml=Object.entries(sources).map(([key,source],index)=>{
   const importLabel=key==='ctlNsr'?'Append':'Import';
-  const help=BOBJ_SOURCES[key]?`Open SAPGUIcontrol.exe. <a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.7z" target="_blank" rel="noopener noreferrer">Download SAPGUIcontrol</a>.`:key==='ctlNsr'?'Download from the CTL system: <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">Open download page</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
+  const help=BOBJ_SOURCES[key]?`<strong>Auto:</strong> Open SAPGUIcontrol.exe (<a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.7z" target="_blank" rel="noopener noreferrer">Download</a>).<br><strong>Manual:</strong> <a href="https://synalocey.github.io/ToolkitKyra/${BOBJ_SOURCES[key].file}" download="${BOBJ_SOURCES[key].file}" target="_blank" rel="noopener noreferrer">Download workbook</a> and refresh.`:
+    key==='ctlNsr'?'Download from <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">the CTL system</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
   return `<section class="fc-source" data-source="${key}" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span>${BOBJ_SOURCES[key]?'<small class="fc-source-bobj">BOBJ</small>':''}</h3><span id="fcSource-${key}" class="fc-source-state" role="status">Unavailable</span></div><div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>${BOBJ_SOURCES[key]?`<button class="btn small" data-source-action="${key==='fcid'?'bobj-update':'ctl-bobj-update'}">Update</button>`:key==='nsr'?'<button class="btn small light" data-source-action="nsr-open">Load NSR</button>':''}<button id="fcImport-${key}" class="btn small light" data-import-source="${key}">${importLabel}</button>${help?`<details class="fc-source-help" id="fcHelp-${key}"${BOBJ_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble">${help}</div></details>`:''}</div><input type="file" id="fcFile-${key}" data-source-file="${key}" aria-label="${importLabel} ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden></section>`;
 }).join('');
-const filterHtml=([name,label,path,needs])=>dateFilters.includes(path)?`<div class="fc-filter primary-filter" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name.slice(0,-4)}From">${label}</label><div class="fc-filter-actions"><button type="button" data-clear-filter="${name}">Clear</button></div></div><div id="${name.slice(0,-4)}${needs==='ctl'?'Periods':'Years'}" class="nsr-year-picks date-picks"></div><div id="${name}" class="fc-range" role="group" aria-label="${label}"><label>From<input id="${name.slice(0,-4)}From" type="date" aria-label="${label} from"></label><label>To<input id="${name.slice(0,-4)}To" type="date" aria-label="${label} to"></label></div></div>`:`<div class="fc-filter${['fAccount','fQuarter','fOwner','fSlotInitiator','fNsrInitiator','fCtlStage','fCtlInitiator'].includes(name)?' primary-filter':''}" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name}" title="${path==='owner'?escapeHtml(ownerHint):path.startsWith('nsr.')?'All selected NSR conditions must match the same NSR':''}">${label}${path==='quarter'?inferenceHelp(quarterHint):path==='owner'?inferenceHelp(ownerHint):path==='salesAdmin'?inferenceHelp(salesAdminHint):''}</label><div class="fc-filter-actions">${name==='fAccount'?'<button type="button" data-mapping-rule title="Fab / Account Mapping">Rule</button>':''}${name==='fQuarter'?'<button type="button" data-reset-quarter>Reset</button>':''}<button type="button" data-select-all="${name}">All</button><button type="button" data-clear-filter="${name}">Clear</button></div></div><select id="${name}" multiple aria-label="${label}"></select></div>`;
+const filterHtml=([name,label,path,needs])=>dateFilters.includes(path)?`<div class="fc-filter primary-filter" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name.slice(0,-4)}From">${label}</label><div class="fc-filter-actions"><button type="button" data-clear-filter="${name}">Clear</button></div></div><div id="${name.slice(0,-4)}${needs==='ctl'?'Periods':'Years'}" class="nsr-year-picks date-picks"></div><div id="${name}" class="fc-range" role="group" aria-label="${label}"><input id="${name.slice(0,-4)}From" type="date" aria-label="${label} from"><span aria-hidden="true">→</span><input id="${name.slice(0,-4)}To" type="date" aria-label="${label} to"></div></div>`:`<div class="fc-filter${['fAccount','fCurrentQuarter','fQuarter','fOwner','fSlotInitiator','fNsrInitiator','fCtlStage','fCtlInitiator'].includes(name)?' primary-filter':''}" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name}" title="${path==='owner'?escapeHtml(ownerHint):path.startsWith('nsr.')?'All selected NSR conditions must match the same NSR':''}">${label}${path==='currentQuarter'?helpIcon(currentQuarterHint):path==='quarter'?helpIcon(quarterHint):path==='owner'?helpIcon(ownerHint):path==='salesAdmin'?helpIcon(salesAdminHint):''}</label><div class="fc-filter-actions">${name==='fAccount'?'<button type="button" data-mapping-rule title="Fab / Account Mapping">Rule</button>':''}${name==='fQuarter'?'<button type="button" data-reset-quarter>Reset</button>':name==='fCtlChange'?'<button type="button" data-reset-ctl-type>Reset</button>':''}<button type="button" data-select-all="${name}">All</button><button type="button" data-clear-filter="${name}">Clear</button></div></div><select id="${name}" multiple aria-label="${label}"></select></div>`;
 const views=[['portfolio','FID Portfolio'],['changes','Slot / CTL'],['nsr','NSR List'],['cycle','NSR Cycle Time'],['summary','Summary Metrics'],['rules','Rules & Settings']];
 
 const charset=document.createElement('meta');charset.charset='utf-8';const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1';const title=document.createElement('title');title.textContent=FID_DASHBOARD_TITLE.replace(/^🏭\s*/,'');const style=document.createElement('style');style.textContent=css;
 document.head.replaceChildren(charset,viewport,title,emojiFavicon('🏭'),style);document.body.className='fcid-app';
 document.body.innerHTML=`<header class="fc-hero"><div class="fc-hero-inner"><div class="fc-heading"><button id="fcToggleSide" class="btn light" aria-label="Toggle Data Sources and Filters" aria-expanded="true" title="Data Sources / Filters">☰</button><div><div class="fc-brand">TOOLKIT</div><h1>${escapeHtml(FID_DASHBOARD_TITLE).replace(' Tracking','<span class="title-tracking"> Tracking</span>')}</h1></div></div><div class="fc-hero-actions"><button id="fcRefresh" class="btn light" disabled>Refresh</button><a class="btn light" href="${GUIDE_URL}" target="_blank" rel="noopener noreferrer">Help</a></div></div></header>
-<div class="layout" id="dashboardWorkspace"><aside class="side card"><div class="section-head"><h2>Data Sources</h2><span class="badge" id="fcSourceCount">0 / 5</span></div>${sourceHtml}<div id="fcActionStatus" class="fc-note" role="status"></div>
-<div class="filter-head"><h2>Filters</h2><button class="btn small light" id="fcReset" title="Restore default filters">Reset</button></div>
-<form id="fidLookup" class="fc-filter fid-lookup"><textarea id="fSearch" class="quick-search" placeholder="Search multiple FIDs, CTLs, or NSRs&#10;Single FID/CTL enables FID 360" aria-label="Search multiple FIDs, CTLs, or NSRs&#10;Single FID/CTL enables FID 360" rows="2"></textarea><button class="btn light" type="submit" aria-label="Open FID 360°" title="Open FID 360°" hidden><span aria-hidden="true">🔍</span></button></form>
-${['fAccount'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="fid">FID Filters</h3>${['fQuarter','fOwner','fSlotInitiator','fFidStatus','fRisk','fCustomer','fSystem','fBusinessUnit','fSalesAdmin'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="ctl">CTL Filters</h3>${['fCtlStage','fCtlInitiator','fCtlCreatedDate','fCtlChange','fCtlCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="nsr">NSR Filters</h3>${['fNsrInitiator','fNsrSubmitDate','fNsrTaskStatus','fNsrType','fNsrOrg','fNsrSubsystem','fNsrProduct','fNsrCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}</aside>
+<div class="layout" id="workspace"><aside class="side card"><div class="section-head"><h2>Data Sources</h2><span class="badge" id="fcSourceCount">0 / 5</span></div>${sourceHtml}<div id="fcActionStatus" class="fc-note" role="status"></div>
+<div class="filter-head"><h2>Filters</h2><button class="btn small light" id="fcReset" title="Restore default filters">Reset All</button></div>
+<form id="fidLookup" class="fc-filter fid-lookup"><textarea id="fSearch" class="quick-search" placeholder="Search FIDs, CTLs, or NSRs&#10;Single FID/CTL → FID 360°" aria-label="Search multiple FIDs, CTLs, or NSRs&#10;Single FID/CTL enables FID 360" rows="2"></textarea><button class="btn light" type="submit" aria-label="Open FID 360°" title="Open FID 360°" hidden><span aria-hidden="true">🔍</span></button></form>
+${['fAccount'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="fid">FID Filters</h3>${['fQuarter','fCurrentQuarter','fOwner','fSlotInitiator','fFidStatus','fRisk','fCustomer','fSystem','fBusinessUnit','fMfg','fSalesAdmin'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="ctl">CTL Filters</h3>${['fCtlStage','fCtlInitiator','fCtlCreatedDate','fCtlChange','fCtlCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="nsr">NSR Filters</h3>${['fNsrInitiator','fNsrSubmitDate','fNsrTaskStatus','fNsrType','fNsrOrg','fNsrSubsystem','fNsrProduct','fNsrCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}</aside>
 <main class="main"><nav class="workspace-nav" id="workspaceNav" aria-label="Dashboard views">${views.map(([view,label])=>`<button type="button" data-view="${view}" aria-selected="${view==='nsr'}"${view==='nsr'?' class="active"':''}${['nsr','cycle','rules'].includes(view)?'':' hidden'}>${label}</button>`).join('')}</nav><div id="filterContext" class="filter-context"></div>${views.map(([view])=>`<section id="view-${view}" class="fc-view"${view==='nsr'?'':' hidden'}></section>`).join('')}</main></div>
-<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card column-filter-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="markFilterPopup" class="card column-filter-popup mark-filter-popup" popover role="dialog" aria-label="Mark filter"><div role="group" aria-label="Mark status"></div></div><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
-const cycleTemplate=document.createElement('template');cycleTemplate.innerHTML=NSR_CYCLE_HTML;id('view-cycle').append(cycleTemplate.content.querySelector('#cycleTab'));id('dashboardWorkspace').append(cycleTemplate.content.querySelector('#wfModal'));
-let selectedView='nsr',graph=null,current=null,revision=0,modelRevision=0,toastTimer=0,searchTimer=0,sidebarAnimation=null;
-const rendered=new Map(),tables=new Map(),filterValues={},localTables=new Map();let mappingDraft=null;const markDrafts={nsr:null,fid:null};
-const pretty=(value,path='')=>path==='nsr.taskStatus'?(nsrCompletedTasks[value]||value||'[Unknown]'):path==='ctl.stage'?ctlStageName(value)||'[Unknown]':path==='ctl.change'&&value==='[Unknown]'?'No CTL Yet':path==='fidStatus'?(value==='stable-slot|stable-ctl'?fidStatusNames['risk-free']:value.startsWith('cause:')?fidCauseNames[value.slice(6)]||value:fidCellNames[value]||fidStatusNames[value]||value):path==='riskType'?(value==='MCSD pending'?'Slot + no MCSD':value):value||'[Unknown]';
+<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card col-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><select id="colChoices" size="6" aria-label="Column values" hidden></select><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="markFilterPopup" class="card col-popup mark-popup" popover role="dialog" aria-label="Mark filter"><div role="group" aria-label="Mark status"></div></div><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
+const cycleTemplate=document.createElement('template');cycleTemplate.innerHTML=NSR_CYCLE_HTML;id('view-cycle').append(cycleTemplate.content.querySelector('#cycleTab'));id('workspace').append(cycleTemplate.content.querySelector('#wfModal'));
+let selectedView='nsr',graph=null,current=null,revision=0,modelRevision=0,buildRun=0,dataRevision=0,toastTimer=0,searchTimer=0,sidebarAnimation=null;
+const rendered=new Map(),tables=new Map(),filterValues={},localTables=new Map();let mappingDraft=null,portfolioCache={};const markDrafts={nsr:null,fid:null};
+const pretty=(value,path='')=>path==='nsr.taskStatus'?(completedTasks[value]||value||'[Unknown]'):path==='ctl.stage'?ctlStageName(value)||'[Unknown]':path==='ctl.change'&&value==='[Unknown]'?'No CTL Yet':path==='fidStatus'?(value==='stable-slot|stable-ctl'?fidStatusNames['risk-free']:value.startsWith('cause:')?fidCauseNames[value.slice(6)]||value:fidCellNames[value]||fidStatusNames[value]||value):path==='riskType'?(value==='MCSD pending'?'Slot + no MCSD':value):value||'[Unknown]';
 const number=value=>String(Number(value||0));
 const pill=(value,kind='info',tip='')=>`<span class="pill ${kind}"${tip?` title="${escapeHtml(tip)}"`:''}>${escapeHtml(value||'—')}</span>`;
 const fidLink=value=>value?`<button type="button" class="fc-link" data-fid="${escapeHtml(value)}">${escapeHtml(value)}</button>`:'—';
+const nsrHistoryLink=(number,nsrId,fid)=>`<button type="button" class="fc-link" data-fid="${escapeHtml(fid)}" data-nsr-id="${escapeHtml(nsrId)}" title="Open NSR History">${escapeHtml(number)}</button>`;
+const linkSuffix=(type,fid='')=>type==='Chg'?' (Chg'+(fid?' · '+fid:'')+')':'';
 const quarterYear=value=>nsrRecords.periodYear(value)||String(value).match(/'(\d{2})$/)?.[1]?.replace(/^(\d{2})$/,'20$1')||'';
 function defaultQuarters(){
   const current=fidQuarterFromDate(new Date()),first=Number(current.slice(-2))*4+['Mar','Jun','Sep','Dec'].indexOf(current.slice(1,4));
   return Array.from({length:5},(_,offset)=>{const quarter=first+offset;return ['QMar','QJun','QSep','QDec'][quarter%4]+"'"+String(Math.floor(quarter/4)).slice(-2).padStart(2,'0')});
 }
-const setPath=(value,path,next)=>{const keys=path.split('.'),last=keys.pop();let target=value;keys.forEach(key=>target=target[key]??={});target[last]=next;};
 function toast(message){clearTimeout(toastTimer);id('fcToast').innerHTML=`<span>${escapeHtml(message)}</span><button type="button" data-toast-close aria-label="Dismiss">×</button>`;id('fcToast').hidden=false;toastTimer=setTimeout(()=>id('fcToast').hidden=true,4500)}
 function buildFilters(paths){
   const nodes=graph.population,statNsrs=graph.nsrs.filter(nsr=>nsr.eligible),statCtls=graph.ctls;let observations;
@@ -2592,15 +2603,15 @@ function buildFilters(paths){
       }).join('');continue;
     }
     const values=path==='fidStatus'?[]:path==='quarter'?assessments.map(state=>state.quarter):path==='account'?[...nodes.map(node=>node.account),...statNsrs.flatMap(nsr=>nsr.accounts.length?nsr.accounts:[''])]:path==='riskType'?nodes.flatMap(node=>node.risks.map(risk=>risk.label)).filter(value=>riskOrder.includes(value)):path.startsWith('ctl.')?statCtls.map(ctl=>ctl[path.slice(4)]):path.startsWith('nsr.')?(observations??=statNsrs.flatMap(nsr=>nsr.observations.length?nsr.observations:[nsr])).map(observation=>observation[path.slice(4)]):path==='slot.initiator'?nodes.map(node=>node.slot.initiator):nodes.map(node=>node[path]);
-    const quarters=path==='quarter'?[...(store.raw.fcid.length?defaultQuarters():[]),...(filterValues.quarter||[])]:path==='ctl.change'&&(store.meta.ctl||store.meta.ctlNsr)?[...defaultCtlTypes,...Object.values(pendingCtlTypes).flat()]:[];
-    const available=path==='fidStatus'?fidStatuses:[...new Set([...values.map(value=>value||'[Unknown]'),...quarters])].sort((a,b)=>Number(a==='[Unknown]')-Number(b==='[Unknown]')||(path==='nsr.taskStatus'?nsrRecords.compareStatus(a,b):path==='ctl.stage'?compareCtlStages(a,b):path==='riskType'?riskOrder.indexOf(a)-riskOrder.indexOf(b):path.toLowerCase().includes('quarter')?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||a.localeCompare(b):a.localeCompare(b,undefined,{numeric:true})));
-    if(path==='nsr.taskStatus'&&available.includes('15-Completed'))available.splice(available.indexOf('15-Completed')+1,0,...Object.keys(nsrCompletedTasks));
+    const quarters=['quarter','currentQuarter'].includes(path)?[...(path==='quarter'&&store.raw.fcid.length?defaultQuarters():[]),...(filterValues[path]||[])]:path==='ctl.change'&&(store.meta.ctl||store.meta.ctlNsr)?[...defaultTypes,...Object.values(pendingTypes).flat()]:[];
+    const available=path==='fidStatus'?fidStatuses:[...new Set([...values.map(value=>value||'[Unknown]'),...quarters])].sort((a,b)=>Number(a==='[Unknown]')-Number(b==='[Unknown]')||(path==='nsr.taskStatus'?nsrRecords.compareStatus(a,b):path==='ctl.stage'?compareCtlStages(a,b):path==='riskType'?riskOrder.indexOf(a)-riskOrder.indexOf(b):path.toLowerCase().includes('quarter')?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||a.localeCompare(b):numericCollator.compare(a,b)));
+    if(path==='nsr.taskStatus'&&available.includes('15-Completed'))available.splice(available.indexOf('15-Completed')+1,0,...Object.keys(completedTasks));
     const select=id(name),saved=path==='fidStatus'?normalizeFidStatus(filterValues[path]||[]):filterValues[path]||[];
     const option=value=>{
       const depth=fidDepth.get(value);
       const classes=path==='fidStatus'
-        ? [depth===1?'fid-status-child':depth===2?'fid-status-detail':'',['no-slot','slot-ready'].includes(value)?'fid-status-parent':''].filter(Boolean).join(' ')
-        : path==='nsr.taskStatus'&&Object.hasOwn(nsrCompletedTasks,value)?'group-option':'';
+        ? [depth===1?'fid-status-child':'',['no-slot','slot-ready'].includes(value)?'fid-status-parent':''].filter(Boolean).join(' ')
+        : path==='nsr.taskStatus'&&Object.hasOwn(completedTasks,value)?'group-option':'';
       const label=path==='fidStatus'&&['cause:slot-pending','cause:slot-dropped'].includes(value)?pretty(value,path).replace(/^(?:No Slot|Slotted FID) · /,''):pretty(value,path);
       return `<option value="${escapeHtml(value)}"${classes?` class="${classes}"`:''}${saved.includes(value)?' selected':''}>${escapeHtml(label)}</option>`;
     };
@@ -2622,15 +2633,41 @@ function syncFidLookup(){
   const fid=value&&(graph.fids.has(value)?value:graph.ctls.find(ctl=>ctl.number===value)?.fidId||'');
   id('fidLookup').querySelector('button').hidden=!fid;return fid;
 }
-function recalculate(updateMarks=false){
-  const started=performance.now();graph=createFidGraph(store.raw,{fidMarks:currentMarks('fid'),accountMap:accountMapping.match,ignoredNsrs,importantNsrs,loadedSources:Object.fromEntries(Object.keys(store.meta).map(key=>[key,true])),today:nsrData.localDate(new Date())});modelRevision++;
-  buildFilters();syncFilters();applyFilters(updateMarks);store.dirty=false;store.buildMs=performance.now()-started;
+async function recalculate(updateMarks=false){
+  const started=performance.now(),run=++buildRun,inputsRevision=dataRevision,refresh=id('fcRefresh');
+  if(graph){store.busy.add('model');refresh.disabled=true;refresh.textContent='Processing…'}
+  try{
+    let next=createFidGraph(store.raw,{fidMarks:currentMarks('fid'),accountMap:accountMapping.match,ignoredNsrs,importantNsrs,
+      loadedSources:Object.fromEntries(Object.keys(store.meta).map(key=>[key,true])),today:nsrData.localDate(new Date()),yield:graph?async()=>{
+        if(unsafeWindow.scheduler?.postTask)await unsafeWindow.scheduler.postTask(()=>{},{priority:'background'});
+        else await new Promise(resolve=>setTimeout(resolve,0));
+        return run===buildRun&&inputsRevision===dataRevision;
+      }:null});
+    if(graph)next=await next;if(!next||run!==buildRun||inputsRevision!==dataRevision)return;
+    // Marks can change while a replacement is being built; apply the latest metadata before showing it.
+    for(const node of next.observedPopulation)next.setFidMark(node.id,recordMark('fid',node.id));
+    for(const nsr of next.nsrs)next.setNsrMark(nsr.number,recordMark('nsr',nsr.number));
+    graph=next;modelRevision++;portfolioCache={};
+    buildFilters();syncFilters();applyFilters(updateMarks);store.dirty=false;store.buildMs=performance.now()-started;return true;
+  }catch(error){if(run===buildRun)toast('Dashboard update failed: '+error.message)}
+  finally{if(run===buildRun){
+    store.busy.delete('model');
+    if(inputsRevision===dataRevision)for(const key of Object.keys(store.meta))if(id('fcSource-'+key).classList.contains('pending'))sourceMessage(key,'Loaded','done',!id('fcHelp-'+key)?.hidden);
+    refresh.disabled=store.refreshing||store.busy.size>0;refresh.textContent=store.refreshing?'Refreshing…':'Refresh';
+  }}
 }
-function queryFilters(){const filters={search:id('fSearch').value,fidStatus:[],signal:store.raw.fcid.length?filterValues.signal||[]:[],includeIgnored};for(const [name,,path] of filterDefs)if(!id(name).closest('.fc-filter').hidden&&filterValues[path]?.length)setPath(filters,path,dateFilters.includes(path)?{from:filterValues[path][0],to:filterValues[path][1]}:filterValues[path]);return filters}
+function queryFilters(){
+  const filters={search:id('fSearch').value,fidStatus:[],signal:store.raw.fcid.length?filterValues.signal||[]:[],includeIgnored};
+  for(const [name,,path] of filterDefs)if(!id(name).closest('.fc-filter').hidden&&filterValues[path]?.length){
+    const keys=path.split('.'),last=keys.pop();let target=filters;for(const key of keys)target=target[key]??={};
+    target[last]=dateFilters.includes(path)?{from:filterValues[path][0],to:filterValues[path][1]}:filterValues[path];
+  }
+  return filters;
+}
 function applyFilters(updateMarks=false,changedNsr=''){
   syncFidLookup();
   const detailFid=id('fidDetail').open?id('fidDetail').dataset.fid:'',view=id('view-'+selectedView),anchor=changedNsr&&!detailFid&&selectedView==='nsr'?id('nsrTable'):view,position=updateMarks?anchor?.getBoundingClientRect():null;
-  current=graph.query(queryFilters());revision++;
+  current=graph.query(queryFilters());revision++;summaryCache={};quarterCache={};
   for(const [name,state] of tables){if(name==='cycleTable'||name==='wfTable'||updateMarks&&(changedNsr||state.grid.element.closest('.fc-view')?.hidden===false||state.grid.element.closest('.fid-dialog')?.open))continue;tableResize.unobserve(state.grid.element);state.grid.destroy();tables.delete(name)}
   rendered.clear();paintContext();showView(selectedView,updateMarks,changedNsr);if(detailFid)showFid(detailFid,updateMarks,changedNsr);
   // Keep visible content in place when filter chips or NSR Overview cards change height.
@@ -2655,7 +2692,7 @@ function showView(name,updateMarks=false,changedNsr=''){
   document.querySelectorAll('.fc-view').forEach(element=>element.hidden=element.id!=='view-'+name);id('cycleTab').classList.toggle('active',name==='cycle');
   if(name==='cycle'){cycle.show();return}
   if(rendered.get(name)===revision)return;
-  ({portfolio:renderPortfolio,changes:renderChanges,nsr:renderNsrs,summary:renderSummaryMetrics,rules:renderRules}[name])(id('view-'+name),updateMarks,changedNsr);rendered.set(name,revision);
+  ({portfolio:renderPortfolio,changes:renderChanges,nsr:renderNsrs,summary:renderSummary,rules:renderRules}[name])(id('view-'+name),updateMarks,changedNsr);rendered.set(name,revision);
 }
 // Persist only leaf selections. Every aggregate is the same set of cells, regardless of entry point.
 function normalizeFidStatus(values){
@@ -2667,54 +2704,54 @@ function fidStatusSelected(value){
   const parts=fidSelection.groups[value],selected=filterValues.fidStatus||[];
   return parts?parts.length>0&&parts.length===selected.length&&parts.every(part=>selected.includes(part)):selected.includes(value);
 }
-function selectFidStatus(value){
-  const parts=fidSelection.groups[value]||[value],selected=filterValues.fidStatus||[];
-  if(fidSelection.groups[value]){changeFilter('fidStatus',fidStatusSelected(value)?[]:parts);return}
-  changeFilter('fidStatus',parts.every(part=>selected.includes(part))
-    ?selected.filter(item=>!parts.includes(item)):[...selected,...parts]);
-}
 function changeFilter(path,values){
   let changed=false;
   for(const [key,next] of typeof path==='string'?[[path,values]]:Object.entries(path)){
-    const selected=key==='fidStatus'?normalizeFidStatus(next):key==='nsr.taskStatus'?normalizeNsrTasks(next):next,previous=filterValues[key]||[];changed||=selected.length!==previous.length||selected.some((value,index)=>value!==previous[index]);filterValues[key]=selected;const definition=filterDefs.find(def=>def[2]===key);
+    const previous=filterValues[key]||[];let selected=key==='fidStatus'?normalizeFidStatus(next):next;
+    if(key==='nsr.taskStatus'){
+      selected=[...new Set(next)];
+      if(selected.includes('15-Completed')&&selected.some(value=>Object.hasOwn(completedTasks,value)))selected=selected.filter(value=>!previous.includes('15-Completed')?!Object.hasOwn(completedTasks,value):value!=='15-Completed');
+    }
+    changed||=selected.length!==previous.length||selected.some((value,index)=>value!==previous[index]);filterValues[key]=selected;const definition=filterDefs.find(def=>def[2]===key);
     if(definition){if(dateFilters.includes(key))buildFilters([key]);else{const select=id(definition[0]);for(const option of select.options)option.selected=selected.includes(option.value);jQuery(select).trigger('chosen:updated')}}
   }
   if(changed)applyFilters(true);
 }
-function positionFilterChoices(select){
-  const chosen=id(select.id+'_chosen');if(!chosen?.classList.contains('chosen-with-drop'))return;
-  const bounds=chosen.closest('.side').getBoundingClientRect(),box=chosen.getBoundingClientRect(),height=chosen.querySelector('.chosen-drop').getBoundingClientRect().height;
-  const below=Math.min(innerHeight,bounds.bottom)-box.bottom,above=box.top-Math.max(0,bounds.top);chosen.classList.toggle('chosen-dropup',height>below&&above>below);
-}
-const portfolioColumns=[markColumn('fid'),
+function sourceValue(record,source,key){return graph.field(record,sources[source].fields[key]?.aliases||[key],true)}
+function fidDateValue(node,state,key){return state.dates[key]||(state.quarter===node.currentQuarter?sourceValue(node.record,'fcid',key):'')}
+const fidColumns=[markColumn('fid'),
   ['FID',node=>node.id,fidLink],['FID Status & Risks',node=>fidDetailStatus(node,false).map(([label])=>label).join(' · '),(_,node)=>`<span class="fid-status-tags">${fidDetailStatus(node).map(([label,kind,tip])=>pill(label,kind,tip)).join('')}</span>`],
-  ['Quarter',node=>fidQuarterRows(node).map(state=>state.quarter||'[Unknown]').join(', ')],['System Description',node=>node.system],['CRD',node=>node.crd],['SRD',node=>fidQuarterRows(node).map(state=>state.dates.rd||'—').join(', ')],['MCSD',node=>fidQuarterRows(node).map(state=>state.dates.mcsd||'—').join(', ')],
-  ['Account',node=>node.account],['Customer',node=>node.customer],['FID Owner',node=>node.owner,(value,node)=>`<span title="${escapeHtml(ownerTip(node))}">${escapeHtml(value||'[Unknown]')}</span>`],['Slot Initiator',node=>node.slot.initiator],['Active CTL',node=>node.slot.active?.number],
-  ['Note',node=>fidNotes[node.id]||'',(value,node)=>`<button type="button" class="fc-link fid-note-cell${value?'':' fid-note-add'}" data-note-fid="${escapeHtml(node.id)}" aria-label="${value?'Edit':'Add'} note for FID ${escapeHtml(node.id)}" title="${escapeHtml(value||'Add note')}">${escapeHtml(value?value.replace(/\r\n?|\n/g,' '):'…')}</button>`]
+  ['Quarter',node=>fidQuarterRows(node).map(state=>state.quarter||'[Unknown]').join(', ')],['System Description',node=>node.system],['CRD',node=>node.crd||sourceValue(node.record,'fcid','crd')],['SRD',node=>fidQuarterRows(node).map(state=>fidDateValue(node,state,'rd')||'—').join(', ')],['MCSD',node=>fidQuarterRows(node).map(state=>fidDateValue(node,state,'mcsd')||'—').join(', ')],
+  ['Account',node=>node.account],['Customer',node=>node.customer],['FID Owner',node=>node.owner,(value,node)=>`<span title="${escapeHtml(ownerTip(node))}">${escapeHtml(value||'[Unknown]')}</span>`],['Slot Initiator',node=>sourceValue(node.slot.active?.record,'ctl','initiator')],['Active CTL',node=>node.activeCtl?.number],['Active Quote',node=>node.activeCtl?.quote],
+  ['Note',node=>fidNotes[node.id]||'',(value,node)=>`<button type="button" class="fc-link fid-note-cell${value?'':' fid-note-add'}" data-note-fid="${escapeHtml(node.id)}" aria-label="${value?'Edit':'Add'} note for FID ${escapeHtml(node.id)}" title="${escapeHtml(value||'Add note')}">${escapeHtml(value?value.replace(/\r\n?|\n/g,' '):'…')}</button>`],
+  ['CTL History',node=>node.ctls.map(ctl=>ctl.number||ctl.id).join(', ')],['NSR History',node=>node.nsrs.map(nsr=>nsr.number).join(', ')],
+  ['Commit: Field',node=>node.commit],['Business Unit',node=>node.businessUnit],['MFG Upgrade Type',node=>node.mfg],['FID Description',node=>node.fidDescription],['Fab Name',node=>node.fab]
 ];
-function fidDetailStatus(node,withTips=true){
+function fidDetailStatus(node,withTips=true,currentOnly=false){
   const tags=[];
-  if(node.portfolioStates.includes('risk-free'))tags.push(['Stable Slot & CTL','clear',withTips?[riskTip(node.pre),riskTip(node.post)].join('\n'):'']);
+  if(currentOnly)tags.push([(node.quarterStates.length>1?'Current Risk: ':'')+(node.portfolioStates.includes('slot-ready')?quarterStatus(node):'Risk Status Unknown'),node.portfolioStates.includes('risk-fid')?'risk':node.portfolioStates.includes('risk-free')?'clear':'unknown','']);
+  else if(node.portfolioStates.includes('risk-free'))tags.push(['Stable Slot & CTL','clear',withTips?[riskTip(node.pre),riskTip(node.post)].join('\n'):'']);
   if(!node.portfolioStates.includes('slot-ready'))tags.push([fidStatusNames[node.portfolioStates[0]],'unknown',withTips?riskTip(node.pre):'']);
-  else if(node.pre.state==='risk')tags.push(['Late Slot','risk',withTips?riskTip(node.pre):'']);
-  else if(node.pre.state==='unknown')tags.push(['Slot date unknown','unknown',withTips?riskTip(node.pre):'']);
+  else if(!currentOnly&&node.pre.state==='risk')tags.push(['Late Slot','risk',withTips?riskTip(node.pre):'']);
+  else if(!currentOnly&&node.pre.state==='unknown')tags.push(['Slot date unknown','unknown',withTips?riskTip(node.pre):'']);
   if(node.slot.state==='dropped')tags.push(['Drop Slot','neutral',withTips?'Included in Slotted FID; risk uses the last approved Slot evidence.':'']);
-  if(node.post.ctls.length)tags.push(['Late CTL ('+node.post.ctls.length+')','risk',withTips?riskTip(node.post):'']);
+  if(!currentOnly&&node.post.ctls.length)tags.push(['Late CTL ('+node.post.ctls.length+')','risk',withTips?riskTip(node.post):'']);
   const pending=node.post.nsrs.filter(nsr=>includeIgnored||!nsr.ignored);
   if(pending.length)tags.push(['Pending NSR ('+pending.length+')','pending',withTips?'In-work NSRs for this FID: '+pending.map(nsr=>nsr.number).join(', ')+'. Pending NSRs do not change Slot / CTL stability.':'']);
   for(const [label,kind]of [['Pending Config CTL','pending'],['Pending Pull/Push CTL','neutral']]){
     const risk=node.risks.find(risk=>risk.label===label);
     if(risk)tags.push([label+' ('+risk.count+')',kind,withTips?label+' for this FID: Submitted '+(kind==='pending'?'Slot / Config':'Pull / Push')+' CTLs.':'']);
   }
+  if(currentOnly)return tags;
   if(node.portfolioStates.includes('slot-ready')&&node.post.state==='unknown')tags.push(['CTL status unknown','unknown',withTips?riskTip(node.post):'']);
   const selected=node.selectedQuarterStates||node.quarterStates,current=node.quarterStates.find(state=>state.quarter===node.currentQuarter);
-  if(current&&selected?.length&&(node.pre.state!==current.pre.state||node.post.state!==current.post.state))tags.push(['Current: '+fidQuarterStatus(current),'neutral',withTips?'Current quarter '+(node.currentQuarter||'[Unknown]')+': '+fidQuarterStatus(current):'']);
-  if(withTips&&selected?.length)for(const tag of tags)tag[2]=[tag[2],selected.map(state=>(state.quarter||'[Unknown]')+': '+fidQuarterStatus(state)).join('\n')].filter(Boolean).join('\n');
+  if(current&&selected?.length&&(node.pre.state!==current.pre.state||node.post.state!==current.post.state))tags.push(['Current Risk: '+quarterStatus(current),'neutral',withTips?'Current quarter '+(node.currentQuarter||'[Unknown]')+': '+quarterStatus(current):'']);
+  if(withTips&&selected?.length)for(const tag of tags)tag[2]=[tag[2],selected.map(state=>(state.quarter||'[Unknown]')+': '+quarterStatus(state)).join('\n')].filter(Boolean).join('\n');
   return tags;
 }
-function fidQuarterStatus(state){
+function quarterStatus(state,withCount=false){
   if(!state.portfolioStates.includes('slot-ready'))return fidStatusNames[state.portfolioStates[0]];
-  return [state.pre.state==='risk'?'Late Slot':'',state.post.state==='risk'?'Late CTL':''].filter(Boolean).join(' + ')||(state.portfolioStates.includes('risk-free')?'Stable Slot & CTL':'Risk Status Unknown');
+  return [state.pre.state==='risk'?'Late Slot':'',state.post.state==='risk'?'Late CTL'+(withCount?' ('+state.post.ctls.length+')':''):''].filter(Boolean).join(' + ')||(state.portfolioStates.includes('risk-free')?'Stable Slot & CTL':'Risk Status Unknown');
 }
 function riskTip(risk){return [risk.reason,risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:'',risk.ctlIds?.length?'CTL: '+risk.ctlIds.slice(0,4).join(', '):''].filter(Boolean).join('\n')}
 function ownerTip(node){
@@ -2731,10 +2768,10 @@ function renderPortfolio(target,updateMarks=false){
   updateMarks=updateMarks&&tables.has('portfolioTable');
   const m=current.metrics;if(!Object.keys(store.meta).length){target.innerHTML='';return}
   const riskFilters=queryFilters();delete riskFilters.riskType;
-  const riskResult=filterValues.riskType?.length?graph.query(riskFilters):current,riskCounts=new Map([...(store.meta.nsr?['Pending NSR']:[]),...(store.meta.ctl||store.meta.ctlNsr?Object.keys(pendingCtlTypes):[]),...[...id('fRisk').options].map(option=>option.value)].map(label=>[label,{count:0,fids:0}]));
+  const riskResult=filterValues.riskType?.length?graph.query(riskFilters):current,riskCounts=new Map([...(store.meta.nsr?['Pending NSR']:[]),...(store.meta.ctl||store.meta.ctlNsr?Object.keys(pendingTypes):[]),...[...id('fRisk').options].map(option=>option.value)].map(label=>[label,{count:0,fids:0}]));
   for(const [label,key]of [['Pending Config CTL','pendingCtl'],['Pending Pull/Push CTL','pendingPullPushCtl']])if(riskCounts.has(label))riskCounts.set(label,{count:riskResult.metrics[key],fids:riskResult.metrics[key+'Fids']});
   for(const node of riskResult.fids)for(const risk of node.risks){
-    const total=riskCounts.get(risk.label);if(!total||risk.label==='Pending NSR'||pendingCtlTypes[risk.label])continue;
+    const total=riskCounts.get(risk.label);if(!total||risk.label==='Pending NSR'||pendingTypes[risk.label])continue;
     total.count++;total.fids++;
   }
   if(store.meta.nsr){
@@ -2745,7 +2782,8 @@ function renderPortfolio(target,updateMarks=false){
   }
   const filters=queryFilters(),selected=filterValues.fidStatus||[],causes=(filterValues.signal||[]).filter(key=>fidCauseKeys.includes(key));delete filters.fidStatus;
   filters.signal=filters.signal.filter(key=>!fidCauseKeys.includes(key));
-  const rows=selected.length||causes.length?graph.query(filters,'fids'):current.fids,counts=Object.fromEntries(Object.keys(fidStatusNames).map(key=>[key,0]));
+  const overviewKey=JSON.stringify(filters);if(portfolioCache.modelRevision!==modelRevision||portfolioCache.key!==overviewKey)portfolioCache={modelRevision,key:overviewKey,rows:selected.length||causes.length?graph.query(filters,'fids'):current.fids};
+  const rows=portfolioCache.rows,counts=Object.fromEntries(Object.keys(fidStatusNames).map(key=>[key,0]));
   for(const node of rows){
     for(const key of node.portfolioStates)counts[key]++;
     if(node.portfolioCell.includes('|'))counts[node.portfolioCell]=(counts[node.portfolioCell]||0)+1;
@@ -2804,41 +2842,44 @@ function renderPortfolio(target,updateMarks=false){
     <div class="fid-matrix" aria-label="Pre-slot Risk × Post-slot Risk matrix"><div class="fid-matrix-grid">${cells.join('')}</div><svg class="fid-risk-outline" viewBox="0 0 ${slotKeys.length*100} ${postKeys.length*100}" preserveAspectRatio="none" aria-hidden="true"><path d="${outline.join('')}"/></svg>${selectionOutline}${cellOperators.join('')}<button class="fid-risk-label" style="right:calc(${riskLabelOffset}% + 14px)" type="button" data-fid-region="risk-fid" data-fid-value="risk-fid" aria-pressed="${fidStatusSelected('risk-fid')}" title="Risk FID = Late Slot ∪ Late CTL&#10;Risk FID / Slotted FID = ${number(counts['risk-fid'])} / ${number(counts['slot-ready'])} = ${riskPercent}%"><span>Risk FID · ${number(counts['risk-fid'])}</span><span class="fid-percent">${riskPercent}%</span></button></div>
     <div class="fid-pre-axis" data-fid-axis="pre" title="Pre: was the Slot submitted on time?"><span>Pre-slot Risk</span></div><div class="fid-post-axis" data-fid-axis="post" title="Post: any qualifying Late CTL in the delivery risk window?"><span>Post-slot Risk</span></div>
     `:''}</div></div>
-    ${!ctlReady?'<div class="fid-waiting" role="status">Load a CTL source to determine Slot Completion.</div>':''}`,drivers=`<div class="section-head"><h2>Risk Drivers</h2><span class="badge">Drivers can overlap</span></div><div class="signal-strip">${[...riskCounts].map(([label,{count,fids}])=>`<button class="signal" ${label==='Pending NSR'?'data-nsr-lifecycle="open"':pendingCtlTypes[label]?`data-ctl-status="workflow" data-ctl-types="${pendingCtlTypes[label].join(',')}" data-group-value="${escapeHtml(label)}"${taskFilterValues('ctl','workflow').length?'':' disabled'}`:`data-group-path="riskType" data-group-value="${escapeHtml(label)}"`} aria-pressed="${label==='Pending NSR'?taskFilterSelected('nsr','workflow'):pendingCtlTypes[label]?taskFilterSelected('ctl','workflow',pendingCtlTypes[label]):(filterValues.riskType||[]).includes(label)}" title="${escapeHtml(pretty(label,'riskType'))} = ${count} ${label==='Pending NSR'?'pending NSR':pendingCtlTypes[label]?'in-work CTL documents':'distinct FIDs'}${label.startsWith('Pending ')?' across '+fids+' distinct FID':''}"><b>${number(count)}</b> ${escapeHtml(pretty(label,'riskType'))}${label.startsWith('Pending ')?' <small>| in '+number(fids)+' FID</small>':''}</button>`).join('')||'<span class="muted">No risk drivers in this selection</span>'}</div>`,signals=`<button class="signal" data-nce-signal${store.meta.nce?'':' hidden'}><b>${number(m.nceFids)}</b>FIDs with NCE / FA</button>`;
+    ${!ctlReady?'<div class="fid-waiting" role="status">Load a CTL source to determine Slot Completion.</div>':''}`,drivers=`<div class="section-head"><h2>Risk Drivers</h2><span class="badge">Drivers can overlap</span></div><div class="signal-strip">${[...riskCounts].map(([label,{count,fids}])=>`<button class="signal" ${label==='Pending NSR'?'data-nsr-lifecycle="open"':pendingTypes[label]?`data-ctl-status="workflow" data-ctl-types="${pendingTypes[label].join(',')}" data-group-value="${escapeHtml(label)}"${taskFilterValues('ctl','workflow').length?'':' disabled'}`:`data-group-path="riskType" data-group-value="${escapeHtml(label)}"`} aria-pressed="${label==='Pending NSR'?taskSelected('nsr','workflow'):pendingTypes[label]?taskSelected('ctl','workflow',pendingTypes[label]):(filterValues.riskType||[]).includes(label)}" title="${escapeHtml(pretty(label,'riskType'))} = ${count} ${label==='Pending NSR'?'pending NSR':pendingTypes[label]?'in-work CTL documents':'distinct FIDs'}${label.startsWith('Pending ')?' across '+fids+' distinct FID':''}"><b>${number(count)}</b> ${escapeHtml(pretty(label,'riskType'))}${label.startsWith('Pending ')?' <small>| in '+number(fids)+' FID</small>':''}</button>`).join('')||'<span class="muted">No risk drivers in this selection</span>'}</div>`,signals=`<button class="signal" data-nce-signal${store.meta.nce?'':' hidden'}><b>${number(m.nceFids)}</b>FIDs with NCE / FA</button>`;
   if(updateMarks){
     const scroll=target.querySelector('.fid-flow').scrollLeft;
     target.querySelector('.fid-overview').innerHTML=overview;
     target.querySelector('.fid-flow').scrollLeft=scroll;
-    target.querySelector('.fid-risk-drivers').innerHTML=drivers;
+    target.querySelector('.risk-drivers').innerHTML=drivers;
     target.querySelector('[data-nce-signal]').parentElement.innerHTML=signals;
-  }else target.innerHTML=`<section class="card fid-overview">${overview}</section><section class="card fid-risk-drivers">${drivers}</section>${pivotHtml('fid',current.fids.length,'FIDs',target)}<div class="signal-strip">${signals}</div><section class="card"><div class="section-head detail-head"><h2>FID Details</h2></div><div id="portfolioTable"></div></section>`;
-  renderPivots('fidPivots',current.fids,[['quarter','Quarter','fQuarter','#4679cf'],['customer','FID Customer','fCustomer','#b44771'],['account','Account','fAccount','#347d50'],['businessUnit','Business Unit','fBusinessUnit','#8251bb'],['system','System Description','fSystem','#14869a']],'FIDs',updateMarks);
-  table('portfolioTable',portfolioColumns,current.fids,{file:'FID_Portfolio',fid:true,markFilter:'fid',defaultSort:'FID',ascending:false,frozen:['FID'],exportRows:fidDetailRows,copyRows:fidCopyRows,widths:{FID:80,'FID Status & Risks':175,Note:220}},updateMarks);
+  }else target.innerHTML=`<section class="card fid-overview">${overview}</section><section class="card risk-drivers">${drivers}</section>${pivotHtml('fid',current.fids.length,'FIDs',target)}<div class="signal-strip">${signals}</div><section class="card"><div class="section-head detail-head"><h2>FID Details</h2></div><div id="portfolioTable"></div></section>`;
+  renderPivots('fidPivots',current.fids,[['currentQuarter','Current Quarter','fCurrentQuarter','#4679cf'],['customer','FID Customer','fCustomer','#b44771'],['account','Account','fAccount','#347d50'],['businessUnit','Business Unit','fBusinessUnit','#8251bb'],['system','System Description','fSystem','#14869a']],'FIDs',updateMarks);
+  table('portfolioTable',fidColumns,current.fids,{file:'FID_Portfolio',fid:true,markFilter:'fid',defaultSort:'FID',ascending:false,frozen:['FID'],exportRows:fidDetailRows,copyRows:fidCopyRows,widths:{FID:80,'FID Status & Risks':175,Quarter:105,Note:220}},updateMarks);
 }
 const ctlColumns=[['CTL',ctl=>ctl.number||ctl.id,(value,ctl)=>ctl.number?`<a class="fc-link" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=CRM_SRQM_RFC&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(ctl.number)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`:escapeHtml(value)],['FID',ctl=>ctl.fidId,fidLink],
-  ['Stage',ctl=>ctlStageName(ctl.stage),value=>value?`<span class="status-pill ${value.startsWith('0-')?'stop':value==='15-Completed'?'terminal':value==='Draft'?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
-  ['Change',ctl=>ctl.change],['Created Date',ctl=>ctl.created],
+  ['Stage',ctl=>ctlStageName(ctl.stage)||sourceValue(ctl.record,'ctl','stage'),value=>value?`<span class="status-pill ${value.startsWith('0-')?'stop':value==='15-Completed'?'terminal':value==='Draft'?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
+  ['Change',ctl=>sourceValue(ctl.record,'ctl','change')],['Created Date',ctl=>ctl.created||sourceValue(ctl.record,'ctl','created')],
   ['Elapsed Days',ctl=>taskGroup(ctlStageName(ctl.stage),true)==='workflow'&&ctl.created?(nsrRecords.dateNumber(nsrData.localDate(new Date()))-nsrRecords.dateNumber(ctl.created))/86400000:''],
-  ['Sales Ops Approval',ctl=>ctl.approved],['RD At Create',ctl=>ctl.rdCreate],['MCSD@Create',ctl=>ctl.mcsdCreate],
-  ['SRD @ SOPs Approval',ctl=>ctl.srdApproval],['MCSD At SOps Approval',ctl=>ctl.mcsdApproval],['TSD @ SOPs Approval',ctl=>ctl.tsdApproval],
-  ['SRD @ Current',ctl=>ctl.srd],['MCSD @ Current',ctl=>ctl.mcsd],['Config Frz',ctl=>ctl.configFrz],['Mfg Upgrade Type',ctl=>ctl.mfg],
-  ['Initiator',ctl=>ctl.initiator],['Customer',ctl=>ctl.customer],['Quote ID',ctl=>ctl.quote],['NSR Reference',ctl=>ctl.nsrReferences.join(', ')],['Change Summary',ctl=>ctl.changeSummary],['Root Cause',ctl=>ctl.rootCause],['CTL Notes',ctl=>ctl.notes],['Reason for Chg',ctl=>ctl.reason],['Sub Reason',ctl=>ctl.subReason],['Sales OPs Approver',ctl=>ctl.salesOpsApprover]
+  ['Sales Ops Approval',ctl=>ctl.approved||sourceValue(ctl.record,'ctl','approved')],['RD At Create',ctl=>ctl.rdCreate||sourceValue(ctl.record,'ctl','rdCreate')],['MCSD@Create',ctl=>ctl.mcsdCreate||sourceValue(ctl.record,'ctl','mcsdCreate')],
+  ['SRD @ SOPs Approval',ctl=>ctl.srdApproval||sourceValue(ctl.record,'ctl','slotSrd')],['MCSD At SOps Approval',ctl=>ctl.mcsdApproval||sourceValue(ctl.record,'ctl','mcsdApproval')],['Config Frz',ctl=>ctl.configFrz||sourceValue(ctl.record,'ctl','configFrz')],
+  ['Initiator',ctl=>sourceValue(ctl.record,'ctl','initiator')],['Customer',ctl=>ctl.customer],['Quote ID',ctl=>ctl.quote],
+  ['NSR Reference',ctl=>ctl.nsrReferences.map(number=>number+linkSuffix(ctl.nsrReferenceTypes[number])).join(', '),(_,ctl)=>ctl.nsrReferences.map(number=>{
+    const link=ctl.links.find(link=>link.nsrNumber===number),fid=link?.kind==='direct'?ctl.fidId:link?.nsrFidId||'';
+    return nsrHistoryLink(number,link?.nsrId||number,fid)+linkSuffix(ctl.nsrReferenceTypes[number]);
+  }).join(', ')||'—'],
+  ['Change Summary',ctl=>ctl.changeSummary],['Root Cause',ctl=>ctl.rootCause],['CTL Notes',ctl=>ctl.notes],['Reason for Chg',ctl=>ctl.reason],['Sub Reason',ctl=>ctl.subReason],['Sales OPs Approver',ctl=>ctl.salesOpsApprover]
 ];
 function renderChanges(target,updateMarks=false){
   updateMarks=updateMarks&&tables.has('ctlTable');
   const selected=filterValues['ctl.stage']||[],filters=queryFilters();if(filters.ctl)delete filters.ctl.stage;
   const pendingOnly=filterValues.signal?.includes('pending-ctl'),rows=pendingOnly?current.ctls.filter(ctl=>ctl.pending):current.ctls,overviewRows=(selected.length?graph.query(filters,'ctls'):current.ctls).filter(ctl=>!pendingOnly||ctl.pending);
   const groups={completed:0,workflow:0,draft:0,rejected:0,cancelled:0,unknown:0};for(const ctl of overviewRows)groups[taskGroup(ctlStageName(ctl.stage),true)]++;
-  const terms=[['completed','Completed',overviewColors.completed],['workflow','In work',overviewColors.workflow],['draft','Draft',overviewColors.draft],['rejected','Rejected',overviewColors.rejected],['cancelled','Cancelled',overviewColors.cancelled],['unknown','Stage unknown',overviewColors.unknown]].filter(([group])=>group!=='unknown'||groups.unknown||taskFilterSelected('ctl','unknown'));
+  const terms=[['completed','Completed',overviewColors.completed],['workflow','In work',overviewColors.workflow],['draft','Draft',overviewColors.draft],['rejected','Rejected',overviewColors.rejected],['cancelled','Cancelled',overviewColors.cancelled],['unknown','Stage unknown',overviewColors.unknown]].filter(([group])=>group!=='unknown'||groups.unknown||taskSelected('ctl','unknown'));
   const overview=`<div class="section-head"><h2>CTL Overview</h2><span class="badge">${selected.length?number(rows.length)+' / '+number(overviewRows.length)+' selected CTL':number(rows.length)+' filtered CTL'}</span></div><div class="ctl-flow" style="--ctl-terms:${terms.length}" aria-label="Total CTL = ${terms.map(([,label])=>label).join(' + ')}">${taskOverview('ctl',terms,groups,overviewRows.length)}</div>`;
   if(updateMarks)target.querySelector('.ctl-overview').innerHTML=overview;
   else target.innerHTML=`<section class="card ctl-overview">${overview}</section>${pivotHtml('ctl',rows.length,'CTL',target)}<section class="card"><div class="section-head detail-head"><h2>CTL Details</h2></div><div id="ctlTable"></div></section>`;
-  renderPivots('ctlPivots',rows,[['quarter','Quarter','fQuarter','#7950a1'],['stage','CTL Stage','fCtlStage','#9468bc'],['customer','Customer','fCtlCustomer','#b491cf']],'CTL',updateMarks);
-  table('ctlTable',ctlColumns,rows,{file:pendingOnly?'Pending_CTL':'CTL_Details',defaultSort:'CTL',ascending:false,widths:{CTL:115,FID:85,Stage:145,Change:105,'Created Date':130,'Elapsed Days':130,'Sales Ops Approval':170,'RD At Create':135,'MCSD@Create':135,'SRD @ SOPs Approval':180,'MCSD At SOps Approval':190,'TSD @ SOPs Approval':180,'SRD @ Current':145,'MCSD @ Current':145,'Config Frz':115,'Mfg Upgrade Type':170,Initiator:155,Customer:185,'Quote ID':120,'NSR Reference':180,'Root Cause':300,'CTL Notes':300,'Reason for Chg':180,'Sub Reason':190,'Sales OPs Approver':180}},updateMarks);
+  renderPivots('ctlPivots',rows,[['quarter','Current Quarter','fCurrentQuarter','#7950a1'],['stage','CTL Stage','fCtlStage','#9468bc'],['customer','Customer','fCtlCustomer','#b491cf']],'CTL',updateMarks);
+  table('ctlTable',ctlColumns,rows,{file:pendingOnly?'Pending_CTL':'CTL_Details',defaultSort:'CTL',ascending:false,widths:{CTL:115,FID:85,Stage:145,Change:105,'Created Date':100,'Elapsed Days':130,'Sales Ops Approval':100,'RD At Create':100,'MCSD@Create':100,'SRD @ SOPs Approval':100,'MCSD At SOps Approval':100,'Config Frz':100,Initiator:155,Customer:185,'Quote ID':120,'NSR Reference':180,'Root Cause':300,'CTL Notes':300,'Reason for Chg':180,'Sub Reason':190,'Sales OPs Approver':180}},updateMarks);
 }
 function recordMark(kind,number){const config=markKinds[kind];return config.ignored.has(number)?'ignore':config.important.has(number)?'important':''}
 function currentMarks(kind){const config=markKinds[kind];return Object.fromEntries([...config.ignored,...config.important].sort().map(number=>[number,recordMark(kind,number)]))}
-function markSymbol(mark){return mark==='ignore'?'⊘':mark==='important'?'★':''}
 function markButton(kind,number){
   const value=recordMark(kind,number),label=value==='ignore'?'⊘ Ignore':value==='important'?'★ Star':'Normal',next=value==='ignore'?'★ Star':value==='important'?'Normal':'⊘ Ignore';
   return `<button type="button" class="record-mark-toggle${kind==='nsr'?' nsr-mark-toggle':''}" data-mark-id="${escapeHtml(number)}" data-ignore-${kind}="${escapeHtml(number)}" data-${kind}-mark="${value}" data-record-mark="${value}" aria-label="${escapeHtml(number)}: ${label}; next ${next}" title="${label} → ${next}\nClick to cycle: Normal → ⊘ Ignore → ★ Star → Normal">${value==='ignore'?'<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><circle cx="6" cy="6" r="4.5"/><path d="M3 9 9 3"/></svg>':value==='important'?'<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M6 1 7.55 4.3 11 4.8 8.5 7.3 9.1 11 6 9.2 2.9 11 3.5 7.3 1 4.8 4.45 4.3Z"/></svg>':''}</button>`;
@@ -2852,36 +2893,37 @@ const markNsrColumn=markColumn('nsr');
 const nsrColumns=[
   ['NSR#',nsr=>nsr.number,value=>`<button class="fc-link" data-cycle-nsr="${escapeHtml(value)}" title="Query Cycle Time">${escapeHtml(value)}</button>`],
   ['NSR Title',nsr=>nsr.title],['Task Status',nsr=>nsr.taskStatus,value=>value?`<span class="status-pill ${value==='15-Completed'?'terminal':value.startsWith('0-')?'stop':value.startsWith('Unmapped')?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
-  ['NSR Type',nsr=>nsr.type],['Impacted Sub System',nsr=>nsr.subsystem],['Initiator',nsr=>nsr.initiator],['FID',nsr=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).join(', '),(_,nsr)=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).map(fidLink).join(', ')||'—'],
+  ['NSR Type',nsr=>nsr.type],['Impacted Sub System',nsr=>nsr.subsystem],['Initiator',nsr=>graph.field(nsr.record,['Initiator','Initiated By','Requester'],true)],['FID',nsr=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).join(', '),(_,nsr)=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).map(fidLink).join(', ')||'—'],
   ['Primary Product',nsr=>nsr.product],
   ['NSR → CTL',nsr=>lifecycleNames[nsr.lifecycle]||nsr.lifecycle,(_,nsr)=>pill(lifecycleNames[nsr.lifecycle]||nsr.lifecycle,nsr.ignored?'ignore':nsr.lifecycle==='completed-unlinked'?'alert':['completed-5d','implemented'].includes(nsr.lifecycle)?'clear':nsr.lifecycle==='ctl-pending'?'pending':'info')],
-  ['CTL references',nsr=>(nsr.links||[]).map(link=>link.ctlNumber+(link.kind==='reference'?' ('+link.fidId+')':'')).join(', ')],
-  ['Customer',nsr=>nsr.customer],['NSR Org',nsr=>nsr.org],['Sales Rep',nsr=>nsr.record['Sales Rep']],['Sales Ops',nsr=>nsr.record['Sales Ops']],['Technical Contact',nsr=>nsr.record['Technical Contact']],
-  ['Submit Date',nsr=>nsr.submitted],['NSR Request',nsr=>nsr.record['NSR Request']],['Temp Id#',nsr=>nsr.tempId]
+  ['CTL references',nsr=>(nsr.links||[]).map(link=>link.ctlNumber+linkSuffix(link.referenceType,link.kind==='reference'?link.fidId:'')).join(', '),(_,nsr)=>(nsr.links||[]).map(link=>`<button type="button" class="fc-link" data-fid="${escapeHtml(link.fidId)}" data-ctl-id="${escapeHtml(link.ctlId)}" title="Open Slot / CTL History">${escapeHtml(link.ctlNumber)}</button>${escapeHtml(linkSuffix(link.referenceType,link.kind==='reference'?link.fidId:''))}`).join(', ')||'—'],
+  ['Customer',nsr=>nsr.customer],['NSR Org',nsr=>nsr.org],['Sales Rep',nsr=>sourceValue(nsr.record,'nsr','Sales Rep')],['Sales Ops',nsr=>sourceValue(nsr.record,'nsr','Sales Ops')],['Technical Contact',nsr=>sourceValue(nsr.record,'nsr','Technical Contact')],
+  ['Submit Date',nsr=>nsr.submitted||sourceValue(nsr.record,'nsr','submitted')],['NSR Request',nsr=>sourceValue(nsr.record,'nsr','NSR Request')],['Temp Id#',nsr=>nsr.tempId||sourceValue(nsr.record,'nsr','tempId')]
 ];
 function nsrCopyRows(rows,columns=nsrColumns){return nsrDetailRows(rows,columns.filter(([label])=>label!=='Mark'))}
-function markedDetailRows(kind,rows,columns){return rows.map(row=>Object.fromEntries(columns.map(([label,get])=>[label,label==='Mark'?markSymbol(recordMark(kind,kind==='fid'?row.id:row.number)):get(row)??''])))}
+function markedDetailRows(kind,rows,columns){return rows.map(row=>Object.fromEntries(columns.map(([label,get])=>{if(label!=='Mark')return [label,get(row)??''];const mark=recordMark(kind,kind==='fid'?row.id:row.number);return [label,mark==='ignore'?'⊘':mark==='important'?'★':'']})))}
 function nsrDetailRows(rows,columns=[markNsrColumn,...nsrColumns]){return markedDetailRows('nsr',rows,columns)}
-function fidDetailRows(rows,columns=portfolioColumns){return markedDetailRows('fid',rows,columns)}
-function fidCopyRows(rows,columns=portfolioColumns){return fidDetailRows(rows,columns.filter(([label])=>label!=='Mark'))}
+function fidDetailRows(rows,columns=fidColumns){return markedDetailRows('fid',rows,columns)}
+function fidCopyRows(rows,columns=fidColumns){return fidDetailRows(rows,columns.filter(([label])=>label!=='Mark'))}
 function renderNsrDetail(name,rows,options={},updateMarks=false,changedNsr=''){
   const columns=[markNsrColumn,...nsrColumns],widths={'Task Status':225,'NSR#':80,FID:80,'NSR Org':96};
+  if(name==='nsrTable')columns[1]=[...columns[1].slice(0,2),(value,nsr)=>nsrHistoryLink(value,nsr.id,nsr.fidId)];
   if(name==='fidNsrTable'){columns.splice(2,0,...columns.splice(columns.findIndex(([label])=>label==='NSR → CTL'),2));widths['NSR → CTL']=150}
-  table(name,columns,rows,{file:'NSR_Detail',cycle:true,nsr:true,exportRows:nsrDetailRows,copyRows:nsrCopyRows,defaultSort:'FID',ascending:false,frozen:['NSR#'],widths,...options},updateMarks,changedNsr);
+  return table(name,columns,rows,{file:'NSR_Detail',cycle:true,nsr:true,exportRows:nsrDetailRows,copyRows:nsrCopyRows,defaultSort:'FID',ascending:false,frozen:['NSR#'],widths,...options},updateMarks,changedNsr);
 }
-function highlightLinkedHistory(name,record){
+function highlightHistory(name,record){
   const state=tables.get(name);if(!state?.ready)return;
-  const key=name==='fidCtlTable'?'ctlId':'nsrId',linked=new Set(record?.links?.map(link=>link[key]));
-  for(const row of state.grid.getRows())row.getElement().classList.toggle('nsr-ctl-match',linked.has(state.rows[row.getIndex()].id));
+  const key=name==='fidCtlTable'?'ctlId':'nsrId',linked=new Map(record?.links?.map(link=>[link[key],link.referenceType]));
+  for(const row of state.grid.getRows()){const element=row.getElement(),type=linked.get(state.rows[row.getIndex()].id);element.classList.toggle('nsr-ctl-match',!!type);element.classList.toggle('nsr-ctl-note',type==='Note')}
 }
 function pivotHtml(kind,count,unit,target){return `<details class="card interactive-pivot"${target.querySelector('.interactive-pivot')?.open===false?'':' open'}><summary class="section-head"><h2>Interactive Pivot<span class="pivot-toggle" aria-hidden="true" title="Expand / collapse Interactive Pivot"></span></h2><span class="badge">${number(count)} filtered ${unit}</span></summary><div id="${kind}Pivots" class="nsr-pivots${kind==='ctl'?' ctl-pivots':''}"></div></details>`}
 function renderPivots(name,rows,pivots,unit,updateMarks=false){
   const target=id(name);
   if(updateMarks)target.previousElementSibling.querySelector('.badge').textContent=number(rows.length)+' filtered '+unit;
   pivots.forEach(([path,label,filter,color],index)=>{
-    const counts=new Map(),pivotRows=path==='quarter'&&name==='fidPivots'?quarterResult().fids:path==='quarter'&&name==='ctlPivots'?quarterResult().ctls:rows;
-    pivotRows.forEach(row=>{for(const value of new Set(path==='quarter'?(row.selectedQuarterStates?.map(state=>state.quarter)||row.quarters||[row.quarter]).map(value=>value||'[Unknown]'):[row[path]||'[Unknown]']))counts.set(value,(counts.get(value)||0)+1)});
-    const entries=[...counts].sort((a,b)=>path==='taskStatus'?nsrRecords.compareStatus(a[0],b[0]):path==='stage'?compareCtlStages(a[0],b[0]):path==='quarter'?Number(a[0]==='[Unknown]')-Number(b[0]==='[Unknown]')||nsrRecords.periodRank(a[0])-nsrRecords.periodRank(b[0])||a[0].localeCompare(b[0]):b[1]-a[1]||a[0].localeCompare(b[0])),max=Math.max(1,...counts.values());
+    const counts=new Map();
+    for(const row of rows){const value=row[path]||'[Unknown]';counts.set(value,(counts.get(value)||0)+1)}
+    const entries=[...counts].sort((a,b)=>path==='taskStatus'?nsrRecords.compareStatus(a[0],b[0]):path==='stage'?compareCtlStages(a[0],b[0]):path.toLowerCase().includes('quarter')?Number(a[0]==='[Unknown]')-Number(b[0]==='[Unknown]')||nsrRecords.periodRank(a[0])-nsrRecords.periodRank(b[0])||a[0].localeCompare(b[0]):b[1]-a[1]||a[0].localeCompare(b[0])),max=Math.max(1,...counts.values());
     const content=entries.map(([value,count])=>`<div class="pivot-row"><span class="pivot-label" title="${escapeHtml(path==='stage'?ctlStageName(value):value)}">${escapeHtml(path==='stage'?ctlStageName(value):value)}</span><span class="pivot-bar"><i style="width:${100*count/max}%;--bar:${color}"></i></span><button class="pivot-count" data-pivot-filter="${filter}" data-pivot-value="${escapeHtml(value)}" title="Filter ${escapeHtml(value)}">${number(count)}</button></div>`).join('')||'<span class="muted">No matching '+unit+'</span>';
     if(updateMarks){const card=target.children[index],list=card.querySelector('.pivot-list'),scroll=list.scrollTop;card.querySelector('.pivot-head span').textContent=counts.size+' values';list.innerHTML=content;list.scrollTop=scroll}
     else target.insertAdjacentHTML('beforeend',`<section class="pivot-card"><div class="pivot-head"><h3>${label}</h3><span>${counts.size} values</span></div><div class="pivot-list">${content}</div></section>`);
@@ -2894,34 +2936,31 @@ function renderNsrs(target,updateMarks=false,changedNsr=''){
   overviewRows.forEach(nsr=>{const group=taskGroup(nsr.taskStatus);groups[group]++;if(group==='completed')stageCounts[Object.hasOwn(stageCounts,nsr.taskLifecycle)?nsr.taskLifecycle:'ctl-unavailable']++});
   const terms=[['completed','Completed',overviewColors.completed],['workflow','In workflow',overviewColors.workflow],['rejected','Rejected',overviewColors.rejected],['cancelled','Cancelled',overviewColors.cancelled]];
   const completedStages=[['completed-unlinked','alert','#a62a49','Completed NSR → no matching CTL in loaded data'],['ctl-pending','pending','#8a5c0c','Linked CTL → awaiting Sales Ops approval'],['implemented','approved',overviewColors.completed,'Linked CTL → Sales Ops approved'],['completed-5d','approved',overviewColors.completed,'Completed D-prefix (5D) NSR → no CTL required']];
-  const showCompleted=groups.completed||selected.some(value=>value==='15-Completed'||Object.hasOwn(nsrCompletedTasks,value)),unknown=stageCounts['ctl-unavailable'];
+  const showCompleted=groups.completed||selected.some(value=>value==='15-Completed'||Object.hasOwn(completedTasks,value)),unknown=stageCounts['ctl-unavailable'];
   const completedEquation=`${groups.completed} = ${completedStages.map(([key])=>stageCounts[key]).join(' + ')}${unknown?' + '+unknown+' unknown':''}`;
   const overview=`${overviewHead('nsr',rows.length,overviewRows.length,selected.length)}<div class="nsr-flow${showCompleted?' has-completed':''}"><div class="nsr-equation" aria-label="Total NSR = ${terms.map(([,label])=>label).join(' + ')}">${taskOverview('nsr',terms,groups,overviewRows.length)}</div>
-  ${showCompleted?`<div class="nsr-breakdown" role="group" aria-label="Completed NSR breakdown"><span class="nsr-completed-arrow" title="${escapeHtml(completedEquation)}" aria-hidden="true"></span><span class="math-sign nsr-breakdown-equals" aria-hidden="true">=</span><div class="nsr-stage-sum"><span class="nsr-stage-spacer" aria-hidden="true"></span>${completedStages.map(([key,kind,color,tip],index)=>{const count=stageCounts[key],active=taskFilterSelected('nsr',key),percent=groups.completed?(100*count/groups.completed).toFixed(1):'0.0';return (index?'<span class="math-sign" aria-hidden="true">+</span>':'')+`<button class="nsr-kpi nsr-stage ${kind}" style="--kpi-color:${color}" type="button" data-nsr-lifecycle="${key}" data-count="${count}" aria-pressed="${active}"${!count&&!active?' disabled':''} title="${escapeHtml(`${count} / ${groups.completed} = ${percent}%\n${tip}`)}"><small>${lifecycleNames[key]}</small><b>${number(count)}</b><span>${percent}% of Completed NSRs</span></button>`}).join('')}${unknown?`<span class="math-sign" aria-hidden="true">+</span><span class="nsr-kpi nsr-stage unknown" style="--kpi-color:#52647d" data-count="${unknown}" role="status" title="CTL sources are not loaded or approval status is missing. View these records under 15-Completed."><small>CTL status unknown</small><b>${number(unknown)}</b><span>${groups.completed?(100*unknown/groups.completed).toFixed(1):'0.0'}% of Completed NSRs</span></span>`:''}</div></div>`:''}</div>`;
+  ${showCompleted?`<div class="nsr-breakdown" role="group" aria-label="Completed NSR breakdown"><span class="nsr-completed-arrow" title="${escapeHtml(completedEquation)}" aria-hidden="true"></span><span class="math-sign nsr-breakdown-equals" aria-hidden="true">=</span><div class="nsr-stage-sum"><span class="nsr-stage-spacer" aria-hidden="true"></span>${completedStages.map(([key,kind,color,tip],index)=>{const count=stageCounts[key],active=taskSelected('nsr',key),percent=groups.completed?(100*count/groups.completed).toFixed(1):'0.0';return (index?'<span class="math-sign" aria-hidden="true">+</span>':'')+`<button class="nsr-kpi nsr-stage ${kind}" style="--kpi-color:${color}" type="button" data-nsr-lifecycle="${key}" data-count="${count}" aria-pressed="${active}"${!count&&!active?' disabled':''} title="${escapeHtml(`${count} / ${groups.completed} = ${percent}%\n${tip}`)}"><small>${lifecycleNames[key]}</small><b>${number(count)}</b><span>${percent}% of Completed NSRs</span></button>`}).join('')}${unknown?`<span class="math-sign" aria-hidden="true">+</span><span class="nsr-kpi nsr-stage unknown" style="--kpi-color:#52647d" data-count="${unknown}" role="status" title="CTL sources are not loaded or approval status is missing. View these records under 15-Completed."><small>CTL status unknown</small><b>${number(unknown)}</b><span>${groups.completed?(100*unknown/groups.completed).toFixed(1):'0.0'}% of Completed NSRs</span></span>`:''}</div></div>`:''}</div>`;
   if(updateMarks)target.querySelector('.nsr-overview').innerHTML=overview;
   else target.innerHTML=`<section class="card nsr-overview">${overview}</section>${pivotHtml('nsr',rows.length,'NSRs',target)}<section class="card"><div class="section-head detail-head"><h2>NSR Details</h2></div><div id="nsrTable"></div></section>`;
   const pivots=[['taskStatus','Task Status','fNsrTaskStatus','var(--nsr-ink)'],['subsystem','Impacted Sub System','fNsrSubsystem','var(--nsr-ink)'],['type','NSR Type','fNsrType','var(--nsr-ink)'],['product','Primary Product','fNsrProduct','var(--nsr-ink)'],['org','NSR Org','fNsrOrg','var(--nsr-ink)'],['customer','Customer','fNsrCustomer','var(--nsr-ink)']];
   if(!sameRows)renderPivots('nsrPivots',rows,pivots,'NSRs',updateMarks);
   renderNsrDetail('nsrTable',rows,{markFilter:'nsr'},updateMarks,sameRows?changedNsr:'');
 }
-const summaryDimensions=[['quarter','Quarter'],['account','Account'],['customer','FID Customer'],['owner','Owner']];
-const summaryMetricDefs=[
+const summaryDimensions=[['quarter','Assessment Quarters'],['currentQuarter','Current Quarter'],['account','Account'],['customer','FID Customer'],['owner','Owner']];
+const metricDefs=[
   ['Slot Completion%','slotted','fid','slot','slot-ready'],['Pre-slot Stability%','stableSlot','slotted','slot','stable-slot'],['Post-slot Stability%','stablePost','slotted','post','stable-ctl'],
   ['FID','fid','','fcid'],['Risk FID%','riskFid','slotted','slot','risk-fid'],['Stable Slot & CTL%','noLate','slotted','post','risk-free'],
   ['NSR','nsr','','nsr'],['In work NSR','open','','nsr'],['Completed NSR','completed','','nsr'],['Cancelled/Rejected NSR','discardedNsr','','nsr'],['Completed NSR but no CTL','unlinked','','linked'],
   ['CTL','ctl','','ctl'],['Submitted CTL','submitted','','ctl'],['Completed CTL','ctlCompleted','','ctl'],['Draft CTL','draft','','ctl'],['Cancelled/Rejected CTL','discardedCtl','','ctl'],['Pending Config CTL','pending','','ctl'],['Pending Pull/Push CTL','pendingPullPush','','ctl']
 ];
-let summaryGroup='quarter',summaryPreviousGroup='quarter',summarySelected=['slotted','stableSlot','stablePost','fid','nsr','ctl'],summarySort={key:'',dir:-1},summaryCache={},summaryReport=[],quarterCache={};
-function quarterResult(){
-  if(quarterCache.revision!==revision)quarterCache={revision,result:graph.query(queryFilters(),'periods')};
-  return quarterCache.result;
-}
+let summaryGroup='quarter',previousGroup='quarter',metricKeys=['slotted','stableSlot','stablePost','fid','nsr','ctl'],summarySort={key:'',dir:-1},summaryCache={},summaryReport=[],quarterCache={};
 function summaryGroups(path){
-  const result=path==='quarter'?quarterResult():current,quartersByFid=new Map();
+  if(path==='quarter'&&quarterCache.revision!==revision)quarterCache={revision,result:graph.query(queryFilters(),'periods')};
+  const result=path==='quarter'?quarterCache.result:current,quartersByFid=new Map();
   if(path==='quarter')for(const node of result.fids){if(!quartersByFid.has(node.id))quartersByFid.set(node.id,[]);quartersByFid.get(node.id).push(node.quarter||'[Unknown]');}
   const fidNames=fid=>path==='quarter'?quartersByFid.get(fid)||graph.fids.get(fid)?.quarterStates.map(state=>state.quarter||'[Unknown]')||['[Unknown]']:[graph.fids.get(fid)?.[path]||'[Unknown]'];
-  const groups=new Map(),fidMetrics=summaryMetricDefs.filter(([,,,,state])=>state),entry=name=>{
-    name=name||'[Unknown]';if(!groups.has(name))groups.set(name,{name,...Object.fromEntries(summaryMetricDefs.map(([,key])=>[key,0]))});return groups.get(name);
+  const groups=new Map(),fidMetrics=metricDefs.filter(([,,,,state])=>state),entry=name=>{
+    name=name||'[Unknown]';if(!groups.has(name))groups.set(name,{name,...Object.fromEntries(metricDefs.map(([,key])=>[key,0]))});return groups.get(name);
   };
   for(const node of result.fids){
     const row=entry(node[path]);row.fid++;
@@ -2941,28 +2980,28 @@ function summaryGroups(path){
       if(ctl.statusKind==='completed')row.ctlCompleted++;else if(ctl.statusKind==='discarded')row.discardedCtl++;else if(ctl.status==='Submitted')row.submitted++;else if(ctl.status==='Draft')row.draft++;
     }
   }
-  return [...groups.values()].sort((a,b)=>Number(a.name==='[Unknown]')-Number(b.name==='[Unknown]')||(path==='owner'?b.riskFid-a.riskFid||b.fid-a.fid||b.nsr-a.nsr||b.ctl-a.ctl:path==='quarter'?nsrRecords.periodRank(a.name)-nsrRecords.periodRank(b.name):0)||tableCollator.compare(a.name,b.name));
+  return [...groups.values()].sort((a,b)=>Number(a.name==='[Unknown]')-Number(b.name==='[Unknown]')||(path==='owner'?b.riskFid-a.riskFid||b.fid-a.fid||b.nsr-a.nsr||b.ctl-a.ctl:['quarter','currentQuarter'].includes(path)?nsrRecords.periodRank(a.name)-nsrRecords.periodRank(b.name):0)||tableCollator.compare(a.name,b.name));
 }
-function renderSummaryMetrics(target){
+function renderSummary(target){
   if(!id('summaryChart')){
-    target.innerHTML=`<section class="card"><div class="section-head"><div class="summary-heading overview-tools"><h2>Summary Metrics</h2><span id="summaryCount" class="badge" aria-live="polite"></span>${ignoredToggle('summary')}</div><div class="btnrow"><button class="btn light small" data-summary-export="copy">Copy</button><button class="btn light small" data-summary-export="xlsx">Export XLSX</button></div></div><div class="summary-controls"><div class="fc-filter"><label for="summaryGroup">Group by</label><select id="summaryGroup"></select></div><div class="fc-filter"><label for="summaryMetrics">Metrics</label><select id="summaryMetrics" multiple>${summaryMetricDefs.map(([label,key])=>`<option value="${key}"${summarySelected.includes(key)?' selected':''}>${label}</option>`).join('')}</select></div></div><div id="summaryChart" class="summary-chart" aria-live="polite"></div><div id="summaryLegend" class="summary-legend" hidden>FID by Owner · NSR / CTL by Initiator.</div></section>`;
+    target.innerHTML=`<section class="card"><div class="section-head"><div class="summary-heading overview-tools"><h2>Summary Metrics</h2><span id="summaryCount" class="badge" aria-live="polite"></span>${ignoredToggle('summary')}</div><div class="btnrow"><button class="btn light small" data-summary-export="copy">Copy</button><button class="btn light small" data-summary-export="xlsx">Export XLSX</button></div></div><div class="summary-controls"><div class="fc-filter"><label for="summaryGroup">Group by</label><select id="summaryGroup"></select></div><div class="fc-filter"><label for="summaryMetrics">Metrics</label><select id="summaryMetrics" multiple>${metricDefs.map(([label,key])=>`<option value="${key}"${metricKeys.includes(key)?' selected':''}>${label}</option>`).join('')}</select></div></div><div id="summaryChart" class="summary-chart" aria-live="polite"></div><div id="summaryLegend" class="summary-legend" hidden>FID by Owner · NSR / CTL by Initiator.</div></section>`;
     jQuery(id('summaryMetrics')).chosen({width:'100%',search_contains:true,hide_results_on_select:false,display_selected_options:false,placeholder_text_multiple:'Select metrics'});
-    jQuery('#summaryGroup,#summaryMetrics').on('change',event=>{if(event.target.id==='summaryGroup'){summaryGroup=event.target.value;if(summaryGroup!=='owner')summaryPreviousGroup=summaryGroup}else summarySelected=[...event.target.selectedOptions].map(option=>option.value);renderSummaryMetrics(target)});
+    jQuery('#summaryGroup,#summaryMetrics').on('change',event=>{if(event.target.id==='summaryGroup'){summaryGroup=event.target.value;if(summaryGroup!=='owner')previousGroup=summaryGroup}else metricKeys=[...event.target.selectedOptions].map(option=>option.value);renderSummary(target)});
   }
   id('summaryGroup').innerHTML=summaryDimensions.filter(([value])=>value!=='owner'||summaryGroup==='owner').map(([value,label])=>`<option value="${value}"${value===summaryGroup?' selected':''}>${label}</option>`).join('');
   id('summaryLegend').hidden=summaryGroup!=='owner';
   const chart=id('summaryChart');summaryReport=[];
-  if(!summarySelected.includes(summarySort.key))summarySort.key='';
+  if(!metricKeys.includes(summarySort.key))summarySort.key='';
   for(const button of target.querySelectorAll('[data-summary-export]'))button.disabled=true;
-  if(!summarySelected.length){chart.innerHTML='<div class="summary-empty">Select at least one metric.</div>';id('summaryCount').textContent='';return}
+  if(!metricKeys.length){chart.innerHTML='<div class="summary-empty">Select at least one metric.</div>';id('summaryCount').textContent='';return}
   if(summaryCache.revision!==revision||summaryCache.group!==summaryGroup){
     summaryCache={revision,group:summaryGroup,rows:summaryGroups(summaryGroup)};
-    if(summaryGroup==='quarter')summarySort.key='';
+    if(['quarter','currentQuarter'].includes(summaryGroup))summarySort.key='';
   }
   const rows=summaryCache.rows.slice(),ctlReady=Boolean(store.meta.ctl||store.meta.ctlNsr),ready={fcid:!!store.meta.fcid,ctl:ctlReady,nsr:!!store.meta.nsr,slot:!!store.meta.fcid&&ctlReady,post:!!store.meta.fcid&&ctlReady,linked:ctlReady&&!!store.meta.nsr};
   id('summaryCount').textContent=rows.length+' groups';
   if(!rows.length){chart.innerHTML='<div class="summary-empty">No matching records.</div>';return}
-  const metrics=summaryMetricDefs.filter(([,key])=>summarySelected.includes(key)),dimension=summaryDimensions.find(([key])=>key===summaryGroup)[1];
+  const metrics=metricDefs.filter(([,key])=>metricKeys.includes(key)),dimension=summaryDimensions.find(([key])=>key===summaryGroup)[1];
   const sortMetric=metrics.find(([,key])=>key===summarySort.key);
   if(sortMetric&&ready[sortMetric[3]]){
     const [,key,base]=sortMetric;
@@ -2990,8 +3029,8 @@ function renderSummaryMetrics(target){
 }
 const nceColumns=[['NCE',row=>row.number],['State',row=>row.status],['Title',row=>row.title],['Impact',row=>row.impact],['Opened',row=>row.opened],['Damage Group',row=>row.damageGroup],['Damage Code',row=>row.damageCode],['Part Number',row=>row.partNumber],['Part Description',row=>row.partDescription]];
 
-const tableCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
-const columnPopup=id('columnFilterPopup'),columnInput=columnPopup.querySelector('input'),markPopup=id('markFilterPopup');
+const tableCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'}),numericCollator=new Intl.Collator(undefined,{numeric:true});
+const columnPopup=id('columnFilterPopup'),columnInput=columnPopup.querySelector('input'),columnChoices=id('colChoices'),markPopup=id('markFilterPopup');
 // Hidden tabs keep their measured size, so showing an unchanged table does not rebuild its rows.
 const tableResize=new ResizeObserver(entries=>{for(const {target} of entries){const state=tables.get(target.dataset.tableName);if(!state?.ready||!target.clientWidth||!target.clientHeight)continue;const size=target.clientWidth+':'+target.clientHeight;if(size!==state.size){state.size=size;state.grid.redraw()}}});
 function orderTableColumns(definitions,columns,order,nsrHistory=false){
@@ -3019,11 +3058,11 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
   if(name==='fidCtlTable'&&!id('fidDetail').open)local.showPullPush=false;
   tables.set(name,state);localTables.set(name,local);
   const host=id(name),autoHeight=Boolean(host.closest('.fid-dialog')),columnFilters=!autoHeight&&options.columnFilters!==false;if(!columnFilters)local.headerFilters=[];
-  host.innerHTML=`<div class="fc-table-shell"><div class="table-toolbar" data-table-tools="${name}">${autoHeight?`<div class="btnrow"><h2>${escapeHtml(options.title)} (<span data-table-count></span>)</h2>${name==='fidCtlTable'?`<button type="button" class="fc-link" data-toggle-pull-push aria-pressed="${Boolean(local.showPullPush)}">${local.showPullPush?'Hide':'Show'} Pull/Push</button>`:''}</div>`:'<span class="table-count" data-table-count></span>'}<div class="toolbar-right${autoHeight?' btnrow':''}"><button class="btn light small" data-table-copy="${name}"${options.copyId?` id="${options.copyId}"`:''}>Copy</button>${autoHeight?'':`<button class="btn light small" data-table-export="${name}"${options.exportId?` id="${options.exportId}"`:''}>Export XLSX</button>`}${options.cycle?`<button class="btn blue small" data-table-cycle="${name}">Cycle Time</button>`:''}</div></div>${columnFilters?'<div class="column-filter-bar"></div>':''}<div class="fc-table-wrap" data-table-name="${name}" aria-label="${escapeHtml(options.file||name)}" aria-busy="true"></div></div>`;
+  host.innerHTML=`<div class="fc-table-shell"><div class="table-toolbar" data-table-tools="${name}">${autoHeight?`<div class="btnrow"><h2>${escapeHtml(options.title)} (<span data-table-count></span>)</h2>${name==='fidCtlTable'?`<button type="button" class="fc-link" data-toggle-pull-push aria-pressed="${Boolean(local.showPullPush)}">${local.showPullPush?'Hide':'Show'} Pull/Push</button>`:''}</div>`:'<span class="table-count" data-table-count></span>'}<div class="toolbar-right${autoHeight?' btnrow':''}"><button class="btn light small" data-table-copy="${name}"${options.copyId?` id="${options.copyId}"`:''}>Copy</button>${autoHeight?'':`<button class="btn light small" data-table-export="${name}"${options.exportId?` id="${options.exportId}"`:''}>Export XLSX</button>`}${options.cycle?`<button class="btn blue small" data-table-cycle="${name}">Cycle Time</button>`:''}</div></div>${columnFilters?'<div class="col-bar"></div>':''}<div class="fc-grid" data-table-name="${name}" aria-label="${escapeHtml(options.file||name)}" aria-busy="true"></div></div>`;
   state.toolbar=host.querySelector('.table-toolbar');
   const heading=autoHeight?null:host.parentElement.querySelector(':scope > .detail-head, :scope > summary');
   if(heading&&state.toolbar){heading.querySelector('[data-table-tools="'+name+'"]')?.remove();heading.append(state.toolbar)}
-  const wrap=host.querySelector('.fc-table-wrap');wrap.classList.toggle('column-filters',columnFilters);
+  const wrap=host.querySelector('.fc-grid');wrap.classList.toggle('column-filters',columnFilters);
   const data=rows.map(dataRow),widths={...options.widths};
   if(options.fid){
     const measure=document.createElement('canvas').getContext('2d'),font=getComputedStyle(wrap).fontFamily;
@@ -3036,6 +3075,7 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
       }
       widths[label]=Math.ceil(Math.max(75,Math.min(220,width)));
     }
+    widths.SRD=widths.MCSD=widths.CRD;
   }
   const filter=item=>(name!=='fidCtlTable'||local.showPullPush||!['pull','push'].includes(state.rows[item.id].changeKey))&&(!options.markFilter||!local.marks||local.marks.includes(recordMark(options.markFilter,options.markFilter==='fid'?state.rows[item.id].id:state.rows[item.id].number)||'normal'));
   const columnDefs=columns.map(([label,,render,settings],index)=>({title:label==='Mark'?'':label,titleFormatter:label==='Mark'&&options.markFilter?()=>markHeader(state):columnFilters&&label!=='Mark'?columnHeader:undefined,field:'c'+index,frozen:index===0||(options.frozen||[]).includes(label),minWidth:label==='Mark'?36:75,headerSort:label!=='Mark',headerFilter:columnFilters&&label!=='Mark'?'input':false,headerFilterParams:{elementAttributes:{'aria-label':'Filter '+label}},cellClick:name==='portfolioTable'&&label==='FID Status & Risks'?(_event,cell)=>showFid(state.rows[cell.getRow().getIndex()].id):undefined,hozAlign:label==='Mark'?'center':'left',headerHozAlign:label==='Mark'?'center':'left',width:widths[label]??(label==='Mark'?36:label==='Task Status'?275:/Title|Summary|Documents|Sample|File|Reason|Description|Action/.test(label)?320:/Owner|Initiator|Candidate|Customer|Product/.test(label)?185:/^Pre$|^Post$|NSR → CTL|Application/.test(label)?180:Math.max(110,Math.min(240,label.length*7+28))),sorter:(a,b)=>label==='Stage'?compareCtlStages(a,b):/Quarter|Period/.test(label)?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||tableCollator.compare(String(a),String(b)):typeof a==='number'&&typeof b==='number'?a-b:tableCollator.compare(String(a),String(b)),...settings,formatter:cell=>{const value=cell.getValue();cell.getElement().title=label==='Mark'?'':String(value);return '<span class="cell-content">'+(render?render(value,state.rows[cell.getRow().getIndex()]):escapeHtml(value)||'—')+'</span>'}}));
@@ -3052,8 +3092,8 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
       finally{target.ordering=false}
     }
   });
-  state.grid.on('dataFiltered',(_filters,rows)=>{local.headerFilters=state.grid.getHeaderFilters();if(columnFilters)paintColumnFilters(state);const count=state.toolbar?.querySelector('[data-table-count]');if(count)count.textContent=number(rows.length)+(autoHeight?'':' rows');paintMarkFilter(state)});
-  if(options.markFilter)state.grid.on('renderComplete',()=>{if(markPopup.state===state)markPopup.position=markMenuPosition(state)});
+  state.grid.on('dataFiltered',(_filters,rows)=>{local.headerFilters=state.grid.getHeaderFilters();if(columnFilters)paintColFilters(state);const count=state.toolbar?.querySelector('[data-table-count]');if(count)count.textContent=number(rows.length)+(autoHeight?'':' rows');paintMarkFilter(state)});
+  if(options.markFilter)state.grid.on('renderComplete',()=>{if(markPopup.state===state)markPopup.position=markMenuPos(state)});
   state.grid.on('dataSorted',(sorters,rows)=>{
     if(sorters.length){local.sort=Number(sorters[0].field.slice(1));local.ascending=sorters[0].dir==='asc'}
     if(name!=='nsrTable')return;const fidSorted=sorters.length===1&&columns[local.sort]?.[0]==='FID';wrap.classList.toggle('fid-sorted',fidSorted);if(!fidSorted)return;
@@ -3064,31 +3104,44 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
   state.grid.on('tableBuilt',()=>state.grid.getColumns().forEach(column=>{const element=column.getElement();element.tabIndex=0;element.title=column.getDefinition().title}));
   if(name==='fidNsrTable'||name==='fidCtlTable'){
     const linkedTable=name==='fidNsrTable'?'fidCtlTable':'fidNsrTable';
-    state.grid.on('rowMouseEnter',(_event,row)=>highlightLinkedHistory(linkedTable,state.rows[row.getIndex()]));
-    state.grid.on('rowMouseLeave',()=>highlightLinkedHistory(linkedTable));
+    state.grid.on('rowMouseEnter',(_event,row)=>highlightHistory(linkedTable,state.rows[row.getIndex()]));
+    state.grid.on('rowMouseLeave',()=>highlightHistory(linkedTable));
   }
   state.grid.on('dataProcessed',()=>{state.ready=true;state.size=wrap.clientWidth+':'+wrap.clientHeight;wrap.setAttribute('aria-busy','false')});tableResize.observe(wrap);
   return state.built=new Promise(resolve=>state.grid.on('tableBuilt',()=>resolve(state)));
 }
 function columnHeader(cell){
   const column=cell.getColumn(),title=column.getDefinition().title,header=document.createElement('span');header.className='column-heading';
-  header.innerHTML='<span>'+escapeHtml(title)+(title==='FID Owner'?inferenceHelp(ownerHint):'')+'</span><button type="button" class="column-funnel" popovertarget="columnFilterPopup" aria-label="Filter '+escapeHtml(title)+'" aria-haspopup="dialog" aria-pressed="false" title="Filter '+escapeHtml(title)+'"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z"/></svg></button>';
+  header.innerHTML='<span>'+escapeHtml(title)+(title==='FID Owner'?helpIcon(ownerHint):'')+'</span><button type="button" class="column-funnel" popovertarget="columnFilterPopup" aria-label="Filter '+escapeHtml(title)+'" aria-haspopup="dialog" aria-pressed="false" title="Filter '+escapeHtml(title)+'"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z"/></svg></button>';
   const button=header.lastElementChild;button.onmousedown=event=>event.stopPropagation();
-  button.onclick=event=>{event.stopPropagation();markPopup.hidePopover();columnPopup.hidePopover();columnPopup.column=column;columnPopup.querySelector('label>span').textContent=title;columnInput.value=column.getHeaderFilterValue()??''};return header;
+  button.onclick=event=>{
+    event.stopPropagation();markPopup.hidePopover();columnPopup.hidePopover();columnPopup.column=column;columnPopup.querySelector('label>span').textContent=title;columnInput.value=column.getHeaderFilterValue()??'';
+    const state=tables.get(column.getTable().element.dataset.tableName),get=state.columns[Number(column.getField().slice(1))][1],values=new Set();
+    for(const row of state.rows){const value=String(get(row)??'');values.add(value);if(values.size>20||/[\r\n]/.test(value))break}
+    columnPopup.choices=values.size<=20&&![...values].some(value=>/[\r\n]/.test(value))?[...values].filter(Boolean).sort(tableCollator.compare):[];paintColChoices();
+  };return header;
 }
-function paintColumnFilters(state){
+function paintColChoices(){
+  const search=columnInput.value.toLowerCase(),values=(columnPopup.choices||[]).filter(value=>value.toLowerCase().includes(search));
+  columnChoices.replaceChildren(...values.map(value=>new Option(value,value)));columnChoices.hidden=!values.length;columnChoices.value=columnInput.value;
+}
+function paintColFilters(state){
   const filters=state.local.headerFilters,key=JSON.stringify(filters);if(state.columnFilterKey===key)return;state.columnFilterKey=key;
   const host=id(state.name),active=new Map(filters.map(filter=>[filter.field,filter.value]));
   for(const column of state.grid.getColumns()){
     const button=column.getElement().querySelector('.column-funnel');if(!button)continue;const selected=active.has(column.getField());button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.title='Filter '+column.getDefinition().title+(selected?': '+active.get(column.getField()):'');
   }
-  host.querySelector('.column-filter-bar').innerHTML=filters.map(({field,value})=>{const text=escapeHtml(state.grid.getColumn(field).getDefinition().title+': '+value);return '<button type="button" class="pill info" data-column-remove="'+state.name+'" data-field="'+field+'" title="'+text+'" aria-label="Remove filter '+text+'">'+text+' ×</button>'}).join('')+(filters.length?'<button type="button" class="fc-link" data-column-clear="'+state.name+'">Clear</button>':'');
+  host.querySelector('.col-bar').innerHTML=filters.map(({field,value})=>{const text=escapeHtml(state.grid.getColumn(field).getDefinition().title+': '+value);return '<button type="button" class="pill info" data-column-remove="'+state.name+'" data-field="'+field+'" title="'+text+'" aria-label="Remove filter '+text+'">'+text+' ×</button>'}).join('')+(filters.length?'<button type="button" class="fc-link" data-column-clear="'+state.name+'">Clear</button>':'');
 }
 function tableResult(state){return state.grid.getRows('active').map(row=>state.rows[row.getIndex()])}
 function paintTable(state){state.grid.refreshFilter()}
 
 
-function exportTableRows(state,copy=false){const rows=tableResult(state),columns=state.grid.getColumns().filter(column=>column.isVisible()).map(column=>state.columns[Number(column.getField().slice(1))]),format=copy?state.options.copyRows:state.options.exportRows;return format?format(rows,columns):rows.map(row=>Object.fromEntries(columns.map(([label,get])=>[label,get(row)??''])))}
+function exportTableRows(state,copy=false){
+  const rows=tableResult(state),columns=state.grid.getColumns().filter(column=>column.isVisible()).map(column=>state.columns[Number(column.getField().slice(1))]),format=copy?state.options.copyRows:state.options.exportRows;
+  if(!rows.length)return [columns.filter(([label])=>!copy||label!=='Mark').map(([label])=>label)];
+  return format?format(rows,columns):rows.map(row=>Object.fromEntries(columns.map(([label,get])=>[label,get(row)??''])));
+}
 function exportWorkbook(filename,sheets,rowFormats={},options={}){
   try{
     const workbook=XLSX.utils.book_new();
@@ -3130,6 +3183,7 @@ function setRecordMark(kind,number){
 function saveMarks(kind,marks,persist=true){
   const config=markKinds[kind];if(persist)try{GM_setValue(config.key,JSON.stringify(marks))}catch(error){return {ok:false,error:error.message}}
   config.ignored.clear();config.important.clear();for(const [number,mark]of Object.entries(marks))(mark==='ignore'?config.ignored:config.important).add(number);
+  portfolioCache={};
   return {ok:true};
 }
 function saveMarkLists(kind){
@@ -3144,17 +3198,17 @@ function saveMarkLists(kind){
   applyFilters(true);
   id(config.status).textContent='Saved';
 }
-function markMenuPosition(state){const holder=state.grid.element.querySelector('.tabulator-tableholder');return holder?[scrollX,scrollY,holder.scrollLeft,holder.scrollTop].join(':'):''}
+function markMenuPos(state){const holder=state.grid.element.querySelector('.tabulator-tableholder');return holder?[scrollX,scrollY,holder.scrollLeft,holder.scrollTop].join(':'):''}
 function markHeader(state){
-  const button=document.createElement('button');button.type='button';button.className='mark-filter-trigger';button.setAttribute('popovertarget','markFilterPopup');button.setAttribute('aria-haspopup','dialog');
+  const button=document.createElement('button');button.type='button';button.className='mark-trigger';button.setAttribute('popovertarget','markFilterPopup');button.setAttribute('aria-haspopup','dialog');
   button.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z"/></svg>';
   button.onmousedown=event=>event.stopPropagation();
-  button.onclick=event=>{event.stopPropagation();columnPopup.hidePopover();markPopup.hidePopover();markPopup.state=state;markPopup.trigger=button;markPopup.position=markMenuPosition(state);paintMarkFilter(state)};
+  button.onclick=event=>{event.stopPropagation();columnPopup.hidePopover();markPopup.hidePopover();markPopup.state=state;markPopup.trigger=button;markPopup.position=markMenuPos(state);paintMarkFilter(state)};
   return button;
 }
 function paintMarkFilter(state){
   const kind=state.options.markFilter;if(!kind)return;
-  const selected=state.local.marks??markOptions,active=Boolean(state.local.marks),trigger=state.grid.element.querySelector('.mark-filter-trigger'),label='Filter marks: '+(active?(selected.length?selected.map(mark=>markLabels[mark]).join(', '):'None'):'All');
+  const selected=state.local.marks??markOptions,active=Boolean(state.local.marks),trigger=state.grid.element.querySelector('.mark-trigger'),label='Filter marks: '+(active?(selected.length?selected.map(mark=>markLabels[mark]).join(', '):'None'):'All');
   if(trigger){trigger.classList.toggle('active',active);trigger.setAttribute('aria-pressed',String(active));trigger.setAttribute('aria-label',label);trigger.title=label}
   if(markPopup.state!==state)return;
   const host=markPopup.querySelector('[role=group]'),counts={all:0,normal:0,ignore:0,important:0};
@@ -3169,7 +3223,7 @@ function paintFidPersonal(fid){
   if(focused)id('fidPersonalMark').querySelector('button').focus({preventScroll:true});
 }
 function refreshFidPersonal(fid){
-  const state=tables.get('portfolioTable'),update=state?.rows.some(node=>node.id===fid)?table('portfolioTable',portfolioColumns,state.rows,state.options,true,fid):null;
+  const state=tables.get('portfolioTable'),update=state?.rows.some(node=>node.id===fid)?table('portfolioTable',fidColumns,state.rows,state.options,true,fid):null;
   paintFidPersonal(fid);return update;
 }
 function editFidNote(fid,anchor){
@@ -3194,35 +3248,67 @@ async function saveFidNote(){
   fidNotes=next;await refreshFidPersonal(fid);closeFidNote();
 }
 function fidQuarterRows(node){return [...node.quarterStates].sort((a,b)=>Number(b.quarter===node.currentQuarter)-Number(a.quarter===node.currentQuarter))}
-function showFid(fid,updateMarks=false,changedNsr=''){
-  const original=graph.fids.get(fid);if(!original)return;const node=graph.projectFid(original,queryFilters().quarter)||graph.projectFid(original),dialog=id('fidDetail');if(dialog.dataset.fid!==fid)['fidNsrTable','fidCtlTable','fidNceTable'].forEach(name=>localTables.delete(name));
-  const updateDetail=updateMarks&&dialog.dataset.fid===fid&&tables.has('fidNsrTable');dialog.dataset.fid=fid;
-  const lateCtlIds=new Set(original.lateCtls.map(ctl=>ctl.id)),lateSlotIds=new Set(original.quarterStates.flatMap(state=>state.slotEvidence.filter(pre=>pre.state==='risk').map(pre=>pre.ctlId)));
+function renderFidEvidence(node,state){
   const riskLabels={'On time':'Stable Slot','Pre late risk':'Late Slot','Post config risk':'Late CTL','No post risk':'Stable CTL'};
-  const quarters=fidQuarterRows(original),multiple=quarters.length>1;
-  const quarterLines=quarters.map(state=>`<div class="fid-quarter-state${state.quarter===original.currentQuarter?' is-current':''}" data-quarter-state="${escapeHtml(state.quarter)}" data-selected-quarter="${node.selectedQuarterStates.includes(state)}" title="${escapeHtml(state.basis.join('\n'))}"><span>${escapeHtml(state.quarter||'[Unknown]')}</span>${multiple?pill(fidQuarterStatus(state),state.portfolioStates.includes('risk-fid')?'risk':state.portfolioStates.includes('risk-free')?'clear':'unknown',[riskTip(state.pre),riskTip(state.post)].join('\n')):''}</div>`).join('');
+  return [['Pre-slot',state.pre],['Post-slot',state.post]].map(([name,risk])=>{
+    const post=name==='Post-slot',ctls=post?risk.assessments:[],label=post&&risk.ctls.length?'Late CTL ('+risk.ctls.length+')':riskLabels[risk.label]||risk.label.replace(/^(?:Pre|Post) /i,'');
+    let content='<p>'+escapeHtml(risk.reason)+'</p>';
+    if(post&&ctls.length)content='<ul class="fid-ctl-list">'+ctls.map(({ctl,weeks,referenceDate,referenceField})=>{
+      const timing=weeks===null?'— weeks (date missing)':weeks.toFixed(1)+' weeks ('+(weeks<20?'<20':'>=20')+' weeks)';
+      const tip='Sales Ops Approval Date: '+ctl.approved+' · '+(referenceField||'MCSD / SRD')+': '+(referenceDate||'—');
+      return '<li'+(risk.ctlIds.includes(ctl.id)?' class="is-late"':'')+' title="'+escapeHtml(tip)+'">'+escapeHtml(ctl.number+' · Config · '+timing)+'</li>';
+    }).join('')+'</ul>';
+    else if(!post&&risk.ctlId){
+      const timing=risk.weeks===null?'— weeks (date missing)':risk.weeks.toFixed(1)+' weeks ('+(risk.weeks>risk.threshold?'>':'<=')+risk.threshold+' weeks)';
+      const tip=(risk.eventDateField||'Sales Ops Approval Date')+': '+(risk.eventDate||'—')+' · '+(risk.referenceField||'SRD')+': '+(risk.referenceDate||'—');
+      content='<ul class="fid-ctl-list"><li'+(risk.state==='risk'?' class="is-late"':'')+' title="'+escapeHtml(tip)+'">'+escapeHtml(risk.ctlId+' · Slot · '+timing)+'</li></ul>';
+    }
+    return '<div class="notice '+(!post&&state.portfolioStates.includes('no-slot')?'no-slot':risk.state)+'"><b>'+escapeHtml(name+(node.quarterStates.length>1?' · '+(state.quarter||'[Unknown]'):'')+': '+label)+'</b>'+content+'</div>';
+  }).join('');
+}
+function showFid(fid,updateMarks=false,changedNsr='',target=null){
+  const node=graph.fids.get(fid);if(!node)return;const dialog=id('fidDetail');if(dialog.dataset.fid!==fid)['fidNsrTable','fidCtlTable','fidNceTable'].forEach(name=>localTables.delete(name));
+  const viewed=dialog.open&&dialog.dataset.fid===fid?dialog.dataset.quarter:node.currentQuarter;
+  const quarterState=node.quarterStates.find(state=>state.quarter===viewed)||node.quarterStates.find(state=>state.quarter===node.currentQuarter);
+  const updateDetail=updateMarks&&dialog.dataset.fid===fid&&tables.has('fidNsrTable');dialog.dataset.fid=fid;dialog.dataset.quarter=quarterState.quarter;
+  const lateCtlIds=new Set(node.lateCtls.map(ctl=>ctl.id)),lateSlotIds=new Set(node.quarterStates.flatMap(state=>state.slotEvidence.filter(pre=>pre.state==='risk').map(pre=>pre.ctlId)));
+  const quarters=fidQuarterRows(node),multiple=quarters.length>1;
+  const quarterLines=quarters.map(state=>{
+    const tag=multiple?'button':'div';
+    return `<${tag}${multiple?' type="button"':''} class="fid-quarter-state${state.quarter===node.currentQuarter?' is-current':''}" data-quarter-state="${escapeHtml(state.quarter)}"${multiple?` data-selected-quarter="${state===quarterState}" aria-pressed="${state===quarterState}" aria-controls="fidEvidence"`:''}><span>${escapeHtml(state.quarter||'[Unknown]')}</span>${pill(quarterStatus(state,true),state.portfolioStates.includes('risk-fid')?'risk':state.portfolioStates.includes('risk-free')?'clear':'unknown')}</${tag}>`;
+  }).join('');
   const summary=`<div class="fid-dialog-grid" style="--fid-date-rows:${quarters.length+1}">${[
-    ['Slot',node.slot.state.replace(/^./,letter=>letter.toUpperCase())],['Commit: Field',node.commit],['Account',node.account],['Business Unit',node.businessUnit],
+    ['Slot',`${node.slot.state.replace(/^./,letter=>letter.toUpperCase())} | ${node.commit||'—'}`],['Active CTL/Quote',node.activeCtl?.number||node.activeCtl?.quote?`${node.activeCtl.number||'—'} | ${node.activeCtl.quote||'—'}`:'—'],['Account',node.account],['Business Unit',node.businessUnit],
     ['System Description',node.system],['FID Description',node.fidDescription],['Customer',node.customer],['Fab Name',node.fab],
-    ['Quarter',node.quarter,'quarter'],['Sales Ops RD',node.rd,'rd'],['MCSD',node.mcsd,'mcsd'],['Customer Request Date',node.crd,'crd'],
-    ['FID Owner',node.owner],['Slot Initiator',node.slot.initiator],['Sales Admin',node.salesAdmin]
+    ['Quarter',node.quarter,'quarter'],['Sales Ops RD',node.rd||sourceValue(node.record,'fcid','rd'),'rd'],['MCSD',node.mcsd||sourceValue(node.record,'fcid','mcsd'),'mcsd'],['Customer Request Date',node.crd||sourceValue(node.record,'fcid','crd'),'crd'],
+    ['MFG Upgrade Type',node.mfg],['FID Owner',node.owner||'[Unknown]'],['Slot Initiator',sourceValue(node.slot.active?.record,'ctl','initiator')],['Sales Admin',node.salesAdmin||'[Unknown]']
   ].map(([label,value,dateKey])=>{
-    const lines=multiple&&dateKey&&dateKey!=='quarter'?(dateKey==='crd'?`<div class="fid-quarter-state"><span>${escapeHtml(value||'[Unknown]')}</span></div>`:quarters.map(state=>`<div class="fid-quarter-state${state.quarter===original.currentQuarter?' is-current':''}" data-quarter-date="${escapeHtml(state.quarter)}" title="${escapeHtml((state.quarter||'[Unknown]')+' · '+state.dateSource+(!state.dates[dateKey]?'\nDate unavailable.':''))}"><span>${escapeHtml(state.dates[dateKey]||'—')}</span></div>`).join('')):'';
-    return `<div class="fid-detail-value${multiple&&dateKey?' fid-date-value':''}${label==='Slot'&&node.portfolioStates.includes('no-slot')?' no-slot':''}"${dateKey?` data-date-field="${dateKey}"`:''}${label==='FID Owner'?` title="${escapeHtml(ownerTip(node))}"`:label.startsWith('Sales Admin')?' title="Unique Pull / Push CTL votes; ties remain unknown"':''}><small>${label}${label==='Quarter'?inferenceHelp(quarterHint):label==='FID Owner'?inferenceHelp(ownerHint):label==='Sales Admin'?inferenceHelp(salesAdminHint):''}</small>${label==='Quarter'?quarterLines:lines||escapeHtml(value||'[Unknown]')}</div>`;
-  }).join('')}</div><div class="fid-evidence">${[['Pre-slot',node.pre],['Post-slot',node.post]].map(([name,risk])=>`<div class="notice ${name==='Pre-slot'&&node.portfolioStates.includes('no-slot')?'no-slot':risk.state}"><b>${escapeHtml(name+(original.quarterStates.length>1?' · '+node.quarter:'')+': '+(riskLabels[risk.label]||risk.label.replace(/^(?:Pre|Post) /i,'')))}</b><p>${escapeHtml(risk.reason)}</p><p class="muted">${escapeHtml([risk.eventDate?`${risk.eventDateField||'Event'}: ${risk.eventDate}`:'',risk.referenceDate?`${risk.referenceField||'Reference'}: ${risk.referenceDate}`:''].filter(Boolean).join(' · '))}</p></div>`).join('')}</div>`;
+    const lines=multiple&&dateKey&&dateKey!=='quarter'?(dateKey==='crd'?`<div class="fid-quarter-state"><span>${escapeHtml(value||'—')}</span></div>`:quarters.map(state=>`<div class="fid-quarter-state${state.quarter===node.currentQuarter?' is-current':''}" data-quarter-date="${escapeHtml(state.quarter)}" title="${escapeHtml((state.quarter||'[Unknown]')+' · '+state.dateSource+(!state.dates[dateKey]?'\nDate unavailable.':''))}"><span>${escapeHtml(fidDateValue(node,state,dateKey)||'—')}</span></div>`).join('')):'';
+    return `<div class="fid-detail-value${multiple&&dateKey?' fid-date-value':''}${label==='Slot'&&node.portfolioStates.includes('no-slot')?' no-slot':''}"${dateKey?` data-date-field="${dateKey}"`:''}${label==='FID Owner'?` title="${escapeHtml(ownerTip(node))}"`:label.startsWith('Sales Admin')?' title="Unique Pull / Push CTL votes; ties remain unknown"':''}><small>${label}${label==='FID Owner'?helpIcon(ownerHint):label==='Sales Admin'?helpIcon(salesAdminHint):''}</small>${label==='Quarter'?quarterLines:lines||escapeHtml(value||'—')}</div>`;
+  }).join('')}</div><div id="fidEvidence" class="fid-evidence">${renderFidEvidence(node,quarterState)}</div>`;
   if(updateDetail)id('fidSummary').innerHTML=summary;
   else dialog.innerHTML=`<div class="section-head"><div><h1 id="fidDetailTitle"><span id="fidPersonalMark" class="fid-personal-mark"></span>FID ${escapeHtml(fid)} <a class="fid-action" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=BT111_OPPT&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(fid)}" target="_blank" rel="noopener noreferrer">CRM ↗</a><span id="fidHeaderStatus" class="fid-header-status" role="group" aria-label="FID Status &amp; Risks"></span></h1><span class="muted">${node.inPopulation?'Commit portfolio':'Observed in source data'}</span></div><a class="fid-action" href="#" data-export-fid="${escapeHtml(fid)}">Export FID 360°</a><button class="fid-close" type="button" data-close-fid aria-label="Close FID 360" title="Close">×</button></div><div id="fidSummary">${summary}</div><section id="fidNotePanel" class="fid-note-panel"></section><div id="fidNsrTable"></div><div id="fidCtlTable"></div><div id="fidNceTable"></div>`;
-  id('fidHeaderStatus').innerHTML=fidDetailStatus(node).map(([label,kind,tip])=>pill(label,kind,tip)).join('');
+  id('fidHeaderStatus').innerHTML=fidDetailStatus(node,false,true).map(([label,kind,tip])=>pill(label,kind,tip)).join('');
   paintFidPersonal(fid);
-  renderNsrDetail('fidNsrTable',node.nsrs,{title:'📋 NSR History',file:'FID_'+fid+'_NSR',defaultSort:'Submit Date',rowRisk:nsr=>nsr.eligible&&nsr.lifecycle==='open'?'pending-nsr':''},updateDetail,changedNsr);
-  if(!updateDetail){table('fidCtlTable',ctlColumns.filter(([label])=>label!=='FID'),node.ctls,{title:'🔄 Slot / CTL History',file:'FID_'+fid+'_CTL',rowRisk:ctl=>lateSlotIds.has(ctl.id)?'late-slot':lateCtlIds.has(ctl.id)?'late-ctl':ctl.pending?'pending-config':ctl.pendingPullPush?'pending-pull-push':'',widths:{CTL:105,Stage:140,Change:90,'Created Date':115,'Elapsed Days':110,'Sales Ops Approval':135,'RD At Create':125,'MCSD@Create':125,'SRD @ SOPs Approval':165,'MCSD At SOps Approval':175,'TSD @ SOPs Approval':165,'SRD @ Current':135,'MCSD @ Current':135,'Config Frz':100,'Mfg Upgrade Type':155,Initiator:135,Customer:160,'Quote ID':105,'NSR Reference':150,'Root Cause':180,'CTL Notes':220,'Reason for Chg':160,'Sub Reason':160,'Sales OPs Approver':170}});table('fidNceTable',nceColumns,node.nces,{title:'🔎 NCE / FA History',file:'FID_'+fid+'_NCE',widths:{NCE:90,State:80,Title:140,Impact:75,Opened:95,'Damage Group':95,'Damage Code':90,'Part Number':105,'Part Description':140}})}
+  const nsrHistory=renderNsrDetail('fidNsrTable',node.nsrs,{title:'📋 NSR History',file:'FID_'+fid+'_NSR',defaultSort:'Submit Date',rowRisk:nsr=>nsr.eligible&&nsr.lifecycle==='open'?'pending-nsr':''},updateDetail,changedNsr);
+  const ctlHistory=updateDetail?tables.get('fidCtlTable').built:table('fidCtlTable',ctlColumns.filter(([label])=>label!=='FID').map(column=>column[0]==='CTL'?[column[0],column[1],(value,ctl)=>column[2](value,ctl)+(ctl.id===node.activeCtl?.id?'<span class="active-ctl-dot" title="Active CTL" aria-label="Active CTL"></span>':'')]:column),node.ctls,{title:'🔄 Slot / CTL History',file:'FID_'+fid+'_CTL',rowRisk:ctl=>lateSlotIds.has(ctl.id)?'late-slot':lateCtlIds.has(ctl.id)?'late-ctl':ctl.isDrop&&ctl.effective?'drop-slot':ctl.pending?'pending-config':ctl.pendingPullPush?'pending-pull-push':'',widths:{CTL:105,Stage:140,Change:90,'Created Date':100,'Elapsed Days':110,'Sales Ops Approval':100,'RD At Create':100,'MCSD@Create':100,'SRD @ SOPs Approval':100,'MCSD At SOps Approval':100,'Config Frz':100,Initiator:135,Customer:160,'Quote ID':105,'NSR Reference':150,'Root Cause':180,'CTL Notes':220,'Reason for Chg':160,'Sub Reason':160,'Sales OPs Approver':170}});
+  if(!updateDetail)table('fidNceTable',nceColumns,node.nces,{title:'🔎 NCE / FA History',file:'FID_'+fid+'_NCE',widths:{NCE:90,State:80,Title:140,Impact:75,Opened:95,'Damage Group':95,'Damage Code':90,'Part Number':105,'Part Description':140}});
   if(!dialog.open)dialog.showModal();
+  if(target?.ctlId||target?.nsrId)(target.ctlId?ctlHistory:nsrHistory).then(state=>{
+    if(!dialog.open||dialog.dataset.fid!==fid||tables.get(state.name)!==state)return;
+    const index=state.rows.findIndex(record=>record.id===(target.ctlId||target.nsrId)),record=state.rows[index];
+    if(target.ctlId&&record&&['pull','push'].includes(record.changeKey)&&!state.local.showPullPush)id('fidCtlTable').querySelector('[data-toggle-pull-push]').click();
+    const row=index>=0?state.grid.getRow(index)?.getElement():null;
+    (row||state.toolbar).scrollIntoView({block:'center',inline:'nearest'});
+    if(row)row.animate([{},{backgroundColor:'#fff0ad'},{}],{duration:1000,iterations:5,easing:'ease-in-out'});
+  });
 }
 function exportFid(fid){
-  const original=graph.fids.get(fid),node=graph.projectFid(original,queryFilters().quarter)||graph.projectFid(original),summary=fidDetailRows([node])[0],elapsedDays=ctlColumns.find(([label])=>label==='Elapsed Days')[1];
+  const original=graph.fids.get(fid),node=graph.projectFid(original,[id('fidDetail').dataset.quarter||'[Unknown]'])||original,summary=fidDetailRows([node])[0],elapsedDays=ctlColumns.find(([label])=>label==='Elapsed Days')[1];
   const quarters=fidQuarterRows(original);
-  summary['Assessment quarters']=node.quarter;summary.Quarter=quarters.map(state=>state.quarter||'[Unknown]').join('\n');summary['Quarter assessments']=quarters.map(state=>(state.quarter||'[Unknown]')+': '+fidQuarterStatus(state)).join('\n');
-  if(quarters.length>1)for(const [label,key]of [['Sales Ops RD','rd'],['MCSD','mcsd']])summary[label]=quarters.map(state=>state.dates[key]||'—').join('\n');
+  summary['FID Status & Risks']=fidDetailStatus(original,false,true).map(([label])=>label).join(' · ');
+  summary['Assessment quarters']=node.quarter;summary.Quarter=quarters.map(state=>state.quarter||'[Unknown]').join('\n');summary['Quarter assessments']=quarters.map(state=>(state.quarter||'[Unknown]')+': '+quarterStatus(state)).join('\n');
+  if(quarters.length>1)for(const [label,key]of [['Sales Ops RD','rd'],['MCSD','mcsd']])summary[label]=quarters.map(state=>fidDateValue(original,state,key)||'—').join('\n');
   summary['Fab Name']=node.fab;summary['Business Unit']=node.businessUnit;summary['Sales Admin']=node.salesAdmin;summary['Owner rule']='Slot-derived Account membership → Slot / Config CTL counts → tied candidates\' NSR counts (all eligible CTL counts are 0: NSR fallback within Account) → current Slot submitter';
   summary['Pending NSR']=node.post.nsrs.filter(nsr=>includeIgnored||!nsr.ignored).length;summary['Completed 5D NSR']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-5d').length;summary['Completed NSR but no CTL']=node.nsrs.filter(nsr=>nsr.eligible&&nsr.lifecycle==='completed-unlinked').length;
   exportWorkbook('FID_'+fid,{FID:[summary],NSR:exportTableRows(tables.get('fidNsrTable')),NSR_Source:node.nsrs.flatMap(nsr=>nsr.rows||[]),CTL:node.ctls.flatMap(ctl=>{const days=elapsedDays(ctl);return (ctl.rows||ctl.rawRows||[]).map(row=>({...row,'Elapsed Days':days}))}),NCE:node.nces.flatMap(nce=>nce.rows||nce.rawRows||[]),FID_Source:node.rawRows||[node.record]})
@@ -3249,7 +3335,7 @@ async function importSettings(file){
     try{for(const [key,value]of Object.entries(values)){GM_setValue(key,value);written.push(key)}}
     catch(error){for(const key of written.reverse())GM_setValue(key,previous[key]);throw error}
     for(const kind of ['nsr','fid']){saveMarks(kind,settings[kind+'Marks'],false);markDrafts[kind]=null}
-    fidNotes=notes;mappingDraft=null;accountMapping.reload();recalculate();toast('Settings imported');
+    fidNotes=notes;mappingDraft=null;accountMapping.reload();if(await recalculate())toast('Settings imported');
   }catch(error){toast('Could not import settings: '+error.message)}
 }
 function showFidEquation(event){
@@ -3268,18 +3354,18 @@ function showFidEquation(event){
   for(const element of id('view-portfolio').querySelectorAll('[data-fid-equation]'))element.classList.toggle('is-visible',element.dataset.fidEquation.split(' ').some(equation=>equations.includes(equation)));
 }
 for(const name of ['pointerover','pointerout','focusin','focusout'])id('view-portfolio').addEventListener(name,showFidEquation);
-const inferenceTooltip=document.createElement('div');inferenceTooltip.className='inference-tooltip';inferenceTooltip.setAttribute('role','tooltip');inferenceTooltip.popover='manual';document.body.append(inferenceTooltip);
+const helpTip=document.createElement('div');helpTip.className='help-tip';helpTip.setAttribute('role','tooltip');helpTip.popover='manual';document.body.append(helpTip);
 document.addEventListener('pointerover',event=>{
-  const help=event.target.closest('.inference-help');if(!help)return;
-  inferenceTooltip.textContent=help.getAttribute('aria-label');inferenceTooltip.showPopover();
+  const help=event.target.closest('.help-icon');if(!help)return;
+  helpTip.textContent=help.getAttribute('aria-label');helpTip.showPopover();
   const rect=help.getBoundingClientRect();
-  inferenceTooltip.style.left=Math.max(8,Math.min(rect.left,innerWidth-inferenceTooltip.offsetWidth-8))+'px';
-  inferenceTooltip.style.top=Math.max(8,Math.min(rect.bottom+7,innerHeight-inferenceTooltip.offsetHeight-8))+'px';
+  helpTip.style.left=Math.max(8,Math.min(rect.left,innerWidth-helpTip.offsetWidth-8))+'px';
+  helpTip.style.top=Math.max(8,Math.min(rect.bottom+7,innerHeight-helpTip.offsetHeight-8))+'px';
 });
-document.addEventListener('pointerout',event=>{if(event.target.closest('.inference-help'))inferenceTooltip.hidePopover()});
+document.addEventListener('pointerout',event=>{if(event.target.closest('.help-icon'))helpTip.hidePopover()});
 // Keep Chosen focus from scrolling an option away between mouse down and mouse up.
 document.addEventListener('mousedown',event=>{const option=event.target.closest('.side .chosen-results .active-result');if(event.button!==0||!option)return;option.closest('.chosen-container').querySelector('.chosen-search-input')?.focus({preventScroll:true});event.preventDefault()},true);
-document.addEventListener('click',event=>{
+document.addEventListener('click',async event=>{
   const label=event.target.closest('.fc-filter-head>label[for]');if(label&&id(label.htmlFor)?.multiple&&jQuery.fn.chosen){event.preventDefault();jQuery(id(label.htmlFor)).trigger('chosen:open');return}
   document.querySelectorAll('.fc-source-help[open]').forEach(help=>{if(!help.contains(event.target))help.open=false});const button=event.target.closest('button,a[data-export-fid]');if(!button)return;
   if(button.id==='fcToggleSide'){
@@ -3295,7 +3381,7 @@ document.addEventListener('click',event=>{
     if(id('fcToggleSide').getAttribute('aria-expanded')==='false')id('fcToggleSide').click();
     let target=id(button.dataset.locateFilter).closest('.fc-filter');if(target.hidden)target=document.querySelector('.filter-head');
     target.scrollIntoView({block:'center',behavior:'instant'});target.tabIndex=-1;target.focus({preventScroll:true});
-    target.animate([{backgroundColor:'#fff0ad',boxShadow:'0 0 0 3px #efb647'},{}],{duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:600,easing:'ease-out'});return;
+    target.animate([{backgroundColor:'#fff0ad',boxShadow:'0 0 0 3px #efb647'},{}],{duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:600,iterations:5,easing:'ease-out'});return;
   }
   if(button.dataset.importSource){id('fcFile-'+button.dataset.importSource).click();return}
   if(button.dataset.sourceAction){const action=button.dataset.sourceAction;if(action==='bobj-update')loadBobj(true);else if(action==='ctl-bobj-update')loadBobj(true,'ctl');else if(action==='nsr-open'){setNsrRange(nsrRange);id('fcNsrDialog').showModal()}return}
@@ -3304,8 +3390,14 @@ document.addEventListener('click',event=>{
   if(button.hasAttribute('data-cancel-fid-note')){closeFidNote();return}
   if(button.dataset.ignoreNsr||button.dataset.ignoreFid){setRecordMark(button.dataset.ignoreFid?'fid':'nsr',button.dataset.ignoreFid||button.dataset.ignoreNsr);return}
   if(button.dataset.view){showView(button.dataset.view);return}
-  if(button.dataset.fid){showFid(button.dataset.fid);return}
+  if(button.hasAttribute('data-fid')){if(graph.fids.has(button.dataset.fid))showFid(button.dataset.fid,false,'',button.dataset);else toast('No FID is available for this '+(button.dataset.nsrId?'NSR':'CTL')+'.');return}
   if(button.hasAttribute('data-mapping-rule')){showView('rules');id('fabAccountMapping').scrollIntoView({block:'start'});return}
+  if(button.hasAttribute('data-quarter-state')){
+    const dialog=id('fidDetail'),node=graph.fids.get(dialog.dataset.fid),state=node?.quarterStates.find(state=>state.quarter===button.dataset.quarterState);if(!state)return;
+    dialog.dataset.quarter=state.quarter;
+    dialog.querySelectorAll('[data-quarter-state]').forEach(row=>{const selected=row===button;row.dataset.selectedQuarter=String(selected);row.setAttribute('aria-pressed',String(selected))});
+    id('fidEvidence').innerHTML=renderFidEvidence(node,state);return;
+  }
   if(button.hasAttribute('data-close-fid')){id('fidDetail').close();return}
   if(button.hasAttribute('data-toggle-pull-push')){
     const state=tables.get('fidCtlTable');state.local.showPullPush=!state.local.showPullPush;button.textContent=(state.local.showPullPush?'Hide':'Show')+' Pull/Push';button.setAttribute('aria-pressed',String(state.local.showPullPush));paintTable(state);
@@ -3313,13 +3405,14 @@ document.addEventListener('click',event=>{
     const wrap=state.grid.element;state.size=wrap.clientWidth+':'+wrap.clientHeight;return;
   }
   if(button.dataset.exportFid){event.preventDefault();exportFid(button.dataset.exportFid);return}
-  if(button.hasAttribute('data-reset-ctl-type')){changeFilter('ctl.change',[...defaultCtlTypes]);return}
+  if(button.hasAttribute('data-reset-ctl-type')){changeFilter('ctl.change',[...defaultTypes]);return}
   if(button.hasAttribute('data-reset-quarter')){changeFilter('quarter',defaultQuarters());return}
-  if(button.dataset.clearFilter||button.dataset.selectAll){const name=button.dataset.clearFilter||button.dataset.selectAll,definition=filterDefs.find(def=>def[0]===name);const values=button.dataset.selectAll?[...id(name).options].map(option=>option.value).filter(value=>name!=='fNsrTaskStatus'||!Object.hasOwn(nsrCompletedTasks,value)):[];changeFilter(definition[2],values);return}
+  if(button.dataset.clearFilter||button.dataset.selectAll){const name=button.dataset.clearFilter||button.dataset.selectAll,definition=filterDefs.find(def=>def[0]===name);const values=button.dataset.selectAll?[...id(name).options].map(option=>option.value).filter(value=>name!=='fNsrTaskStatus'||!Object.hasOwn(completedTasks,value)):[];changeFilter(definition[2],values);return}
   if(button.dataset.fidCell||button.dataset.fidStatus||button.dataset.fidRegion){
     const key=button.dataset.fidStatus||button.dataset.fidRegion;
     if(key==='all'){changeFilter({fidStatus:[],signal:(filterValues.signal||[]).filter(value=>!fidCauseKeys.includes(value))});return}
-    selectFidStatus(button.dataset.fidValue||button.dataset.fidCell);return;
+    const value=button.dataset.fidValue||button.dataset.fidCell,parts=fidSelection.groups[value]||[value],selected=filterValues.fidStatus||[];
+    changeFilter('fidStatus',fidSelection.groups[value]?fidStatusSelected(value)?[]:parts:parts.every(part=>selected.includes(part))?selected.filter(item=>!parts.includes(item)):[...selected,...parts]);return;
   }
   if(button.dataset.ctlStatus){selectTaskFilter('ctl',button.dataset.ctlStatus,button.dataset.ctlTypes?.split(','));return}
   if(button.dataset.nsrGroup||button.dataset.nsrLifecycle){const key=button.dataset.nsrLifecycle||button.dataset.nsrGroup;selectTaskFilter('nsr',key==='open'?'workflow':key);return}
@@ -3338,11 +3431,11 @@ document.addEventListener('click',event=>{
   if(button.dataset.columnRemove){tables.get(button.dataset.columnRemove).grid.setHeaderFilterValue(button.dataset.field,'');return}
   if(button.dataset.tableCopy){const state=tables.get(button.dataset.tableCopy);if(state.options.onCopy)state.options.onCopy();else copyRows(exportTableRows(state,true));return}
   if(button.dataset.summarySort){
-    const key=button.dataset.summarySort;summarySort={key,dir:summarySort.key===key?-summarySort.dir:-1};renderSummaryMetrics(id('view-summary'));
+    const key=button.dataset.summarySort;summarySort={key,dir:summarySort.key===key?-summarySort.dir:-1};renderSummary(id('view-summary'));
     id('summaryChart').querySelector('[data-summary-sort="'+key+'"]').focus({preventScroll:true});return;
   }
   if(button.dataset.summaryExport){
-    const percentMetrics=summaryMetricDefs.filter(([,,base])=>base).map(([label])=>label);
+    const percentMetrics=metricDefs.filter(([,,base])=>base).map(([label])=>label);
     if(button.dataset.summaryExport==='copy')copyRows(summaryReport.map(([label,...values])=>[label,...values.map(value=>typeof value==='number'&&percentMetrics.includes(label)?(100*value).toFixed(1)+'%':value)]));
     else exportWorkbook('Summary_Metrics_'+summaryGroup,{Metrics:summaryReport},Object.fromEntries(percentMetrics.map(label=>[label,'0.0%'])));
     return;
@@ -3352,24 +3445,24 @@ document.addEventListener('click',event=>{
   if(button.hasAttribute('data-clear-signal')){delete filterValues.signal;applyFilters();return}
   if(button.hasAttribute('data-toast-close')){id('fcToast').hidden=true;return}
   if(button.hasAttribute('data-save-nsr-marks')||button.hasAttribute('data-save-fid-marks')){saveMarkLists(button.hasAttribute('data-save-fid-marks')?'fid':'nsr');return}
-  if(button.hasAttribute('data-save-mapping')){const value=Object.fromEntries([...document.querySelectorAll('[data-account-group]')].map(textarea=>[textarea.dataset.accountGroup,textarea.value])),result=accountMapping.save(value);if(result.ok){mappingDraft=null;recalculate();toast('Account mapping saved')}else{const notice=id('agNotice');notice.hidden=false;notice.textContent=result.error}return}
-  if(button.hasAttribute('data-reset-mapping')){if(!unsafeWindow.confirm('Restore the default Fab / Account mapping?'))return;const result=accountMapping.reset();if(result.ok){mappingDraft=null;recalculate()}else toast(result.error);return}
+  if(button.hasAttribute('data-save-mapping')){const value=Object.fromEntries([...document.querySelectorAll('[data-account-group]')].map(textarea=>[textarea.dataset.accountGroup,textarea.value])),result=accountMapping.save(value);if(result.ok){mappingDraft=null;if(await recalculate())toast('Account mapping saved')}else{const notice=id('agNotice');notice.hidden=false;notice.textContent=result.error}return}
+  if(button.hasAttribute('data-reset-mapping')){if(!unsafeWindow.confirm('Restore the default Fab / Account mapping?'))return;const result=accountMapping.reset();if(result.ok){mappingDraft=null;await recalculate()}else toast(result.error);return}
   if(button.hasAttribute('data-import-settings')){id('fcSettingsFile').click();return}
   if(button.hasAttribute('data-export-settings')){exportSettings();return}
   if(button.hasAttribute('data-export-data-sources')){exportAllDataSources();return}
   if(button.id==='fcRefresh')restoreSources(true);else if(button.id==='fcReset'){
     includeIgnored=true;clearTimeout(searchTimer);for(const key of Object.keys(filterValues))delete filterValues[key];
     if(store.raw.fcid.length)filterValues.quarter=defaultQuarters();
-    if(store.meta.ctl||store.meta.ctlNsr)filterValues['ctl.change']=[...defaultCtlTypes];
+    if(store.meta.ctl||store.meta.ctlNsr)filterValues['ctl.change']=[...defaultTypes];
     id('fSearch').value='';for(const local of localTables.values()){local.scroll=0;local.marks=null;local.headerFilters=[]}for(const state of tables.values())if(state.ready)state.grid.clearHeaderFilter();buildFilters();applyFilters();
   }
 });
 document.addEventListener('keydown',event=>{
   if(event.ctrlKey&&event.shiftKey&&event.altKey&&event.code==='KeyD'){
     event.preventDefault();if(event.repeat||document.querySelector('[data-view="summary"]').hidden)return;
-    summaryGroup=summaryGroup==='owner'?summaryPreviousGroup:'owner';rendered.delete('summary');showView('summary');return;
+    summaryGroup=summaryGroup==='owner'?previousGroup:'owner';rendered.delete('summary');showView('summary');return;
   }
-  if((event.key==='Enter'||event.key===' ')&&event.target.matches('.fc-table-wrap .tabulator-col')){event.preventDefault();event.target.click()}
+  if((event.key==='Enter'||event.key===' ')&&event.target.matches('.fc-grid .tabulator-col')){event.preventDefault();event.target.click()}
   if(event.key==='Escape')document.querySelectorAll('.fc-source-help[open]').forEach(help=>help.open=false);
 });
 document.addEventListener('input',event=>{const kind=event.target.dataset.nsrMarks?'nsr':event.target.dataset.fidMarks?'fid':'';if(kind){markDrafts[kind]=Object.fromEntries([...document.querySelectorAll(`[data-${kind}-marks]`)].map(textarea=>[textarea.dataset[kind+'Marks'],textarea.value]));id(markKinds[kind].status).textContent=''}if(event.target.dataset.accountGroup){mappingDraft??=accountMapping.getMap();mappingDraft[event.target.dataset.accountGroup]=event.target.value}});
@@ -3383,15 +3476,21 @@ document.addEventListener('change',event=>{
     if(focused)id('view-'+view).querySelector('[data-exclude-ignored]').focus({preventScroll:true});
   }else if(input.id==='fcSettingsFile'&&input.files?.[0]){importSettings(input.files[0]);input.value=''}else if(input.dataset.sourceFile&&input.files?.[0])importSource(input.files[0],input.dataset.sourceFile);
 });
-filterDefs.forEach(([name,,path])=>{if(dateFilters.includes(path)){id(name).addEventListener('change',event=>{const [from,to]=id(name).querySelectorAll('input');from.setCustomValidity('');to.setCustomValidity('');if(from.value&&to.value&&from.value>to.value){event.target.setCustomValidity('From date must not be later than To date.');event.target.reportValidity();return}changeFilter(path,from.value||to.value?[from.value,to.value]:[])});return}const position=()=>requestAnimationFrame(()=>positionFilterChoices(id(name)));jQuery(id(name)).on('change',(event,change)=>{const values=[...id(name).selectedOptions].map(option=>option.value);if(path==='riskType'||path==='fidStatus'||path==='nsr.taskStatus'||path.startsWith('ctl.'))changeFilter(path,path==='fidStatus'?fidSelection.groups[change?.selected]||values:values);else{filterValues[path]=values;applyFilters()}position()}).on('chosen:showing_dropdown',position);if(jQuery.fn.chosen)jQuery(id(name)).chosen({width:'100%',search_contains:true,hide_results_on_select:false,placeholder_text_multiple:'All',display_selected_options:false})});
+filterDefs.forEach(([name,,path])=>{if(dateFilters.includes(path)){id(name).addEventListener('change',event=>{const [from,to]=id(name).querySelectorAll('input');from.setCustomValidity('');to.setCustomValidity('');if(from.value&&to.value&&from.value>to.value){event.target.setCustomValidity('From date must not be later than To date.');event.target.reportValidity();return}changeFilter(path,from.value||to.value?[from.value,to.value]:[])});return}const position=()=>requestAnimationFrame(()=>{
+  const chosen=id(name+'_chosen');if(!chosen?.classList.contains('chosen-with-drop'))return;
+  const bounds=chosen.closest('.side').getBoundingClientRect(),box=chosen.getBoundingClientRect(),height=chosen.querySelector('.chosen-drop').getBoundingClientRect().height;
+  const below=Math.min(innerHeight,bounds.bottom)-box.bottom,above=box.top-Math.max(0,bounds.top);chosen.classList.toggle('chosen-dropup',height>below&&above>below);
+});jQuery(id(name)).on('change',(event,change)=>{const values=[...id(name).selectedOptions].map(option=>option.value);if(path==='mfg'||path==='riskType'||path==='fidStatus'||path==='nsr.taskStatus'||path.startsWith('ctl.'))changeFilter(path,path==='fidStatus'?fidSelection.groups[change?.selected]||values:values);else{filterValues[path]=values;applyFilters()}position()}).on('chosen:showing_dropdown',position);if(jQuery.fn.chosen)jQuery(id(name)).chosen({width:'100%',search_contains:true,hide_results_on_select:false,placeholder_text_multiple:'All',display_selected_options:false})});
 columnPopup.onsubmit=columnPopup.onreset=event=>{
   event.preventDefault();const column=columnPopup.column,value=event.type==='reset'?'':columnInput.value;
   if(column&&value!==(column.getHeaderFilterValue()??''))column.setHeaderFilterValue(value);columnPopup.hidePopover();
 };
-columnPopup.ontoggle=event=>{if(event.newState==='open')columnInput.select();else columnPopup.column=null};
+columnInput.oninput=paintColChoices;
+columnChoices.onchange=()=>{columnInput.value=columnChoices.value;columnInput.focus({preventScroll:true})};
+columnPopup.ontoggle=event=>{if(event.newState==='open')columnInput.select();else{columnPopup.column=null;columnPopup.choices=[];columnChoices.replaceChildren();columnChoices.hidden=true}};
 markPopup.onbeforetoggle=event=>{if(event.newState==='closed'){markPopup.state=null;markPopup.trigger=null}};
-document.addEventListener('scroll',event=>{if(columnPopup.column&&!columnPopup.contains(event.target))columnPopup.hidePopover();if(markPopup.state&&!markPopup.contains(event.target)){if(markPopup.position!==markMenuPosition(markPopup.state))markPopup.hidePopover()}},true);window.addEventListener('resize',()=>{columnPopup.hidePopover();markPopup.hidePopover()});
-id('fidDetail').addEventListener('close',()=>{id('fidNotePanel')?.querySelector('form')?.remove();highlightLinkedHistory('fidCtlTable');highlightLinkedHistory('fidNsrTable')});
+document.addEventListener('scroll',event=>{if(columnPopup.column&&!columnPopup.contains(event.target))columnPopup.hidePopover();if(markPopup.state&&!markPopup.contains(event.target)){if(markPopup.position!==markMenuPos(markPopup.state))markPopup.hidePopover()}},true);window.addEventListener('resize',()=>{columnPopup.hidePopover();markPopup.hidePopover()});
+id('fidDetail').addEventListener('close',()=>{id('fidNotePanel')?.querySelector('form')?.remove();highlightHistory('fidCtlTable');highlightHistory('fidNsrTable')});
 id('fidNoteDialog').addEventListener('close',()=>id('fidNoteDialog').replaceChildren());
 document.addEventListener('submit',event=>{if(event.target.id==='fidNoteForm'){event.preventDefault();saveFidNote()}});
 id('fSearch').addEventListener('input',()=>{syncFidLookup();clearTimeout(searchTimer);searchTimer=setTimeout(applyFilters,180)});
@@ -3414,10 +3513,10 @@ function sourceRange(rows,key,meta){
   return {dateFrom,dateTo,dateField:config.label};
 }
 function sourceMessage(key,message,kind='ok',transport=false){
-  const target=id('fcSource-'+key),meta=store.meta[key],hasRange=Boolean(meta?.dateFrom&&meta?.dateTo);
+  const target=id('fcSource-'+key),meta=store.meta[key],hasRange=Boolean(meta?.dateFrom&&meta?.dateTo),pending=kind==='ok'&&store.dirty;
   const cutoff=new Date();cutoff.setDate(cutoff.getDate()-3);const stale=hasRange&&meta.dateTo<=nsrData.localDate(cutoff);
-  const label=kind==='loading'?(/updat/i.test(message)?'Updating…':'Loading…'):meta?(hasRange?meta.dateFrom+' ~ '+meta.dateTo:'Loaded · no dates'):'Unavailable';
-  target.textContent=label;target.className='fc-source-state '+(kind==='loading'?'loading':meta?'ok':'')+(hasRange?' has-range':'')+(kind!=='loading'&&stale?' stale':'')+(kind==='error'?' error':'');
+  const label=pending?'Loading…':kind==='loading'?(/updat/i.test(message)?'Updating…':'Loading…'):meta?(hasRange?meta.dateFrom+' ~ '+meta.dateTo:'Loaded · no dates'):'Unavailable';
+  target.textContent=label;target.className='fc-source-state '+(kind==='loading'?'loading':meta?'ok':'')+(hasRange?' has-range':'')+(kind!=='loading'&&stale?' stale':'')+(kind==='error'?' error':'')+(pending?' loading pending':'');
   target.title=meta?.cached&&kind!=='loading'?['Using cache · '+new Date(meta.savedAt).toLocaleString('en-GB'),meta.modifiedAt?(BOBJ_SOURCES[key]?'Workbook updated · ':'Source updated · ')+new Date(meta.modifiedAt).toLocaleString('en-GB'):'',kind==='error'?message:meta.cacheReason].filter(Boolean).join('\n'):kind==='error'?message:hasRange?'Data range · '+meta.dateField:message;
   target.setAttribute('aria-label',label);target.tabIndex=kind==='error'||meta?.cached?0:-1;
   if(BOBJ_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=!transport;if(help.hidden)help.open=false}
@@ -3432,13 +3531,13 @@ function sourceBusy(key,on){
 }
 function startSource(key){store.controllers[key]?.abort();store.runs[key]=(store.runs[key]||0)+1;sourceBusy(key,true);return store.runs[key];}
 async function applySource(key,rows,meta,render=true){
-  if(['ctl','ctlNsr'].includes(key)&&!store.meta.ctl&&!store.meta.ctlNsr)filterValues['ctl.change']=[...defaultCtlTypes];
+  if(['ctl','ctlNsr'].includes(key)&&!store.meta.ctl&&!store.meta.ctlNsr)filterValues['ctl.change']=[...defaultTypes];
   if(key==='fcid'&&id('workspaceNav').querySelector('[data-view="portfolio"]').hidden){
     filterValues.quarter=defaultQuarters();
     id('workspaceNav').querySelectorAll('[data-view]').forEach(button=>button.hidden=false);
     showView('portfolio');
   }
-  store.raw[key]=rows;store.meta[key]={...meta,...(meta.cached&&meta.dateField?{}:sourceRange(rows,key,meta)),rows:rows.length,savedAt:meta.savedAt||Date.now()};store.dirty=true;sourceMessage(key,'Loaded');sourceMeta(key);if(render&&!store.refreshing)recalculate();
+  store.raw[key]=rows;store.meta[key]={...meta,...(meta.cached&&meta.dateField?{}:sourceRange(rows,key,meta)),rows:rows.length,savedAt:meta.savedAt||Date.now()};dataRevision++;store.dirty=true;sourceMessage(key,'Loaded');sourceMeta(key);if(render&&!store.refreshing)await recalculate();
 }
 
 
@@ -3502,7 +3601,7 @@ function mergeCtlNsr(rows,time,append=false){
   }
   const records=[...merged.values()];return {rows:records.map(record=>record.row),rowTimes:records.map(record=>record.time),fields:[...new Set([...(store.meta.ctlNsr?.fields||[]),...Object.keys(rows[0]||{})])]};
 }
-async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES),force=false){
+async function loadHostedSources(keys=Object.keys(HOSTED_PREFIXES),force=false){
   const runs=Object.fromEntries(keys.map(key=>[key,startSource(key)])),today=nsrData.localDate(new Date());keys.forEach(key=>sourceMessage(key,'Loading data…','loading'));
   const cacheErrors={};let pending=keys,stage='SAP access';
   const failed=(key,error)=>sourceFailure(key,runs[key],stage+' failed: '+(error.userMessage||error.message)+(stage==='SAP access'&&!store.meta[key]?'\nSign in to Fiori.':''));
@@ -3540,7 +3639,7 @@ async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES),force=
         if(runs[key]!==store.runs[key])continue;
         try{
           stage='Read '+sources[key].label;
-          const entry=entries.find(item=>!item.directory&&item.filename.split(/[\\/]/).pop().toLowerCase().startsWith(HOSTED_SOURCE_PREFIXES[key]));
+          const entry=entries.find(item=>!item.directory&&item.filename.split(/[\\/]/).pop().toLowerCase().startsWith(HOSTED_PREFIXES[key]));
           if(!entry)throw new Error('The data file is missing.');
           const filename=entry.filename.split(/[\\/]/).pop(),modifiedAt=entry.lastModDate?.getTime();
           if(!Number.isFinite(modifiedAt)||modifiedAt<=0)throw new Error('The data file timestamp is invalid.');
@@ -3552,7 +3651,7 @@ async function loadHostedSources(keys=Object.keys(HOSTED_SOURCE_PREFIXES),force=
         }catch(error){await failed(key,error)}
       }
     }finally{await reader.close()}
-  }catch(error){await Promise.all(pending.map(key=>failed(key,error)))}finally{if(store.dirty&&!store.refreshing)recalculate();keys.forEach(key=>{if(runs[key]===store.runs[key])sourceBusy(key,false)})}
+  }catch(error){await Promise.all(pending.map(key=>failed(key,error)))}finally{try{if(store.dirty&&!store.refreshing)await recalculate()}finally{keys.forEach(key=>{if(runs[key]===store.runs[key])sourceBusy(key,false)})}}
 }
 async function importSource(file,key){
   const run=startSource(key);sourceMessage(key,'Reading '+file.name+'…','loading');
@@ -3590,7 +3689,7 @@ async function loadBobj(update=false,key='fcid'){
     if(run!==store.runs[key])return;
     const {rows,...recognition}=parsed;await applySource(key,rows,{file:status.outputPath,kind:'bridge',...recognition});
     let modified=0;
-    try{const data=await bridgeFileRequest('stat',{path:status.outputPath},10000);modified=Number(data.entries?.[0]?.lastModified)||0}catch(_){/* File dates are optional; keep successfully read data. */}
+    try{const data=await bridgeFileRequest('stat',{path:status.outputPath},10000);modified=Number(data.entries?.[0]?.lastModified)||0}catch{/* File dates are optional; keep successfully read data. */}
     if(run!==store.runs[key])return;
     store.meta[key].modifiedAt=modified;
     await saveSourceCache(key,run);
@@ -3627,23 +3726,24 @@ async function restoreSources(reset=false){
   try{
     const keys=Object.keys(sources);
     if(reset){
+      dataRevision++;
       keys.forEach(key=>{store.runs[key]=(store.runs[key]||0)+1;store.raw[key]=[];delete store.meta[key]; sourceMessage(key,'Not loaded','');sourceMeta(key);sourceBusy(key,true);id('fcFile-'+key).value='';}); setNsrRange(nsrData.sapRange());actionMessage('');
-        recalculate();
+        await recalculate();
     }
     // Retain hosted merged data and BOBJ fallback caches; discard other legacy source caches.
-    try{await nsrData.deleteDatasets([...keys.filter(key=>!HOSTED_SOURCE_PREFIXES[key]).map(key=>CACHE_PREFIX+key),CACHE_PREFIX+'archive'])} catch(error){if(reset)actionMessage('Local source cache could not be reset. '+error.message)} finally{if(reset)keys.forEach(key=>sourceBusy(key,false))}
+    try{await nsrData.deleteDatasets([...keys.filter(key=>!HOSTED_PREFIXES[key]).map(key=>CACHE_PREFIX+key),CACHE_PREFIX+'archive'])} catch(error){if(reset)actionMessage('Local source cache could not be reset. '+error.message)} finally{if(reset)keys.forEach(key=>sourceBusy(key,false))}
     if(store.meta.nsr?.from)setNsrRange({from:store.meta.nsr.from,to:store.meta.nsr.to});
     const loads=[];
     for(const key of Object.keys(BOBJ_SOURCES))if(!store.busy.has(key))loads.push(loadBobj(false,key));
-    const hostedKeys=Object.keys(HOSTED_SOURCE_PREFIXES).filter(key=>!store.busy.has(key));if(hostedKeys.length)loads.push(loadHostedSources(hostedKeys,reset));
+    const hostedKeys=Object.keys(HOSTED_PREFIXES).filter(key=>!store.busy.has(key));if(hostedKeys.length)loads.push(loadHostedSources(hostedKeys,reset));
     if(!store.busy.has('nsr')&&(!store.meta.nsr||store.meta.nsr.kind==='sap'))loads.push(loadSharedNsr());
     // Keep per-source progress visible; rebuild the graph once the whole load settles.
     await Promise.all(loads);
-  }finally{store.refreshing=false;refresh.disabled=store.busy.size>0;refresh.textContent='Refresh';if(store.dirty||reset)recalculate()}
+  }finally{store.refreshing=false;refresh.disabled=store.busy.size>0;refresh.textContent='Refresh';if(store.dirty||reset)await recalculate()}
 }
 
 
-const cycle=createNsrCycle(id('dashboardWorkspace'),{getRows:nsrs=>{
+const cycle=createNsrCycle(id('workspace'),{getRows:nsrs=>{
   const selected=new Set(nsrs);
   return nsrCopyRows(graph.nsrs.filter(nsr=>selected.has(nsr.number))).map(row=>({...row,'REF FCID':row.FID}));
 },renderTable:(name,columns,rows,options)=>table(name,columns,rows,options,true),copyRows,onNotify:message=>toast(message)});
@@ -3676,26 +3776,26 @@ function createFidSourceReaders(sources){
     return {score:score<profile.minimum?score:score+exactScore,missing,requiredOk:!missing.length};
   }
   function betterHeader(candidate,previous){return !previous||Number(candidate.requiredOk)>Number(previous.requiredOk)||(candidate.requiredOk===previous.requiredOk&&candidate.score>previous.score);}
-  function bestHeaderFromMatrix(matrix,key,startRow=0){
+  function bestHeader(matrix,key,startRow=0){
     let best=null;(matrix||[]).slice(0,50).forEach((values,index)=>{const candidate={...scoreSourceHeader(values,key),headerRow:startRow+index};if(betterHeader(candidate,best))best=candidate;});
     return best||{score:0,missing:profileFor(key).fields.filter(field=>field.required).map(field=>field.label),requiredOk:false,headerRow:startRow};
   }
   function sourceScoreError(key,candidate){const error=new Error(profileFor(key).label+': check file headers'+(candidate?.missing?.length?' ('+candidate.missing.join(', ')+')':''));error.code='LOW_SOURCE_SCORE';error.userMessage=error.message;return error;}
-  function validateSourceCandidate(key,candidate){if(!candidate||!candidate.requiredOk||candidate.score<profileFor(key).minimum)throw sourceScoreError(key,candidate);return candidate;}
-  function detectWorkbookSource(workbook,key){
+  function validateCandidate(key,candidate){if(!candidate||!candidate.requiredOk||candidate.score<profileFor(key).minimum)throw sourceScoreError(key,candidate);return candidate;}
+  function detectSource(workbook,key){
     const profile=profileFor(key),candidates=[];
     (workbook.SheetNames||[]).forEach((sheetName,sheetOrder)=>{
       const sheet=workbook.Sheets[sheetName];if(!sheet||!sheet['!ref'])return;
       const fullRange=XLSX.utils.decode_range(sheet['!ref']),previewRange={s:{r:fullRange.s.r,c:fullRange.s.c},e:{r:Math.min(fullRange.e.r,fullRange.s.r+49),c:fullRange.e.c}};
-      const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',blankrows:true,raw:false,range:previewRange}),best=bestHeaderFromMatrix(matrix,key,fullRange.s.r);
+      const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',blankrows:true,raw:false,range:previewRange}),best=bestHeader(matrix,key,fullRange.s.r);
       candidates.push({...best,sheet:sheetName,dataRows:Math.max(0,fullRange.e.r-best.headerRow),configured:sheetName===profile.sheet,sheetOrder});
     });
     candidates.sort((a,b)=>Number(b.requiredOk)-Number(a.requiredOk)||b.score-a.score||Number(b.configured)-Number(a.configured)||b.dataRows-a.dataRows||a.sheetOrder-b.sheetOrder);
-    return validateSourceCandidate(key,candidates[0]);
+    return validateCandidate(key,candidates[0]);
   }
-  function canonicalize(rows,key){const profile=profileFor(key),headers=new Map(Object.keys(rows[0]||{}).map(name=>[norm(name),name])),columns=profile.fields.map(field=>[field.label,field.aliases.map(alias=>headers.get(alias)).find(Boolean)]);return rows.map(source=>{const row={...source};for(const [label,alias] of columns)if(!clean(row[label])&&alias)row[label]=source[alias];return row}).filter(row=>clean(row[profile.key])||(key==='nsr'&&clean(row[profile.number])));}
+  function canonicalize(rows,key){const profile=profileFor(key),headers=new Map(Object.keys(rows[0]||{}).map(name=>[norm(name),name])),columns=profile.fields.map(field=>[field.label,field.aliases.map(alias=>headers.get(alias)).find(Boolean)]);return rows.map(source=>{const row={...source};for(const [label,alias] of columns)if(!clean(row[label])&&String(row[label]??'').trim().toLowerCase()!=='not assigned'&&alias)row[label]=source[alias];return row}).filter(row=>clean(row[profile.key])||(key==='nsr'&&clean(row[profile.number])));}
   function parseWorkbook(bytes,key){
-    const workbook=XLSX.read(bytes,{type:'array'}),candidate=detectWorkbookSource(workbook,key),rows=canonicalize(XLSX.utils.sheet_to_json(workbook.Sheets[candidate.sheet],{defval:'',range:candidate.headerRow}),key);
+    const workbook=XLSX.read(bytes,{type:'array'}),candidate=detectSource(workbook,key),rows=canonicalize(XLSX.utils.sheet_to_json(workbook.Sheets[candidate.sheet],{defval:'',range:candidate.headerRow}),key);
     return {rows,sheet:candidate.sheet,headerRow:candidate.headerRow+1,score:candidate.score,fields:Object.keys(rows[0])};
   }
   let reader=null,readSequence=0;const pendingReads=new Map();
@@ -3704,7 +3804,7 @@ function createFidSourceReaders(sources){
     // The normal userscript path always uses the shared resource-backed worker.
     if(typeof createWorkbookWorker!=='function')return Promise.resolve().then(()=>parseWorkbook(bytes,key));
     if(!reader){
-      const functions=[clean,norm,profileFor,scoreSourceHeader,betterHeader,bestHeaderFromMatrix,sourceScoreError,validateSourceCandidate,detectWorkbookSource,canonicalize,parseWorkbook];
+      const functions=[clean,norm,profileFor,scoreSourceHeader,betterHeader,bestHeader,sourceScoreError,validateCandidate,detectSource,canonicalize,parseWorkbook];
       const code='const profiles='+JSON.stringify(profiles)+';\n'+functions.map(fn=>fn.toString()).join('\n')+';self.onmessage=event=>{const {id,bytes,key}=event.data;try{self.postMessage({id,ok:true,...parseWorkbook(bytes,key)})}catch(error){self.postMessage({id,ok:false,message:error.message,code:error.code,userMessage:error.userMessage})}};';
       reader=createWorkbookWorker(code);
       reader.onmessage=event=>{const result=event.data,waiting=pendingReads.get(result.id);if(!waiting)return;pendingReads.delete(result.id);if(result.ok){const {id,ok,...parsed}=result;waiting.resolve(parsed);}else waiting.reject(Object.assign(new Error(result.message),{code:result.code,userMessage:result.userMessage}));};
@@ -3724,13 +3824,13 @@ function createFidSourceReaders(sources){
     if(row.length||value){row.push(value);rows.push(row);}return rows;
   }
   function rowsFromMatrix(matrix,headerRow){const headers=(matrix[headerRow]||[]).map(clean);return matrix.slice(headerRow+1).filter(row=>row.some(value=>clean(value))).map(row=>Object.fromEntries(headers.map((header,index)=>[header,row[index]??''])));}
-  function decodeText(buffer){const bytes=new Uint8Array(buffer);if(bytes[0]===255&&bytes[1]===254)return new TextDecoder('utf-16le').decode(bytes);if(bytes[0]===254&&bytes[1]===255)return new TextDecoder('utf-16be').decode(bytes);try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch(_){return new TextDecoder('gb18030').decode(bytes)}}
+  function decodeText(buffer){const bytes=new Uint8Array(buffer);if(bytes[0]===255&&bytes[1]===254)return new TextDecoder('utf-16le').decode(bytes);if(bytes[0]===254&&bytes[1]===255)return new TextDecoder('utf-16be').decode(bytes);try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{return new TextDecoder('gb18030').decode(bytes)}}
   function csvDelimiter(text){const probe=text.split(/\r?\n/).slice(0,50);return [',','\t',';','|'].map(delimiter=>{let score=0;for(const line of probe){let quoted=false;for(const char of line){if(char==='"')quoted=!quoted;else if(char===delimiter&&!quoted)score++}}return {delimiter,score}}).sort((a,b)=>b.score-a.score)[0].delimiter}
   async function readFile(file,key){
     const extension=file.name.split('.').pop().toLowerCase();
     if(extension==='json'&&key==='nsr'){const cache=JSON.parse(decodeText(await file.arrayBuffer()));if(!Array.isArray(cache.rows))throw new Error('No NSR cache rows.');return {rows:cache.rows,sheet:'NSR cache',from:cache.from,to:cache.to,savedAt:cache.savedAt}}
     if(extension!=='csv'){if(!['xlsx','xls','xlsm'].includes(extension))throw new Error('Use Excel, CSV or NSR JSON.');return readWorkbook(await file.arrayBuffer(),key)}
-    const content=(typeof file.arrayBuffer==='function'?decodeText(await file.arrayBuffer()):await file.text()).replace(/^\uFEFF/,''),matrix=csvToMatrix(content,csvDelimiter(content)),candidate=validateSourceCandidate(key,{...bestHeaderFromMatrix(matrix,key),sheet:'CSV',dataRows:matrix.length}),rows=canonicalize(rowsFromMatrix(matrix,candidate.headerRow),key);
+    const content=(typeof file.arrayBuffer==='function'?decodeText(await file.arrayBuffer()):await file.text()).replace(/^\uFEFF/,''),matrix=csvToMatrix(content,csvDelimiter(content)),candidate=validateCandidate(key,{...bestHeader(matrix,key),sheet:'CSV',dataRows:matrix.length}),rows=canonicalize(rowsFromMatrix(matrix,candidate.headerRow),key);
     return {rows,sheet:'CSV',headerRow:candidate.headerRow+1,score:candidate.score,fields:Object.keys(rows[0]||{})};
   }
   return {readFile,readWorkbook};
@@ -3944,7 +4044,7 @@ LAM RESEARCH INTERNATIONAL SDN`,
 TSMC - *`
   };
   const key='fcid.ag.v1',legacyKey='toolkitKyra.fcid.accounts.v1';let mapping={...defaults},notice='',conflicts=[],error='';
-  let matchName=()=>'';
+  let matchName;
   function clean(value){let text=String(value??'').trim().replace(/\.0$/,'');return !text||text==='#'||text.toLowerCase()==='nan'||text==='Not assigned'?'':text;}
   function fabKey(value){return clean(value).toUpperCase().replace(/\s+/g,' ');}
   function normalize(value){
@@ -3970,12 +4070,12 @@ TSMC - *`
     if(restored.length){found.push(...restored.map(([,entry])=>entry.fab+': saved '+(savedMatch(entry.fab)||'[Unmapped]')+'; updated default '+nextMatch(entry.fab)));return {mapping:savedMap,conflicts:found}}
     return {mapping:next,conflicts:found};
   }
-  function websiteStorage(){try{return typeof persistentStore==='function'?persistentStore():unsafeWindow.localStorage;}catch(_){try{return localStorage;}catch(__){return null;}}}
-  function readLegacy(name){try{return websiteStorage()?.getItem(name)??null;}catch(_){return null;}}
+  function websiteStorage(){try{return typeof persistentStore==='function'?persistentStore():unsafeWindow.localStorage;}catch{try{return localStorage;}catch{return null;}}}
+  function readLegacy(name){try{return websiteStorage()?.getItem(name)??null;}catch{return null;}}
   function persist(base,value){
     try{GM_setValue(key,JSON.stringify({base,mapping:value}));}catch(problem){error=problem.message||String(problem);return false;}
     // Only these two superseded mapping keys belong to this migration.
-    try{const storage=websiteStorage();storage?.removeItem(key);storage?.removeItem(legacyKey);}catch(_){/* GM copy is already saved. */}return true;
+    try{const storage=websiteStorage();storage?.removeItem(key);storage?.removeItem(legacyKey);}catch{/* GM copy is already saved. */}return true;
   }
   function matcher(value){
     const exact=new Map(),patterns=[],matches=new Map();
@@ -4004,7 +4104,7 @@ TSMC - *`
           // Unresolved conflicts retain the old baseline until explicit Save or Reset.
           if(saved===null)persist(base,user);else if(base&&!notice&&JSON.stringify(base)!==JSON.stringify(defaults))persist(defaults,mapping);
           return result(true);
-        }catch(_){/* Try the next valid legacy record without overwriting malformed data. */}
+        }catch{/* Try the next valid legacy record without overwriting malformed data. */}
       }
     }catch(problem){error=problem.message||String(problem);}return result(!error);
   }
@@ -4018,8 +4118,20 @@ TSMC - *`
 }
 
 function createFidGraph(raw, options = {}) {
+  const steps=createFidGraphSteps(raw,options);
+  if(options.yield)return (async()=>{
+    let step,until=performance.now()+12;
+    do{step=steps.next();if(!step.done&&performance.now()>=until){if(await options.yield()===false)return null;until=performance.now()+12}}while(!step.done);
+    return step.value;
+  })();
+  let step;do{step=steps.next()}while(!step.done);return step.value;
+}
+function* createFidGraphSteps(raw, options) {
+  // The synchronous API and responsive page build use the same calculation, yielding between small batches.
+  let batch=0;
   const sourceKeys = ['fcid','ctl','ctlNsr','nsr','nce'];
   const input = Object.fromEntries(sourceKeys.map(key => [key, Array.isArray(raw?.[key]) ? raw[key] : []]));
+  const sourceText=value=>{const text=String(value??''),trimmed=text.trim();return !trimmed||/^(?:#|nan|null|undefined|\[undefined\]|n\/a)$/i.test(trimmed)?'':text};
   const cleanedValues=new Map();
   const clean = value => {
     if(cleanedValues.has(value))return cleanedValues.get(value);
@@ -4029,11 +4141,11 @@ function createFidGraph(raw, options = {}) {
   const norm = value => String(value ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const textKey = value => clean(value).toLowerCase();
   const headerIndexes=new WeakMap(),headerSchemas=new Map(),aliasKeys=new Map();
-  const field = (row, names) => {
+  const field = (row, names, original=false) => {
     if (!row) return '';
-    for (const name of names) if (Object.hasOwn(row,name)) {const value=clean(row[name]);if(value)return value;}
+    for (const name of names) if (Object.hasOwn(row,name)) {const value=original?sourceText(row[name]):clean(row[name]);if(value)return value;}
     let headers=headerIndexes.get(row);if(!headers){const keys=Object.keys(row),schema=keys.join('\0');headers=headerSchemas.get(schema);if(!headers){headers=new Map();for(const key of keys){const canonical=norm(key),variants=headers.get(canonical)||[];variants.push(key);headers.set(canonical,variants)}headerSchemas.set(schema,headers)}headerIndexes.set(row,headers)}
-    for(const name of names){if(!aliasKeys.has(name))aliasKeys.set(name,norm(name));for(const key of headers.get(aliasKeys.get(name))||[]){const value=clean(row[key]);if(value)return value}}
+    for(const name of names){if(!aliasKeys.has(name))aliasKeys.set(name,norm(name));for(const key of headers.get(aliasKeys.get(name))||[]){const value=original?sourceText(row[key]):clean(row[key]);if(value)return value}}
     return '';
   };
   const validFid = value => { const id = clean(value); return id && !['NOFID','NOFCID','NA','NULL','UNKNOWN','NOTASSIGNED'].includes(norm(id).toUpperCase()) ? id : ''; };
@@ -4041,7 +4153,7 @@ function createFidGraph(raw, options = {}) {
   const ownerPolicy='majority';
   const effectivePolicy='approved';
   const riskPolicy='approved';
-  const dropQuarterLeadWeeks=19; // Inferred reporting window; use the Drop's creation snapshot, including overdue schedules.
+  const dropLeadWeeks=20,dropReportDay=16,pullLeadWeeks=16; // Inferred reporting windows for historical quarter membership.
   const ignoredNsrs = new Set(Array.from(options.ignoredNsrs||[],value=>clean(value).toUpperCase())),importantNsrs = new Set(Array.from(options.importantNsrs||[],value=>clean(value).toUpperCase()));
   const parsedDates=new Map(),isoDates=new Map(),quarterDates=new Map();
   const date = value => {
@@ -4066,12 +4178,11 @@ function createFidGraph(raw, options = {}) {
     else if(map){const key=Object.keys(map).find(key=>norm(key)===norm(name));if(key)return clean(map[key])||name}
     return learnedAliases.get(norm(name))||personNames.get(norm(name))||name.replace(/\s+/g,' ');
   };
-  const initiator = record => person(field(record,['Initiator','Initiated By','Requester','Created By']));
-  const discarded = status => /REJECT|CANCEL/.test(String(status).toUpperCase());
   const completed = status => /\bCOMPLETED\b/i.test(status);
   const nsrStatus=nsr=>[nsr.status,nsr.task,nsr.taskStatus].filter(Boolean).join(' ');
   const nsrNamesByFid=new Map(),authorsByFid=new Map(),knownUserIds=new Set(),aliasCandidates=new Map();
   for(const source of ['ctl','ctlNsr'])for(const row of input[source]){
+    if(++batch%128===0)yield;
     const account=field(row,['Initiator','Created By','Initiated By','Requester']),change=norm(field(row,['Change Cat','Change Type','Change Category']));
     if(!account)continue;if(/^[A-Z0-9_]+$/i.test(account))knownUserIds.add(norm(account));
     if(change&&change!=='slot'&&change!=='config')continue;
@@ -4079,6 +4190,7 @@ function createFidGraph(raw, options = {}) {
     const accounts=authorsByFid.get(fid)||new Set();accounts.add(norm(account));authorsByFid.set(fid,accounts);
   }
   for(const row of input.nsr){
+    if(++batch%128===0)yield;
     if(!field(row,['NSR#','NSR Number','Nsrnum']))continue;
     const name=field(row,['Initiator','Initiated By','Requester']),fid=validFid(field(row,['Reference Fcid','REF FCID','Reference FID','FCID','FID']));
     if(name&&!/^[A-Z0-9]+$/.test(name)&&!(!/\s/.test(name)&&knownUserIds.has(norm(name)))){personNames.set(norm(name),name.replace(/\s+/g,' '));if(fid){const names=nsrNamesByFid.get(fid)||new Set();names.add(norm(name));nsrNamesByFid.set(fid,names)}}
@@ -4101,7 +4213,7 @@ function createFidGraph(raw, options = {}) {
   for(const evidence of aliasEvidence.values())for(const alias of evidence.aliases)if(!primaryNames.has(norm(alias))||norm(alias)===norm(evidence.name))personNames.set(norm(alias),evidence.name);
   const mergeRows = rows => {
     const result = {};
-    for (const row of rows) for (const [key,value] of Object.entries(row)) if (!clean(result[key]) && clean(value)) result[key] = value;
+    for (const row of rows) for (const key of Object.keys(row)) if (!clean(result[key]) && sourceText(row[key])) result[key] = row[key];
     return result;
   };
   const unique = values => [...new Set(values.filter(Boolean))];
@@ -4134,13 +4246,15 @@ function createFidGraph(raw, options = {}) {
     if (!fids.has(id)) fids.set(id,{id,fidMark:['ignore','important'].includes(options.fidMarks?.[id])?options.fidMarks[id]:'normal',record:{},rawRows:[],sources:[],hasNativeRecord:false,inPopulation:false,excludedReason:'',account:'',businessUnit:'',customer:'',system:'',fidDescription:'',commit:'',quote:'',quarter:'',mcsd:'',rd:'',crd:'',targetShip:'',ctls:[],nsrs:[],nces:[],slot:null,owner:'',ownerEvidence:null,salesAdmin:'',salesAdminEvidence:null,pre:null,post:null,risks:[],category:'review'});
     return fids.get(id);
   };
-  const sourceFidRows = new Map();
+  const fidRows = new Map();
   for (const row of input.fcid) {
+    if(++batch%128===0)yield;
     const id = validFid(field(row,['FID','FCID','Field ID']));
     if (!id) continue;
-    if (!sourceFidRows.has(id)) sourceFidRows.set(id,[]); sourceFidRows.get(id).push(row);
+    if (!fidRows.has(id)) fidRows.set(id,[]); fidRows.get(id).push(row);
   }
-  for (const [id,rows] of sourceFidRows) {
+  for (const [id,rows] of fidRows) {
+    if(++batch%128===0)yield;
     const node = ensureFid(id), commits = rows.filter(row=>field(row,['Commit: Field','Commit Field','Field Commit','Commit Status']).toUpperCase()==='COMMIT'), candidates = commits.length ? commits : rows;
     const selected = candidates.find(row=>field(row,['Fab Segment','Fab_Segment'])) || candidates[0];
     node.record = {...selected}; node.rawRows = [...rows]; node.hasNativeRecord = true; node.sources.push('fcid');
@@ -4150,26 +4264,29 @@ function createFidGraph(raw, options = {}) {
   }
   const ctlGroups = new Map();
   for (const source of ['ctl','ctlNsr']) for (let index=0;index<input[source].length;index++) {
+    if(++batch%128===0)yield;
     const row=input[source][index], number=field(row,['CTL ID','CTL#']), key=number || '__'+source+'-row-'+index;
     if (!ctlGroups.has(key)) ctlGroups.set(key,[]); ctlGroups.get(key).push({source,row,index});
   }
     const ctlValueFields=Object.entries({
-      fidId:['Opportunity ID','FCID','FID'],change:['Change Cat','Change Type','Change Category'],initiator:['Initiator','Created By','Initiated By','Requester'],businessUnit:['Business Unit','BU'],
+      fidId:['Opportunity ID','FCID','FID'],change:['Change Cat','Change Type','Change Category'],initiator:['Initiator','Created By','Initiated By','Requester'],businessUnit:['Business Unit','BU','Bus Unit'],
       summary:['Change Summary','Summary'],created:['Creation Date','Create Date'],approved:['1st SOps Appr Dt','Sales Ops Approval Date','SOPS Approval Date'],mcsd:['MCSD @ Current','MCSD'],mcsdCreate:['MCSD@Create','MCSD At Create'],rdCreate:['RD At Create'],mcsdApproval:['MCSD At SOps Approval'],tsdApproval:['TSD @ SOPs Approval'],
       srd:['SRD @ Current','Sales Ops RD','SRD'],srdApproval:['SRD @ SOPs Approval'],fieldCrd:['Field CRD','CRD @ Current','CRD'],mfg:['Mfg Upgrade Type','Manufacturing Upgrade Type'],stage:['Stage','CTL Stage'],quote:['Quote ID','Quote Number'],sourceQuote:['Source Quote','Source Quote Number'],
       customer:['Customer group 2','Customer','Customer Name','End Customer'],configFrz:['Config Frz@Current','Config Frz','Config Frozen Date','Config Freeze Date'],rootCause:['Root Cause','Root Cause of Late Change'],reason:['Reason for Chg','Reason for Change'],salesOpsApprover:['Sales OPs Approver']
     });
   const ctlDateFields=['created','approved','mcsd','mcsdCreate','rdCreate','mcsdApproval','tsdApproval','srd','srdApproval','fieldCrd','configFrz'];
+  const ctlSourceFields=new Set(['businessUnit','customer','quote','sourceQuote','rootCause','reason','salesOpsApprover']);
   // BOBJ truncates Sub Reason at 20 characters; match stable prefixes and retain raw values.
   const lateCtlSubReasonPrefixes=['Application Change','Build Type Change (N','Fab Change – Config','Install Base Issue R','New Feature CIP','Demand Reallocation','Common SPEC/Safety'];
   for (const [key,entries] of ctlGroups) {
-    const rows = entries.map(entry=>entry.row), read = names => { for (const entry of entries) { const value=field(entry.row,names); if (value) return value; } return ''; };
+    if(++batch%128===0)yield;
+    const rows = entries.map(entry=>entry.row), read = (names,original=false) => { for (const entry of entries) { const value=field(entry.row,names,original); if (value) return value; } return ''; };
 
     const reference=entries.find(entry=>entry.source==='ctlNsr')?.row;
-    const ctl={id:key,number:read(['CTL ID','CTL#']),record:rows.length===1?rows[0]:mergeRows(rows),rows,rawRows:rows,sources:unique(entries.map(entry=>entry.source)),conflicts:[],links:[],changeSummary:field(reference,['Change Summary','Summary'])||read(['Change Summary','Summary']),notes:field(reference,['Notes','CTL Notes'])||read(['Notes','CTL Notes']),subReason:field(reference,['Sub Reason'])||read(['Sub Reason'])};
+    const ctl={id:key,number:read(['CTL ID','CTL#']),record:rows.length===1?rows[0]:mergeRows(rows),rows,rawRows:rows,sources:unique(entries.map(entry=>entry.source)),conflicts:[],links:[],changeSummary:field(reference,['Change Summary','Summary'],true)||read(['Change Summary','Summary'],true),notes:field(reference,['Notes','CTL Notes'],true)||read(['Notes','CTL Notes'],true),subReason:field(reference,['Sub Reason'],true)||read(['Sub Reason'],true)};
     for (const [name,names] of ctlValueFields) {
-      ctl[name]=(name==='rootCause'&&field(reference,names))||read(names);
-      if(entries.length>1){const alternatives=unique(entries.map(entry=>field(entry.row,names)).filter(Boolean)),comparison=alternatives.map(value=>ctlDateFields.includes(name)?iso(value)||textKey(value):textKey(value));if(unique(comparison).length>1)ctl.conflicts.push({field:name,values:alternatives})}
+      ctl[name]=(name==='rootCause'&&field(reference,names,true))||read(names,ctlSourceFields.has(name));
+      if(entries.length>1){const alternatives=unique(entries.map(entry=>field(entry.row,names))),comparison=alternatives.map(value=>ctlDateFields.includes(name)?iso(value)||textKey(value):textKey(value));if(unique(comparison).length>1)ctl.conflicts.push({field:name,values:alternatives})}
     }
     ctl.fidId=validFid(ctl.fidId); ctl.initiator=person(ctl.initiator); for(const name of ctlDateFields)ctl[name]=iso(ctl[name]);
     // Every CTL source uses Stage; Status columns remain only in the original source rows.
@@ -4177,6 +4294,8 @@ function createFidGraph(raw, options = {}) {
     const stage=String(ctl.stage||'').trim().replace(/^\d+\s*-\s*/,'').toLowerCase();
     ctl.status=stage&&stage!=='[unknown]'?({completed:'Completed',cancelled:'Cancelled',canceled:'Cancelled',rejected:'Rejected',draft:'Draft'})[stage]||'Submitted':'';
     ctl.changeKey=norm(ctl.change); ctl.statusKind=ctl.status==='Completed'?'completed':['Cancelled','Rejected'].includes(ctl.status)?'discarded':'pending';
+    const subReason=field(reference,['Sub Reason'])||read(['Sub Reason']);
+    ctl.lateConfigReason=ctl.changeKey.includes('config')&&read(['Reason for Chg','Reason for Change'])==='Customer Config Chg'&&lateCtlSubReasonPrefixes.some(prefix=>subReason.startsWith(prefix));
     ctl.pending=['slot','config'].includes(ctl.changeKey)&&ctl.status==='Submitted';
     ctl.pendingPullPush=['pull','push'].includes(ctl.changeKey)&&ctl.status==='Submitted';
     ctl.effective=ctl.riskEligible=ctl.applied=ctl.statusKind!=='discarded'&&!!ctl.approved;
@@ -4188,16 +4307,18 @@ function createFidGraph(raw, options = {}) {
     const node=ensureFid(ctl.fidId); if (node) { node.ctls.push(ctl); node.sources=unique([...node.sources,...ctl.sources]); } else orphans.ctls.push(ctl);
   }
   const nsrValues=(record,number)=>({
-    account:accountOf(record),status:field(record,['NSR Status','NsrWorkflowStatus','Workflow Status','Status']),initiator:initiator(record),
-    title:field(record,['NSR Title','Title','NsrTitle']),type:field(record,['NSR Type','Type']),org:field(record,['NSR Org','Org','NsrOrg']),product:field(record,['Primary Product','Product','PrimaryProd']),customer:field(record,['Customer','Customer Name']),subsystem:field(record,['Impacted Sub System','Impacted Subsystem','Sub System','Subsystem']),submitted:iso(field(record,['Submit Date','Submitted Date','Submission Date','SubmitDate'])),tempId:field(record,['Temp Id#','Temp ID','TempId']),task:field(record,['Task Name','Task','Workflow Task']),taskStatus:field(record,['Task Status']),
+    account:accountOf(record),status:field(record,['NSR Status','NsrWorkflowStatus','Workflow Status','Status']),initiator:person(field(record,['Initiator','Initiated By','Requester','Created By'])),
+    title:field(record,['NSR Title','Title','NsrTitle'],true),type:field(record,['NSR Type','Type'],true),org:field(record,['NSR Org','Org','NsrOrg'],true),product:field(record,['Primary Product','Product','PrimaryProd'],true),customer:field(record,['Customer','Customer Name'],true),subsystem:field(record,['Impacted Sub System','Impacted Subsystem','Sub System','Subsystem'],true),submitted:iso(field(record,['Submit Date','Submitted Date','Submission Date','SubmitDate'])),tempId:field(record,['Temp Id#','Temp ID','TempId']),task:field(record,['Task Name','Task','Workflow Task']),taskStatus:field(record,['Task Status']),
     searchText:[number,...Object.values(record)].join(' ').toLowerCase()
   });
   const nsrGroups = new Map();
   for (let index=0;index<input.nsr.length;index++) {
+    if(++batch%128===0)yield;
     const row=input.nsr[index], number=field(row,['NSR#','NSR Number','Nsrnum']).toUpperCase(), key=number||'__nsr-row-'+index;
     if (!nsrGroups.has(key)) nsrGroups.set(key,[]); nsrGroups.get(key).push(row);
   }
   for (const [key,rows] of nsrGroups) {
+    if(++batch%128===0)yield;
     const record=mergeRows(rows), number=field(record,['NSR#','NSR Number','Nsrnum']).toUpperCase(), fidIds=unique(rows.map(row=>validFid(field(row,['Reference Fcid','REF FCID','Reference FID','FCID','FID','RefFcid']))));
     const nsr={id:key,number,fidId:fidIds[0]||'',fidIds,record,rows,rawRows:rows,...nsrValues(record,number),eligible:!!number,linkAssessmentAvailable:loaded.ctl||loaded.ctlNsr,linkAssessmentProvenance:loaded.ctl&&loaded.ctlNsr?'both':loaded.ctl?'ctl':loaded.ctlNsr?'ctlNsr-partial':'unavailable',workflow:field(record,['Workflow Status','NSR Status','NsrWorkflowStatus']),links:[]};
     nsr.ignored=ignoredNsrs.has(nsr.number);nsr.important=!nsr.ignored&&importantNsrs.has(nsr.number);
@@ -4210,6 +4331,7 @@ function createFidGraph(raw, options = {}) {
     } else orphans.nsrs.push(nsr);
   }
   for (let index=0;index<input.nce.length;index++) {
+    if(++batch%128===0)yield;
     const record=input.nce[index], id=field(record,['NCe #','NCE Number'])||'__nce-row-'+index, fidId=validFid(field(record,['FCID','FID']));
     const nce={id,number:field(record,['NCe #','NCE Number']),fidId,record,rows:[record],status:field(record,['NCe State','State','Status']),impact:field(record,['Impact','NCE Impact']),title:field(record,['Title','NCE Title']),customer:field(record,['Customer','Customer Name']),opened:iso(field(record,['Open Date','Opened Date','Creation Date'])),damageGroup:field(record,['Damage Group']),damageCode:field(record,['Damage Code']),partNumber:field(record,['Part_Number','Part Number']),partDescription:field(record,['Part_Description','Part Description'])};
     nces.push(nce); const node=ensureFid(fidId); if (node) { node.nces.push(nce); node.sources=unique([...node.sources,'nce']); } else orphans.nces.push(nce);
@@ -4217,35 +4339,37 @@ function createFidGraph(raw, options = {}) {
   const nsrByNumber=new Map(nsrs.filter(nsr=>nsr.number).map(nsr=>[nsr.number,nsr]));
   const tokenPattern=/(?<![A-Z0-9])([NDL]\d{5,8})(?![A-Z0-9])/gi;
   for (const ctl of ctls) {
+    if(++batch%128===0)yield;
     const tokens=new Map();
     for (const row of ctl.rows) for (const name of ['Change Summary','Summary','Root Cause','Root Cause of Late Change','Notes','CTL Notes']) {
       const value=field(row,[name]); if (!value) continue;
       for (const match of value.matchAll(tokenPattern)) { const number=match[1].toUpperCase(); if (!tokens.has(number)) tokens.set(number,new Set()); tokens.get(number).add(name); }
     }
     ctl.nsrReferences=[...tokens.keys()];
+    ctl.nsrReferenceTypes=Object.fromEntries([...tokens].map(([number,fields])=>[number,fields.has('Change Summary')||fields.has('Summary')?'Chg':'Note']));
     for (const [number,fields] of tokens) {
       const nsr=nsrByNumber.get(number); if (!nsr) continue;
       const kind=ctl.fidId && nsr.fidIds.includes(ctl.fidId) ? 'direct':'reference';
-      const link={ctlId:ctl.id,ctlNumber:ctl.number,nsrId:nsr.id,nsrNumber:nsr.number,fidId:ctl.fidId,nsrFidId:nsr.fidId,kind,fields:[...fields],effective:ctl.effective,applied:ctl.applied,status:ctl.status,statusKind:ctl.statusKind};
+      const link={ctlId:ctl.id,ctlNumber:ctl.number,nsrId:nsr.id,nsrNumber:nsr.number,fidId:ctl.fidId,nsrFidId:nsr.fidId,kind,referenceType:ctl.nsrReferenceTypes[number],fields:[...fields],effective:ctl.effective,applied:ctl.applied,status:ctl.status,statusKind:ctl.statusKind};
       ctl.links.push(link); nsr.links.push(link);
     }
   }
-  const linkedLifecycle=links=>!links.length?'completed-unlinked':links.some(link=>link.applied)?'implemented':links.some(link=>clean(link.status))?'ctl-pending':'ctl-unavailable';
-  function refreshNsrLifecycle(nsr) {
+  for(const nsr of nsrs){
+    if(++batch%128===0)yield;
     nsr.implementationByFid=Object.fromEntries(nsr.fidIds.map(fidId=>[fidId,observationLifecycle(nsr,nsr,fidId)]));
     nsr.lifecycle=observationLifecycle(nsr,nsr);
   }
-  nsrs.forEach(refreshNsrLifecycle);
   const tally = actions => {
     const counts=new Map(); for (const action of actions) if (action.name) { const key=textKey(action.name), entry=counts.get(key)||{name:action.name,count:0,documents:[]}; entry.count++; entry.documents.push({id:action.id,source:action.source}); counts.set(key,entry); }
     return [...counts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
   };
   // Slot authors establish Account membership; approval and current Slot state do not change who authored an operation.
   const accountPeople=new Map();
-  for(const node of fids.values())node.account=accountOf(node.record);
+  for(const node of fids.values()){if(++batch%128===0)yield;node.account=accountOf(node.record)}
   const nsrAccount=(observation,fidId=observation.fidId)=>fids.get(fidId)?.account||observation.account||'';
-  for(const nsr of nsrs)nsr.accounts=[...new Set((nsr.observations.length?nsr.observations:[nsr]).map(observation=>nsrAccount(observation)))];
+  for(const nsr of nsrs){if(++batch%128===0)yield;nsr.accounts=[...new Set((nsr.observations.length?nsr.observations:[nsr]).map(observation=>nsrAccount(observation)))]}
   for(const ctl of ctls){
+    if(++batch%128===0)yield;
     const account=fids.get(ctl.fidId)?.account;
     if(!ctl.isSlot||!ctl.initiator||!account)continue;
     const key=textKey(account),people=accountPeople.get(key)||new Map();people.set(textKey(ctl.initiator),ctl.initiator);accountPeople.set(key,people);
@@ -4331,13 +4455,17 @@ function createFidGraph(raw, options = {}) {
       return observation?{...nsr,...observation,fidId:node.id,lifecycle:nsr.implementationByFid[node.id]||nsr.lifecycle,globalLifecycle:nsr.lifecycle}:nsr;
     });
     const record=node.record, nativeMcsd=firstDate(record,['Date: Mfg Commit Ship','Mfg Commit Ship','Manufacturing Commit Ship Date','MCSD']);
-    node.customer=field(record,['Customer','Customer Name','End Customer'])||node.nsrs.find(nsr=>nsr.customer)?.customer||'';
-    node.system=field(record,['System Description','System Desc','System']); node.quote=field(record,['Active Quote Number','Quote Number','Active Quote']);
-    node.fab=field(record,['Fab Name','Fab']); node.fidDescription=field(record,['FID Description']); node.commit=field(record,['Commit: Field','Commit Field','Field Commit','Commit Status']); node.crd=firstDate(record,['Date: Customer Request','Customer Request Date']).date;
-    node.businessUnit=field(record,['Business Unit','BU'])||node.ctls.find(ctl=>ctl.businessUnit)?.businessUnit||'';
+    node.customer=field(record,['Customer','Customer Name','End Customer'],true)||node.nsrs.find(nsr=>nsr.customer)?.customer||'';
+    node.system=field(record,['System Description','System Desc','System'],true); node.quote=field(record,['Active Quote Number','Quote Number','Active Quote']);
+    node.fab=field(record,['Fab Name','Fab'],true); node.fidDescription=field(record,['FID Description'],true); node.commit=field(record,['Commit: Field','Commit Field','Field Commit','Commit Status'],true); node.crd=firstDate(record,['Date: Customer Request','Customer Request Date']).date;
+    node.businessUnit=field(record,['Business Unit','BU'],true)||node.ctls.find(ctl=>ctl.businessUnit)?.businessUnit||'';
+    node.mfg=field(record,['Mfg Upgrade Type','Manufacturing Upgrade Type'],true);
     node.mcsd=nativeMcsd.date||node.ctls.find(ctl=>ctl.mcsd)?.mcsd||'';
     node.rd=firstDate(record,['Date: Sales Ops Request Date (RD)','Sales Ops Request Date','Sales Ops RD','SRD','RD']).date; node.targetShip=firstDate(record,['Date: Target Ship','Target Ship Date','Target Ship']).date;
     const events=node.ctls.filter(ctl=>(ctl.isSlot||ctl.isDrop)&&ctl.effective).sort((a,b)=>(b.eventDate||'').localeCompare(a.eventDate||''));
+    // Active CTL is independent of the Slot cycle; CTL number breaks same-day approval ties.
+    node.activeCtl=node.ctls.filter(ctl=>ctl.status==='Completed'&&ctl.approved&&(ctl.isSlot||ctl.isDrop||ctl.changeKey.includes('config')))
+      .sort((a,b)=>b.approved.localeCompare(a.approved)||b.number.localeCompare(a.number,undefined,{numeric:true}))[0]||null;
     const current=events[0]||null,active=current?.isSlot?current:null,riskActive=active||(current?.isDrop?events.find(ctl=>ctl.isSlot):null)||null,pending=node.ctls.filter(ctl=>(ctl.isSlot||ctl.isDrop)&&ctl.statusKind!=='discarded'&&!ctl.effective);
     const effectiveCtls=node.ctls.filter(ctl=>ctl.effective&&ctl.eventDate<=today);
     const quarterDate=nativeMcsd.date||node.rd,quarterField=nativeMcsd.date?'Current MCSD':'Current SRD';
@@ -4346,17 +4474,19 @@ function createFidGraph(raw, options = {}) {
     const slotReady=loaded.ctl||loaded.ctlNsr;
     node.slot={active,current,pending,riskCurrent:current,riskActive,state:!slotReady?'unknown':current?.isDrop?'dropped':active?'active':'none',initiator:active?.initiator||'',number:active?.number||current?.number||'',quarter:node.quarter,effectivePolicy,riskPolicy,sourceReady:slotReady};
     const ownership=inferOwner(node); node.owner=ownership.owner; node.ownerEvidence=ownership.evidence;
-    const salesAdminActions=node.ctls.filter(ctl=>ctl.initiator&&(ctl.changeKey==='pull'||ctl.changeKey==='push')).map(ctl=>({id:ctl.id,name:ctl.initiator,source:'ctl'})),salesAdminCandidates=tally(salesAdminActions);
-    const salesAdminTied=salesAdminCandidates.length>1&&salesAdminCandidates[0].count===salesAdminCandidates[1].count;
-    node.salesAdmin=salesAdminTied?'':salesAdminCandidates[0]?.name||'';node.salesAdminEvidence={candidates:salesAdminCandidates,tied:salesAdminTied,documents:salesAdminActions.length};
+    const adminActions=node.ctls.filter(ctl=>ctl.initiator&&(ctl.changeKey==='pull'||ctl.changeKey==='push')).map(ctl=>({id:ctl.id,name:ctl.initiator,source:'ctl'})),adminCandidates=tally(adminActions);
+    const salesAdminTied=adminCandidates.length>1&&adminCandidates[0].count===adminCandidates[1].count;
+    node.salesAdmin=salesAdminTied?'':adminCandidates[0]?.name||'';node.salesAdminEvidence={candidates:adminCandidates,tied:salesAdminTied,documents:adminActions.length};
     node.pre=assessSlot(node,current,riskActive);
     const referenceDate=node.pre.referenceDate,referenceField=node.pre.referenceField;
     const postMcsd=current?.isDrop?nativeMcsd.date||riskActive?.mcsd:node.mcsd;
-    const postReference=postMcsd||(current?.isDrop?referenceDate:active?.srd||node.rd||referenceDate),postReferenceField=postMcsd?'MCSD':current?.isDrop?referenceField:active?.srd?'Sales Ops RD':node.rd?'Date: Sales Ops Request Date (RD)':referenceField;
-    const qualifying=slotReady?node.ctls.filter(ctl=>{
-      if(!ctl.changeKey.includes('config')||!ctl.riskEligible||ctl.reason!=='Customer Config Chg'||!lateCtlSubReasonPrefixes.some(prefix=>ctl.subReason.startsWith(prefix)))return false;
-      const span=weeks(ctl.eventDate,ctl.mcsdApproval||ctl.mcsdCreate||postReference);return span!==null&&span<20;
-    }):[];
+    const postDate=postMcsd||(current?.isDrop?referenceDate:active?.srd||node.rd||referenceDate),postDateField=postMcsd?'MCSD':current?.isDrop?referenceField:active?.srd?'Sales Ops RD':node.rd?'Date: Sales Ops Request Date (RD)':referenceField;
+    // Retain both Stable and Late Config evidence within the existing risk scope.
+    const ctlAssessments=node.ctls.filter(ctl=>ctl.lateConfigReason&&ctl.riskEligible).map(ctl=>{
+      const referenceDate=ctl.mcsdApproval||ctl.mcsdCreate||postDate||'',referenceField=ctl.mcsdApproval?'MCSD At SOps Approval':ctl.mcsdCreate?'MCSD@Create':postDateField;
+      return {ctl,quarter:quarterOf(ctl.mcsdCreate||ctl.rdCreate)||node.currentQuarter,weeks:weeks(ctl.approved,referenceDate),referenceDate,referenceField};
+    });
+    const qualifying=slotReady?ctlAssessments.filter(({weeks})=>weeks!==null&&weeks<20).map(({ctl})=>ctl):[];
     node.lateCtls=qualifying; // Keep complete event evidence for history, independently of KPI quarter membership.
     const pendingConfigs=node.ctls.filter(ctl=>ctl.isConfig&&ctl.statusKind!=='discarded'&&!ctl.effective);
     // post.nsrs is shared Pending NSR evidence; it does not determine CTL stability.
@@ -4374,11 +4504,23 @@ function createFidGraph(raw, options = {}) {
     for(const ctl of effectiveCtls)if(ctl.isDrop){
       const boundary=events.find(event=>event.id!==ctl.id&&event.eventDate<=(ctl.created||ctl.eventDate))?.eventDate||'';
       const retry=node.ctls.filter(event=>event.isDrop&&event.status==='Rejected'&&event.created>boundary&&event.created<=(ctl.created||ctl.eventDate)&&(event.mcsdCreate||event.rdCreate)).sort((a,b)=>a.created.localeCompare(b.created))[0];
-      const original=retry||ctl,snapshot=original.mcsdCreate||original.rdCreate;
+      const original=retry||ctl,created=date(original.created);
+      if(!created)continue;
+      const report=iso(new Date(created.getFullYear(),created.getMonth()-(created.getDate()<dropReportDay?1:0),dropReportDay));
+      const reportingCycle=events.find(event=>event.eventDate<=report),droppingCycle=events.find(event=>event.id!==ctl.id&&event.eventDate<=original.created);
+      const observations=[];
+      if(!original.mcsdCreate&&original.rdCreate&&reportingCycle?.isSlot&&reportingCycle.id===droppingCycle?.id)for(const event of node.ctls){
+        if(event.number===original.number||event.status==='Cancelled')continue;
+        if(event.created&&event.created>=reportingCycle.eventDate&&event.created<report&&quarterOf(event.created)===quarterOf(report)&&(event.mcsdCreate||event.rdCreate))observations.push({at:event.created,mcsd:event.mcsdCreate,rd:event.rdCreate,order:0,number:event.number});
+        if(event.effective&&event.eventDate>=reportingCycle.eventDate&&event.eventDate<report&&quarterOf(event.eventDate)===quarterOf(report)&&(event.mcsdApproval||event.srdApproval))observations.push({at:event.eventDate,mcsd:event.mcsdApproval,rd:event.srdApproval,order:1,number:event.number});
+      }
+      observations.sort((a,b)=>b.at.localeCompare(a.at)||b.order-a.order||b.number.localeCompare(a.number));
+      const observation=observations[0],observedMcsd=observation?.rd===original.rdCreate?observation.mcsd:'';
+      const mcsd=original.mcsdCreate||observedMcsd,snapshot=mcsd||original.rdCreate;
       if(!snapshot)continue;
-      const lead=weeks(original.created,snapshot);
-      if(lead===null||lead>dropQuarterLeadWeeks)continue;
-      addQuarter(quarterOf(snapshot),ctl,'Drop Slot · '+(retry?'original snapshot from CTL '+retry.number+' · ':'')+(original.mcsdCreate?'MCSD@Create':'RD At Create')+': '+snapshot+'; created '+original.created+'; lead '+lead.toFixed(1)+' weeks (<='+dropQuarterLeadWeeks+').',original.rdCreate,original.mcsdCreate);
+      const lead=weeks(report,snapshot);
+      if(lead===null||lead>dropLeadWeeks)continue;
+      addQuarter(quarterOf(snapshot),ctl,'Drop Slot · '+(retry?'original snapshot from CTL '+retry.number+' · ':'')+(original.mcsdCreate?'MCSD@Create':observedMcsd?'Prior MCSD observation from CTL '+observation.number+' at '+observation.at:'RD At Create')+': '+snapshot+'; created '+original.created+'; assumed report '+report+'; report lead '+lead.toFixed(1)+' weeks (<='+dropLeadWeeks+').',original.rdCreate,mcsd);
     }
     const commitRows=node.rawRows.filter(row=>field(row,['Commit: Field','Commit Field','Field Commit','Commit Status']).toUpperCase()==='COMMIT');
     const sourceQuarters=new Set((commitRows.length?commitRows:node.rawRows).map(row=>quarterRank(field(row,['Time: Calendar Quarter']))).filter(Number.isFinite));
@@ -4403,11 +4545,6 @@ function createFidGraph(raw, options = {}) {
         addQuarter(q,after.ctl,'Corroborated '+label+' history: '+before.day+' → '+after.day+'; source Quarter and initial Slot date agree.',rd,mcsd,after.at);
       }
     }
-    const splitFlag=/^(?:Y|YES|X|TRUE|1)$/i.test(field(record,['Split Ship Flag']));
-    for(const ctl of effectiveCtls){
-      const partial=splitFlag||/\b(?:split|partial)\s+(?:ship(?:ment)?|deliver)|\banother\s+PM(?:x|\b)|\bship\b[\s\S]{0,120}\bfirst\b[\s\S]{0,120}\b(?:later|second)\b/i.test([ctl.rootCause,ctl.summary,ctl.notes].join(' '));
-      if(partial&&ctl.tsdApproval&&ctl.srdApproval&&quarterOf(ctl.tsdApproval)!==quarterOf(ctl.srdApproval))addQuarter(quarterOf(ctl.tsdApproval),ctl,'Split delivery · TSD @ SOPs Approval: '+ctl.tsdApproval+'; SRD @ SOPs Approval: '+ctl.srdApproval);
-    }
     // Retain additional schedules only once approval reaches their preceding fiscal quarter.
     const initialDate=initialMcsd||initialRd;
     if(riskActive&&initialDate&&quarterRank(quarterOf(initialDate))-quarterRank(quarterOf(riskActive.eventDate))<=1){
@@ -4422,20 +4559,31 @@ function createFidGraph(raw, options = {}) {
     for(const ctl of effectiveCtls)if(ctl.changeKey==='push'&&ctl.mcsdCreate&&quarterRank(quarterOf(ctl.mcsdCreate))-quarterRank(quarterOf(ctl.eventDate))<=1){
       addQuarter(quarterOf(ctl.mcsdCreate),ctl,'Push MCSD@Create: '+ctl.mcsdCreate+'; approved from preceding fiscal quarter onward.');
     }
+    for(const ctl of effectiveCtls)if(ctl.changeKey==='pull'&&ctl.mcsdCreate){
+      const q=quarterOf(ctl.mcsdCreate),span=weeks(ctl.eventDate,ctl.mcsdCreate);
+      if(span===null||span>pullLeadWeeks)continue;
+      const support=effectiveCtls.find(other=>other.id!==ctl.id&&other.eventDate<=ctl.eventDate&&(quarterOf(other.mcsdApproval)===q||other.created&&other.created<=ctl.eventDate&&quarterOf(other.mcsdCreate)===q));
+      if(support)addQuarter(q,ctl,'Corroborated Pull MCSD@Create: '+ctl.mcsdCreate+'; approved '+ctl.eventDate+'; lead '+span.toFixed(1)+' weeks (<='+pullLeadWeeks+'); supported by CTL '+support.number+'.');
+    }
+    // Only a confirmed first effective Slot can disprove earlier unslotted forecasts; missing history is not proof.
+    const firstSlot=events.filter(ctl=>ctl.eventDate<=today).at(-1);
+    if(firstSlot?.isSlot&&!events.some(ctl=>ctl.isDrop&&ctl.eventDate<=firstSlot.eventDate)){
+      for(const [quarter,group]of groups)if(quarter!==node.currentQuarter&&[...group.cycles.values()].every(cycle=>!cycle.current))groups.delete(quarter);
+    }
     // Classification uses only quarters already supported by schedule evidence; a Late CTL never adds a quarter.
     for(const ctl of qualifying){
-      const snapshot=ctl.mcsdCreate||ctl.rdCreate,dateBasis=snapshot||postReference,q=snapshot?quarterOf(snapshot)||node.quarter:node.quarter;
+      const snapshot=ctl.mcsdCreate||ctl.rdCreate,dateBasis=snapshot||postDate,q=snapshot?quarterOf(snapshot)||node.quarter:node.quarter;
       if(!groups.has(q))continue;
-      const group=q?addQuarter(q,ctl,(ctl.mcsdCreate?'MCSD@Create':ctl.rdCreate?'RD At Create':postReferenceField)+': '+dateBasis):groups.get(q);
+      const group=q?addQuarter(q,ctl,(ctl.mcsdCreate?'MCSD@Create':ctl.rdCreate?'RD At Create':postDateField)+': '+dateBasis):groups.get(q);
       group.ctls.push(ctl);
     }
     node.quarterStates=[...groups.values()].map(group=>{
       const cycles=[...group.cycles.values()],slotted=cycles.filter(cycle=>cycle.current),preCandidates=(slotted.length?slotted:cycles).map(cycle=>cycle.current===current&&group.quarter===node.currentQuarter?node.pre:assessSlot(node,cycle.current,cycle.riskActive,false));
       const pre=preCandidates.find(pre=>pre.state==='risk')||preCandidates.find(pre=>pre.state==='unknown')||preCandidates[0];
-      const late=group.ctls,first=late[0],reference=first?.mcsdApproval||first?.mcsdCreate||postReference||'',field=first?.mcsdApproval?'MCSD At SOps Approval':first?.mcsdCreate?'MCSD@Create':postReferenceField,span=first?weeks(first.eventDate,reference):null;
-      const post={state:late.length?'risk':slotReady&&postReference?'clear':'unknown',label:late.length?'Post config risk':slotReady&&postReference?'No post risk':'Post risk unknown',weeks:span,threshold:20,
-        reason:late.length?`(${field} − CTL approved date) / 7 = ${span.toFixed(1)} weeks <20 weeks.`:slotReady&&postReference?'No qualifying Late CTL in this quarter.':!slotReady?'CTL not loaded.':'MCSD / SRD missing.',
-        eventDate:first?.eventDate||'',referenceDate:reference,referenceField:field,created:first?.created||'',approved:first?.approved||'',ctlIds:late.map(ctl=>ctl.id),ctls:late,nsrs:pendingNsrs,pending:pendingConfigs,policy:riskPolicy};
+      const late=group.ctls,first=late[0],reference=first?.mcsdApproval||first?.mcsdCreate||postDate||'',field=first?.mcsdApproval?'MCSD At SOps Approval':first?.mcsdCreate?'MCSD@Create':postDateField,span=first?weeks(first.eventDate,reference):null;
+      const post={state:late.length?'risk':slotReady&&postDate?'clear':'unknown',label:late.length?'Post config risk':slotReady&&postDate?'No post risk':'Post risk unknown',weeks:span,threshold:20,
+        reason:late.length?`(${field} − CTL approved date) / 7 = ${span.toFixed(1)} weeks <20 weeks.`:slotReady&&postDate?'No qualifying Late CTL in this quarter.':!slotReady?'CTL not loaded.':'MCSD / SRD missing.',
+        eventDate:first?.eventDate||'',referenceDate:reference,referenceField:field,created:first?.created||'',approved:first?.approved||'',ctlIds:late.map(ctl=>ctl.id),ctls:late,assessments:ctlAssessments.filter(assessment=>assessment.quarter===group.quarter),nsrs:pendingNsrs,pending:pendingConfigs,policy:riskPolicy};
       const dates=group.quarter===node.currentQuarter?{rd:node.rd,mcsd:node.mcsd}:{rd:unique(group.rd).sort().join(' / '),mcsd:unique(group.mcsd).sort().join(' / ')};
       const dateSource=group.sources.size?'CTL schedule evidence: '+[...group.sources].join(', ')+'\n'+group.basis.join('\n'):'Current FID / CTL dates';
       return assessPortfolio({quarter:group.quarter,pre,post,basis:group.basis,slotEvidence:preCandidates,dates,dateSource},node,slotted.length>0);
@@ -4445,8 +4593,8 @@ function createFidGraph(raw, options = {}) {
     node.weeksToMcsd=node.mcsd?Math.round(weeks(today,node.mcsd)):'';
     node.entitySearchText=[node.id,node.account,node.businessUnit,node.customer,node.system,node.owner,node.salesAdmin,node.quote,...Object.values(record),...node.ctls.flatMap(ctl=>[ctl.number,ctl.summary,ctl.initiator]),...node.nces.flatMap(nce=>[nce.number,nce.title])].join(' ').toLowerCase();
   }
-  for(const node of fids.values())refreshFid(node);
-  for(const ctl of ctls){const node=fids.get(ctl.fidId);ctl.quarter=node?.quarter||'';ctl.quarters=node?.quarterStates.map(state=>state.quarter)||[''];if(!ctl.customer)ctl.customer=field(node?.record||{},['Customer','Customer Name','End Customer'])}
+  for(const node of fids.values()){if(++batch%128===0)yield;refreshFid(node)}
+  for(const ctl of ctls){if(++batch%128===0)yield;const node=fids.get(ctl.fidId);ctl.quarter=node?.quarter||'';ctl.quarters=node?.quarterStates.map(state=>state.quarter)||[''];if(!ctl.customer)ctl.customer=field(node?.record||{},['Customer','Customer Name','End Customer'])}
   function setNsrMark(number,mark) {
     const nsr=nsrByNumber.get(number);if(!nsr)return false;
     nsr.ignored=mark==='ignore';nsr.important=mark==='important';
@@ -4454,9 +4602,9 @@ function createFidGraph(raw, options = {}) {
     return true;
   }
   function setFidMark(id,mark){const node=fids.get(id);if(!node)return false;node.fidMark=['ignore','important'].includes(mark)?mark:'normal';return true}
-  const observedPopulation=[...fids.values()],population=observedPopulation.filter(node=>node.inPopulation);
-  const values = value => value===undefined||value===null||value===''?[]:(Array.isArray(value)?value:[value]).map(clean);
-  const match = (actual, expected) => { if(expected===undefined||expected===null||expected===''||Array.isArray(expected)&&!expected.length)return true;const selected=values(expected); return !selected.length||selected.some(value=>value==='[Unknown]'?!clean(actual):textKey(actual)===textKey(value)); };
+  const allFids=[...fids.values()],population=allFids.filter(node=>node.inPopulation);
+  const values = value => value===undefined||value===null||value===''?[]:(Array.isArray(value)?value:[value]).map(value=>sourceText(value).trim());
+  const match = (actual, expected) => { if(expected===undefined||expected===null||expected===''||Array.isArray(expected)&&!expected.length)return true;const text=sourceText(actual).trim().toLowerCase();return (Array.isArray(expected)?expected:[expected]).some(value=>{const term=sourceText(value).trim();return term==='[Unknown]'?!text:text===term.toLowerCase()}); };
   const hasPredicates = object => !!object&&Object.values(object).some(value=>values(value).length);
   const searchMatch = (text, search) => {
     const term=clean(search).toLowerCase(); if (!term) return true;
@@ -4465,8 +4613,9 @@ function createFidGraph(raw, options = {}) {
   };
   function observationLifecycle(nsr,observation,fidId=''){
     const status=nsrStatus(observation);
-    if(discarded(status))return 'discarded';if(!completed(status))return 'open';if(nsr.number.startsWith('D'))return 'completed-5d';if(!nsr.linkAssessmentAvailable)return 'ctl-unavailable';
-    const links=nsr.links.filter(link=>link.kind==='direct'&&(!fidId||link.fidId===fidId)&&link.statusKind!=='discarded');return linkedLifecycle(links);
+    if(/REJECT|CANCEL/.test(status.toUpperCase()))return 'discarded';if(!completed(status))return 'open';if(nsr.number.startsWith('D'))return 'completed-5d';if(!nsr.linkAssessmentAvailable)return 'ctl-unavailable';
+    const links=nsr.links.filter(link=>link.kind==='direct'&&(!fidId||link.fidId===fidId)&&link.statusKind!=='discarded');
+    return !links.length?'completed-unlinked':links.some(link=>link.applied)?'implemented':links.some(link=>clean(link.status))?'ctl-pending':'ctl-unavailable';
   }
   const matchDateRange=(actual,range)=>{const from=iso(range.from),to=iso(range.to);return (!from&&!to)||!!actual&&(!from||actual>=from)&&(!to||actual<=to)};
   const matchObservation=(nsr,observation,filters={},fidId='')=>{
@@ -4488,21 +4637,21 @@ function createFidGraph(raw, options = {}) {
   const matchSignal=(node,signal,includeIgnored=true)=>signal==='nce'?node.nces.length>0:signal==='pending-ctl'?node.ctls.some(ctl=>ctl.pending):signal==='open-nsr'?node.portfolioStates.includes('slot-ready')&&node.post.nsrs.some(nsr=>includeIgnored||!nsr.ignored):['late-ctl','slot-no-mcsd','slot-pending','slot-dropped'].includes(signal)&&node.portfolioStates.includes(signal);
   const isNsrRisk=label=>label==='Pending NSR'||label==='Late NSR'||label==='Open NSR'||label==='Post NSR risk';
   function query(filters={},rowsOnly='') {
-    const includeIgnored=filters.includeIgnored!==false;let base=filters.excluded?observedPopulation.filter(node=>node.excludedReason):population;
+    const includeIgnored=filters.includeIgnored!==false;let base=filters.excluded?allFids.filter(node=>node.excludedReason):population;
     if(!includeIgnored)base=base.filter(node=>node.fidMark!=='ignore');
     const ctlRows=hasPredicates(filters.ctl)?ctls.filter(ctl=>matchCtl(ctl,filters.ctl)):ctls,ctlFids=ctlRows===ctls?null:new Set(ctlRows.map(ctl=>ctl.fidId));
     // An absent CTL matches Unknown only when every selected CTL field accepts an empty value.
     const ctlUnknown=!!ctlFids&&matchCtl({},filters.ctl),matchCtlFid=fidId=>!ctlFids||ctlFids.has(fidId)||ctlUnknown&&!fids.get(fidId)?.ctls.length;
-    const directKeys=['quarter','systemQuarter','account','customer','system','businessUnit','salesAdmin','owner','category','preState','postState','slotState','fidStatus','fidMark','signal','riskType'];
+    const directKeys=['quarter','currentQuarter','systemQuarter','account','customer','system','businessUnit','mfg','salesAdmin','owner','category','preState','postState','slotState','fidStatus','fidMark','signal','riskType'];
     const hasFidPredicates=!!filters.excluded||directKeys.some(key=>key!=='account'&&values(filters[key]).length)||hasPredicates(filters.slot);
     const scalarKeys=directKeys.filter(key=>!['quarter','systemQuarter','fidStatus','signal','riskType'].includes(key)&&values(filters[key]).length),fidStatuses=values(filters.fidStatus),signals=values(filters.signal),riskTypes=values(filters.riskType).map(label=>['Post NSR risk','Late NSR','Open NSR'].includes(label)?'Pending NSR':label==='Pending CTL'?'Pending Config CTL':label),nsrRiskOnly=riskTypes.length>0&&riskTypes.every(isNsrRisk),hasNsrPredicates=hasPredicates(filters.nsr);
     const search=clean(filters.search).toLowerCase(),tokens=search.split(/[\s,;|/]+/).filter(Boolean),idSearch=!!tokens.length&&tokens.every(token=>/^(?:\d{5,10}|[ndl]\d{5,8})$/i.test(token));
     const entityMatch=node=>idSearch?tokens.some(token=>/^\d+$/.test(token)&&(node.id.toLowerCase()===token||node.ctls.some(ctl=>ctl.number.toLowerCase()===token))):node.entitySearchText.includes(search);
     const nsrSearchMatch=(nsr,observation=nsr)=>!search||(idSearch?tokens.some(token=>nsr.number.toLowerCase()===token||nsr.number.replace(/^[NDL]/,'')===token):observation.searchText.includes(search));
     const hasAccount=values(filters.account).length>0;
-    const observationMatches=(nsr,observation,fidId='')=>matchObservation(nsr,observation,filters.nsr||{},fidId)&&(!hasAccount||match(nsrAccount(observation,fidId||observation.fidId),filters.account));
-    const nsrDomainMatch=(nsr,fidId='')=>nsr.eligible&&(includeIgnored||!nsr.ignored)&&(nsr.observations.length?nsr.observations.some(observation=>observationMatches(nsr,observation,fidId)&&nsrSearchMatch(nsr,observation)):observationMatches(nsr,nsr,fidId)&&nsrSearchMatch(nsr));
-    const entityHits=search?new Set(observedPopulation.filter(entityMatch).map(node=>node.id)):null,entityHit=fidId=>!entityHits||entityHits.has(fidId);
+    const inNsrScope=(nsr,observation,fidId='')=>matchObservation(nsr,observation,filters.nsr||{},fidId)&&(!hasAccount||match(nsrAccount(observation,fidId||observation.fidId),filters.account));
+    const nsrDomainMatch=(nsr,fidId='')=>nsr.eligible&&(includeIgnored||!nsr.ignored)&&(nsr.observations.length?nsr.observations.some(observation=>inNsrScope(nsr,observation,fidId)&&nsrSearchMatch(nsr,observation)):inNsrScope(nsr,nsr,fidId)&&nsrSearchMatch(nsr));
+    const entityHits=search?new Set(allFids.filter(entityMatch).map(node=>node.id)):null,entityHit=fidId=>!entityHits||entityHits.has(fidId);
     const scopedFids=base.flatMap(node=>{
       const scoped=projectFid(node,filters.quarter,filters.systemQuarter);if(!scoped)return [];
       return rowsOnly==='periods'?scoped.selectedQuarterStates.map(state=>projectFid(node,[state.quarter||'[Unknown]'])):[scoped];
@@ -4540,16 +4689,16 @@ function createFidGraph(raw, options = {}) {
           const node=fids.get(fidId),riskNsrs=node.post.nsrs;
           if(!riskNsrs.some(row=>row.number===nsr.number&&row.lifecycle==='open'))return false;
         }
-        return entityHit(fidId)?(!hasNsrPredicates&&!hasAccount)||(nsr.observations.length?nsr.observations:[nsr]).some(observation=>observationMatches(nsr,observation,fidId)):nsrDomainMatch(nsr,fidId);
+        return entityHit(fidId)?(!hasNsrPredicates&&!hasAccount)||(nsr.observations.length?nsr.observations:[nsr]).some(observation=>inNsrScope(nsr,observation,fidId)):nsrDomainMatch(nsr,fidId);
       });
       const orphan=!nsr.fidId&&!hasFidPredicates&&(!ctlFids||ctlUnknown)&&nsrDomainMatch(nsr);
       if(!matchedFidIds.length&&!orphan)continue;
       if(!nsr.observations.length){selectedNsrs.push({...nsr,taskLifecycle:observationLifecycle(nsr,nsr,nsr.fidId)});continue;}
-      const scopeLifecycles=unique(matchedFidIds.map(fidId=>nsr.implementationByFid[fidId]||nsr.lifecycle)),lifecycle=['open','discarded','completed-5d','completed-unlinked','ctl-pending','implemented','ctl-unavailable'].find(state=>scopeLifecycles.includes(state))||nsr.lifecycle;
-      const fidId=matchedFidIds[0]||nsr.fidId,observation=nsr.observations.find(observation=>observationMatches(nsr,observation,fidId)&&(entityHit(fidId)||nsrSearchMatch(nsr,observation)))||nsr.observations[0];
+      const lifecycles=unique(matchedFidIds.map(fidId=>nsr.implementationByFid[fidId]||nsr.lifecycle)),lifecycle=['open','discarded','completed-5d','completed-unlinked','ctl-pending','implemented','ctl-unavailable'].find(state=>lifecycles.includes(state))||nsr.lifecycle;
+      const fidId=matchedFidIds[0]||nsr.fidId,observation=nsr.observations.find(observation=>inNsrScope(nsr,observation,fidId)&&(entityHit(fidId)||nsrSearchMatch(nsr,observation)))||nsr.observations[0];
       let taskLifecycle=observationLifecycle(nsr,observation,fidId);
-      if(scopeLifecycles.includes('completed-unlinked')&&!['open','discarded'].includes(taskLifecycle))taskLifecycle='completed-unlinked';
-      selectedNsrs.push({...nsr,...observation,fidId,lifecycle:hasNsrPredicates?taskLifecycle:lifecycle,taskLifecycle,globalLifecycle:nsr.lifecycle,matchedFidIds,scopeLifecycles});
+      if(lifecycles.includes('completed-unlinked')&&!['open','discarded'].includes(taskLifecycle))taskLifecycle='completed-unlinked';
+      selectedNsrs.push({...nsr,...observation,fidId,lifecycle:hasNsrPredicates?taskLifecycle:lifecycle,taskLifecycle,globalLifecycle:nsr.lifecycle,matchedFidIds,scopeLifecycles:lifecycles});
     }
     if(rowsOnly==='nsrs')return selectedNsrs;
     const selectedNces=nces.filter(nce=>ids.has(nce.fidId));
@@ -4562,12 +4711,12 @@ function createFidGraph(raw, options = {}) {
     }
     const lifecycleMetrics={open:'openNsr','completed-5d':'completed5dNsr','completed-unlinked':'completedUnlinked',implemented:'implementedNsr','ctl-pending':'ctlPendingNsr',discarded:'discardedNsr','ctl-unavailable':'ctlUnavailableNsr'};
     for(const nsr of selectedNsrs){const metric=lifecycleMetrics[nsr.lifecycle];if(metric)metrics[metric]++;metrics.ignoredNsr+=nsr.ignored;metrics.ignoredCompletedNsr+=nsr.ignored&&completed(nsrStatus(nsr));metrics.importantNsr+=nsr.important;metrics.orphanNsr+=!nsr.fidId}
-    const pendingCtlFids=new Set(),pendingPullPushCtlFids=new Set();
-    for(const ctl of selectedCtls){metrics.pendingCtl+=ctl.pending;metrics.pendingPullPushCtl+=ctl.pendingPullPush;metrics.workflowPendingCtl+=ctl.status==='Submitted';if(ctl.pending)pendingCtlFids.add(ctl.fidId);if(ctl.pendingPullPush)pendingPullPushCtlFids.add(ctl.fidId)}
-    metrics.pendingCtlFids=pendingCtlFids.size;metrics.pendingPullPushCtlFids=pendingPullPushCtlFids.size;
+    const pendingCtlFids=new Set(),pullPushFids=new Set();
+    for(const ctl of selectedCtls){metrics.pendingCtl+=ctl.pending;metrics.pendingPullPushCtl+=ctl.pendingPullPush;metrics.workflowPendingCtl+=ctl.status==='Submitted';if(ctl.pending)pendingCtlFids.add(ctl.fidId);if(ctl.pendingPullPush)pullPushFids.add(ctl.fidId)}
+    metrics.pendingCtlFids=pendingCtlFids.size;metrics.pendingPullPushCtlFids=pullPushFids.size;
     return {fids:selectedFids,nsrs:selectedNsrs,ctls:selectedCtls,nces:selectedNces,metrics};
   }
-  return {fids,population,observedPopulation,nsrs,ctls,nces,orphans,query,projectFid,setNsrMark,setFidMark,isNsrRisk};
+  return {fids,population,observedPopulation:allFids,nsrs,ctls,nces,orphans,query,projectFid,setNsrMark,setFidMark,isNsrRisk,field};
 }
 
 function fidQuarterFromDate(day){
@@ -4584,26 +4733,24 @@ function fidRiskAssessment(cell){
 
 // Shared SAP search and IndexedDB storage for the NSR and FCID dashboards.
 function createNsrDataService(onProgress=()=>{}){
-  const clean=value=>{const s=String(value??'').replace(/^\uFEFF/,'').trim();return /^(nan|null|undefined)$/i.test(s)?'':s}; const pageFetch=(url,options)=>unsafeWindow.fetch(url,options); const workflowDate=value=>clean(value).match(/^(\d{4}-\d{2}-\d{2})/)?.[1]||'';
-  const xmlFirst=(node,names)=>names.map(name=>clean(node.getElementsByTagNameNS('*',name)[0]?.textContent)).find(Boolean)||'';
-const SOURCE_FIELDS=['Temp Id#','NSR#','NSR Status','REF FCID','NSR Request','Task Name','NSR Title','NSR Type','Impacted Sub System','Initiator','Sales Rep','Sales Ops','Technical Contact','Customer','Submit Date','NSR Org','Primary Product'];
+  const clean=value=>{const s=String(value??'').replace(/^\uFEFF/,'').trim();return /^(nan|null|undefined)$/i.test(s)?'':s};
 const SAP_SEARCH='/sap/opu/odata/sap/ZNSR_CD_SRV/SearchNsrSet';
 const SAP_FIELDS={
   'Temp Id#':['TempId'],'NSR#':['Nsrnum'],'NSR Status':['NsrWorkflowStatus','NsrStatus'],'REF FCID':['RefFcid'], 'NSR Request':['NsrRequest'],'Task Name':['DescriptionTask'],'NSR Title':['NsrTitle','EnggTitle'],'NSR Type':['NsrType'], 'Impacted Sub System':['ImpSubSys'],
     'Initiator':['InitiatedByFn','Requester','InitiatedBy'],'Sales Rep':['SalesRepFn'], 'Sales Ops':['SalesOpsFn','SalesOps'],'Technical Contact':['TechContactFn'],'Customer':['Customer'],'Submit Date':['SubmitDate'], 'NSR Org':['NsrOrg'],'Primary Product':['PrimaryProd']
 };
-const NSR_CACHE_DB='toolkitKyra',NSR_CACHE_DB_VERSION=1,NSR_CACHE_STORE='datasets';let cacheDb;
+const SOURCE_FIELDS=Object.keys(SAP_FIELDS);
+const CACHE_DB='toolkitKyra',CACHE_VERSION=1,CACHE_STORE='datasets';let cacheDb;
 
 function openCache(){
   if(!cacheDb)cacheDb=new Promise((resolve,reject)=>{
     const api=unsafeWindow.indexedDB;if(!api){reject(new Error('IndexedDB is unavailable.'));return}
-    const request=api.open(NSR_CACHE_DB,NSR_CACHE_DB_VERSION);let settled=false; request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(NSR_CACHE_STORE))db.createObjectStore(NSR_CACHE_STORE,{keyPath:'key'})};
+    const request=api.open(CACHE_DB,CACHE_VERSION);let settled=false; request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains(CACHE_STORE))db.createObjectStore(CACHE_STORE,{keyPath:'key'})};
     request.onsuccess=()=>{const db=request.result;if(settled){db.close();return}settled=true;db.onversionchange=db.onclose=()=>{db.close();cacheDb=null};resolve(db)}; request.onerror=()=>{if(!settled){settled=true;reject(request.error||new Error('Could not open the data cache.'))}};
     request.onblocked=()=>{if(!settled){settled=true;reject(new Error('Data cache is blocked by another page.'))}};
   }).catch(error=>{cacheDb=null;throw error});return cacheDb;
 }
 
-function cacheRequest(request){return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('Cache request failed.'))});}
 function cacheDone(transaction){return new Promise((resolve,reject)=>{transaction.oncomplete=resolve;transaction.onerror=()=>reject(transaction.error||new Error('Cache write failed.'));transaction.onabort=()=>reject(transaction.error||new Error('Cache write cancelled.'))});}
 
 function localDate(value){return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;}
@@ -4614,46 +4761,39 @@ function validSapDate(value){
   const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]),date=new Date(Date.UTC(year,month-1,day)); return date.getUTCFullYear()===year&&date.getUTCMonth()===month-1&&date.getUTCDate()===day;
 }
 
-function sapFilter(from,to){
-  return (`(Nsrnum eq '' and Screen eq 'S' and Customer eq '' and Description eq '' and ImpSubSys eq '' and NsrRequest eq '' and NsrTitle eq '' and RefFcid eq '' and NsrType eq '' and SalesOpsFn eq '' and EnggTitle eq '' and ` +
-  `NsrWorkflowStatus eq '' and NsrStatus eq '' and InitiatedByFn eq '' and HostFidUpgrade eq '' and (ResEngGroup eq '') and PrimaryProd eq '' and TechSpec eq '' and (SubmitDate ge datetime'${from}T00:00:00' and SubmitDate le datetime'${to}T23:59:59') and (NsrOrg eq ''))`);
-}
-
-function sapUrl(range){return `${SAP_SEARCH}?$filter=${encodeURIComponent(sapFilter(range.from,range.to))}`;}
-
 function parseSearchXml(text){
   const doc=new DOMParser().parseFromString(text,'application/xml');
   if(doc.getElementsByTagName('parsererror').length)throw new Error('SAP returned invalid XML.');
-  const rows=[...doc.getElementsByTagNameNS('*','entry')].map(entry=>{const props=entry.getElementsByTagNameNS('*','properties')[0]||entry,row={}; SOURCE_FIELDS.forEach(field=>row[field]=xmlFirst(props,SAP_FIELDS[field]||[field])); row['Submit Date']=workflowDate(row['Submit Date']);
+  const rows=[...doc.getElementsByTagNameNS('*','entry')].map(entry=>{const props=entry.getElementsByTagNameNS('*','properties')[0]||entry,row={}; SOURCE_FIELDS.forEach(field=>row[field]=SAP_FIELDS[field].map(name=>clean(props.getElementsByTagNameNS('*',name)[0]?.textContent)).find(Boolean)||''); row['Submit Date']=clean(row['Submit Date']).match(/^(\d{4}-\d{2}-\d{2})/)?.[1]||'';
     return row;}).filter(row=>row['NSR#']);
   const next=[...doc.getElementsByTagNameNS('*','link')].find(link=>clean(link.getAttribute('rel')).toLowerCase()==='next'); return {rows,next:next?clean(next.getAttribute('href')):''};
 }
 
-function nextSapUrl(href,current){const url=new URL(href,current); if(url.origin!==unsafeWindow.location.origin)throw new Error('SAP returned an unexpected pagination URL.'); return url.href;}
-
 async function fetchSapRows(range,signal){
-  const rows=[],seen=new Set();let url=sapUrl(range),pages=0;
+  const filter=`(Nsrnum eq '' and Screen eq 'S' and Customer eq '' and Description eq '' and ImpSubSys eq '' and NsrRequest eq '' and NsrTitle eq '' and RefFcid eq '' and NsrType eq '' and SalesOpsFn eq '' and EnggTitle eq '' and `+
+    `NsrWorkflowStatus eq '' and NsrStatus eq '' and InitiatedByFn eq '' and HostFidUpgrade eq '' and (ResEngGroup eq '') and PrimaryProd eq '' and TechSpec eq '' and (SubmitDate ge datetime'${range.from}T00:00:00' and SubmitDate le datetime'${range.to}T23:59:59') and (NsrOrg eq ''))`;
+  const rows=[],seen=new Set();let url=`${SAP_SEARCH}?$filter=${encodeURIComponent(filter)}`,pages=0;
   while(url){
     if(seen.has(url))throw new Error('SAP returned a repeated pagination URL.');
     if(pages>=250)throw new Error('SAP returned too many result pages.');
     seen.add(url);onProgress(range,rows.length); let response;
-    try{response=await pageFetch(url,{credentials:'same-origin',cache:'no-store',signal,headers:{Accept:'application/atom+xml,application/xml,text/xml'}})} catch(_){throw new Error('SAP data request failed. Check the Fiori session and network connection.')}
+    try{response=await unsafeWindow.fetch(url,{credentials:'same-origin',cache:'no-store',signal,headers:{Accept:'application/atom+xml,application/xml,text/xml'}})} catch{throw new Error('SAP data request failed. Check the Fiori session and network connection.')}
     const text=await response.text(),type=(response.headers.get('Content-Type')||'').toLowerCase();
     if(response.status===401||response.status===403||type.includes('text/html')||/^\s*<!doctype\s+html/i.test(text)||/^\s*<html/i.test(text))throw new Error('Session expired. Return to NSR page and sign in again.');
     if(!response.ok)throw new Error(`SAP SearchNsrSet returned HTTP ${response.status}.`);
-    const parsed=parseSearchXml(text);rows.push(...parsed.rows);pages++; url=parsed.next?nextSapUrl(parsed.next,response.url||url):'';
+    const parsed=parseSearchXml(text);rows.push(...parsed.rows);pages++;
+    if(parsed.next){const next=new URL(parsed.next,response.url||url);if(next.origin!==unsafeWindow.location.origin)throw new Error('SAP returned an unexpected pagination URL.');url=next.href}else url='';
   }
   return {rows,pages};
 }
 
-async function readDataset(key){return cacheRequest((await openCache()).transaction(NSR_CACHE_STORE,'readonly').objectStore(NSR_CACHE_STORE).get(key))}
-async function writeDataset(entry){const transaction=(await openCache()).transaction(NSR_CACHE_STORE,'readwrite');transaction.objectStore(NSR_CACHE_STORE).put(entry);await cacheDone(transaction)}
-async function deleteDatasets(keys){const transaction=(await openCache()).transaction(NSR_CACHE_STORE,'readwrite');keys.forEach(key=>transaction.objectStore(NSR_CACHE_STORE).delete(key));await cacheDone(transaction)}
+async function readDataset(key){const request=(await openCache()).transaction(CACHE_STORE,'readonly').objectStore(CACHE_STORE).get(key);return new Promise((resolve,reject)=>{request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error||new Error('Cache request failed.'))})}
+async function writeDataset(entry){const transaction=(await openCache()).transaction(CACHE_STORE,'readwrite');transaction.objectStore(CACHE_STORE).put(entry);await cacheDone(transaction)}
+async function deleteDatasets(keys){const transaction=(await openCache()).transaction(CACHE_STORE,'readwrite');keys.forEach(key=>transaction.objectStore(CACHE_STORE).delete(key));await cacheDone(transaction)}
 return {fields:SOURCE_FIELDS,localDate,sapRange,validSapDate,fetchSapRows,readDataset,writeDataset,deleteDatasets};
 }
 
 function createNsrRecords(){
-const {fields:SOURCE_FIELDS}=createNsrDataService();
 const DETAIL_FIELDS=['NSR#','NSR Title','Task Status','NSR Type','Impacted Sub System','Initiator','REF FCID','NSR Org','Primary Product','Customer','Sales Rep','Sales Ops','Technical Contact','Submit Date','NSR Request','Temp Id#'];
 const ALIASES={
   'Temp Id#':['Temp Id#','Temp ID','TempId','Temporary ID'], 'NSR#':['NSR#','NSR','NSR No','NSR Number','NSR ID'], 'NSR Status':['NSR Status','Status'], 'REF FCID':['REF FCID','Reference Fcid','Reference FCID','Ref FCID','FCID'], 'NSR Request':['NSR Request','Request','Request Type'],
@@ -4661,6 +4801,7 @@ const ALIASES={
   'Sales Rep':['Sales Rep','Sales Representative'], 'Sales Ops':['Sales Ops','Sales Operation','Sales Operations'], 'Technical Contact':['Technical Contact','Tech Contact'], 'Customer':['Customer','Customer Name','Account'],
   'Submit Date':['Submit Date','Submitted Date','Submission Date'], 'NSR Org':['NSR Org','NSR Organization','Organization','Org'], 'Primary Product':['Primary Product','Product','PrimaryProduct']
 };
+const SOURCE_FIELDS=Object.keys(ALIASES);
 const TASK_STATUS={
   'CREATE NSR':'1-Create NSR','REQUEST REVIEW':'2-Request Review','SAFETY REVIEW':'5-Safety Review','ESTIMATES':'6-Estimates','COST REVIEW':'7-Cost Review',
   'PRICE CONFIRMATION':'8-Price Confirmation','DEMAND CONFIRMATION':'9-Demand Confirmation','FINAL APPROVAL':'10-Final Approval','VC VALIDATION':'11-VC Validation','ENGINEERING COMMIT AND DESIGN':'12-Engineering Commit and Design'
@@ -4682,41 +4823,17 @@ function deriveTaskStatus(row){
   return `Unmapped · ${clean(row['Task Name'])||clean(row['NSR Status'])||'Blank task/status'}`;
 }
 
-
-
 function statusRank(v){const m=clean(v).match(/^(\d+)-/); if(!m)return [99,clean(v)]; return [Number(m[1]),clean(v)];}
 function compareStatus(a,b){const aa=statusRank(a),bb=statusRank(b); return aa[0]-bb[0]||collator.compare(aa[1],bb[1]);}
-function buildHeaderMap(headers){const byNorm=new Map(headers.map(h=>[normHeader(h),h])); const map={}; for(const field of SOURCE_FIELDS){const aliases=(ALIASES[field]||[field]).map(normHeader); map[field]=aliases.map(a=>byNorm.get(a)).find(Boolean)||'';} return map;}
-
 let cachedHeaders=null,cachedHeaderMap;
-function canonicalRow(raw,headerMap){if(!headerMap){const headers=Object.keys(raw),signature=headers.join('\0');if(signature!==cachedHeaders){cachedHeaders=signature;cachedHeaderMap=buildHeaderMap(headers)}headerMap=cachedHeaderMap}return Object.fromEntries(SOURCE_FIELDS.map(field=>[field,clean(raw[headerMap[field]])]))}
-function normalizeRows(rawRows){
-  if(!rawRows.length)throw new Error('No data rows were found.');
-  const headers=Object.keys(rawRows[0]||{}),headerMap=buildHeaderMap(headers);
-  if(!headerMap['NSR#'])throw new Error('Required header “NSR#” was not found.');
-  const map=new Map();let missingNsr=0,duplicates=0;
-  rawRows.forEach(raw=>{
-    const row=canonicalRow(raw,headerMap),nsr=row['NSR#'];
-    if(!nsr){missingNsr++;return}
-    if(map.has(nsr)){duplicates++; const existing=map.get(nsr); SOURCE_FIELDS.forEach(field=>{if(!existing[field]&&row[field])existing[field]=row[field]});}else map.set(nsr,row);
-  });
-  const rows=[...map.values()].map(row=>({...row,'Task Status':deriveTaskStatus(row)})); const unmapped=rows.filter(r=>r['Task Status'].startsWith('Unmapped')).length;
-  return {rows,stats:{inputRows:rawRows.length,validRows:rows.length,missingNsr,duplicates,unmapped}};
+function canonicalRow(raw){
+  const headers=Object.keys(raw),signature=headers.join('\0');
+  if(signature!==cachedHeaders){
+    cachedHeaders=signature;const byNorm=new Map(headers.map(header=>[normHeader(header),header]));
+    cachedHeaderMap=Object.fromEntries(SOURCE_FIELDS.map(field=>[field,ALIASES[field].map(alias=>byNorm.get(normHeader(alias))).find(Boolean)||'']));
+  }
+  return Object.fromEntries(SOURCE_FIELDS.map(field=>{const value=raw[cachedHeaderMap[field]];return [field,typeof value==='string'&&clean(value)&&!['NSR#','REF FCID','Temp Id#'].includes(field)?value:clean(value)]}));
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 function dateNumber(value){
   const s=clean(value);if(!s)return Number.NEGATIVE_INFINITY;
@@ -4729,22 +4846,22 @@ function dateNumber(value){
 function periodRank(value){let match=clean(value).match(/^(\d{4})\s+Q([1-4])$/);if(match)return Number(match[1])*10+Number(match[2]);
   match=clean(value).match(/^Q(Mar|Jun|Sep|Dec)'(\d{2}|\d{4})$/i);return match?Number(match[2].length===2?'20'+match[2]:match[2])*10+({mar:1,jun:2,sep:3,dec:4}[match[1].toLowerCase()]):0;}
 function periodYear(value){const rank=periodRank(value);return rank?String(Math.floor(rank/10)):'';}
-return {detailFields:DETAIL_FIELDS,clean,upper,canonicalRow,normalizeRows,deriveTaskStatus,compareStatus,dateNumber,periodRank,periodYear};
+return {detailFields:DETAIL_FIELDS,clean,upper,canonicalRow,deriveTaskStatus,compareStatus,dateNumber,periodRank,periodYear};
 }
 
 function createNsrCycle(root=document,{getRows=null,onNotify=null,renderTable,copyRows}={}){
 const ownerDocument=root.ownerDocument||root,embedded=root!==ownerDocument,modalHost=embedded?root:ownerDocument.body;
 const {detailFields:DETAIL_FIELDS,clean,upper,dateNumber,compareStatus}=createNsrRecords();
 const LIVE_FIELDS=['Submit Date','Task Status','ECD','Approver Team','Assigned Approver','Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'];
-const CYCLE_DETAIL_FIELDS=DETAIL_FIELDS.filter(field=>field!=='NSR#'&&field!=='Initiator'&&!LIVE_FIELDS.includes(field)).flatMap(field=>field==='NSR Type'?[field,'NSR Category']:field==='Customer'?[field,'Initiator']:[field]);
-const FID_FIELDS=['REF FCID','Primary Product','NSR → CTL','CTL references','Customer','NSR Org','Sales Rep'],fidIndex=CYCLE_DETAIL_FIELDS.indexOf('REF FCID');
-const CYCLE_FIELDS=['NSR#',...LIVE_FIELDS,...CYCLE_DETAIL_FIELDS.slice(0,fidIndex),...FID_FIELDS,...CYCLE_DETAIL_FIELDS.slice(fidIndex).filter(field=>!FID_FIELDS.includes(field))];
-const WF_FIELDS=['Task Name','Approver Status','Approver Team','Approver','Pending Days','Approved Date','Comments']; const WORKFLOW_EXPORT_FIELDS=['NSR#','Workflow Step',...WF_FIELDS];
-const CYCLE_WIDTHS=CYCLE_FIELDS.map(field=>({
+const DETAIL_COLUMNS=DETAIL_FIELDS.filter(field=>field!=='NSR#'&&field!=='Initiator'&&!LIVE_FIELDS.includes(field)).flatMap(field=>field==='NSR Type'?[field,'NSR Category']:field==='Customer'?[field,'Initiator']:[field]);
+const FID_FIELDS=['REF FCID','Primary Product','NSR → CTL','CTL references','Customer','NSR Org','Sales Rep'],fidIndex=DETAIL_COLUMNS.indexOf('REF FCID');
+const CYCLE_FIELDS=['NSR#',...LIVE_FIELDS,...DETAIL_COLUMNS.slice(0,fidIndex),...FID_FIELDS,...DETAIL_COLUMNS.slice(fidIndex).filter(field=>!FID_FIELDS.includes(field))];
+const WF_FIELDS=['Task Name','Approver Status','Approver Team','Approver','Pending Days','Approved Date','Comments']; const WF_EXPORT=['NSR#','Workflow Step',...WF_FIELDS];
+const WIDTHS=CYCLE_FIELDS.map(field=>({
   'NSR#':78,'Submit Date':116,'Approver Team':125, 'Assigned Approver':130,'Pending Days':82,'Elapsed Days':82,'Cycle Time (ECD)':110,'Cycle Time (SOBi)':116,'NSR Title':190,'Task Status':144,'ECD':96, 'NSR Category':100,'Customer':150,'Primary Product':120,'Technical Contact':108,
     'Impacted Sub System':104,'NSR → CTL':180,'CTL references':180
 }[field]||92));
-const CYCLE_CONCURRENCY=8,CYCLE_WARN_AT=100,CYCLE_LIMIT=500; const WORKFLOW_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const NSR_DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const FIORI_DETAIL='https://fep.lamresearch.com/flp#ZNSR-display&/NsrDetail/';
+const CONCURRENCY=8,WARN_AT=100,LIMIT=500; const WF_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const FIORI_DETAIL='https://fep.lamresearch.com/flp#ZNSR-display&/NsrDetail/';
 const pageFetch=(url,options)=>unsafeWindow.fetch(url,options);
 const collator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
 const state={rows:[],cycleRows:[],cycleAbort:null,cycleRun:0,toastTimer:null};
@@ -4763,7 +4880,7 @@ function parseNsrInput(text){
 function xmlValue(node,name){const item=node&&node.getElementsByTagNameNS('*',name)[0];return clean(item&&item.textContent);}
 function xmlFirst(node,names){for(const name of names){const value=xmlValue(node,name);if(value)return value}return '';}
 function workflowDate(value){const match=clean(value).match(/^(\d{4}-\d{2}-\d{2})/);return match?match[1]:'';}
-function workflowStatusHint(value){const status=upper(value);return status.includes('COMPLET')?'COMPLETED':status.includes('CANCEL')?'CANCELLED':status.includes('REJECT')?'REJECTED':'';}
+function terminalStatus(value){const status=upper(value);return status.includes('COMPLET')?'COMPLETED':status.includes('CANCEL')?'CANCELLED':status.includes('REJECT')?'REJECTED':'';}
 
 function workflowHistory(entries){
   return entries.map(entry=>{
@@ -4775,14 +4892,14 @@ function workflowHistory(entries){
   }).filter(stage=>WF_FIELDS.some(field=>clean(stage[field])));
 }
 
-function workflowStamp(value){const match=clean(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);return match?Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3])):NaN;}
-function elapsedDays(startValue,endValue=''){const start=workflowStamp(startValue),now=new Date(),end=endValue?workflowStamp(endValue):Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()); return Number.isFinite(start)&&Number.isFinite(end)?Math.max(0,Math.floor((end-start)/
+function dateStamp(value){const match=clean(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);return match?Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3])):NaN;}
+function elapsedDays(startValue,endValue=''){const start=dateStamp(startValue),now=new Date(),end=endValue?dateStamp(endValue):Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()); return Number.isFinite(start)&&Number.isFinite(end)?Math.max(0,Math.floor((end-start)/
   86400000)):'';}
 
 function parseWorkflowXml(text,statusHint=''){
   const doc=new DOMParser().parseFromString(text,'application/xml');
   if(doc.getElementsByTagName('parsererror').length)throw new Error('The workflow service returned invalid XML.');
-  const entries=[...doc.getElementsByTagNameNS('*','entry')],hintedTerminal=workflowStatusHint(statusHint);
+  const entries=[...doc.getElementsByTagNameNS('*','entry')],hintedTerminal=terminalStatus(statusHint);
   if(!entries.length)return {'Submit Date':'','Approver Team':'','Assigned Approver':'','Pending Days':'','Elapsed Days':'','Cycle Time (ECD)':'','Cycle Time (SOBi)':'',__completed:hintedTerminal==='COMPLETED',__completedAt:'',__cycleEndAt:'',__terminal:hintedTerminal,__workflow:[],
     __error:'No workflow data'};
   const decisions=entries.map(entry=>upper(xmlValue(entry,'Decision'))),submittedIndex=decisions.indexOf('SUBMITTED'); const submittedEntry=submittedIndex>=0?entries[submittedIndex]:null; const submitted=workflowDate(xmlValue(submittedEntry,'ApprovalDate')); let lastAction=-1;
@@ -4791,13 +4908,13 @@ function parseWorkflowXml(text,statusHint=''){
     const decision=decisions[index],date=workflowDate(xmlValue(entry,'ApprovalDate'));
     if(decision&&decision!=='PENDING'&&decision!=='N/A')lastAction=index;
     if(['APPROVED','COMPLETED'].includes(decision)&&date)approvedDates.push(date);
-    const terminalDecision=workflowStatusHint(decision);
-    if(terminalDecision&&date&&(!terminalDates[terminalDecision]||workflowStamp(date)>workflowStamp(terminalDates[terminalDecision])))terminalDates[terminalDecision]=date;
+    const terminalDecision=terminalStatus(decision);
+    if(terminalDecision&&date&&(!terminalDates[terminalDecision]||dateStamp(date)>dateStamp(terminalDates[terminalDecision])))terminalDates[terminalDecision]=date;
   });
   const after=entries.slice(lastAction+1);
   const pending=after.find(entry=>{const decision=upper(xmlValue(entry,'Decision')),approved=workflowDate(xmlValue(entry,'ApprovalDate')); return (!decision||decision==='PENDING')&&!approved&&['DescriptionTask','ApproverTeam','Approver','PendingDays'].some(name=>xmlValue(entry,name));
     })||null;
-  const lastDecision=lastAction>=0?decisions[lastAction]:'',xmlTerminal=workflowStatusHint(lastDecision),terminal=hintedTerminal||xmlTerminal; const completedAt=approvedDates.reduce((latest,date)=>!latest||workflowStamp(date)>workflowStamp(latest)?date:latest,'');
+  const lastDecision=lastAction>=0?decisions[lastAction]:'',xmlTerminal=terminalStatus(lastDecision),terminal=hintedTerminal||xmlTerminal; const completedAt=approvedDates.reduce((latest,date)=>!latest||dateStamp(date)>dateStamp(latest)?date:latest,'');
   const completed=terminal==='COMPLETED'||(!terminal&&lastDecision==='APPROVED'&&!pending); const cycleEndAt=completed?completedAt:(terminalDates[terminal]||'');
   return {
     'Submit Date':submitted, 'Approver Team':terminal?'':xmlValue(pending,'ApproverTeam'), 'Assigned Approver':terminal?'':xmlValue(pending,'Approver'), 'Pending Days':terminal?'':xmlValue(pending,'PendingDays'), 'Elapsed Days':'', 'Cycle Time (ECD)':'', 'Cycle Time (SOBi)':'',
@@ -4817,11 +4934,10 @@ async function fetchOdataXml(url,signal,label){
   return text;
 }
 
-async function fetchWorkflow(nsr,signal,statusHint){const text=await fetchOdataXml(odataLookupUrl(WORKFLOW_ODATA,'Nsrnum',nsr),signal,'Workflow service'); return parseWorkflowXml(text,statusHint);}
 
 async function fetchNsrEnrichment(tempId,signal){
   if(!clean(tempId))return {category:'',ecd:''};
-  const text=await fetchOdataXml(odataLookupUrl(NSR_DETAIL_ODATA,'TempId',tempId),signal,'NSR detail service'); const doc=new DOMParser().parseFromString(text,'application/xml');
+  const text=await fetchOdataXml(odataLookupUrl(DETAIL_ODATA,'TempId',tempId),signal,'NSR detail service'); const doc=new DOMParser().parseFromString(text,'application/xml');
   if(doc.getElementsByTagName('parsererror').length)throw new Error('NSR detail service returned invalid XML.');
   const entry=doc.getElementsByTagNameNS('*','entry')[0]; return {category:xmlValue(entry,'NsrCategory'),ecd:workflowDate(xmlValue(entry,'HwEngCommit'))};
 }
@@ -4835,10 +4951,10 @@ function mergeCycle(nsr,live,details){
 }
 
 function setCycleBusy(busy){$id('runCycleBtn').disabled=busy;$id('cancelCycleBtn').disabled=!busy;$id('cycleInput').disabled=busy; $id('cycleBadge').textContent=busy?'Querying':'Ready';}
-function setCycleProgress(done,total,message){const progress=$id('cycleProgress');progress.max=Math.max(1,total);progress.value=done; $id('cycleStatus').textContent=message;$id('cycleBadge').textContent=total?`${done}/${total}`:'Ready';}
+function cycleProgress(done,total,message){const progress=$id('cycleProgress');progress.max=Math.max(1,total);progress.value=done; $id('cycleStatus').textContent=message;$id('cycleBadge').textContent=total?`${done}/${total}`:'Ready';}
 
 function cycleError(err,statusHint=''){
-  const message=clean(err&&err.message)||'Lookup failed',terminal=workflowStatusHint(statusHint);
+  const message=clean(err&&err.message)||'Lookup failed',terminal=terminalStatus(statusHint);
   return {'Submit Date':'','Approver Team':'','Assigned Approver':'','Pending Days':'','Elapsed Days':'','Cycle Time (ECD)':'','Cycle Time (SOBi)':'',__completed:terminal==='COMPLETED',__completedAt:'',__cycleEndAt:'',__terminal:terminal,__error:message};
 }
 
@@ -4847,35 +4963,35 @@ async function runCycleLookup(nsrs){
   if(!parsed.valid.length){toast('Enter at least one valid NSR#.',true);return}
   if(parsed.invalid.length)toast(`${parsed.invalid.length} invalid value${parsed.invalid.length===1?' was':'s were'} ignored.`,true);
   const total=parsed.valid.length;
-  if(total>CYCLE_LIMIT){const message=`A maximum of ${CYCLE_LIMIT} NSRs can be queried at once. Reduce the list and try again.`;unsafeWindow.alert(message);setCycleProgress(0,0,message);return}
-  if(total>CYCLE_WARN_AT&&!unsafeWindow.confirm(`You are about to query ${total} NSRs from SAP. This may take some time. Continue?`)){setCycleProgress(0,0,`Query cancelled. ${total} NSRs were not sent to SAP.`);return;}
+  if(total>LIMIT){const message=`A maximum of ${LIMIT} NSRs can be queried at once. Reduce the list and try again.`;unsafeWindow.alert(message);cycleProgress(0,0,message);return}
+  if(total>WARN_AT&&!unsafeWindow.confirm(`You are about to query ${total} NSRs from SAP. This may take some time. Continue?`)){cycleProgress(0,0,`Query cancelled. ${total} NSRs were not sent to SAP.`);return;}
   if(state.cycleAbort)state.cycleAbort.abort();
-  const run=++state.cycleRun,controller=new unsafeWindow.AbortController();state.cycleAbort=controller;state.cycleRows=[]; const details=new Map((getRows?getRows(parsed.valid):state.rows).map(row=>[upper(row['NSR#']),row])),results=new Array(total),workers=Math.min(CYCLE_CONCURRENCY,total);
-  let next=0,done=0,stoppedForAuth=false,lastPaint=0; setCycleBusy(true);setCycleProgress(0,total,`Starting ${total} live lookup${total===1?'':'s'} · up to ${workers} requests at once…`);await renderCycleTable();
+  const run=++state.cycleRun,controller=new unsafeWindow.AbortController();state.cycleAbort=controller;state.cycleRows=[]; const details=new Map((getRows?getRows(parsed.valid):state.rows).map(row=>[upper(row['NSR#']),row])),results=new Array(total),workers=Math.min(CONCURRENCY,total);
+  let next=0,done=0,authFailed=false,lastPaint=0; setCycleBusy(true);cycleProgress(0,total,`Starting ${total} live lookup${total===1?'':'s'} · up to ${workers} requests at once…`);await renderCycle();
   async function worker(){
-    while(!controller.signal.aborted&&run===state.cycleRun&&!stoppedForAuth){
+    while(!controller.signal.aborted&&run===state.cycleRun&&!authFailed){
       const index=next++;if(index>=total)return;
-      const nsr=parsed.valid[index],detail=details.get(upper(nsr)),statusHint=workflowStatusHint(detail&&detail['Task Status']); let live;
-      try{live=await fetchWorkflow(nsr,controller.signal,statusHint)} catch(err){if(controller.signal.aborted)return; live=cycleError(err,statusHint);if(err.auth){stoppedForAuth=true;controller.abort()}}
+      const nsr=parsed.valid[index],detail=details.get(upper(nsr)),statusHint=terminalStatus(detail&&detail['Task Status']); let live;
+      try{live=parseWorkflowXml(await fetchOdataXml(odataLookupUrl(WF_ODATA,'Nsrnum',nsr),controller.signal,'Workflow service'),statusHint)} catch(err){if(controller.signal.aborted)return; live=cycleError(err,statusHint);if(err.auth){authFailed=true;controller.abort()}}
       let categoryError='';live['NSR Category']='';live.__ecd='';
-      if(!stoppedForAuth&&clean(detail&&detail['Temp Id#'])){
+      if(!authFailed&&clean(detail&&detail['Temp Id#'])){
         try{const enrichment=await fetchNsrEnrichment(detail['Temp Id#'],controller.signal);live['NSR Category']=enrichment.category;live.__ecd=enrichment.ecd}
-        catch(err){if(controller.signal.aborted)return; categoryError=clean(err&&err.message)||'NSR Category unavailable';if(err.auth){stoppedForAuth=true;controller.abort()}}
+        catch(err){if(controller.signal.aborted)return; categoryError=clean(err&&err.message)||'NSR Category unavailable';if(err.auth){authFailed=true;controller.abort()}}
       }
       if(categoryError)live.__categoryError=categoryError;
       if(run!==state.cycleRun)return;
-      results[index]=mergeCycle(nsr,live,details);done++;state.cycleRows=results.filter(Boolean); const now=Date.now();if(now-lastPaint>200||done===total||stoppedForAuth){lastPaint=now;await renderCycleTable()}
+      results[index]=mergeCycle(nsr,live,details);done++;state.cycleRows=results.filter(Boolean); const now=Date.now();if(now-lastPaint>200||done===total||authFailed){lastPaint=now;await renderCycle()}
       if(run!==state.cycleRun)return;
-      if(!stoppedForAuth)setCycleProgress(done,total,`Queried ${done} of ${total} · up to ${workers} requests at once`);
+      if(!authFailed)cycleProgress(done,total,`Queried ${done} of ${total} · up to ${workers} requests at once`);
     }
   }
   await Promise.all(Array.from({length:workers},()=>worker()));
   if(run!==state.cycleRun)return;
-  state.cycleRows=results.filter(Boolean);await renderCycleTable();if(run!==state.cycleRun)return;
-  const cancelled=controller.signal.aborted&&!stoppedForAuth,failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length;state.cycleAbort=null;setCycleBusy(false);
-  if(stoppedForAuth){setCycleProgress(done,total,'Stopped because the Fiori session is unavailable. Return to Fiori, sign in, and run the query again.');toast('Fiori session unavailable.',true)}
-  else if(cancelled)setCycleProgress(done,total,`Cancelled after ${done} of ${total} lookups.`);
-  else{setCycleProgress(done,total,`${done} live lookup${done===1?'':'s'} completed${failed?` · ${failed} unavailable`:''}.`);
+  state.cycleRows=results.filter(Boolean);await renderCycle();if(run!==state.cycleRun)return;
+  const cancelled=controller.signal.aborted&&!authFailed,failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length;state.cycleAbort=null;setCycleBusy(false);
+  if(authFailed){cycleProgress(done,total,'Stopped because the Fiori session is unavailable. Return to Fiori, sign in, and run the query again.');toast('Fiori session unavailable.',true)}
+  else if(cancelled)cycleProgress(done,total,`Cancelled after ${done} of ${total} lookups.`);
+  else{cycleProgress(done,total,`${done} live lookup${done===1?'':'s'} completed${failed?` · ${failed} unavailable`:''}.`);
     toast(`${done} cycle time row${done===1?'':'s'} loaded${failed?` · ${failed} unavailable`:''}.`,failed>0)}
 }
 
@@ -4889,7 +5005,7 @@ function compareCycle(a,b,field){
 function cycleRows(){
   return cycleTable?.ready?cycleTable.grid.getRows('active').map(row=>cycleTable.rows[row.getIndex()]):[];
 }
-function cycleFields(){return cycleTable.grid.getColumns().filter(column=>column.isVisible()).map(column=>CYCLE_FIELDS[Number(column.getField().slice(1))])}
+function cycleFields(){return cycleTable.grid.getColumns().filter(column=>column.isVisible()).map(column=>[CYCLE_FIELDS[Number(column.getField().slice(1))],column.getDefinition().title])}
 
 function nsrDetailUrl(row){return clean(row['Temp Id#'])&&clean(row['NSR#'])?`${FIORI_DETAIL}${encodeURIComponent(clean(row['Temp Id#']))}/${encodeURIComponent(clean(row['NSR#']))}/Search`:''}
 
@@ -4904,7 +5020,7 @@ function cycleCell(row,field){
   return esc(row[field]);
 }
 
-function cycleCellClass(row,field){
+function cycleClass(row,field){
   const elapsed=clean(row['Elapsed Days']),ecdCycle=clean(row['Cycle Time (ECD)']),sobiCycle=clean(row['Cycle Time (SOBi)']); const elapsedOverEcd=elapsed&&ecdCycle&&Number(elapsed)>Number(ecdCycle); const ecdOverSobi=ecdCycle&&sobiCycle&&Number(ecdCycle)>Number(sobiCycle);
   if(field==='Elapsed Days'&&elapsedOverEcd)return 'duration-over';
   if(field==='Cycle Time (ECD)'&&(elapsedOverEcd||ecdOverSobi))return 'duration-over';
@@ -4924,21 +5040,21 @@ async function openWorkflow(nsr,trigger){
 }
 
 function closeWorkflow(){if($id('wfModal').open)$id('wfModal').close()}
-function restoreWorkflowFocus(){modalHost.classList.remove('wf-open');if(wfTrigger?.isConnected)wfTrigger.focus({preventScroll:true});wfTrigger=null}
+function restoreWfFocus(){modalHost.classList.remove('wf-open');if(wfTrigger?.isConnected)wfTrigger.focus({preventScroll:true});wfTrigger=null}
 
-async function renderCycleTable(){
-  cycleTable=await renderTable('cycleTable',CYCLE_FIELDS.map(field=>[field,row=>row[field],(_,row)=>`<span class="${cycleCellClass(row,field)}">${cycleCell(row,field)}</span>`,{title:embedded&&field==='REF FCID'?'FID':field,sorter:(a,b)=>compareCycle(a,b,field)}]),state.cycleRows,{file:'NSR_Cycle_Time',height:450,columnFilters:false,defaultSort:'NSR#',copyId:'copyCycleBtn',exportId:'exportCycleBtn',onCopy:copyCycleRows,onExport:exportCycleRows,widths:Object.fromEntries(CYCLE_FIELDS.map((field,index)=>[field,CYCLE_WIDTHS[index]]))});
+async function renderCycle(){
+  cycleTable=await renderTable('cycleTable',CYCLE_FIELDS.map(field=>[field,row=>row[field],(_,row)=>`<span class="${cycleClass(row,field)}">${cycleCell(row,field)}</span>`,{title:embedded&&field==='REF FCID'?'FID':field,sorter:(a,b)=>compareCycle(a,b,field)}]),state.cycleRows,{file:'NSR_Cycle_Time',height:450,columnFilters:false,defaultSort:'NSR#',copyId:'copyCycleBtn',exportId:'exportCycleBtn',onCopy:copyCycle,onExport:exportCycle,widths:Object.fromEntries(CYCLE_FIELDS.map((field,index)=>[field,WIDTHS[index]]))});
 }
 
 function copyWorkflow(){if(!workflowTable?.ready)return;const fields=workflowTable.grid.getColumns().filter(column=>column.isVisible()).map(column=>WF_FIELDS[Number(column.getField().slice(1))]),rows=workflowTable.grid.getRows('active').map(row=>workflowTable.rows[row.getIndex()]);if(rows.length)return copyRows([fields,...rows.map(row=>fields.map(field=>row[field]??''))])}
-function copyCycleRows(){const rows=cycleRows();if(!rows.length)return;const fields=cycleFields();return copyRows([fields,...rows.map(row=>fields.map(field=>row[field]??''))])}
+function copyCycle(){const rows=cycleRows();if(!rows.length)return;const fields=cycleFields();return copyRows([fields.map(([,label])=>label),...rows.map(row=>fields.map(([field])=>row[field]??''))])}
 
-function exportCycleRows(){
+function exportCycle(){
   const rows=cycleRows();if(!rows.length)return;
   if(!window.XLSX){toast('The XLSX library did not load.',true);return}
-  const fields=cycleFields(),data=rows.map(row=>Object.fromEntries(fields.map(field=>[field,row[field]??'']))),sheet=XLSX.utils.json_to_sheet(data,{header:fields});
-  const workflowData=rows.flatMap(row=>(Array.isArray(row.__workflow)?row.__workflow:[]).map((stage,index)=>Object.fromEntries(WORKFLOW_EXPORT_FIELDS.map(field=>[field,field==='NSR#'?(row['NSR#']??''):field==='Workflow Step'?index+1:(stage[field]??'')]))));
-  const workflowSheet=XLSX.utils.json_to_sheet(workflowData,{header:WORKFLOW_EXPORT_FIELDS}); sheet['!cols']=fields.map(field=>({wch:Math.max(10,Math.round(CYCLE_WIDTHS[CYCLE_FIELDS.indexOf(field)]/7))}));sheet['!autofilter']={ref:sheet['!ref']};
+  const fields=cycleFields(),data=rows.map(row=>Object.fromEntries(fields.map(([field,label])=>[label,row[field]??'']))),sheet=XLSX.utils.json_to_sheet(data,{header:fields.map(([,label])=>label)});
+  const workflowData=rows.flatMap(row=>(Array.isArray(row.__workflow)?row.__workflow:[]).map((stage,index)=>Object.fromEntries(WF_EXPORT.map(field=>[field,field==='NSR#'?(row['NSR#']??''):field==='Workflow Step'?index+1:(stage[field]??'')]))));
+  const workflowSheet=XLSX.utils.json_to_sheet(workflowData,{header:WF_EXPORT}); sheet['!cols']=fields.map(([field])=>({wch:Math.max(10,Math.round(WIDTHS[CYCLE_FIELDS.indexOf(field)]/7))}));sheet['!autofilter']={ref:sheet['!ref']};
   workflowSheet['!cols']=[12,14,32,18,22,24,14,14,50].map(wch=>({wch}));workflowSheet['!autofilter']={ref:workflowSheet['!ref']}; const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,'NSR Cycle Time');XLSX.utils.book_append_sheet(book,workflowSheet,
     'Workflow Detail'); const now=new Date(),stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`; XLSX.writeFile(book,`NSR_Cycle_Time_${stamp}.xlsx`,{compression:true});
     toast(`${rows.length} summary rows and ${workflowData.length} workflow records exported.`);
@@ -4950,14 +5066,14 @@ function bind(element,event,handler){element.addEventListener(event,handler);lis
 bind($id('runCycleBtn'),'click',()=>runCycleLookup());bind($id('cancelCycleBtn'),'click',cancel);
 bind($id('cycleTable'),'click',event=>{const trigger=event.target.closest('[data-wf-nsr]');if(trigger)openWorkflow(trigger.dataset.wfNsr,trigger)});
 bind($id('wfModal'),'click',event=>{if(event.target.closest('[data-wf-close]'))closeWorkflow()});
-bind($id('wfModal'),'close',()=>{if(!$id('wfModal').open)restoreWorkflowFocus()});
+bind($id('wfModal'),'close',()=>{if(!$id('wfModal').open)restoreWfFocus()});
 setCycleBusy(false);
 return {
   setRows(rows){state.rows=Array.isArray(rows)?rows:[]},
-  show:()=>renderCycleTable().then(()=>cycleTable.grid.redraw(true)),
+  show:()=>renderCycle().then(()=>cycleTable.grid.redraw(true)),
   query(nsrs,{run=true}={}){if(nsrs!==undefined)$id('cycleInput').value=Array.isArray(nsrs)?nsrs.join('\n'):String(nsrs);return run?runCycleLookup():parseNsrInput($id('cycleInput').value)},
   snapshot:()=>({rows:state.cycleRows,busy:Boolean(state.cycleAbort)}),cancel,
-  destroy(){state.cycleRun++;if(state.cycleAbort)state.cycleAbort.abort();state.cycleAbort=null;setCycleBusy(false);clearTimeout(state.toastTimer);closeWorkflow();restoreWorkflowFocus();cycleTable?.grid.destroy();workflowTable?.grid.destroy();listeners.forEach(([element,event,handler])=>element.removeEventListener(event,handler));}
+  destroy(){state.cycleRun++;if(state.cycleAbort)state.cycleAbort.abort();state.cycleAbort=null;setCycleBusy(false);clearTimeout(state.toastTimer);closeWorkflow();restoreWfFocus();cycleTable?.grid.destroy();workflowTable?.grid.destroy();listeners.forEach(([element,event,handler])=>element.removeEventListener(event,handler));}
 };
 }
 
@@ -5354,7 +5470,7 @@ function syncFilters(){
 function init(){
   const style=document.createElement('style');style.textContent=chosenBaseCss+css;document.head.append(style);syncFilters();
   // MyLam also changes checked/selected properties without DOM events (saved filters and resets).
-  setInterval(()=>{if(!document.hidden)syncFilters()},500);
+  setInterval(()=>{if(!document.hidden)syncFilters()},2000);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
