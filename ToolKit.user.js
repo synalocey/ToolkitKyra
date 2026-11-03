@@ -60,7 +60,7 @@ const DASHBOARD_BASE_CSS=chosenBaseCss+`
 .section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.section-title h2{margin:0}.context-badge{display:inline-flex;align-items:center;background:#e7f6ed;color:#22604b;border:1px solid #b8dcc7;border-radius:18px;padding:4px 9px;font-size:12px;font-weight:600;white-space:nowrap}.toolbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:#fff;scrollbar-width:thin}
 .status-pill{display:inline-flex;border-radius:12px;padding:3px 7px;font-size:12px;line-height:1.3;background:#dbeafe;color:#1d4ed8}.status-pill.terminal{background:#dcfce7;color:#166534}.status-pill.stop{background:#fee2e2;color:#991b1b}.status-pill.unknown{background:#fef3c7;color:#92400e}
 .cycle-shell{display:grid;gap:14px}.cycle-label{display:block;color:#425a7b;font-size:12px;font-weight:600;margin-bottom:6px}.cycle-input{display:block;width:100%;resize:vertical;min-height:110px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);padding:10px;font:13px/1.5 Consolas,"Segoe UI",sans-serif}.cycle-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}.cycle-progress{display:block;width:100%;height:6px;margin-top:12px;accent-color:var(--teal);appearance:none;border:0;border-radius:9px;overflow:hidden;background:#e9eff4}.cycle-progress::-webkit-progress-bar{background:#e9eff4}.cycle-progress::-webkit-progress-value,.cycle-progress::-moz-progress-bar{background:var(--teal)}.cycle-status{margin-top:7px;color:var(--muted);font-size:12px}.cycle-status:empty{display:none}.ct-link{border:0;background:none;color:#0369a1;padding:0;font:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.duration-over,.duration-over .ct-link{color:var(--red)!important}
-.wf-modal:not([open]){display:none}.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:18px;border:0;background:transparent;overflow:hidden}.wf-modal::backdrop{background:#152e505c;backdrop-filter:blur(2px)}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.wf-box.fid-dialog{--table-heading-bg:initial;position:relative;width:min(1200px,calc(100vw - 36px));min-width:0;height:auto;min-height:0;max-height:90vh}.wf-head p{margin:4px 0 0;font-size:13px}#wfTable .tabulator-col-title{white-space:normal;line-height:17px}.wf-box .fc-grid .tabulator-row .tabulator-cell{height:auto;white-space:pre-wrap}.wf-box .cell-content{white-space:pre-wrap;max-height:none;overflow-wrap:anywhere}body.wf-open{overflow:hidden}
+.wf-modal:not([open]){display:none}.wf-modal{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:18px;border:0;background:transparent;overflow:hidden}.wf-modal::backdrop{background:#152e505c;backdrop-filter:blur(2px)}.wf-bg{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}.wf-box.fid-dialog{--table-heading-bg:initial;position:relative;width:min(1200px,calc(100vw - 36px));min-width:0;height:auto;min-height:0;max-height:90vh}.wf-head p{margin:4px 0 0;font-size:13px}#wfTable .tabulator-col-title{white-space:normal;line-height:17px}#wfTable .tabulator-row .tabulator-cell{height:auto;white-space:pre-wrap}#wfTable .cell-content{white-space:pre-wrap;max-height:none;overflow-wrap:anywhere}body.wf-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 `;
 const NSR_CYCLE_HTML=`<section id="cycleTab" class="tab-page" role="tabpanel" aria-label="NSR Cycle Time">
@@ -95,7 +95,9 @@ const NSR_CYCLE_HTML=`<section id="cycleTab" class="tab-page" role="tabpanel" ar
       <div><h1><span id="wfTitle">Workflow Detail</span><a id="wfNsrLink" class="fid-action" target="_blank" rel="noopener noreferrer" hidden>NSR ↗</a></h1><p id="wfMeta" class="muted"></p></div>
       <button id="wfClose" class="fid-close" type="button" data-wf-close aria-label="Close workflow detail">×</button>
     </div>
+    <p id="wfStatus" class="muted" role="status" hidden></p>
     <div id="wfSummary" class="fid-dialog-grid"></div>
+    <div id="wfAdditional"></div>
     <div id="wfTable" aria-label="Full NSR workflow detail"></div>
   </section>
 </dialog>
@@ -184,8 +186,8 @@ const BRIDGE_HTML=(`
         <small>Local service</small>
         <strong id="bridgeService">Checking SAPGUIcontrol…</strong>
         <div id="bridgeUpdateStatus" class="bridge-note" style="margin-top:6px" aria-live="polite">Checking for updates…</div>
-        <a id="bridgeDownload" class="bridge-btn light small bridge-download" href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.7z" target="_blank" rel="noopener noreferrer"` +
-  ` title="Download SAPGUIcontrol.7z, then extract it and run SAPGUIcontrol.exe." hidden>Download SAPGUIcontrol</a>
+        <a id="bridgeDownload" class="bridge-btn light small bridge-download" href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer"` +
+  ` title="Download SAPGUIcontrol.zip, then extract it and run SAPGUIcontrol.exe." hidden>Download SAPGUIcontrol</a>
       </div>
       <div class="bridge-status-item"><small>SAP GUI</small><strong id="bridgeSap">Not checked</strong></div>
       <div class="bridge-status-item">
@@ -822,13 +824,31 @@ function missingBobjFileNameFields(rows,template){
   return headers.filter(header=>rows.some(row=>{if(row._error)return false; const value=bobjTemplateValue(row,header);return !value||value==='#';}));
 }
 
+async function waitForBobjRefresh(endpoint,status,update,onProgress,isCurrent=()=>true){
+  let pendingStart=update&&!status.running,blocked=false;
+  while(pendingStart||status.running){
+    if(!isCurrent())return null;
+    if(pendingStart&&status.running)pendingStart=false;
+    if(pendingStart){
+      if(blocked){
+        const other=await bridgeRequest('GET',endpoint==='/excel'?'/excel/ctl/status':'/excel/status',undefined,10000);
+        if(!isCurrent())return null;blocked=Boolean(other.running);
+      }
+      if(!blocked){
+        try{status=await bridgeRequest('POST',endpoint+'/refresh',{visible:false},20000);pendingStart=false;continue}
+        catch(error){if(error.status!==409)throw error;blocked=true}
+      }
+    }
+    onProgress(status,pendingStart||status.stage==='queued');await waitMs(1000);if(!isCurrent())return null;
+    status=await bridgeRequest('GET',endpoint+'/status',undefined,10000);
+  }
+  return isCurrent()?status:null;
+}
+
 async function refreshBobjAndWait(){
   if(!bobjTaskRefreshPromise)bobjTaskRefreshPromise=(async()=>{
     bobjStatusRun++;clearTimeout(bobjPollTimer);bobjPollTimer=0;bobjRefreshing=true;updateBobjUpdate(); let status=await bridgeRequest('GET','/excel/status',undefined,10000);
-    if(!status.running){try{status=await bridgeRequest('POST','/excel/refresh',{visible:false},20000)} catch(error){if(error.status!==409)throw error;status=await bridgeRequest('GET','/excel/status',undefined,10000)}}
-    const deadline=Date.now()+660000;
-    while(status.running){bobjStatus=status;setBobjRefreshState('Updating · '+String(status.stage||'running'),'running'); if(Date.now()>deadline)throw new Error('FID BOBJ refresh did not finish within 11 minutes.'); await waitMs(1000);status=await bridgeRequest('GET','/excel/status',
-      undefined,10000);}
+    status=await waitForBobjRefresh('/excel',status,true,(status,queued)=>{bobjStatus=status;setBobjRefreshState(queued?'Waiting for another BOBJ refresh…':'Updating · '+String(status.stage||'running'),'running')});
     bobjStatus=status;bobjRefreshing=false;
     if(status.stage!=='completed')throw new Error(status.message||'FID BOBJ update did not complete.');
     const source=await readBobjDataSource(status);
@@ -1148,7 +1168,7 @@ function isSapGuiControlUpdateAvailable(current,latest){const local=current.repl
 function renderSapGuiControlUpdate(){
   const state=sapGuiControlUpdate,release=state.release,download=bridgeId('bridgeDownload'); const newer=Boolean(release&&state.current&&isSapGuiControlUpdateAvailable(state.current,release.version)); download.href=release&&release.downloadUrl||SAPGUICONTROL_DOWNLOAD_URL;
   download.hidden=state.online===null||Boolean(state.online&&!newer); download.textContent=state.online?'Update SAPGUIcontrol':'Download SAPGUIcontrol';
-  download.title=(state.online&&release?'Download SAPGUIcontrol '+release.version+' (7z).':'Download SAPGUIcontrol.7z.')+' Extract it and run SAPGUIcontrol.exe.';
+  download.title=(state.online&&release?'Download SAPGUIcontrol '+release.version+' (ZIP).':'Download SAPGUIcontrol.zip.')+' Extract it and run SAPGUIcontrol.exe.';
   bridgeId('bridgeUpdateStatus').textContent=state.checking?'Checking for updates…':release?(state.online&&!newer?'Up to date':'Latest version: '+release.version):'Update check unavailable';
 }
 
@@ -2439,7 +2459,7 @@ body.fcid-app{--ctl-ink:#7950a1;--ctl-tint:#f3edfa;--ctl-line:#d2bee8}
 .fc-grid .tabulator-header-filter{display:none}.fc-grid.column-filters .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-title{padding-right:29px}.fc-grid.column-filters .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter{right:0}.fc-grid.column-filters .tabulator-col-sorter .tabulator-arrow{border-left-width:4px;border-right-width:4px}.column-heading>span{display:block;overflow:hidden;text-overflow:ellipsis}.column-funnel,.mark-trigger{position:absolute;right:11px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;justify-content:center;width:16px;height:18px;padding:2px;border:0;border-radius:3px;background:none;color:#8a97aa;cursor:pointer}.column-funnel svg,.mark-trigger svg{width:12px;height:12px;fill:currentColor}.column-funnel:hover,.column-funnel.active,.mark-trigger:hover,.mark-trigger.active{background:#dceaff;color:#215fbb}.column-funnel:focus-visible,.mark-trigger:focus-visible{outline:2px solid #557cae;outline-offset:-2px}
 .col-bar{display:flex;align-items:center;flex-wrap:wrap;gap:4px;flex:1 1 160px;min-width:0}.col-bar:empty{display:none}.col-bar .pill{max-width:min(220px,100%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;cursor:pointer}
 .col-popup{position:fixed;position-area:bottom;position-try-fallbacks:flip-block;inset:auto;margin:8px;width:min(240px,calc(100vw - 16px));color:#344c6b;box-shadow:0 6px 22px #213a612b}.col-popup label>span{font-weight:600}.col-popup input{display:block;width:100%;margin:7px 0 10px;padding:7px;border:1px solid #c5d2e5;border-radius:5px}.col-popup .btnrow{justify-content:space-between}
-#colChoices{width:100%;max-height:160px;margin:0 0 10px;padding:3px;border:1px solid #c5d2e5;border-radius:5px;color:inherit;background:#fff;font:inherit}#colChoices option{padding:3px 6px}
+#colChoices,#colNoteFilter{width:100%;max-height:160px;margin:0 0 10px;padding:3px;border:1px solid #c5d2e5;border-radius:5px;color:inherit;background:#fff;font:inherit}#colChoices option{padding:3px 6px}#colNoteFilter{padding:7px}
 .mark-trigger{position:static;transform:none;display:flex;margin:auto;height:20px}.col-popup.mark-popup{position-area:bottom span-right;justify-self:start;position-try-fallbacks:flip-block,flip-inline;margin:8px 0;padding:7px;width:190px}.mark-popup label{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border-radius:5px;color:#344c6b;cursor:pointer}.mark-popup label:first-child{border-bottom:1px solid #e0e7f1;margin-bottom:4px}.mark-popup label:hover{background:#f0f5fc}.mark-popup label:has(input:checked){background:#e7effb;color:#215fbb}.mark-popup input[type=checkbox]{width:14px;height:14px;margin:0;padding:0;accent-color:#2863d6;flex:none}.mark-popup label>span{flex:1;font-weight:400}.mark-popup b{font-weight:400;font-variant-numeric:tabular-nums}
 .fid-dialog .tabulator-row[data-fid-risk^="late-"],.fid-header-status .pill.risk{background:#fff2f5;--fid-history-line:#c75970}
 .fid-dialog .tabulator-row:is([data-fid-risk="pending-nsr"],[data-fid-risk="pending-config"]):hover,.risk-drivers .signal[data-group-value="Pending Config CTL"]:not([aria-pressed=true]):hover{background:#e8ddf5}
@@ -2542,7 +2562,7 @@ button.fid-quarter-state{width:100%;padding:2px 4px;border:0;border-radius:4px;b
 `;
 const sourceHtml=Object.entries(sources).map(([key,source],index)=>{
   const importLabel=key==='ctlNsr'?'Append':'Import';
-  const help=BOBJ_SOURCES[key]?`<strong>Auto:</strong> Open SAPGUIcontrol.exe (<a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.7z" target="_blank" rel="noopener noreferrer">Download</a>).<br><strong>Manual:</strong> <a href="https://synalocey.github.io/ToolkitKyra/${BOBJ_SOURCES[key].file}" download="${BOBJ_SOURCES[key].file}" target="_blank" rel="noopener noreferrer">Download workbook</a> and refresh.`:
+  const help=BOBJ_SOURCES[key]?`<strong>Auto:</strong> Open SAPGUIcontrol.exe (<a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer">Download</a>).<br><strong>Manual:</strong> <a href="https://synalocey.github.io/ToolkitKyra/${BOBJ_SOURCES[key].file}" download="${BOBJ_SOURCES[key].file}" target="_blank" rel="noopener noreferrer">Download workbook</a> and refresh.`:
     key==='ctlNsr'?'Download from <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">the CTL system</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
   return `<section class="fc-source" data-source="${key}" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span>${BOBJ_SOURCES[key]?'<small class="fc-source-bobj">BOBJ</small>':''}</h3><span id="fcSource-${key}" class="fc-source-state" role="status">Unavailable</span></div><div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>${BOBJ_SOURCES[key]?`<button class="btn small" data-source-action="${key==='fcid'?'bobj-update':'ctl-bobj-update'}">Update</button>`:key==='nsr'?'<button class="btn small light" data-source-action="nsr-open">Load NSR</button>':''}<button id="fcImport-${key}" class="btn small light" data-import-source="${key}">${importLabel}</button>${help?`<details class="fc-source-help" id="fcHelp-${key}"${BOBJ_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble">${help}</div></details>`:''}</div><input type="file" id="fcFile-${key}" data-source-file="${key}" aria-label="${importLabel} ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden></section>`;
 }).join('');
@@ -2557,15 +2577,15 @@ document.body.innerHTML=`<header class="fc-hero"><div class="fc-hero-inner"><div
 <form id="fidLookup" class="fc-filter fid-lookup"><textarea id="fSearch" class="quick-search" placeholder="Search FIDs, CTLs, or NSRs&#10;Single FID/CTL → FID 360°" aria-label="Search multiple FIDs, CTLs, or NSRs&#10;Single FID/CTL enables FID 360" rows="2"></textarea><button class="btn light" type="submit" aria-label="Open FID 360°" title="Open FID 360°" hidden><span aria-hidden="true">🔍</span></button></form>
 ${['fAccount'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="fid">FID Filters</h3>${['fQuarter','fCurrentQuarter','fOwner','fSlotInitiator','fFidStatus','fRisk','fCustomer','fSystem','fBusinessUnit','fMfg','fSalesAdmin'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="ctl">CTL Filters</h3>${['fCtlStage','fCtlInitiator','fCtlCreatedDate','fCtlChange','fCtlCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}<h3 class="filter-group-title" data-filter-needs="nsr">NSR Filters</h3>${['fNsrInitiator','fNsrSubmitDate','fNsrTaskStatus','fNsrType','fNsrOrg','fNsrSubsystem','fNsrProduct','fNsrCustomer'].map(name=>filterHtml(filterDefs.find(def=>def[0]===name))).join('')}</aside>
 <main class="main"><nav class="workspace-nav" id="workspaceNav" aria-label="Dashboard views">${views.map(([view,label])=>`<button type="button" data-view="${view}" aria-selected="${view==='nsr'}"${view==='nsr'?' class="active"':''}${['nsr','cycle','rules'].includes(view)?'':' hidden'}>${label}</button>`).join('')}</nav><div id="filterContext" class="filter-context"></div>${views.map(([view])=>`<section id="view-${view}" class="fc-view"${view==='nsr'?'':' hidden'}></section>`).join('')}</main></div>
-<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card col-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><select id="colChoices" size="6" aria-label="Column values" hidden></select><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="markFilterPopup" class="card col-popup mark-popup" popover role="dialog" aria-label="Mark filter"><div role="group" aria-label="Mark status"></div></div><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
+<dialog id="fcNsrDialog" class="fc-nsr-dialog" aria-labelledby="fcNsrDialogTitle"><form id="fcNsrForm"><h2 id="fcNsrDialogTitle">Load NSR</h2><div class="fc-range"><label>From<input id="fcNsrFrom" type="date" required></label><label>To<input id="fcNsrTo" type="date" required></label></div><p class="fc-nsr-help"><a href="https://fep.lamresearch.com/flp#ZNSR-display&amp;/Search/Search/%20" target="_blank" rel="noopener noreferrer">Open NSR search</a></p><div class="fc-actions"><button id="fcNsrCancel" class="btn light" type="button">Cancel</button><button id="fcNsrLoad" class="btn blue" type="submit">Load</button></div></form></dialog><dialog id="fidDetail" class="fid-dialog" aria-labelledby="fidDetailTitle"></dialog><dialog id="fidNoteDialog" class="fc-note-dialog" aria-labelledby="fidNoteTitle"></dialog><form id="columnFilterPopup" class="card col-popup" popover role="dialog" aria-label="Column filter"><label><span></span><input autocomplete="off" autofocus></label><select id="colNoteFilter" aria-label="Note presence" hidden><option value="">All</option><option value="has">Has note</option><option value="none">No note</option></select><select id="colChoices" size="6" aria-label="Column values" hidden></select><div class="btnrow"><button type="reset" class="fc-link">Clear</button><button type="submit" class="btn blue small">Apply</button></div></form><div id="markFilterPopup" class="card col-popup mark-popup" popover role="dialog" aria-label="Mark filter"><div role="group" aria-label="Mark status"></div></div><div id="fcToast" class="fc-toast" role="status" hidden></div>`;
 const cycleTemplate=document.createElement('template');cycleTemplate.innerHTML=NSR_CYCLE_HTML;id('view-cycle').append(cycleTemplate.content.querySelector('#cycleTab'));id('workspace').append(cycleTemplate.content.querySelector('#wfModal'));
 let selectedView='nsr',graph=null,current=null,revision=0,modelRevision=0,buildRun=0,dataRevision=0,toastTimer=0,searchTimer=0,sidebarAnimation=null;
 const rendered=new Map(),tables=new Map(),filterValues={},localTables=new Map();let mappingDraft=null,portfolioCache={};const markDrafts={nsr:null,fid:null};
 const pretty=(value,path='')=>path==='nsr.taskStatus'?(completedTasks[value]||value||'[Unknown]'):path==='ctl.stage'?ctlStageName(value)||'[Unknown]':path==='ctl.change'&&value==='[Unknown]'?'No CTL Yet':path==='fidStatus'?(value==='stable-slot|stable-ctl'?fidStatusNames['risk-free']:value.startsWith('cause:')?fidCauseNames[value.slice(6)]||value:fidCellNames[value]||fidStatusNames[value]||value):path==='riskType'?(value==='MCSD pending'?'Slot + no MCSD':value):value||'[Unknown]';
 const number=value=>String(Number(value||0));
 const pill=(value,kind='info',tip='')=>`<span class="pill ${kind}"${tip?` title="${escapeHtml(tip)}"`:''}>${escapeHtml(value||'—')}</span>`;
-const fidLink=value=>value?`<button type="button" class="fc-link" data-fid="${escapeHtml(value)}">${escapeHtml(value)}</button>`:'—';
-const nsrHistoryLink=(number,nsrId,fid)=>`<button type="button" class="fc-link" data-fid="${escapeHtml(fid)}" data-nsr-id="${escapeHtml(nsrId)}" title="Open NSR History">${escapeHtml(number)}</button>`;
+const fidLink=(value,target)=>value?`<button type="button" class="fc-link" data-fid="${escapeHtml(value)}"${target?.ctlId?` data-ctl-id="${escapeHtml(target.ctlId)}"`:target?.nsrId?` data-nsr-id="${escapeHtml(target.nsrId)}"`:''}>${escapeHtml(value)}</button>`:'—';
+const nsrWorkflowLink=number=>number?`<button type="button" class="fc-link" data-wf-nsr="${escapeHtml(number)}" title="View full workflow for ${escapeHtml(number)}">${escapeHtml(number)}</button>`:'';
 const linkSuffix=(type,fid='')=>type==='Chg'?' (Chg'+(fid?' · '+fid:'')+')':'';
 const quarterYear=value=>nsrRecords.periodYear(value)||String(value).match(/'(\d{2})$/)?.[1]?.replace(/^(\d{2})$/,'20$1')||'';
 function defaultQuarters(){
@@ -2668,8 +2688,9 @@ function applyFilters(updateMarks=false,changedNsr=''){
   syncFidLookup();
   const detailFid=id('fidDetail').open?id('fidDetail').dataset.fid:'',view=id('view-'+selectedView),anchor=changedNsr&&!detailFid&&selectedView==='nsr'?id('nsrTable'):view,position=updateMarks?anchor?.getBoundingClientRect():null;
   current=graph.query(queryFilters());revision++;summaryCache={};quarterCache={};
-  for(const [name,state] of tables){if(name==='cycleTable'||name==='wfTable'||updateMarks&&(changedNsr||state.grid.element.closest('.fc-view')?.hidden===false||state.grid.element.closest('.fid-dialog')?.open))continue;tableResize.unobserve(state.grid.element);state.grid.destroy();tables.delete(name)}
+  for(const [name,state] of tables){if(name==='cycleTable'||name==='wfTable'||name==='wfAdditional'||updateMarks&&(changedNsr||state.grid.element.closest('.fc-view')?.hidden===false||state.grid.element.closest('.fid-dialog')?.open))continue;tableResize.unobserve(state.grid.element);state.grid.destroy();tables.delete(name)}
   rendered.clear();paintContext();showView(selectedView,updateMarks,changedNsr);if(detailFid)showFid(detailFid,updateMarks,changedNsr);
+  const additional=tables.get('wfAdditional');if(additional?.options.fid&&additional.rows.length)table(additional.name,additional.columns,additional.rows,additional.options,true);
   // Keep visible content in place when filter chips or NSR Overview cards change height.
   if(position?.top<innerHeight&&position.bottom>0)window.scrollBy({top:anchor.getBoundingClientRect().top-position.top,behavior:'instant'});
 }
@@ -2719,12 +2740,15 @@ function changeFilter(path,values){
 }
 function sourceValue(record,source,key){return graph.field(record,sources[source].fields[key]?.aliases||[key],true)}
 function fidDateValue(node,state,key){return state.dates[key]||(state.quarter===node.currentQuarter?sourceValue(node.record,'fcid',key):'')}
+const fidTableWidths={FID:80,'FID Status & Risks':175,Quarter:105,Note:220};
 const fidColumns=[markColumn('fid'),
   ['FID',node=>node.id,fidLink],['FID Status & Risks',node=>fidDetailStatus(node,false).map(([label])=>label).join(' · '),(_,node)=>`<span class="fid-status-tags">${fidDetailStatus(node).map(([label,kind,tip])=>pill(label,kind,tip)).join('')}</span>`],
   ['Quarter',node=>fidQuarterRows(node).map(state=>state.quarter||'[Unknown]').join(', ')],['System Description',node=>node.system],['CRD',node=>node.crd||sourceValue(node.record,'fcid','crd')],['SRD',node=>fidQuarterRows(node).map(state=>fidDateValue(node,state,'rd')||'—').join(', ')],['MCSD',node=>fidQuarterRows(node).map(state=>fidDateValue(node,state,'mcsd')||'—').join(', ')],
   ['Account',node=>node.account],['Customer',node=>node.customer],['FID Owner',node=>node.owner,(value,node)=>`<span title="${escapeHtml(ownerTip(node))}">${escapeHtml(value||'[Unknown]')}</span>`],['Slot Initiator',node=>sourceValue(node.slot.active?.record,'ctl','initiator')],['Active CTL',node=>node.activeCtl?.number],['Active Quote',node=>node.activeCtl?.quote],
-  ['Note',node=>fidNotes[node.id]||'',(value,node)=>`<button type="button" class="fc-link fid-note-cell${value?'':' fid-note-add'}" data-note-fid="${escapeHtml(node.id)}" aria-label="${value?'Edit':'Add'} note for FID ${escapeHtml(node.id)}" title="${escapeHtml(value||'Add note')}">${escapeHtml(value?value.replace(/\r\n?|\n/g,' '):'…')}</button>`],
-  ['CTL History',node=>node.ctls.map(ctl=>ctl.number||ctl.id).join(', ')],['NSR History',node=>node.nsrs.map(nsr=>nsr.number).join(', ')],
+  ['Note',node=>fidNotes[node.id]||'',(value,node)=>`<button type="button" class="fc-link fid-note-cell${value?'':' fid-note-add'}" data-note-fid="${escapeHtml(node.id)}" aria-label="${value?'Edit':'Add'} note for FID ${escapeHtml(node.id)}" title="${escapeHtml(value||'Add note')}">${escapeHtml(value?value.replace(/\r\n?|\n/g,' '):'…')}</button>`,{headerFilterFunc:(filter,value)=>{
+    const note=String(value??'');return (!filter.presence||(filter.presence==='has')===Boolean(note.trim()))&&note.toLowerCase().includes(String(filter.text??filter).toLowerCase());
+  }}],
+  ['CTL History',node=>node.ctls.map(ctl=>ctl.number||ctl.id).join(', ')],['NSR History',node=>node.nsrs.map(nsr=>nsr.number).join(', '),(_,node)=>node.nsrs.map(nsr=>nsrWorkflowLink(nsr.number)).join(', ')||'—'],
   ['Commit: Field',node=>node.commit],['Business Unit',node=>node.businessUnit],['MFG Upgrade Type',node=>node.mfg],['FID Description',node=>node.fidDescription],['Fab Name',node=>node.fab]
 ];
 function fidDetailStatus(node,withTips=true,currentOnly=false){
@@ -2851,19 +2875,16 @@ function renderPortfolio(target,updateMarks=false){
     target.querySelector('[data-nce-signal]').parentElement.innerHTML=signals;
   }else target.innerHTML=`<section class="card fid-overview">${overview}</section><section class="card risk-drivers">${drivers}</section>${pivotHtml('fid',current.fids.length,'FIDs',target)}<div class="signal-strip">${signals}</div><section class="card"><div class="section-head detail-head"><h2>FID Details</h2></div><div id="portfolioTable"></div></section>`;
   renderPivots('fidPivots',current.fids,[['currentQuarter','Current Quarter','fCurrentQuarter','#4679cf'],['customer','FID Customer','fCustomer','#b44771'],['account','Account','fAccount','#347d50'],['businessUnit','Business Unit','fBusinessUnit','#8251bb'],['system','System Description','fSystem','#14869a']],'FIDs',updateMarks);
-  table('portfolioTable',fidColumns,current.fids,{file:'FID_Portfolio',fid:true,markFilter:'fid',defaultSort:'FID',ascending:false,frozen:['FID'],exportRows:fidDetailRows,copyRows:fidCopyRows,widths:{FID:80,'FID Status & Risks':175,Quarter:105,Note:220}},updateMarks);
+  table('portfolioTable',fidColumns,current.fids,{file:'FID_Portfolio',fid:true,markFilter:'fid',defaultSort:'FID',ascending:false,frozen:['FID'],exportRows:fidDetailRows,copyRows:fidCopyRows,widths:fidTableWidths},updateMarks);
 }
-const ctlColumns=[['CTL',ctl=>ctl.number||ctl.id,(value,ctl)=>ctl.number?`<a class="fc-link" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=CRM_SRQM_RFC&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(ctl.number)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`:escapeHtml(value)],['FID',ctl=>ctl.fidId,fidLink],
+const ctlColumns=[['CTL',ctl=>ctl.number||ctl.id,(value,ctl)=>ctl.number?`<a class="fc-link" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=CRM_SRQM_RFC&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(ctl.number)}" target="_blank" rel="noopener noreferrer">${escapeHtml(value)}</a>`:escapeHtml(value)],['FID',ctl=>ctl.fidId,(value,ctl)=>fidLink(value,{ctlId:ctl.id})],
   ['Stage',ctl=>ctlStageName(ctl.stage)||sourceValue(ctl.record,'ctl','stage'),value=>value?`<span class="status-pill ${value.startsWith('0-')?'stop':value==='15-Completed'?'terminal':value==='Draft'?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
   ['Change',ctl=>sourceValue(ctl.record,'ctl','change')],['Created Date',ctl=>ctl.created||sourceValue(ctl.record,'ctl','created')],
   ['Elapsed Days',ctl=>taskGroup(ctlStageName(ctl.stage),true)==='workflow'&&ctl.created?(nsrRecords.dateNumber(nsrData.localDate(new Date()))-nsrRecords.dateNumber(ctl.created))/86400000:''],
   ['Sales Ops Approval',ctl=>ctl.approved||sourceValue(ctl.record,'ctl','approved')],['RD At Create',ctl=>ctl.rdCreate||sourceValue(ctl.record,'ctl','rdCreate')],['MCSD@Create',ctl=>ctl.mcsdCreate||sourceValue(ctl.record,'ctl','mcsdCreate')],
   ['SRD @ SOPs Approval',ctl=>ctl.srdApproval||sourceValue(ctl.record,'ctl','slotSrd')],['MCSD At SOps Approval',ctl=>ctl.mcsdApproval||sourceValue(ctl.record,'ctl','mcsdApproval')],['Config Frz',ctl=>ctl.configFrz||sourceValue(ctl.record,'ctl','configFrz')],
   ['Initiator',ctl=>sourceValue(ctl.record,'ctl','initiator')],['Customer',ctl=>ctl.customer],['Quote ID',ctl=>ctl.quote],
-  ['NSR Reference',ctl=>ctl.nsrReferences.map(number=>number+linkSuffix(ctl.nsrReferenceTypes[number])).join(', '),(_,ctl)=>ctl.nsrReferences.map(number=>{
-    const link=ctl.links.find(link=>link.nsrNumber===number),fid=link?.kind==='direct'?ctl.fidId:link?.nsrFidId||'';
-    return nsrHistoryLink(number,link?.nsrId||number,fid)+linkSuffix(ctl.nsrReferenceTypes[number]);
-  }).join(', ')||'—'],
+  ['NSR Reference',ctl=>ctl.nsrReferences.map(number=>number+linkSuffix(ctl.nsrReferenceTypes[number])).join(', '),(_,ctl)=>ctl.nsrReferences.map(number=>nsrWorkflowLink(number)+linkSuffix(ctl.nsrReferenceTypes[number])).join(', ')||'—'],
   ['Change Summary',ctl=>ctl.changeSummary],['Root Cause',ctl=>ctl.rootCause],['CTL Notes',ctl=>ctl.notes],['Reason for Chg',ctl=>ctl.reason],['Sub Reason',ctl=>ctl.subReason],['Sales OPs Approver',ctl=>ctl.salesOpsApprover]
 ];
 function renderChanges(target,updateMarks=false){
@@ -2891,9 +2912,9 @@ function markListHtml(kind){
 }
 const markNsrColumn=markColumn('nsr');
 const nsrColumns=[
-  ['NSR#',nsr=>nsr.number,value=>`<button class="fc-link" data-cycle-nsr="${escapeHtml(value)}" title="Query Cycle Time">${escapeHtml(value)}</button>`],
+  ['NSR#',nsr=>nsr.number,nsrWorkflowLink],
   ['NSR Title',nsr=>nsr.title],['Task Status',nsr=>nsr.taskStatus,value=>value?`<span class="status-pill ${value==='15-Completed'?'terminal':value.startsWith('0-')?'stop':value.startsWith('Unmapped')?'unknown':''}">${escapeHtml(value)}</span>`:'—'],
-  ['NSR Type',nsr=>nsr.type],['Impacted Sub System',nsr=>nsr.subsystem],['Initiator',nsr=>graph.field(nsr.record,['Initiator','Initiated By','Requester'],true)],['FID',nsr=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).join(', '),(_,nsr)=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).map(fidLink).join(', ')||'—'],
+  ['NSR Type',nsr=>nsr.type],['Impacted Sub System',nsr=>nsr.subsystem],['Initiator',nsr=>graph.field(nsr.record,['Initiator','Initiated By','Requester'],true)],['FID',nsr=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).join(', '),(_,nsr)=>(nsr.matchedFidIds||nsr.fidIds||[nsr.fidId]).filter(Boolean).map(fid=>fidLink(fid,{nsrId:nsr.id})).join(', ')||'—'],
   ['Primary Product',nsr=>nsr.product],
   ['NSR → CTL',nsr=>lifecycleNames[nsr.lifecycle]||nsr.lifecycle,(_,nsr)=>pill(lifecycleNames[nsr.lifecycle]||nsr.lifecycle,nsr.ignored?'ignore':nsr.lifecycle==='completed-unlinked'?'alert':['completed-5d','implemented'].includes(nsr.lifecycle)?'clear':nsr.lifecycle==='ctl-pending'?'pending':'info')],
   ['CTL references',nsr=>(nsr.links||[]).map(link=>link.ctlNumber+linkSuffix(link.referenceType,link.kind==='reference'?link.fidId:'')).join(', '),(_,nsr)=>(nsr.links||[]).map(link=>`<button type="button" class="fc-link" data-fid="${escapeHtml(link.fidId)}" data-ctl-id="${escapeHtml(link.ctlId)}" title="Open Slot / CTL History">${escapeHtml(link.ctlNumber)}</button>${escapeHtml(linkSuffix(link.referenceType,link.kind==='reference'?link.fidId:''))}`).join(', ')||'—'],
@@ -2907,7 +2928,6 @@ function fidDetailRows(rows,columns=fidColumns){return markedDetailRows('fid',ro
 function fidCopyRows(rows,columns=fidColumns){return fidDetailRows(rows,columns.filter(([label])=>label!=='Mark'))}
 function renderNsrDetail(name,rows,options={},updateMarks=false,changedNsr=''){
   const columns=[markNsrColumn,...nsrColumns],widths={'Task Status':225,'NSR#':80,FID:80,'NSR Org':96};
-  if(name==='nsrTable')columns[1]=[...columns[1].slice(0,2),(value,nsr)=>nsrHistoryLink(value,nsr.id,nsr.fidId)];
   if(name==='fidNsrTable'){columns.splice(2,0,...columns.splice(columns.findIndex(([label])=>label==='NSR → CTL'),2));widths['NSR → CTL']=150}
   return table(name,columns,rows,{file:'NSR_Detail',cycle:true,nsr:true,exportRows:nsrDetailRows,copyRows:nsrCopyRows,defaultSort:'FID',ascending:false,frozen:['NSR#'],widths,...options},updateMarks,changedNsr);
 }
@@ -3030,7 +3050,7 @@ function renderSummary(target){
 const nceColumns=[['NCE',row=>row.number],['State',row=>row.status],['Title',row=>row.title],['Impact',row=>row.impact],['Opened',row=>row.opened],['Damage Group',row=>row.damageGroup],['Damage Code',row=>row.damageCode],['Part Number',row=>row.partNumber],['Part Description',row=>row.partDescription]];
 
 const tableCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'}),numericCollator=new Intl.Collator(undefined,{numeric:true});
-const columnPopup=id('columnFilterPopup'),columnInput=columnPopup.querySelector('input'),columnChoices=id('colChoices'),markPopup=id('markFilterPopup');
+const columnPopup=id('columnFilterPopup'),columnInput=columnPopup.querySelector('input'),columnChoices=id('colChoices'),columnNoteFilter=id('colNoteFilter'),markPopup=id('markFilterPopup');
 // Hidden tabs keep their measured size, so showing an unchanged table does not rebuild its rows.
 const tableResize=new ResizeObserver(entries=>{for(const {target} of entries){const state=tables.get(target.dataset.tableName);if(!state?.ready||!target.clientWidth||!target.clientHeight)continue;const size=target.clientWidth+':'+target.clientHeight;if(size!==state.size){state.size=size;state.grid.redraw()}}});
 function orderTableColumns(definitions,columns,order,nsrHistory=false){
@@ -3045,11 +3065,11 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
   const previous=tables.get(name),dataRow=(row,index)=>({id:index,...Object.fromEntries(columns.map(([,get],column)=>['c'+column,get(row)??'']))});
   if(previous&&!previous.ready&&previous.built)return previous.built.then(()=>table(name,columns,rows,options,updateMarks,changedNsr));
   if(previous?.ready&&updateMarks){
-    const wrap=previous.grid.element,active=document.activeElement,focused=wrap.contains(active)?active.dataset.markId||active.dataset.noteFid:'',focusSelector=active.matches('[data-mark-id]')?'[data-mark-id]':'[data-note-fid]';previous.rows=rows;previous.columns=columns;previous.options=options;wrap.setAttribute('aria-busy','true');
+    const wrap=previous.grid.element,wasHidden=wrap.hidden,active=document.activeElement,focused=wrap.contains(active)?active.dataset.markId||active.dataset.noteFid:'',focusSelector=active.matches('[data-mark-id]')?'[data-mark-id]':'[data-note-fid]';previous.rows=rows;previous.columns=columns;previous.options=options;wrap.setAttribute('aria-busy','true');
     const index=changedNsr?rows.findIndex(row=>(options.fid?row.id:row.number)===changedNsr):-1,updated=index>=0?previous.grid.updateData([dataRow(rows[index],index)]):previous.grid.replaceData(rows.map(dataRow));
     return updated.then(()=>{
       if(index>=0){if(previous.local.marks?.length||previous.local.headerFilters?.length)previous.grid.refreshFilter();else paintMarkFilter(previous);const sorters=previous.grid.getSorters();if(sorters.some(sorter=>['NSR → CTL','Note'].includes(columns[Number(sorter.field.slice(1))]?.[0])))previous.grid.setSort(sorters.map(sorter=>({column:sorter.field,dir:sorter.dir})))}
-      wrap.setAttribute('aria-busy','false');if(focused)[...wrap.querySelectorAll(focusSelector)].find(button=>(button.dataset.markId||button.dataset.noteFid)===focused)?.focus({preventScroll:true});
+      if(wasHidden&&!wrap.hidden)redrawTable(previous);wrap.setAttribute('aria-busy','false');if(focused)[...wrap.querySelectorAll(focusSelector)].find(button=>(button.dataset.markId||button.dataset.noteFid)===focused)?.focus({preventScroll:true});
       return previous;
     });
   }
@@ -3078,8 +3098,10 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
     widths.SRD=widths.MCSD=widths.CRD;
   }
   const filter=item=>(name!=='fidCtlTable'||local.showPullPush||!['pull','push'].includes(state.rows[item.id].changeKey))&&(!options.markFilter||!local.marks||local.marks.includes(recordMark(options.markFilter,options.markFilter==='fid'?state.rows[item.id].id:state.rows[item.id].number)||'normal'));
-  const columnDefs=columns.map(([label,,render,settings],index)=>({title:label==='Mark'?'':label,titleFormatter:label==='Mark'&&options.markFilter?()=>markHeader(state):columnFilters&&label!=='Mark'?columnHeader:undefined,field:'c'+index,frozen:index===0||(options.frozen||[]).includes(label),minWidth:label==='Mark'?36:75,headerSort:label!=='Mark',headerFilter:columnFilters&&label!=='Mark'?'input':false,headerFilterParams:{elementAttributes:{'aria-label':'Filter '+label}},cellClick:name==='portfolioTable'&&label==='FID Status & Risks'?(_event,cell)=>showFid(state.rows[cell.getRow().getIndex()].id):undefined,hozAlign:label==='Mark'?'center':'left',headerHozAlign:label==='Mark'?'center':'left',width:widths[label]??(label==='Mark'?36:label==='Task Status'?275:/Title|Summary|Documents|Sample|File|Reason|Description|Action/.test(label)?320:/Owner|Initiator|Candidate|Customer|Product/.test(label)?185:/^Pre$|^Post$|NSR → CTL|Application/.test(label)?180:Math.max(110,Math.min(240,label.length*7+28))),sorter:(a,b)=>label==='Stage'?compareCtlStages(a,b):/Quarter|Period/.test(label)?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||tableCollator.compare(String(a),String(b)):typeof a==='number'&&typeof b==='number'?a-b:tableCollator.compare(String(a),String(b)),...settings,formatter:cell=>{const value=cell.getValue();cell.getElement().title=label==='Mark'?'':String(value);return '<span class="cell-content">'+(render?render(value,state.rows[cell.getRow().getIndex()]):escapeHtml(value)||'—')+'</span>'}}));
-  state.grid=new Tabulator(wrap,{data,autoResize:false,movableColumns:true,height:autoHeight?false:options.height??Math.min(620,Math.max(105,rows.length*34+68)),rowHeight:options.rowHeight??34,renderVertical:autoHeight?'basic':'virtual',renderVerticalBuffer:200,columnDefaults:{resizable:'header',headerFilterFunc:'like',headerFilterPlaceholder:'Filter…'},layout:'fitDataFill',placeholder:'',dataLoader:false,initialFilter:filter,initialHeaderFilter:local.headerFilters||[],initialSort:local.sort>=0?[{column:'c'+local.sort,dir:local.ascending?'asc':'desc'}]:[],rowFormatter:row=>{const element=row.getElement(),data=row.getData();element.dataset.rowIndex=row.getIndex();if(state.options.rowRisk)element.dataset.fidRisk=state.options.rowRisk(state.rows[row.getIndex()]);if(options.nsr||options.fid){const mark=recordMark(options.nsr?'nsr':'fid',options.nsr?state.rows[data.id].number:state.rows[data.id].id);element.dataset.recordMark=mark;if(options.nsr)element.dataset.nsrMark=mark;else element.dataset.fidMark=mark;}if(name==='nsrTable'){element.dataset.fidBand=data.fidBand;element.dataset.fidStart=data.fidStart}},columns:orderTableColumns(columnDefs,columns,tableOrders[orderKey],name==='fidNsrTable')});
+  const columnDefs=columns.map(([label,,render,settings],index)=>({title:label==='Mark'?'':label,titleFormatter:label==='Mark'&&options.markFilter?()=>markHeader(state):columnFilters&&label!=='Mark'?columnHeader:undefined,field:'c'+index,frozen:index===0||(options.frozen||[]).includes(label),minWidth:label==='Mark'?36:75,headerSort:label!=='Mark',headerFilter:columnFilters&&label!=='Mark'?'input':false,headerFilterParams:{elementAttributes:{'aria-label':'Filter '+label}},cellClick:options.fid&&label==='FID Status & Risks'?(event,cell)=>{if(event.target.closest('#wfModal')&&id('fidDetail').open)id('fidDetail').close();showFid(state.rows[cell.getRow().getIndex()].id)}:undefined,hozAlign:label==='Mark'?'center':'left',headerHozAlign:label==='Mark'?'center':'left',width:widths[label]??(label==='Mark'?36:label==='Task Status'?275:/Title|Summary|Documents|Sample|File|Reason|Description|Action/.test(label)?320:/Owner|Initiator|Candidate|Customer|Product/.test(label)?185:/^Pre$|^Post$|NSR → CTL|Application/.test(label)?180:Math.max(110,Math.min(240,label.length*7+28))),sorter:(a,b)=>label==='Stage'?compareCtlStages(a,b):/Quarter|Period/.test(label)?nsrRecords.periodRank(a)-nsrRecords.periodRank(b)||tableCollator.compare(String(a),String(b)):typeof a==='number'&&typeof b==='number'?a-b:tableCollator.compare(String(a),String(b)),...settings,formatter:cell=>{const value=cell.getValue();cell.getElement().title=label==='Mark'?'':String(value);return '<span class="cell-content">'+(render?render(value,state.rows[cell.getRow().getIndex()]):escapeHtml(value)||'—')+'</span>'}}));
+  let order=tableOrders[orderKey];
+  if(name==='cycleTable'&&Array.isArray(order)&&!order.includes('Additional FCID')){const index=order.indexOf('REF FCID');if(index>=0)order=[...order.slice(0,index+1),'Additional FCID',...order.slice(index+1)]}
+  state.grid=new Tabulator(wrap,{data,autoResize:false,movableColumns:true,height:autoHeight?false:options.height??Math.min(620,Math.max(105,rows.length*34+68)),rowHeight:options.rowHeight??34,renderVertical:autoHeight?'basic':'virtual',renderVerticalBuffer:200,columnDefaults:{resizable:'header',headerFilterFunc:'like',headerFilterPlaceholder:'Filter…'},layout:'fitDataFill',placeholder:'',dataLoader:false,initialFilter:filter,initialHeaderFilter:local.headerFilters||[],initialSort:local.sort>=0?[{column:'c'+local.sort,dir:local.ascending?'asc':'desc'}]:[],rowFormatter:row=>{const element=row.getElement(),data=row.getData();element.dataset.rowIndex=row.getIndex();if(state.options.rowRisk)element.dataset.fidRisk=state.options.rowRisk(state.rows[row.getIndex()]);if(options.nsr||options.fid){const mark=recordMark(options.nsr?'nsr':'fid',options.nsr?state.rows[data.id].number:state.rows[data.id].id);element.dataset.recordMark=mark;if(options.nsr)element.dataset.nsrMark=mark;else element.dataset.fidMark=mark;}if(name==='nsrTable'){element.dataset.fidBand=data.fidBand;element.dataset.fidStart=data.fidStart}},columns:orderTableColumns(columnDefs,columns,order,name==='fidNsrTable')});
   state.grid.on('tableDestroyed',()=>{if(columnPopup.column?.getTable()===state.grid)columnPopup.hidePopover();if(markPopup.state===state)markPopup.hidePopover()});
   state.grid.on('columnMoved',()=>{
     if(state.ordering)return;
@@ -3092,7 +3114,14 @@ function table(name,columns,rows,options={},updateMarks=false,changedNsr=''){
       finally{target.ordering=false}
     }
   });
-  state.grid.on('dataFiltered',(_filters,rows)=>{local.headerFilters=state.grid.getHeaderFilters();if(columnFilters)paintColFilters(state);const count=state.toolbar?.querySelector('[data-table-count]');if(count)count.textContent=number(rows.length)+(autoHeight?'':' rows');paintMarkFilter(state)});
+  state.grid.on('dataFiltered',(_filters,rows)=>{
+    local.headerFilters=state.grid.getHeaderFilters();if(columnFilters)paintColFilters(state);const count=state.toolbar?.querySelector('[data-table-count]');if(count)count.textContent=number(rows.length)+(autoHeight?'':' rows');
+    if(autoHeight){
+      wrap.hidden=!rows.length;state.toolbar.querySelector('.toolbar-right').hidden=!rows.length;
+      const toggle=state.toolbar.querySelector('[data-toggle-pull-push]');if(toggle)toggle.hidden=!state.rows.length;
+    }
+    paintMarkFilter(state);
+  });
   if(options.markFilter)state.grid.on('renderComplete',()=>{if(markPopup.state===state)markPopup.position=markMenuPos(state)});
   state.grid.on('dataSorted',(sorters,rows)=>{
     if(sorters.length){local.sort=Number(sorters[0].field.slice(1));local.ascending=sorters[0].dir==='asc'}
@@ -3115,7 +3144,8 @@ function columnHeader(cell){
   header.innerHTML='<span>'+escapeHtml(title)+(title==='FID Owner'?helpIcon(ownerHint):'')+'</span><button type="button" class="column-funnel" popovertarget="columnFilterPopup" aria-label="Filter '+escapeHtml(title)+'" aria-haspopup="dialog" aria-pressed="false" title="Filter '+escapeHtml(title)+'"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 2h14L10 8v5l-4 2V8z"/></svg></button>';
   const button=header.lastElementChild;button.onmousedown=event=>event.stopPropagation();
   button.onclick=event=>{
-    event.stopPropagation();markPopup.hidePopover();columnPopup.hidePopover();columnPopup.column=column;columnPopup.querySelector('label>span').textContent=title;columnInput.value=column.getHeaderFilterValue()??'';
+    event.stopPropagation();markPopup.hidePopover();columnPopup.hidePopover();columnPopup.column=column;columnPopup.querySelector('label>span').textContent=title;
+    const value=column.getHeaderFilterValue()??'';columnInput.value=value.text??value;columnNoteFilter.hidden=title!=='Note';columnNoteFilter.value=value.presence||'';
     const state=tables.get(column.getTable().element.dataset.tableName),get=state.columns[Number(column.getField().slice(1))][1],values=new Set();
     for(const row of state.rows){const value=String(get(row)??'');values.add(value);if(values.size>20||/[\r\n]/.test(value))break}
     columnPopup.choices=values.size<=20&&![...values].some(value=>/[\r\n]/.test(value))?[...values].filter(Boolean).sort(tableCollator.compare):[];paintColChoices();
@@ -3125,16 +3155,18 @@ function paintColChoices(){
   const search=columnInput.value.toLowerCase(),values=(columnPopup.choices||[]).filter(value=>value.toLowerCase().includes(search));
   columnChoices.replaceChildren(...values.map(value=>new Option(value,value)));columnChoices.hidden=!values.length;columnChoices.value=columnInput.value;
 }
+function columnFilterText(value){return typeof value==='object'?[value.presence==='has'?'Has note':'No note',value.text].filter(Boolean).join(' · '):value}
 function paintColFilters(state){
   const filters=state.local.headerFilters,key=JSON.stringify(filters);if(state.columnFilterKey===key)return;state.columnFilterKey=key;
   const host=id(state.name),active=new Map(filters.map(filter=>[filter.field,filter.value]));
   for(const column of state.grid.getColumns()){
-    const button=column.getElement().querySelector('.column-funnel');if(!button)continue;const selected=active.has(column.getField());button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.title='Filter '+column.getDefinition().title+(selected?': '+active.get(column.getField()):'');
+    const button=column.getElement().querySelector('.column-funnel');if(!button)continue;const selected=active.has(column.getField());button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));button.title='Filter '+column.getDefinition().title+(selected?': '+columnFilterText(active.get(column.getField())):'');
   }
-  host.querySelector('.col-bar').innerHTML=filters.map(({field,value})=>{const text=escapeHtml(state.grid.getColumn(field).getDefinition().title+': '+value);return '<button type="button" class="pill info" data-column-remove="'+state.name+'" data-field="'+field+'" title="'+text+'" aria-label="Remove filter '+text+'">'+text+' ×</button>'}).join('')+(filters.length?'<button type="button" class="fc-link" data-column-clear="'+state.name+'">Clear</button>':'');
+  host.querySelector('.col-bar').innerHTML=filters.map(({field,value})=>{const text=escapeHtml(state.grid.getColumn(field).getDefinition().title+': '+columnFilterText(value));return '<button type="button" class="pill info" data-column-remove="'+state.name+'" data-field="'+field+'" title="'+text+'" aria-label="Remove filter '+text+'">'+text+' ×</button>'}).join('')+(filters.length?'<button type="button" class="fc-link" data-column-clear="'+state.name+'">Clear</button>':'');
 }
 function tableResult(state){return state.grid.getRows('active').map(row=>state.rows[row.getIndex()])}
-function paintTable(state){state.grid.refreshFilter()}
+function redrawTable(state){const widths=state.grid.getColumns().map(column=>[column,column.getWidth()]);state.grid.redraw();for(const [column,width]of widths)if(column.getWidth()!==width)column.setWidth(width)}
+function paintTable(state){const wasHidden=state.grid.element.hidden;state.grid.refreshFilter();if(wasHidden&&!state.grid.element.hidden)redrawTable(state)}
 
 
 function exportTableRows(state,copy=false){
@@ -3212,7 +3244,8 @@ function paintMarkFilter(state){
   if(trigger){trigger.classList.toggle('active',active);trigger.setAttribute('aria-pressed',String(active));trigger.setAttribute('aria-label',label);trigger.title=label}
   if(markPopup.state!==state)return;
   const host=markPopup.querySelector('[role=group]'),counts={all:0,normal:0,ignore:0,important:0};
-  for(const {id:index}of state.grid.searchData(state.grid.getHeaderFilters())){const record=state.rows[index];counts.all++;counts[recordMark(kind,kind==='fid'?record.id:record.number)||'normal']++}
+  const filters=state.grid.getHeaderFilters().map(filter=>typeof filter.type==='function'?{field:filter.type}:filter);
+  for(const {id:index}of state.grid.searchData(filters)){const record=state.rows[index];counts.all++;counts[recordMark(kind,kind==='fid'?record.id:record.number)||'normal']++}
   if(host.dataset.tableName!==state.name){host.dataset.tableName=state.name;host.innerHTML=['all',...markOptions].map(mark=>`<label><input type="checkbox" data-table-mark-filter="${state.name}" data-mark="${mark}"><span>${markLabels[mark]}</span><b aria-hidden="true"></b></label>`).join('')}
   for(const input of host.querySelectorAll('input')){const mark=input.dataset.mark;input.checked=mark==='all'?selected.length===markOptions.length:selected.includes(mark);input.indeterminate=mark==='all'&&selected.length>0&&selected.length<markOptions.length;input.dataset.count=counts[mark];input.setAttribute('aria-label',markLabels[mark]+' ('+number(counts[mark])+')');input.parentElement.querySelector('b').textContent=number(counts[mark])}
 }
@@ -3223,11 +3256,11 @@ function paintFidPersonal(fid){
   if(focused)id('fidPersonalMark').querySelector('button').focus({preventScroll:true});
 }
 function refreshFidPersonal(fid){
-  const state=tables.get('portfolioTable'),update=state?.rows.some(node=>node.id===fid)?table('portfolioTable',fidColumns,state.rows,state.options,true,fid):null;
-  paintFidPersonal(fid);return update;
+  const updates=[...tables.values()].filter(state=>state.options.fid&&state.rows.some(node=>node.id===fid)).map(state=>table(state.name,state.columns,state.rows,state.options,true,fid));
+  paintFidPersonal(fid);return Promise.all(updates);
 }
 function editFidNote(fid,anchor){
-  const dialog=id('fidNoteDialog'),panel=anchor.closest('#fidNotePanel'),host=panel||dialog,rect=anchor.getBoundingClientRect();host.dataset.fid=fid;
+  const dialog=id('fidNoteDialog'),panel=anchor.closest('#fidNotePanel'),host=panel||dialog,rect=anchor.getBoundingClientRect();host.dataset.fid=fid;host.dataset.table=anchor.closest('[data-table-name]')?.dataset.tableName||'';
   host.innerHTML=`<form id="fidNoteForm"><div class="section-head"><h2 id="fidNoteTitle">${panel?'Note':'Note · FID '+escapeHtml(fid)}</h2></div><textarea id="fidNoteText" rows="8" aria-label="Note" placeholder="Write a note…" spellcheck="false">${escapeHtml(fidNotes[fid]||'')}</textarea><div id="fidNoteStatus" class="statistics-state" role="status"></div><div class="fc-note-actions"><button class="btn light" type="button" data-cancel-fid-note>Cancel</button><button class="btn blue" type="submit">Save</button></div></form>`;
   if(!panel){
     if(!dialog.open)dialog.showModal();
@@ -3240,7 +3273,7 @@ function editFidNote(fid,anchor){
 }
 function closeFidNote(){
   const host=id('fidNoteForm').parentElement,fid=host.dataset.fid;if(host.id==='fidNoteDialog')host.close();host.replaceChildren();if(host.id==='fidNotePanel')paintFidPersonal(fid);
-  const target=id('fidDetail').open?id('fidDetail'):id('portfolioTable');[...target.querySelectorAll('[data-note-fid]')].find(button=>button.dataset.noteFid===fid)?.focus({preventScroll:true});
+  const target=id(host.dataset.table)||(id('fidDetail').open?id('fidDetail'):id('portfolioTable'));[...target.querySelectorAll('[data-note-fid]')].find(button=>button.dataset.noteFid===fid)?.focus({preventScroll:true});
 }
 async function saveFidNote(){
   const fid=id('fidNoteForm').parentElement.dataset.fid,note=id('fidNoteText').value,next={...fidNotes};if(note.trim())next[fid]=note;else delete next[fid];
@@ -3280,11 +3313,11 @@ function showFid(fid,updateMarks=false,changedNsr='',target=null){
   const summary=`<div class="fid-dialog-grid" style="--fid-date-rows:${quarters.length+1}">${[
     ['Slot',`${node.slot.state.replace(/^./,letter=>letter.toUpperCase())} | ${node.commit||'—'}`],['Active CTL/Quote',node.activeCtl?.number||node.activeCtl?.quote?`${node.activeCtl.number||'—'} | ${node.activeCtl.quote||'—'}`:'—'],['Account',node.account],['Business Unit',node.businessUnit],
     ['System Description',node.system],['FID Description',node.fidDescription],['Customer',node.customer],['Fab Name',node.fab],
-    ['Quarter',node.quarter,'quarter'],['Sales Ops RD',node.rd||sourceValue(node.record,'fcid','rd'),'rd'],['MCSD',node.mcsd||sourceValue(node.record,'fcid','mcsd'),'mcsd'],['Customer Request Date',node.crd||sourceValue(node.record,'fcid','crd'),'crd'],
+    ['Assessment Quarter',node.quarter,'quarter'],['Sales Ops RD',node.rd||sourceValue(node.record,'fcid','rd'),'rd'],['MCSD',node.mcsd||sourceValue(node.record,'fcid','mcsd'),'mcsd'],['Customer Request Date',node.crd||sourceValue(node.record,'fcid','crd'),'crd'],
     ['MFG Upgrade Type',node.mfg],['FID Owner',node.owner||'[Unknown]'],['Slot Initiator',sourceValue(node.slot.active?.record,'ctl','initiator')],['Sales Admin',node.salesAdmin||'[Unknown]']
   ].map(([label,value,dateKey])=>{
     const lines=multiple&&dateKey&&dateKey!=='quarter'?(dateKey==='crd'?`<div class="fid-quarter-state"><span>${escapeHtml(value||'—')}</span></div>`:quarters.map(state=>`<div class="fid-quarter-state${state.quarter===node.currentQuarter?' is-current':''}" data-quarter-date="${escapeHtml(state.quarter)}" title="${escapeHtml((state.quarter||'[Unknown]')+' · '+state.dateSource+(!state.dates[dateKey]?'\nDate unavailable.':''))}"><span>${escapeHtml(fidDateValue(node,state,dateKey)||'—')}</span></div>`).join('')):'';
-    return `<div class="fid-detail-value${multiple&&dateKey?' fid-date-value':''}${label==='Slot'&&node.portfolioStates.includes('no-slot')?' no-slot':''}"${dateKey?` data-date-field="${dateKey}"`:''}${label==='FID Owner'?` title="${escapeHtml(ownerTip(node))}"`:label.startsWith('Sales Admin')?' title="Unique Pull / Push CTL votes; ties remain unknown"':''}><small>${label}${label==='FID Owner'?helpIcon(ownerHint):label==='Sales Admin'?helpIcon(salesAdminHint):''}</small>${label==='Quarter'?quarterLines:lines||escapeHtml(value||'—')}</div>`;
+    return `<div class="fid-detail-value${multiple&&dateKey?' fid-date-value':''}${label==='Slot'&&node.portfolioStates.includes('no-slot')?' no-slot':''}"${dateKey?` data-date-field="${dateKey}"`:''}${label==='FID Owner'?` title="${escapeHtml(ownerTip(node))}"`:label.startsWith('Sales Admin')?' title="Unique Pull / Push CTL votes; ties remain unknown"':''}><small>${label}${dateKey==='quarter'?helpIcon(quarterHint):label==='FID Owner'?helpIcon(ownerHint):label==='Sales Admin'?helpIcon(salesAdminHint):''}</small>${dateKey==='quarter'?quarterLines:lines||escapeHtml(value||'—')}</div>`;
   }).join('')}</div><div id="fidEvidence" class="fid-evidence">${renderFidEvidence(node,quarterState)}</div>`;
   if(updateDetail)id('fidSummary').innerHTML=summary;
   else dialog.innerHTML=`<div class="section-head"><div><h1 id="fidDetailTitle"><span id="fidPersonalMark" class="fid-personal-mark"></span>FID ${escapeHtml(fid)} <a class="fid-action" href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm?saprole=ZSLSDIR&amp;crm-object-type=BT111_OPPT&amp;crm-object-action=B&amp;crm-object-keyname=OBJECT_ID&amp;crm-object-value=${encodeURIComponent(fid)}" target="_blank" rel="noopener noreferrer">CRM ↗</a><span id="fidHeaderStatus" class="fid-header-status" role="group" aria-label="FID Status &amp; Risks"></span></h1><span class="muted">${node.inPopulation?'Commit portfolio':'Observed in source data'}</span></div><a class="fid-action" href="#" data-export-fid="${escapeHtml(fid)}">Export FID 360°</a><button class="fid-close" type="button" data-close-fid aria-label="Close FID 360" title="Close">×</button></div><div id="fidSummary">${summary}</div><section id="fidNotePanel" class="fid-note-panel"></section><div id="fidNsrTable"></div><div id="fidCtlTable"></div><div id="fidNceTable"></div>`;
@@ -3390,7 +3423,7 @@ document.addEventListener('click',async event=>{
   if(button.hasAttribute('data-cancel-fid-note')){closeFidNote();return}
   if(button.dataset.ignoreNsr||button.dataset.ignoreFid){setRecordMark(button.dataset.ignoreFid?'fid':'nsr',button.dataset.ignoreFid||button.dataset.ignoreNsr);return}
   if(button.dataset.view){showView(button.dataset.view);return}
-  if(button.hasAttribute('data-fid')){if(graph.fids.has(button.dataset.fid))showFid(button.dataset.fid,false,'',button.dataset);else toast('No FID is available for this '+(button.dataset.nsrId?'NSR':'CTL')+'.');return}
+  if(button.hasAttribute('data-fid')){if(graph.fids.has(button.dataset.fid)){if(button.closest('#wfModal')&&id('fidDetail').open)id('fidDetail').close();showFid(button.dataset.fid,false,'',button.dataset)}else toast('No FID is available'+(button.dataset.nsrId?' for this NSR.':button.dataset.ctlId?' for this CTL.':'.'));return}
   if(button.hasAttribute('data-mapping-rule')){showView('rules');id('fabAccountMapping').scrollIntoView({block:'start'});return}
   if(button.hasAttribute('data-quarter-state')){
     const dialog=id('fidDetail'),node=graph.fids.get(dialog.dataset.fid),state=node?.quarterStates.find(state=>state.quarter===button.dataset.quarterState);if(!state)return;
@@ -3422,10 +3455,6 @@ document.addEventListener('click',async event=>{
   if(button.dataset.groupPath){const path=button.dataset.groupPath,value=button.dataset.groupValue,selected=filterValues[path]||[];changeFilter(path,selected.includes(value)?selected.filter(item=>item!==value):[...selected,value]);return}
   if(button.dataset.pivotFilter){const path=filterDefs.find(def=>def[0]===button.dataset.pivotFilter)[2];changeFilter(path,[button.dataset.pivotValue]);return}
 
-  if(button.dataset.cycleNsr){
-    if(!unsafeWindow.confirm(`Query Cycle Time and Workflow for NSR ${button.dataset.cycleNsr}?`))return;
-    if(id('fidDetail').open)id('fidDetail').close();showView('cycle');cycle.query([button.dataset.cycleNsr]);return;
-  }
   if(button.dataset.tableCycle){const state=tables.get(button.dataset.tableCycle),rows=tableResult(state);if(id('fidDetail').open)id('fidDetail').close();showView('cycle');cycle.query(rows.map(row=>row.number));return}
   if(button.dataset.columnClear){tables.get(button.dataset.columnClear).grid.clearHeaderFilter();return}
   if(button.dataset.columnRemove){tables.get(button.dataset.columnRemove).grid.setHeaderFilterValue(button.dataset.field,'');return}
@@ -3482,8 +3511,8 @@ filterDefs.forEach(([name,,path])=>{if(dateFilters.includes(path)){id(name).addE
   const below=Math.min(innerHeight,bounds.bottom)-box.bottom,above=box.top-Math.max(0,bounds.top);chosen.classList.toggle('chosen-dropup',height>below&&above>below);
 });jQuery(id(name)).on('change',(event,change)=>{const values=[...id(name).selectedOptions].map(option=>option.value);if(path==='mfg'||path==='riskType'||path==='fidStatus'||path==='nsr.taskStatus'||path.startsWith('ctl.'))changeFilter(path,path==='fidStatus'?fidSelection.groups[change?.selected]||values:values);else{filterValues[path]=values;applyFilters()}position()}).on('chosen:showing_dropdown',position);if(jQuery.fn.chosen)jQuery(id(name)).chosen({width:'100%',search_contains:true,hide_results_on_select:false,placeholder_text_multiple:'All',display_selected_options:false})});
 columnPopup.onsubmit=columnPopup.onreset=event=>{
-  event.preventDefault();const column=columnPopup.column,value=event.type==='reset'?'':columnInput.value;
-  if(column&&value!==(column.getHeaderFilterValue()??''))column.setHeaderFilterValue(value);columnPopup.hidePopover();
+  event.preventDefault();const column=columnPopup.column,value=event.type==='reset'?'':!columnNoteFilter.hidden&&columnNoteFilter.value?{text:columnInput.value,presence:columnNoteFilter.value}:columnInput.value;
+  if(column&&JSON.stringify(value)!==JSON.stringify(column.getHeaderFilterValue()??''))column.setHeaderFilterValue(value);columnPopup.hidePopover();
 };
 columnInput.oninput=paintColChoices;
 columnChoices.onchange=()=>{columnInput.value=columnChoices.value;columnInput.focus({preventScroll:true})};
@@ -3673,14 +3702,10 @@ async function loadBobj(update=false,key='fcid'){
   const config=BOBJ_SOURCES[key],run=startSource(key),{endpoint,label}=config;sourceMessage(key,update?'Updating '+label+'…':'Reading current '+label+' workbook…','loading');
   try{
     let status=await bridgeRequest('GET',endpoint+'/status',undefined,10000);
+    if(run!==store.runs[key])return;
     if(!status.hasWorkbook||!status.outputPath)update=true;
-    if(update&&!status.running)status=await bridgeRequest('POST',endpoint+'/refresh',{visible:false},20000);
-    const deadline=Date.now()+SAP_ACTION_TIMEOUT;
-    while(status.running){
-      if(Date.now()>deadline)throw new Error('BOBJ update timed out.');
-      sourceMessage(key,'Updating BOBJ · '+(status.stage||'running'),'loading'); await new Promise(resolve=>setTimeout(resolve,1000));if(run!==store.runs[key])return;
-      status=await bridgeRequest('GET',endpoint+'/status',undefined,10000);
-    }
+    status=await waitForBobjRefresh(endpoint,status,update,(status,queued)=>sourceMessage(key,queued?'Waiting for another BOBJ refresh…':'Updating BOBJ · '+(status.stage||'running'),'loading'),()=>run===store.runs[key]);
+    if(!status)return;
     if(update&&status.stage==='failed')throw new Error(status.message||'BOBJ update failed.');
     if(!status.hasWorkbook||!status.outputPath)throw new Error('No '+label+' workbook. Click Update or Import.');
     const result=await bridgeFileRequest('read',{path:status.outputPath},BRIDGE_FILE_TIMEOUT);
@@ -3696,7 +3721,7 @@ async function loadBobj(update=false,key='fcid'){
     if(run!==store.runs[key])return;
     if(!update){
       const date=modified>0?nsrData.localDate(new Date(modified)):'';
-      if(date&&date<nsrData.localDate(new Date())&&unsafeWindow.confirm(`${sources[key].label} data is not up to date (last updated: ${date}). Update now? This may take 2-3 minutes.`))setTimeout(()=>document.querySelector(`[data-source-action="${key==='ctl'?'ctl-bobj-update':'bobj-update'}"]`).click(),0);
+      if(date&&date<nsrData.localDate(new Date())&&unsafeWindow.confirm(`${sources[key].label} data is not up to date (last updated: ${date}). Update now? This may take 5-10 minutes per workbook.`))setTimeout(()=>document.querySelector(`[data-source-action="${key==='ctl'?'ctl-bobj-update':'bobj-update'}"]`).click(),0);
     }
   }catch(error){await sourceFailure(key,run,error.message,error.transport)}
   finally{if(run===store.runs[key])sourceBusy(key,false)}
@@ -3746,7 +3771,16 @@ async function restoreSources(reset=false){
 const cycle=createNsrCycle(id('workspace'),{getRows:nsrs=>{
   const selected=new Set(nsrs);
   return nsrCopyRows(graph.nsrs.filter(nsr=>selected.has(nsr.number))).map(row=>({...row,'REF FCID':row.FID}));
-},renderTable:(name,columns,rows,options)=>table(name,columns,rows,options,true),copyRows,onNotify:message=>toast(message)});
+},renderTable:(name,columns,rows,options)=>{
+  if(name==='wfAdditional'){
+    rows=rows.map(row=>({id:row.FID}));
+    columns=fidColumns.map(([label,get,render,settings])=>[label,row=>{const node=graph.fids.get(row.id);return node?get(node):label==='FID'?row.id:''},(value,row)=>{
+      const node=graph.fids.get(row.id);return node&&render?render(value,node):label==='FID'?fidLink(row.id):label==='Mark'?'':escapeHtml(value)||'—';
+    },settings]);
+    options={...options,fid:true,frozen:['FID'],copyRows:fidCopyRows,exportRows:fidDetailRows,widths:fidTableWidths};
+  }
+  return table(name,columns,rows,options,true);
+},renderFid:fidLink,copyRows,onNotify:message=>toast(message)});
 setNsrRange(nsrRange);recalculate();restoreSources();
 }
 
@@ -4849,19 +4883,20 @@ function periodYear(value){const rank=periodRank(value);return rank?String(Math.
 return {detailFields:DETAIL_FIELDS,clean,upper,canonicalRow,deriveTaskStatus,compareStatus,dateNumber,periodRank,periodYear};
 }
 
-function createNsrCycle(root=document,{getRows=null,onNotify=null,renderTable,copyRows}={}){
+function createNsrCycle(root=document,{getRows=null,onNotify=null,renderTable,renderFid=null,copyRows}={}){
 const ownerDocument=root.ownerDocument||root,embedded=root!==ownerDocument,modalHost=embedded?root:ownerDocument.body;
 const {detailFields:DETAIL_FIELDS,clean,upper,dateNumber,compareStatus}=createNsrRecords();
 const LIVE_FIELDS=['Submit Date','Task Status','ECD','Approver Team','Assigned Approver','Pending Days','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'];
 const DETAIL_COLUMNS=DETAIL_FIELDS.filter(field=>field!=='NSR#'&&field!=='Initiator'&&!LIVE_FIELDS.includes(field)).flatMap(field=>field==='NSR Type'?[field,'NSR Category']:field==='Customer'?[field,'Initiator']:[field]);
-const FID_FIELDS=['REF FCID','Primary Product','NSR → CTL','CTL references','Customer','NSR Org','Sales Rep'],fidIndex=DETAIL_COLUMNS.indexOf('REF FCID');
+const FID_FIELDS=['REF FCID','Additional FCID','Primary Product','NSR → CTL','CTL references','Customer','NSR Org','Sales Rep'],fidIndex=DETAIL_COLUMNS.indexOf('REF FCID');
 const CYCLE_FIELDS=['NSR#',...LIVE_FIELDS,...DETAIL_COLUMNS.slice(0,fidIndex),...FID_FIELDS,...DETAIL_COLUMNS.slice(fidIndex).filter(field=>!FID_FIELDS.includes(field))];
 const WF_FIELDS=['Task Name','Approver Status','Approver Team','Approver','Pending Days','Approved Date','Comments']; const WF_EXPORT=['NSR#','Workflow Step',...WF_FIELDS];
+const WF_SUMMARY=['Task Status','Assigned Approver','Pending Days','Submit Date','REF FCID','NSR Type','NSR Category','NSR Org','Customer','Primary Product','Initiator','Approver Team','ECD','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'];
 const WIDTHS=CYCLE_FIELDS.map(field=>({
   'NSR#':78,'Submit Date':116,'Approver Team':125, 'Assigned Approver':130,'Pending Days':82,'Elapsed Days':82,'Cycle Time (ECD)':110,'Cycle Time (SOBi)':116,'NSR Title':190,'Task Status':144,'ECD':96, 'NSR Category':100,'Customer':150,'Primary Product':120,'Technical Contact':108,
-    'Impacted Sub System':104,'NSR → CTL':180,'CTL references':180
+    'Impacted Sub System':104,'Additional FCID':180,'NSR → CTL':180,'CTL references':180
 }[field]||92));
-const CONCURRENCY=8,WARN_AT=100,LIMIT=500; const WF_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const FIORI_DETAIL='https://fep.lamresearch.com/flp#ZNSR-display&/NsrDetail/';
+const CONCURRENCY=8,WARN_AT=100,LIMIT=500; const WF_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/WorkflowSet/'; const DETAIL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/GetNsrDetSet/'; const ADDITIONAL_ODATA='/sap/opu/odata/sap/ZNSR_CD_SRV/AddtionalFcidSet/'; const FIORI_DETAIL='https://fep.lamresearch.com/flp#ZNSR-display&/NsrDetail/';
 const pageFetch=(url,options)=>unsafeWindow.fetch(url,options);
 const collator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
 const state={rows:[],cycleRows:[],cycleAbort:null,cycleRun:0,toastTimer:null};
@@ -4871,7 +4906,8 @@ function toast(message,isError=false){
   if(onNotify){onNotify(message,isError);return}
   const el=$id('toast');if(!el)return;clearTimeout(state.toastTimer);el.textContent=message;el.className=`toast show${isError?' error':''}`;state.toastTimer=setTimeout(()=>el.className='toast',3000);
 }
-let wfTrigger=null,workflowTable=null,cycleTable=null;
+let wfTrigger=null,wfAbort=null,workflowTable=null,additionalTable=null,cycleTable=null;
+function fidLinks(value){const fids=[...new Set(clean(value).split(',').map(clean).filter(Boolean))];return fids.length?fids.map(fid=>renderFid?renderFid(fid):esc(fid)).join(', '):'—'}
 function parseNsrInput(text){
   const valid=[],invalid=[],seen=new Set(); String(text||'').split(/[\s,;|]+/).map(v=>v.trim()).filter(Boolean).forEach(token=>{const nsr=token.toUpperCase(); if(!/^[A-Z]\d{5,9}$/.test(nsr)){invalid.push(token);return} if(!seen.has(nsr)){seen.add(nsr);valid.push(nsr)}});
   return {valid,invalid};
@@ -4942,10 +4978,16 @@ async function fetchNsrEnrichment(tempId,signal){
   const entry=doc.getElementsByTagNameNS('*','entry')[0]; return {category:xmlValue(entry,'NsrCategory'),ecd:workflowDate(xmlValue(entry,'HwEngCommit'))};
 }
 
+async function fetchAdditionalFcids(tempId,signal){
+  const text=await fetchOdataXml(odataLookupUrl(ADDITIONAL_ODATA,'TempId',tempId),signal,'Additional FCID service'),doc=new DOMParser().parseFromString(text,'application/xml');
+  if(doc.getElementsByTagName('parsererror').length)throw new Error('Additional FCID service returned invalid XML.');
+  return [...new Set([...doc.getElementsByTagNameNS('*','entry')].map(entry=>xmlValue(entry,'Fcid')).filter(Boolean))].join(', ');
+}
+
 function mergeCycle(nsr,live,details){
   const detail=details.get(upper(nsr))||{},row={'NSR#':nsr,...live};
   if(!row['Submit Date'])row['Submit Date']=detail['Submit Date']||'';
-  CYCLE_FIELDS.forEach(field=>{if(field!=='NSR#'&&field!=='NSR Category'&&!LIVE_FIELDS.includes(field))row[field]=detail[field]||''}); row['Task Status']=detail['Task Status']||({COMPLETED:'15-Completed',CANCELLED:'0-Cancelled',REJECTED:'0-Rejected'}[row.__terminal]||''); row['ECD']=row.__ecd||'';
+  CYCLE_FIELDS.forEach(field=>{if(field!=='NSR#'&&field!=='NSR Category'&&field!=='Additional FCID'&&!LIVE_FIELDS.includes(field))row[field]=detail[field]||''}); row['Task Status']=detail['Task Status']||({COMPLETED:'15-Completed',CANCELLED:'0-Cancelled',REJECTED:'0-Rejected'}[row.__terminal]||''); row['ECD']=row.__ecd||'';
   row['Elapsed Days']=row.__terminal||row.__completed?'':elapsedDays(row['Submit Date']); row['Cycle Time (ECD)']=row.__ecd?elapsedDays(row['Submit Date'],row.__ecd):''; row['Cycle Time (SOBi)']=row.__completed&&row.__completedAt?elapsedDays(row['Submit Date'],row.__completedAt):'';
   return row;
 }
@@ -4973,10 +5015,14 @@ async function runCycleLookup(nsrs){
       const index=next++;if(index>=total)return;
       const nsr=parsed.valid[index],detail=details.get(upper(nsr)),statusHint=terminalStatus(detail&&detail['Task Status']); let live;
       try{live=parseWorkflowXml(await fetchOdataXml(odataLookupUrl(WF_ODATA,'Nsrnum',nsr),controller.signal,'Workflow service'),statusHint)} catch(err){if(controller.signal.aborted)return; live=cycleError(err,statusHint);if(err.auth){authFailed=true;controller.abort()}}
-      let categoryError='';live['NSR Category']='';live.__ecd='';
+      let categoryError='';live['NSR Category']='';live.__ecd='';live['Additional FCID']='';
       if(!authFailed&&clean(detail&&detail['Temp Id#'])){
         try{const enrichment=await fetchNsrEnrichment(detail['Temp Id#'],controller.signal);live['NSR Category']=enrichment.category;live.__ecd=enrichment.ecd}
         catch(err){if(controller.signal.aborted)return; categoryError=clean(err&&err.message)||'NSR Category unavailable';if(err.auth){authFailed=true;controller.abort()}}
+        if(!authFailed){
+          try{live['Additional FCID']=await fetchAdditionalFcids(detail['Temp Id#'],controller.signal)}
+          catch(err){if(controller.signal.aborted)return;live.__additionalError=clean(err&&err.message)||'Additional FCID unavailable';live['Additional FCID']='Unavailable';if(err.auth){authFailed=true;controller.abort()}}
+        }
       }
       if(categoryError)live.__categoryError=categoryError;
       if(run!==state.cycleRun)return;
@@ -4988,7 +5034,7 @@ async function runCycleLookup(nsrs){
   await Promise.all(Array.from({length:workers},()=>worker()));
   if(run!==state.cycleRun)return;
   state.cycleRows=results.filter(Boolean);await renderCycle();if(run!==state.cycleRun)return;
-  const cancelled=controller.signal.aborted&&!authFailed,failed=state.cycleRows.filter(row=>row.__error||row.__categoryError).length;state.cycleAbort=null;setCycleBusy(false);
+  const cancelled=controller.signal.aborted&&!authFailed,failed=state.cycleRows.filter(row=>row.__error||row.__categoryError||row.__additionalError).length;state.cycleAbort=null;setCycleBusy(false);
   if(authFailed){cycleProgress(done,total,'Stopped because the Fiori session is unavailable. Return to Fiori, sign in, and run the query again.');toast('Fiori session unavailable.',true)}
   else if(cancelled)cycleProgress(done,total,`Cancelled after ${done} of ${total} lookups.`);
   else{cycleProgress(done,total,`${done} live lookup${done===1?'':'s'} completed${failed?` · ${failed} unavailable`:''}.`);
@@ -5011,12 +5057,13 @@ function nsrDetailUrl(row){return clean(row['Temp Id#'])&&clean(row['NSR#'])?`${
 
 function cycleCell(row,field){
   if(field==='Task Status')return statusPill(row[field]);
+  if(field==='REF FCID')return fidLinks(row[field]);
+  if(field==='Additional FCID')return `<span title="${esc(row.__additionalError||row[field]||'')}">${row.__additionalError?esc(row[field]):fidLinks(row[field])}</span>`;
   if(field==='NSR Title'&&clean(row[field])&&clean(row['Temp Id#'])&&clean(row['NSR#'])){
     const href=nsrDetailUrl(row);
     return `<a class="ct-link" data-nsr-detail="${esc(row['NSR#'])}" href="${esc(href)}" target="_blank" rel="noopener noreferrer" title="Open ${esc(row['NSR#'])} in Fiori">${esc(row[field])}</a>`;
   }
-  if(['NSR#','Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'].includes(field)&&clean(row[field])&&Array.isArray(row.__workflow)&&
-    row.__workflow.length){return `<button class="ct-link" type="button" data-wf-nsr="${esc(row['NSR#'])}" title="View full workflow for ${esc(row['NSR#'])}">${esc(row[field])}</button>`;}
+  if(clean(row[field])&&(field==='NSR#'||['Elapsed Days','Cycle Time (ECD)','Cycle Time (SOBi)'].includes(field)&&row.__workflow?.length))return `<button class="ct-link" type="button" data-wf-nsr="${esc(row['NSR#'])}" title="View full workflow for ${esc(row['NSR#'])}">${esc(row[field])}</button>`;
   return esc(row[field]);
 }
 
@@ -5028,19 +5075,46 @@ function cycleClass(row,field){
 }
 
 async function openWorkflow(nsr,trigger){
-  const row=state.cycleRows.find(item=>upper(item['NSR#'])===upper(nsr)),stages=row&&Array.isArray(row.__workflow)?row.__workflow:[];
-  if(!stages.length){toast('Workflow detail is unavailable for this NSR.',true);return}
-  const modal=$id('wfModal'),link=$id('wfNsrLink'),href=nsrDetailUrl(row);
-  $id('wfTitle').textContent=`${clean(nsr)} Workflow Detail`;$id('wfMeta').textContent=clean(row['NSR Title']);
+  const modal=$id('wfModal'),title=`${clean(nsr)} Workflow Detail`;
+  if(modal.open&&trigger?.closest('#fidDetail')){modal.close();modal.showModal();wfTrigger=trigger;$id('wfClose').focus({preventScroll:true})}
+  if(modal.open&&$id('wfTitle').textContent===title)return;
+  if(wfAbort)wfAbort.abort();const controller=new unsafeWindow.AbortController();wfAbort=controller;
+  let row=state.cycleRows.find(item=>upper(item['NSR#'])===upper(nsr)&&item.__workflow?.length);
+  const detail=row||(getRows?getRows([nsr]):state.rows).find(item=>upper(item['NSR#'])===upper(nsr))||{'NSR#':nsr};
+  const link=$id('wfNsrLink'),href=nsrDetailUrl(detail),status=$id('wfStatus'),summary=$id('wfSummary'),additional=$id('wfAdditional'),table=$id('wfTable');
+  $id('wfTitle').textContent=title;$id('wfMeta').textContent=clean(detail['NSR Title']);
   link.hidden=!href;if(href)link.href=href;else link.removeAttribute('href');
-  $id('wfSummary').innerHTML=['Task Status','Assigned Approver','Pending Days','Submit Date'].map(field=>`<div class="fid-detail-value"><small>${field}</small>${field==='Task Status'&&clean(row[field])?statusPill(clean(row[field])):esc(row[field])||'—'}</div>`).join('');
+  summary.hidden=true;additional.hidden=true;table.hidden=true;status.hidden=false;status.textContent='Loading workflow…';modal.setAttribute('aria-busy','true');
   wfTrigger=trigger||ownerDocument.activeElement;if(!modal.open)modal.showModal();modalHost.classList.add('wf-open');
-  workflowTable=await renderTable('wfTable',WF_FIELDS.map(field=>[field,row=>row[field],value=>field==='Approver Status'?`<span class="pill ${/APPROVED|COMPLETED/.test(upper(value))?'clear':/REJECT|CANCEL/.test(upper(value))?'risk':'info'}">${esc(value)}</span>`:esc(value),{variableHeight:true,...(field==='Pending Days'?{sorter:(a,b)=>(Number(a)||0)-(Number(b)||0)}:{})}]),stages,{title:'Workflow History',rowHeight:false,copyId:'wfCopy',onCopy:copyWorkflow,widths:{'Task Name':160,'Approver Status':130,'Approver Team':140,Approver:120,'Pending Days':112,'Approved Date':125,Comments:360}});
-  if(modal.open)$id('wfClose').focus({preventScroll:true});
+  $id('wfClose').focus({preventScroll:true});
+  try{
+    if(!row){
+      const xml=await fetchOdataXml(odataLookupUrl(WF_ODATA,'Nsrnum',nsr),controller.signal,'Workflow service');
+      const live=parseWorkflowXml(xml,terminalStatus(detail['Task Status']));if(!live.__workflow?.length)throw new Error(live.__error||'Workflow detail is unavailable for this NSR.');
+      live['Additional FCID']='';
+      if(clean(detail['Temp Id#'])){
+        const [enrichment,fcids]=await Promise.allSettled([fetchNsrEnrichment(detail['Temp Id#'],controller.signal),fetchAdditionalFcids(detail['Temp Id#'],controller.signal)]);
+        if(enrichment.status==='fulfilled'){live['NSR Category']=enrichment.value.category;live.__ecd=enrichment.value.ecd}else live.__categoryError=clean(enrichment.reason.message)||'NSR Category unavailable';
+        if(fcids.status==='fulfilled')live['Additional FCID']=fcids.value;else live.__additionalError=clean(fcids.reason.message)||'Additional FCID unavailable';
+      }
+      row=mergeCycle(nsr,live,new Map([[upper(nsr),detail]]));
+    }
+    if(controller.signal.aborted||wfAbort!==controller||!modal.open)return;
+    if(!row.__workflow?.length)throw new Error(row.__error||'Workflow detail is unavailable for this NSR.');
+    summary.innerHTML=WF_SUMMARY.map(field=>`<div class="fid-detail-value"${field==='NSR Category'&&row.__categoryError?` title="${esc(row.__categoryError)}"`:''}><small>${field==='REF FCID'?'FID':field}</small>${field==='REF FCID'?fidLinks(row[field]):field==='Task Status'&&clean(row[field])?statusPill(clean(row[field])):field==='NSR Category'&&row.__categoryError?'Unavailable':esc(row[field])||'—'}</div>`).join('');
+    summary.hidden=false;additional.hidden=false;table.hidden=false;status.textContent=[row.__categoryError,row.__additionalError].filter(Boolean).join(' · ');status.hidden=!status.textContent;
+    const fids=row.__additionalError?[]:[...new Set(clean(row['Additional FCID']).split(',').map(clean).filter(Boolean))].map(fid=>({FID:fid}));
+    additionalTable=await renderTable('wfAdditional',[['FID',row=>row.FID,fidLinks]],fids,{title:'Additional FCID',copyId:'wfAdditionalCopy',widths:{FID:120}});
+    if(controller.signal.aborted||wfAbort!==controller||!modal.open)return;
+    if(row.__additionalError)additionalTable.toolbar.querySelector('[data-table-count]').textContent='Unavailable';
+    workflowTable=await renderTable('wfTable',WF_FIELDS.map(field=>[field,row=>row[field],value=>field==='Approver Status'?`<span class="pill ${/APPROVED|COMPLETED/.test(upper(value))?'clear':/REJECT|CANCEL/.test(upper(value))?'risk':'info'}">${esc(value)}</span>`:esc(value),{variableHeight:true,...(field==='Pending Days'?{sorter:(a,b)=>(Number(a)||0)-(Number(b)||0)}:{})}]),row.__workflow,{title:'Workflow History',rowHeight:false,copyId:'wfCopy',onCopy:copyWorkflow,widths:{'Task Name':160,'Approver Status':130,'Approver Team':140,Approver:120,'Pending Days':112,'Approved Date':125,Comments:360}});
+  }catch(error){if(controller.signal.aborted||wfAbort!==controller||!modal.open)return;summary.hidden=true;additional.hidden=true;table.hidden=true;status.hidden=false;status.textContent=clean(error.message)||'Workflow detail is unavailable for this NSR.'}
+  finally{if(wfAbort===controller)modal.removeAttribute('aria-busy')}
+  if(modal.open&&wfAbort===controller)$id('wfClose').focus({preventScroll:true});
 }
 
 function closeWorkflow(){if($id('wfModal').open)$id('wfModal').close()}
-function restoreWfFocus(){modalHost.classList.remove('wf-open');if(wfTrigger?.isConnected)wfTrigger.focus({preventScroll:true});wfTrigger=null}
+function restoreWfFocus(){if(wfAbort)wfAbort.abort();wfAbort=null;$id('wfModal').removeAttribute('aria-busy');modalHost.classList.remove('wf-open');if(wfTrigger?.isConnected)wfTrigger.focus({preventScroll:true});wfTrigger=null}
 
 async function renderCycle(){
   cycleTable=await renderTable('cycleTable',CYCLE_FIELDS.map(field=>[field,row=>row[field],(_,row)=>`<span class="${cycleClass(row,field)}">${cycleCell(row,field)}</span>`,{title:embedded&&field==='REF FCID'?'FID':field,sorter:(a,b)=>compareCycle(a,b,field)}]),state.cycleRows,{file:'NSR_Cycle_Time',height:450,columnFilters:false,defaultSort:'NSR#',copyId:'copyCycleBtn',exportId:'exportCycleBtn',onCopy:copyCycle,onExport:exportCycle,widths:Object.fromEntries(CYCLE_FIELDS.map((field,index)=>[field,WIDTHS[index]]))});
@@ -5064,7 +5138,7 @@ function cancel(){if(!state.cycleAbort)return;state.cycleAbort.abort();$id('cycl
 const listeners=[];
 function bind(element,event,handler){element.addEventListener(event,handler);listeners.push([element,event,handler]);}
 bind($id('runCycleBtn'),'click',()=>runCycleLookup());bind($id('cancelCycleBtn'),'click',cancel);
-bind($id('cycleTable'),'click',event=>{const trigger=event.target.closest('[data-wf-nsr]');if(trigger)openWorkflow(trigger.dataset.wfNsr,trigger)});
+bind(ownerDocument,'click',event=>{const trigger=event.target.closest('[data-wf-nsr]');if(trigger)openWorkflow(trigger.dataset.wfNsr,trigger)});
 bind($id('wfModal'),'click',event=>{if(event.target.closest('[data-wf-close]'))closeWorkflow()});
 bind($id('wfModal'),'close',()=>{if(!$id('wfModal').open)restoreWfFocus()});
 setCycleBusy(false);
@@ -5073,7 +5147,7 @@ return {
   show:()=>renderCycle().then(()=>cycleTable.grid.redraw(true)),
   query(nsrs,{run=true}={}){if(nsrs!==undefined)$id('cycleInput').value=Array.isArray(nsrs)?nsrs.join('\n'):String(nsrs);return run?runCycleLookup():parseNsrInput($id('cycleInput').value)},
   snapshot:()=>({rows:state.cycleRows,busy:Boolean(state.cycleAbort)}),cancel,
-  destroy(){state.cycleRun++;if(state.cycleAbort)state.cycleAbort.abort();state.cycleAbort=null;setCycleBusy(false);clearTimeout(state.toastTimer);closeWorkflow();restoreWfFocus();cycleTable?.grid.destroy();workflowTable?.grid.destroy();listeners.forEach(([element,event,handler])=>element.removeEventListener(event,handler));}
+  destroy(){state.cycleRun++;if(state.cycleAbort)state.cycleAbort.abort();state.cycleAbort=null;setCycleBusy(false);clearTimeout(state.toastTimer);closeWorkflow();restoreWfFocus();cycleTable?.grid.destroy();workflowTable?.grid.destroy();additionalTable?.grid.destroy();listeners.forEach(([element,event,handler])=>element.removeEventListener(event,handler));}
 };
 }
 
