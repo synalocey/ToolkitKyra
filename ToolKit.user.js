@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.10.30
+// @version      26.10.31
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
