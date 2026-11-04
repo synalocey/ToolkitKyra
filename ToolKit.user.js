@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Toolkit Kyra
-// @version      26.10.31
+// @version      26.11.04
 // @namespace    https://github.com/synalocey/ToolkitKyra
 // @description  Toolkit Kyra
 // @author       Syna
@@ -30,6 +30,7 @@
 // @grant        GM_setValue
 // @grant        unsafeWindow
 // @connect      127.0.0.1
+// @connect      pcazbwpap04.fremont.lamrc.net
 // @connect      synalocey.github.io
 // @connect      raw.githubusercontent.com
 // @connect      github.com
@@ -49,8 +50,6 @@ function loadExcelJs(){
 'use strict';
 const [versionYear,versionMonth,versionDay]=GM_info.script.version.split('.').map(Number);
 const date_v = new Date(2000+versionYear,versionMonth-1,versionDay); const APP_PATH='/k1.png'; const BRIDGE_PATH='/k2.png'; const FCID_PATH='/staceykyra.png'; const NSR_HEADER_BUTTON_ID='toolkitKyraControlTowerButton';
-const BRIDGE_URLS=[25972,25973,25974,8765].map(port=>'http://127.0.0.1:'+port); let bridgeUrl='',bridgeDiscovery=null;
-const SAPGUICONTROL_DOWNLOAD_URL='https://lamresearch-my.sharepoint.com/:u:/p/kyra_long/IQAkrJwix3nKTKijNazpuktkAUXL46RCibysVC7XkXJmYcQ?e=UUDyWl'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
 const GUIDE_URL='https://synalocey.github.io/ToolkitKyra/guide';
 const FID_DASHBOARD_TITLE='🏭 FID & NSR Tracking Dashboard';
 const DASHBOARD_BASE_CSS=chosenBaseCss+`
@@ -102,6 +101,55 @@ const NSR_CYCLE_HTML=`<section id="cycleTab" class="tab-page" role="tabpanel" ar
   </section>
 </dialog>
 `;
+GM_registerMenuCommand(FID_DASHBOARD_TITLE,()=>unsafeWindow.open('https://fep.lamresearch.com'+FCID_PATH+'?nsrct=1','_blank','noopener'));
+GM_registerMenuCommand('🧰 SAP Toolbox',()=>unsafeWindow.open(BRIDGE_PATH+'?nsrbridge=1','_blank','noopener')); GM_registerMenuCommand('📖 Help',()=>unsafeWindow.open(GUIDE_URL,'_blank','noopener'));
+
+function toolkitExpired(){
+  const expired=Number.isFinite(date_v.getTime())&&(Date.now()-date_v.getTime())/86400000>270;
+  if(expired)document.documentElement.innerHTML='<head><meta charset="utf-8"><title>Toolkit update required</title></head><body><p>Something wrong with toolkit, please update to the latest version.</p><a href="'+GUIDE_URL+'">'+GUIDE_URL+'</a></body>';
+  return expired;
+}
+
+if(location.origin==='https://synalocey.github.io'&&location.pathname.startsWith('/ToolkitKyra/')){
+  const autoUpdate=typeof GM_info.scriptWillUpdate==='boolean'?GM_info.scriptWillUpdate:GM_info.script.options?.check_for_updates;
+  const announce=()=>unsafeWindow.postMessage({type:'toolkit:ready',version:GM_info.script.version,autoUpdate:typeof autoUpdate==='boolean'?autoUpdate:null},location.origin);
+  unsafeWindow.addEventListener('message',event=>{if(event.source===unsafeWindow&&event.origin===location.origin&&event.data?.type==='toolkit:check')announce();}); announce(); return;
+}
+
+const currentPath=unsafeWindow.location.pathname.toLowerCase();
+if(currentPath===APP_PATH){if(!toolkitExpired()){const target=new URL(FCID_PATH,unsafeWindow.location.href);target.search=unsafeWindow.location.search;target.hash='nsr';unsafeWindow.location.replace(target.href)}}else if(currentPath===FCID_PATH){whenBody(runFcidGovernance);}
+  else if(currentPath!==BRIDGE_PATH&&unsafeWindow.location.hostname.toLowerCase()==='fep.lamresearch.com')addNsrHeaderButton();
+
+function whenBody(callback){if(document.body)callback();else document.addEventListener('DOMContentLoaded',callback,{once:true});}
+
+async function addNsrHeaderButton(){
+  while(true){
+    const target=document.getElementById('shellAppTitle-button'),title=target&&target.querySelector('.sapUshellAppTitleText');
+    if(target&&String(title&&title.textContent||'').trim().toUpperCase()==='NSR'&&!document.getElementById(NSR_HEADER_BUTTON_ID)){
+      const button=document.createElement('button');button.id=NSR_HEADER_BUTTON_ID;button.type='button';button.title='Open '+FID_DASHBOARD_TITLE;button.textContent=FID_DASHBOARD_TITLE; button.style.cssText='margin-left:8px;padding:4px 8px;cursor:pointer;white-space:nowrap';
+      button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();unsafeWindow.open(FCID_PATH+'?nsrct=1','_blank','noopener')}); target.insertAdjacentElement('afterend',button);
+      if(button.getBoundingClientRect().right>innerWidth)button.textContent=FID_DASHBOARD_TITLE.replace(' Tracking','');
+    }
+    await new Promise(resolve=>setTimeout(resolve,2000));
+  }
+}
+
+function persistentStore(){try{return unsafeWindow.localStorage}catch(_){try{return localStorage}catch(__){return null}}}
+function emojiFavicon(emoji){
+  const icon=document.createElement('link');icon.rel='icon';icon.type='image/svg+xml';icon.sizes='any';
+  icon.href='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text x="32" y="52" text-anchor="middle" font-size="54" font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif">${emoji}</text></svg>`); return icon;
+}
+
+
+// Workers have separate globals; bootstrap them with the cached XLSX resource.
+function createWorkbookWorker(code){
+  const url=URL.createObjectURL(new Blob([GM_getResourceText('xlsxJs'),'\n;\n',code],{type:'text/javascript'})),worker=new Worker(url);
+  URL.revokeObjectURL(url);return worker;
+}
+// Only SAP Toolbox initializes the local EXE connection, UI and task state.
+if(currentPath===BRIDGE_PATH){
+const BRIDGE_URLS=[25972,25973,25974,8765].map(port=>'http://127.0.0.1:'+port); let bridgeUrl='',bridgeDiscovery=null;
+const SAPGUICONTROL_DOWNLOAD_URL='https://lamresearch-my.sharepoint.com/:u:/p/kyra_long/IQAkrJwix3nKTKijNazpuktkAUXL46RCibysVC7XkXJmYcQ?e=UUDyWl'; const SAPGUICONTROL_VERSION_URL='https://synalocey.github.io/ToolkitKyra/SAPGUIcontrol.version.json';
 const BRIDGE_CSS=(`
 :root{--bg:#f3f7fb;--panel:#fff;--ink:#0f172a;--muted:#64748b;--line:#d8e3ee;--blue:#2563eb;--teal:#0f766e;--green:#16a34a;--amber:#d97706;--red:#dc2626;--shadow:0 14px 34px rgba(15,23,42,.08);
 --font-sans:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",Arial,sans-serif}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color
@@ -491,40 +539,8 @@ let ctlBobjStatus=null,ctlBobjBusy=false,ctlBobjTimer=0,ctlBobjRun=0;
 let bobjStatus=null,bobjRefreshing=false,bobjOpening=false,bobjPollTimer=0,bobjStatusRun=0,bobjDataRows=new Map(),bobjDataHeaderIndexes=new Map(),bobjDataMissing=new Set(),bobjDataPath='',bobjDataModified=0,bobjDataCount=0,bobjDataReady=false,bobjDataLoadRun=0,
   bobjConsumersPending=false,bobjSourcePath='',bobjSourceModified=0,bobjDataLoading=false,bobjDataPromise=null,bobjWorker=null,bobjWorkerRequest=0,bobjWorkerPending=new Map();
 
-GM_registerMenuCommand(FID_DASHBOARD_TITLE,()=>unsafeWindow.open('https://fep.lamresearch.com'+FCID_PATH+'?nsrct=1','_blank','noopener'));
-GM_registerMenuCommand('🧰 SAP Toolbox',()=>unsafeWindow.open(BRIDGE_PATH+'?nsrbridge=1','_blank','noopener')); GM_registerMenuCommand('📖 Help',()=>unsafeWindow.open(GUIDE_URL,'_blank','noopener'));
+whenBody(mountBridgeApp);
 
-function toolkitExpired(){
-  const expired=Number.isFinite(date_v.getTime())&&(Date.now()-date_v.getTime())/86400000>270;
-  if(expired)document.documentElement.innerHTML='<head><meta charset="utf-8"><title>Toolkit update required</title></head><body><p>Something wrong with toolkit, please update to the latest version.</p><a href="'+GUIDE_URL+'">'+GUIDE_URL+'</a></body>';
-  return expired;
-}
-
-if(location.origin==='https://synalocey.github.io'&&location.pathname.startsWith('/ToolkitKyra/')){
-  const autoUpdate=typeof GM_info.scriptWillUpdate==='boolean'?GM_info.scriptWillUpdate:GM_info.script.options?.check_for_updates;
-  const announce=()=>unsafeWindow.postMessage({type:'toolkit:ready',version:GM_info.script.version,autoUpdate:typeof autoUpdate==='boolean'?autoUpdate:null},location.origin);
-  unsafeWindow.addEventListener('message',event=>{if(event.source===unsafeWindow&&event.origin===location.origin&&event.data?.type==='toolkit:check')announce();}); announce(); return;
-}
-
-const currentPath=unsafeWindow.location.pathname.toLowerCase();
-if(currentPath===APP_PATH){if(!toolkitExpired()){const target=new URL(FCID_PATH,unsafeWindow.location.href);target.search=unsafeWindow.location.search;target.hash='nsr';unsafeWindow.location.replace(target.href)}}else if(currentPath===BRIDGE_PATH){whenBody(mountBridgeApp);}else if(currentPath===FCID_PATH){whenBody(runFcidGovernance);}
-  else if(unsafeWindow.location.hostname.toLowerCase()==='fep.lamresearch.com')addNsrHeaderButton();
-
-function whenBody(callback){if(document.body)callback();else document.addEventListener('DOMContentLoaded',callback,{once:true});}
-
-async function addNsrHeaderButton(){
-  while(true){
-    const target=document.getElementById('shellAppTitle-button'),title=target&&target.querySelector('.sapUshellAppTitleText');
-    if(target&&String(title&&title.textContent||'').trim().toUpperCase()==='NSR'&&!document.getElementById(NSR_HEADER_BUTTON_ID)){
-      const button=document.createElement('button');button.id=NSR_HEADER_BUTTON_ID;button.type='button';button.title='Open '+FID_DASHBOARD_TITLE;button.textContent=FID_DASHBOARD_TITLE; button.style.cssText='margin-left:8px;padding:4px 8px;cursor:pointer;white-space:nowrap';
-      button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();unsafeWindow.open(FCID_PATH+'?nsrct=1','_blank','noopener')}); target.insertAdjacentElement('afterend',button);
-      if(button.getBoundingClientRect().right>innerWidth)button.textContent=FID_DASHBOARD_TITLE.replace(' Tracking','');
-    }
-    await new Promise(resolve=>setTimeout(resolve,2000));
-  }
-}
-
-function persistentStore(){try{return unsafeWindow.localStorage}catch(_){try{return localStorage}catch(__){return null}}}
 function readPersistent(key,fallback){const storage=persistentStore();if(!storage)return fallback; try{const value=storage.getItem(key);return value===null?fallback:value}catch(_){return fallback}}
 function writePersistent(key,value){const storage=persistentStore();if(!storage)return; try{storage.setItem(key,String(value))}catch(_){/* ignore unavailable or full storage */}}
 
@@ -707,12 +723,6 @@ function renderCreateQuoteHistory(){
 function recordCreateQuoteHistory(quotation,input){createQuoteHistory=[{quotation:String(quotation||''),input:String(input||''),runAt:new Date().toISOString()},...createQuoteHistory].slice(0,CREATE_QUOTE_HISTORY_LIMIT); writePersistent(CREATE_QUOTE_STORAGE_KEYS.history,
   JSON.stringify(createQuoteHistory));renderCreateQuoteHistory();}
 
-function emojiFavicon(emoji){
-  const icon=document.createElement('link');icon.rel='icon';icon.type='image/svg+xml';icon.sizes='any';
-  icon.href='data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text x="32" y="52" text-anchor="middle" font-size="54" font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif">${emoji}</text></svg>`); return icon;
-}
-
-
 function mountBridgeApp(){
   if(toolkitExpired())return;
   if(document.documentElement.dataset.nsrSapBridgeMounted)return;
@@ -873,11 +883,6 @@ async function prepareBobjFileNames(tool,rows,template){
 
 function enrichZbomCompareRowFromBobj(row){if(!row||!row.fid)return row; if(!row.customer)row.customer=bobjValue(row.fid,'Customer'); if(!row.systemDescription)row.systemDescription=bobjValue(row.fid,'System Description'); return row;}
 
-// Workers have separate globals; bootstrap them with the cached XLSX resource.
-function createWorkbookWorker(code){
-  const url=URL.createObjectURL(new Blob([GM_getResourceText('xlsxJs'),'\n;\n',code],{type:'text/javascript'})),worker=new Worker(url);
-  URL.revokeObjectURL(url);return worker;
-}
 function bobjWorkerMain(){
   'use strict';
   let rows=new Map(); const normalizeHeader=value=>String(value||'').trim().replace(/\s+/g,' ').toLocaleLowerCase(); const sourceFid=value=>{const text=String(value||'').trim();return /^\d{6}$/.test(text)?text:''};
@@ -2277,6 +2282,8 @@ function bindBridgeEvents(){
     loadZbomComparePreferences();previewZbomCompareInput();loadCreateQuotePreferences();previewCreateQuoteInput();setToolTab('zbom');
 }
 
+} // SAP Toolbox
+
 function runFcidGovernance(){
 'use strict';
 if(toolkitExpired())return;
@@ -2296,7 +2303,7 @@ const sources={
     description:field('FID Description'),system:field('System Description',['System Desc','System']),quote:field('Active Quote Number',['Quote Number','Active Quote']),crd:field('Date: Customer Request',['Customer Request Date']),targetShip:field('Date: Target Ship',['Target Ship Date','Target Ship']),mcsd:field('Date: Mfg Commit Ship',['Mfg Commit Ship',
       'Manufacturing Commit Ship Date','MCSD']), rd:field('Date: Sales Ops Request Date (RD)',['Sales Ops Request Date','Sales Ops RD','SRD','RD']),mfg:ctlFields.mfg
   }},
-  ctl:{label:'CTL BOBJ',sheet:'CTL BOBJ',fields:ctlFields},
+  ctl:{label:'CTL Report',sheet:'CTL BOBJ',fields:ctlFields},
   ctlNsr:{label:'CTL-NSR List',sheet:'export',fields:{...ctlFields, fid:field('FCID',['FID','Opportunity ID']),change:field('Change Type',['Change Cat','CTL Change Type']),mcsd:field('MCSD',['MCSD @ Current']),srd:field('Sales Ops RD',
     ['SRD','SRD @ Current','Field CRD']), approved:field('Sales Ops Approval Date',['1st SOps Appr Dt','SOPS Approval Date']),stage:field('Stage',['CTL Stage']), quote:field('Quote Number',['Quote ID']),sourceQuote:field('Source Quote',['Source Quote Number'])
   }},
@@ -2311,7 +2318,8 @@ const sources={
   }}
 };
 
-sources.ctl.label='CTL Report'; const BOBJ_SOURCES={fcid:{label:'FID BOBJ',endpoint:'/excel',file:'BOBJ_FID.xlsm'}, ctl:{label:'CTL BOBJ',endpoint:'/excel/ctl',file:'BOBJ_CTL.xlsm'}};
+const bwData=createBwDataService();
+const BW_SOURCES={fcid:{label:'FID',query:'PHCPSYS10R_QR001_REG',file:'BOBJ_FID.xlsm'},ctl:{label:'CTL',query:'PHMACTR1_ACTIVITY_CTL_REP',file:'BOBJ_CTL.xlsm'}};
 const HOSTED_ARCHIVE_URLS=[
   'https://synalocey.github.io/ToolkitKyra/images/Stacey1.png',
   'https://raw.githubusercontent.com/synalocey/ToolkitKyra/main/images/Stacey1.png',
@@ -2323,7 +2331,7 @@ const SOURCE_DATES={
   nsr:{fields:['Submit Date','Submitted Date','Submission Date'],label:'Submit Date'}, nce:{fields:['Open Date'],label:'Open Date'}
 };
 const CACHE_PREFIX='fcid-governance:'; const store={raw:Object.fromEntries(Object.keys(sources).map(key=>[key,[]])),meta:{},busy:new Set(),refreshing:false,dirty:false,runs:{},controllers:{}};
-const cacheKeys=Object.fromEntries(Object.keys(sources).map(key=>[key,key==='nsr'?'sap-nsr-search':CACHE_PREFIX+(BOBJ_SOURCES[key]?'bobj:':'')+key]));
+const cacheKeys=Object.fromEntries(Object.keys(sources).map(key=>[key,key==='nsr'?'sap-nsr-search':CACHE_PREFIX+(BW_SOURCES[key]?'bobj:':'')+key]));
 const NSR_MARKS_KEY='toolkitKyra.nsr.marks.v1',IGNORED_NSRS_KEY='toolkitKyra.nsr.ignored.v1',FID_MARKS_KEY='toolkitKyra.fid.marks.v1',FID_NOTES_KEY='toolkitKyra.fid.notes.v1',TABLE_ORDERS_KEY='toolkitKyra.table.orders.v1';
 const ignoredNsrs=new Set(),importantNsrs=new Set(),ignoredFids=new Set(),importantFids=new Set();
 const markKinds={
@@ -2412,7 +2420,7 @@ const css=GM_getResourceText('tabulatorCss')+DASHBOARD_BASE_CSS+`
 body.fcid-app{--side:370px;--fid-ink:#2458a6;--fid-tint:#eaf1ff;--fid-line:#bed0ef;--nsr-ink:#b13d53;--nsr-tint:#fceef1;--nsr-line:#e6b6c1;--shadow:0 2px 12px #253c6410;font-size:13px;min-width:0}.fcid-app [hidden]{display:none!important}.fcid-app h1,.fcid-app h2,.fcid-app h3{font-weight:600;line-height:1.3;margin:0}.fcid-app h2{font-size:16px}.fcid-app h3{font-size:13px}.fcid-app .card{padding:14px;min-width:0;border-radius:11px}.fcid-app .btn{color:#fff;font-size:12px;padding:7px 10px;font-weight:600;white-space:nowrap}.fcid-app .btn.small{padding:4px 7px}.fcid-app .btn.light{background:#edf1f6;border:1px solid #ccd6e3;color:#354d6d}.fcid-app .btn.blue{background:#2863d6;color:#fff}.muted,.small{font-size:12px;color:#53657d}.btnrow,.fc-hero-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.badge{font-size:12px;background:#edf2fa;color:#435a7b;border-radius:6px;padding:3px 7px;white-space:nowrap}
 .fc-hero{padding:15px 18px;background:linear-gradient(110deg,#e8f3ff,#f0ebff 57%,#fff0e4);border-bottom:1px solid #ccd9ed}.fc-hero-inner{max-width:1900px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px}.fc-brand{font-size:12px;letter-spacing:1.5px;color:#4d5b89}.fc-hero h1{font-size:27px;margin-top:3px;letter-spacing:-.5px}.fc-heading{display:flex;align-items:center;gap:13px}#fcToggleSide{font-size:21px;padding:4px 10px;line-height:1.3}
 .fcid-app .layout{max-width:1948px;margin:auto;display:grid;grid-template-columns:var(--side) minmax(0,1fr);gap:14px;padding:14px;align-items:start}.fcid-app .main{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.fcid-app .side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;scrollbar-width:thin;padding:13px;min-width:0}.side-collapsed .layout{grid-template-columns:minmax(0,1fr)}.side-collapsed .side{display:none}
-.fc-source{position:relative;border:1px solid #dce7ed;background:#fbfdfe;border-radius:9px;padding:9px 8px;margin-top:8px}.fc-source-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:7px}.fc-source h3{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;color:#24364b}.fc-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fc-source-bobj{flex:none;border:1px solid #d5e0e8;border-radius:4px;padding:1px 4px;color:#64748b;font-size:9px;font-weight:600}.fc-source-number{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;background:#376bd2;color:#fff;border-radius:6px;font-size:12px;font-weight:600}.fc-source[data-source=ctl] .fc-source-number{background:#8152bf}.fc-source[data-source=ctlNsr] .fc-source-number{background:#a85c07}.fc-source[data-source=nsr] .fc-source-number{background:#bf3d74}.fc-source[data-source=nce] .fc-source-number{background:#087e70}.fc-source-state{display:inline-flex;align-items:center;gap:5px;flex:none;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}.fc-source-state.has-range{max-width:none}.fc-source-state::before{content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:#94a3b8}.fc-source-state.ok{color:#166534}.fc-source-state.ok::before{background:#158653}.fc-source-state.stale{color:#d97706}.fc-source-state.stale::before{background:#d97706}.fc-source-state.loading{color:#92400e}.fc-source-state.loading::before{background:#d97706}.fc-source-state.error{cursor:help}.fc-source-toolbar{display:flex;align-items:center;gap:6px;min-width:0}.fc-source-toolbar>.btn{flex:none}.fc-source-file{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5}.fc-source-help{position:relative}.fc-source-help summary{list-style:none}.fc-source-help-bubble{position:absolute;right:0;top:30px;width:275px;z-index:30;padding:10px;background:#fff;border:1px solid #c4d0e4;border-radius:8px;box-shadow:0 8px 26px #23395630;font-size:12px}.fc-source-help a,.fc-nsr-help a{color:#265dbb}.fc-note{font-size:12px;color:#a73047;white-space:pre-line}.fc-note:empty{display:none}
+.fc-source{position:relative;border:1px solid #dce7ed;background:#fbfdfe;border-radius:9px;padding:9px 8px;margin-top:8px}.fc-source-head{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:7px}.fc-source h3{display:flex;align-items:center;gap:5px;min-width:0;font-size:12px;color:#24364b}.fc-source-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fc-source-number{display:inline-flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;background:#376bd2;color:#fff;border-radius:6px;font-size:12px;font-weight:600}.fc-source[data-source=ctl] .fc-source-number{background:#8152bf}.fc-source[data-source=ctlNsr] .fc-source-number{background:#a85c07}.fc-source[data-source=nsr] .fc-source-number{background:#bf3d74}.fc-source[data-source=nce] .fc-source-number{background:#087e70}.fc-source-state{display:inline-flex;align-items:center;gap:5px;flex:none;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums}.fc-source-state.has-range{max-width:none}.fc-source-state::before{content:"";display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:#94a3b8}.fc-source-state.ok{color:#166534}.fc-source-state.ok::before{background:#158653}.fc-source-state.stale{color:#d97706}.fc-source-state.stale::before{background:#d97706}.fc-source-state.loading{color:#92400e}.fc-source-state.loading::before{background:#d97706}.fc-source-state.error{cursor:help}.fc-source-toolbar{display:flex;align-items:center;gap:6px;min-width:0}.fc-source-toolbar>.btn{flex:none}.fc-source-file{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#53657d;font-size:12px;line-height:1.5}.fc-source-help{position:relative}.fc-source-help summary{list-style:none}.fc-source-help-bubble{position:absolute;right:0;top:30px;width:275px;z-index:30;padding:10px;background:#fff;border:1px solid #c4d0e4;border-radius:8px;box-shadow:0 8px 26px #23395630;font-size:12px}.fc-source-help a,.fc-nsr-help a{color:#265dbb}.fc-note{font-size:12px;color:#a73047;white-space:pre-line}.fc-note:empty{display:none}
 .filter-head{display:flex;align-items:center;justify-content:space-between;margin:17px 0 10px}.fc-filter{margin-top:9px}.filter-head h2{font-size:18px;color:#30445f}.fc-filter[data-filter-needs=common]{--filter-ink:#52647d;--filter-tint:#f4f6fa;--filter-line:#cbd5e1}.fc-filter[data-filter-needs^=fid]{--filter-ink:var(--fid-ink);--filter-tint:var(--fid-tint);--filter-line:var(--fid-line)}.fc-filter[data-filter-needs=nsr]{--filter-ink:var(--nsr-ink);--filter-tint:var(--nsr-tint);--filter-line:var(--nsr-line)}.fc-filter label{display:block;font-size:12px;font-weight:600;color:var(--filter-ink,#435775);margin-bottom:4px}.fc-filter select{font-size:12px;width:100%;min-height:32px;border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:5px;background:#fff;color:var(--filter-ink,#263e60)}.fc-filter .chosen-container,.fc-filter .chosen-container-multi .chosen-choices li.search-field input.chosen-search-input{font-size:12px}.fc-filter .chosen-choices{border:1px solid var(--filter-line,#cbd6e6);border-radius:6px;padding:2px;background:#fff;box-shadow:none;min-height:32px}.fc-filter .chosen-choices li.search-choice{color:var(--filter-ink,#294c88);background:var(--filter-tint,#e8effd);border-color:var(--filter-line,#bacdee);padding:4px 22px 4px 6px}.fc-filter .chosen-results li{font-size:12px;line-height:1.4;padding:5px 7px}.fc-filter .chosen-results li.highlighted{background:var(--filter-ink,#2f64ca);color:#fff}.fc-filter input::placeholder{color:#526782}.fc-filter-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}.fc-filter-head>label{min-width:0;margin-bottom:0}.fc-filter-actions{display:flex;flex:none;gap:6px;justify-content:flex-end}.fc-filter-actions button{border:0;background:none;color:var(--filter-ink,#365c97);font-size:12px;padding:1px 2px;cursor:pointer}.fcid-app .filter-group-title{font-size:16px;font-weight:600;color:var(--fid-ink);border-top:1px solid #dde5f1;margin-top:18px;padding-top:13px}.filter-group-title[data-filter-needs=nsr]{color:var(--nsr-ink);border-top-color:var(--nsr-line)}.fc-filter.primary-filter{border-left:3px solid var(--filter-line,#83a8e8);padding:7px 8px;background:var(--filter-tint,#f1f5fd);border-radius:0 6px 6px 0}.fc-filter.primary-filter .fc-filter-head>label{color:var(--filter-ink,#2f5590)}.quick-search{width:100%;border:1px solid #cbd6e6;border-radius:6px;padding:7px;color:#243b5c;font-size:13px}.quick-search{resize:vertical;min-height:52px}.nsr-year-picks{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.nsr-year-picks button{font-size:12px;border:1px solid var(--filter-line,#cbd8e9);border-radius:5px;color:var(--filter-ink,#405a80);background:var(--filter-tint,#f4f7fc);padding:2px 6px;cursor:pointer}.nsr-year-picks button.active{background:var(--filter-ink,#315b96);border-color:var(--filter-ink,#315b96);color:#fff}.nsr-year-picks button.partial{background:#eaf3fc;border-color:#8db3d9;color:#285982}
 .fid-lookup{display:flex;align-items:center;gap:7px}.fid-lookup textarea{flex:1;min-width:0;width:0}.fid-lookup .btn{flex:none;padding:6px 8px}
 .fc-filter[data-filter-needs] .chosen-drop{border-color:var(--filter-line)}.fc-filter[data-filter-needs] .chosen-container-active .chosen-choices{border-color:var(--filter-ink);box-shadow:0 0 0 2px var(--filter-tint)}
@@ -2562,9 +2570,9 @@ button.fid-quarter-state{width:100%;padding:2px 4px;border:0;border-radius:4px;b
 `;
 const sourceHtml=Object.entries(sources).map(([key,source],index)=>{
   const importLabel=key==='ctlNsr'?'Append':'Import';
-  const help=BOBJ_SOURCES[key]?`<strong>Auto:</strong> Open SAPGUIcontrol.exe (<a href="${SAPGUICONTROL_DOWNLOAD_URL}" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer">Download</a>).<br><strong>Manual:</strong> <a href="https://synalocey.github.io/ToolkitKyra/${BOBJ_SOURCES[key].file}" download="${BOBJ_SOURCES[key].file}" target="_blank" rel="noopener noreferrer">Download workbook</a> and refresh.`:
+  const help=BW_SOURCES[key]?`<strong>Auto:</strong> Connect to VPN, <a href="${bwData.loginUrl}" target="_blank" rel="noopener noreferrer">sign in to BW</a>, and click Update.<br><strong>Manual:</strong> <a href="https://synalocey.github.io/ToolkitKyra/${BW_SOURCES[key].file}" download="${BW_SOURCES[key].file}" target="_blank" rel="noopener noreferrer">Download workbook</a>, refresh in Excel, then Import.`:
     key==='ctlNsr'?'Download from <a href="https://pcazcrpap02.fremont.lamrc.net:8443/sap(bD1lbiZjPTI1MCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm" target="_blank" rel="noopener noreferrer">the CTL system</a>.':key==='nce'?'Ask Stacey for the latest NCE / FA Review file.':'';
-  return `<section class="fc-source" data-source="${key}" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span>${BOBJ_SOURCES[key]?'<small class="fc-source-bobj">BOBJ</small>':''}</h3><span id="fcSource-${key}" class="fc-source-state" role="status">Unavailable</span></div><div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>${BOBJ_SOURCES[key]?`<button class="btn small" data-source-action="${key==='fcid'?'bobj-update':'ctl-bobj-update'}">Update</button>`:key==='nsr'?'<button class="btn small light" data-source-action="nsr-open">Load NSR</button>':''}<button id="fcImport-${key}" class="btn small light" data-import-source="${key}">${importLabel}</button>${help?`<details class="fc-source-help" id="fcHelp-${key}"${BOBJ_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble">${help}</div></details>`:''}</div><input type="file" id="fcFile-${key}" data-source-file="${key}" aria-label="${importLabel} ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden></section>`;
+  return `<section class="fc-source" data-source="${key}" aria-labelledby="fcSourceTitle-${key}"><div class="fc-source-head"><h3 id="fcSourceTitle-${key}"><span class="fc-source-number">${index+1}</span><span class="fc-source-name">${escapeHtml(source.label)}</span></h3><span id="fcSource-${key}" class="fc-source-state" role="status">Unavailable</span></div><div class="fc-source-toolbar"><span class="fc-source-file" id="fcMeta-${key}"></span>${BW_SOURCES[key]?`<button class="btn small" data-source-action="${key==='fcid'?'bw-update':'ctl-bw-update'}">Update</button>`:key==='nsr'?'<button class="btn small light" data-source-action="nsr-open">Load NSR</button>':''}<button id="fcImport-${key}" class="btn small light" data-import-source="${key}">${importLabel}</button>${help?`<details class="fc-source-help" id="fcHelp-${key}"${BW_SOURCES[key]?' hidden':''}><summary class="btn light small" aria-label="Help for ${escapeHtml(source.label)}">...</summary><div class="fc-source-help-bubble">${help}</div></details>`:''}</div><input type="file" id="fcFile-${key}" data-source-file="${key}" aria-label="${importLabel} ${escapeHtml(source.label)}" accept=".xlsx,.xls,.xlsm,.csv${key==='nsr'?',.json':''}" hidden></section>`;
 }).join('');
 const filterHtml=([name,label,path,needs])=>dateFilters.includes(path)?`<div class="fc-filter primary-filter" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name.slice(0,-4)}From">${label}</label><div class="fc-filter-actions"><button type="button" data-clear-filter="${name}">Clear</button></div></div><div id="${name.slice(0,-4)}${needs==='ctl'?'Periods':'Years'}" class="nsr-year-picks date-picks"></div><div id="${name}" class="fc-range" role="group" aria-label="${label}"><input id="${name.slice(0,-4)}From" type="date" aria-label="${label} from"><span aria-hidden="true">→</span><input id="${name.slice(0,-4)}To" type="date" aria-label="${label} to"></div></div>`:`<div class="fc-filter${['fAccount','fCurrentQuarter','fQuarter','fOwner','fSlotInitiator','fNsrInitiator','fCtlStage','fCtlInitiator'].includes(name)?' primary-filter':''}" data-filter-needs="${needs}"><div class="fc-filter-head"><label for="${name}" title="${path==='owner'?escapeHtml(ownerHint):path.startsWith('nsr.')?'All selected NSR conditions must match the same NSR':''}">${label}${path==='currentQuarter'?helpIcon(currentQuarterHint):path==='quarter'?helpIcon(quarterHint):path==='owner'?helpIcon(ownerHint):path==='salesAdmin'?helpIcon(salesAdminHint):''}</label><div class="fc-filter-actions">${name==='fAccount'?'<button type="button" data-mapping-rule title="Fab / Account Mapping">Rule</button>':''}${name==='fQuarter'?'<button type="button" data-reset-quarter>Reset</button>':name==='fCtlChange'?'<button type="button" data-reset-ctl-type>Reset</button>':''}<button type="button" data-select-all="${name}">All</button><button type="button" data-clear-filter="${name}">Clear</button></div></div><select id="${name}" multiple aria-label="${label}"></select></div>`;
 const views=[['portfolio','FID Portfolio'],['changes','Slot / CTL'],['nsr','NSR List'],['cycle','NSR Cycle Time'],['summary','Summary Metrics'],['rules','Rules & Settings']];
@@ -3417,7 +3425,7 @@ document.addEventListener('click',async event=>{
     target.animate([{backgroundColor:'#fff0ad',boxShadow:'0 0 0 3px #efb647'},{}],{duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:600,iterations:5,easing:'ease-out'});return;
   }
   if(button.dataset.importSource){id('fcFile-'+button.dataset.importSource).click();return}
-  if(button.dataset.sourceAction){const action=button.dataset.sourceAction;if(action==='bobj-update')loadBobj(true);else if(action==='ctl-bobj-update')loadBobj(true,'ctl');else if(action==='nsr-open'){setNsrRange(nsrRange);id('fcNsrDialog').showModal()}return}
+  if(button.dataset.sourceAction){const action=button.dataset.sourceAction;if(action==='bw-update')loadBw();else if(action==='ctl-bw-update')loadBw('ctl');else if(action==='nsr-open'){setNsrRange(nsrRange);id('fcNsrDialog').showModal()}return}
   if(button.hasAttribute('data-nce-signal')){filterValues.signal=['nce'];applyFilters();return}
   if(button.dataset.noteFid){editFidNote(button.dataset.noteFid,button);return}
   if(button.hasAttribute('data-cancel-fid-note')){closeFidNote();return}
@@ -3544,17 +3552,18 @@ function sourceRange(rows,key,meta){
 function sourceMessage(key,message,kind='ok',transport=false){
   const target=id('fcSource-'+key),meta=store.meta[key],hasRange=Boolean(meta?.dateFrom&&meta?.dateTo),pending=kind==='ok'&&store.dirty;
   const cutoff=new Date();cutoff.setDate(cutoff.getDate()-3);const stale=hasRange&&meta.dateTo<=nsrData.localDate(cutoff);
-  const label=pending?'Loading…':kind==='loading'?(/updat/i.test(message)?'Updating…':'Loading…'):meta?(hasRange?meta.dateFrom+' ~ '+meta.dateTo:'Loaded · no dates'):'Unavailable';
+  const progress=kind==='loading'?message.match(/\b\d+%/)?.[0]:'';
+  const label=pending?'Loading…':kind==='loading'?(/updat/i.test(message)?'Updating…':'Loading…')+(progress?' '+progress:''):meta?(hasRange?meta.dateFrom+' ~ '+meta.dateTo:'Loaded · no dates'):'Unavailable';
   target.textContent=label;target.className='fc-source-state '+(kind==='loading'?'loading':meta?'ok':'')+(hasRange?' has-range':'')+(kind!=='loading'&&stale?' stale':'')+(kind==='error'?' error':'')+(pending?' loading pending':'');
-  target.title=meta?.cached&&kind!=='loading'?['Using cache · '+new Date(meta.savedAt).toLocaleString('en-GB'),meta.modifiedAt?(BOBJ_SOURCES[key]?'Workbook updated · ':'Source updated · ')+new Date(meta.modifiedAt).toLocaleString('en-GB'):'',kind==='error'?message:meta.cacheReason].filter(Boolean).join('\n'):kind==='error'?message:hasRange?'Data range · '+meta.dateField:message;
+  target.title=kind==='loading'?message:meta?.cached?['Using cache · '+new Date(meta.savedAt).toLocaleString('en-GB'),meta.modifiedAt?(meta.kind==='bridge'?'Workbook updated · ':'Source updated · ')+new Date(meta.modifiedAt).toLocaleString('en-GB'):'',kind==='error'?message:meta.cacheReason].filter(Boolean).join('\n'):kind==='error'?message:hasRange?'Data range · '+meta.dateField:message;
   target.setAttribute('aria-label',label);target.tabIndex=kind==='error'||meta?.cached?0:-1;
-  if(BOBJ_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=!transport;if(help.hidden)help.open=false}
+  if(BW_SOURCES[key]){const help=id('fcHelp-'+key);help.hidden=!transport;if(help.hidden)help.open=false}
 }
 function actionMessage(message){id('fcActionStatus').textContent=message}
-function sourceMeta(key){const meta=store.meta[key],target=id('fcMeta-'+key);target.textContent=meta?text(meta.file).split(/[\\/]/).pop():'';target.title=meta?.file||'';id('fcSourceCount').textContent=Object.keys(store.meta).length+' / 5'}
+function sourceMeta(key){const meta=store.meta[key],target=id('fcMeta-'+key);target.textContent=meta?text(meta.file).split(/[\\/]/).pop():'';target.title=BW_SOURCES[key]?target.textContent:meta?.file||'';id('fcSourceCount').textContent=Object.keys(store.meta).length+' / 5'}
 function sourceBusy(key,on){
   on?store.busy.add(key):store.busy.delete(key); document.querySelectorAll(`[data-source-file="${key}"]`).forEach(input=>input.disabled=on); id('fcImport-'+key).disabled=on;
-  const actions=key==='fcid'?['bobj-update']:key==='ctl'?['ctl-bobj-update']:key==='nsr'?['nsr-open']:[]; actions.forEach(action=>document.querySelectorAll(`[data-source-action="${action}"]`).forEach(button=>button.disabled=on));
+  const actions=key==='fcid'?['bw-update']:key==='ctl'?['ctl-bw-update']:key==='nsr'?['nsr-open']:[]; actions.forEach(action=>document.querySelectorAll(`[data-source-action="${action}"]`).forEach(button=>button.disabled=on));
   if(key==='nsr')id('fcNsrLoad').disabled=on;
   id('fcRefresh').disabled=store.refreshing||store.busy.size>0;
 }
@@ -3593,7 +3602,7 @@ async function readSourceCache(key){
     if(!Array.isArray(cache.rows)||!cache.rows.length||!nsrData.validSapDate(cache.from)||!nsrData.validSapDate(cache.to))return null;
     return {rows:normalizeNsrRows(cache.rows),meta:{file:'NSR cache',kind:'sap',sheet:'SearchNsrSet',from:cache.from,to:cache.to,pages:cache.pages,savedAt:cache.savedAt||Date.now()}};
   }
-  if(cache?.schema!==2&&(!BOBJ_SOURCES[key]||cache?.schema!==1)||typeof cache.meta?.file!=='string'||!Number.isFinite(cache.meta.savedAt)||cache.meta.savedAt<=0||
+  if(cache?.schema!==2&&(!BW_SOURCES[key]||cache?.schema!==1)||typeof cache.meta?.file!=='string'||!Number.isFinite(cache.meta.savedAt)||cache.meta.savedAt<=0||
     !Array.isArray(cache.columns)||cache.columns.some(column=>typeof column!=='string')||new Set(cache.columns).size!==cache.columns.length||
     !Array.isArray(cache.rows)||cache.rows.some(row=>!Array.isArray(row)||row.length!==cache.columns.length)||
     cache.rows.length&&[key==='nsr'?'NSR#':sources[key].fields.fid.label,sources[key].fields.number?.label].filter(Boolean).some(field=>!cache.columns.includes(field))||
@@ -3604,6 +3613,11 @@ async function restoreSourceCache(key,run,render=true){
   if(store.meta[key])return;
   const cache=await readSourceCache(key);
   if(cache&&run===store.runs[key])await applySource(key,cache.rows,{...cache.meta,cached:true,cacheReason:''},render);
+}
+function sourceCacheCurrent(key,today=nsrData.localDate(new Date())){
+  const meta=store.meta[key];if(!meta)return false;
+  if(key==='nsr')return meta.kind==='file'||meta.to===today;
+  return (HOSTED_PREFIXES[key]?meta.hostedDay:nsrData.localDate(new Date(meta.savedAt)))===today;
 }
 async function sourceFailure(key,run,message,transport=false){
   if(run!==store.runs[key])return;
@@ -3636,7 +3650,7 @@ async function loadHostedSources(keys=Object.keys(HOSTED_PREFIXES),force=false){
   const failed=(key,error)=>sourceFailure(key,runs[key],stage+' failed: '+(error.userMessage||error.message)+(stage==='SAP access'&&!store.meta[key]?'\nSign in to Fiori.':''));
   try{
     await Promise.all(keys.map(key=>restoreSourceCache(key,runs[key],false).catch(error=>{cacheErrors[key]=error.message})));
-    pending=keys.filter(key=>runs[key]===store.runs[key]&&(force||store.meta[key]?.hostedDay!==today));
+    pending=keys.filter(key=>runs[key]===store.runs[key]&&(force||!sourceCacheCurrent(key,today)));
     keys.filter(key=>runs[key]===store.runs[key]&&!pending.includes(key)).forEach(key=>sourceMessage(key,'Loaded'));
     if(!pending.length)return;
     pending.forEach(key=>sourceMessage(key,'Loading data…','loading'));
@@ -3698,33 +3712,23 @@ async function importSource(file,key){
   }catch(error){if(run===store.runs[key])sourceMessage(key,(key==='ctlNsr'?'Append':'Import')+' failed: '+(error.userMessage||error.message)+(store.meta[key]?' Previous data retained.':''),'error')}finally{if(run===store.runs[key]){sourceBusy(key,false);
     id('fcFile-'+key).value=''}}
 }
-async function loadBobj(update=false,key='fcid'){
-  const config=BOBJ_SOURCES[key],run=startSource(key),{endpoint,label}=config;sourceMessage(key,update?'Updating '+label+'…':'Reading current '+label+' workbook…','loading');
+async function loadBw(key='fcid',useCache=false){
+  const config=BW_SOURCES[key],run=startSource(key),controller=new unsafeWindow.AbortController();store.controllers[key]=controller;
+  sourceMessage(key,useCache?'Checking BW cache…':'Loading BW InA · 0%','loading');
   try{
-    let status=await bridgeRequest('GET',endpoint+'/status',undefined,10000);
-    if(run!==store.runs[key])return;
-    if(!status.hasWorkbook||!status.outputPath)update=true;
-    status=await waitForBobjRefresh(endpoint,status,update,(status,queued)=>sourceMessage(key,queued?'Waiting for another BOBJ refresh…':'Updating BOBJ · '+(status.stage||'running'),'loading'),()=>run===store.runs[key]);
-    if(!status)return;
-    if(update&&status.stage==='failed')throw new Error(status.message||'BOBJ update failed.');
-    if(!status.hasWorkbook||!status.outputPath)throw new Error('No '+label+' workbook. Click Update or Import.');
-    const result=await bridgeFileRequest('read',{path:status.outputPath},BRIDGE_FILE_TIMEOUT);
-    if(!result.contentBase64)throw new Error('The BOBJ workbook is empty.');
-    sourceMessage(key,'Reading BOBJ in the background…','loading'); const bytes=Uint8Array.from(atob(result.contentBase64),character=>character.charCodeAt(0)),parsed=await report.readWorkbook(bytes.buffer,key);
-    if(run!==store.runs[key])return;
-    const {rows,...recognition}=parsed;await applySource(key,rows,{file:status.outputPath,kind:'bridge',...recognition});
-    let modified=0;
-    try{const data=await bridgeFileRequest('stat',{path:status.outputPath},10000);modified=Number(data.entries?.[0]?.lastModified)||0}catch{/* File dates are optional; keep successfully read data. */}
-    if(run!==store.runs[key])return;
-    store.meta[key].modifiedAt=modified;
-    await saveSourceCache(key,run);
-    if(run!==store.runs[key])return;
-    if(!update){
-      const date=modified>0?nsrData.localDate(new Date(modified)):'';
-      if(date&&date<nsrData.localDate(new Date())&&unsafeWindow.confirm(`${sources[key].label} data is not up to date (last updated: ${date}). Update now? This may take 5-10 minutes per workbook.`))setTimeout(()=>document.querySelector(`[data-source-action="${key==='ctl'?'ctl-bobj-update':'bobj-update'}"]`).click(),0);
+    if(useCache){
+      await restoreSourceCache(key,run).catch(()=>{});if(run!==store.runs[key])return;
+      if(store.meta[key]){store.meta[key].cached=true;sourceMessage(key,'Using cached BW data');return}
     }
-  }catch(error){await sourceFailure(key,run,error.message,error.transport)}
-  finally{if(run===store.runs[key])sourceBusy(key,false)}
+    sourceMessage(key,'Loading BW InA · 0%','loading');
+    const result=await bwData.read(key,config.query,controller.signal,message=>{if(run===store.runs[key])sourceMessage(key,message,'loading')});
+    if(run!==store.runs[key])return;
+    sourceMessage(key,'Loading BW InA · 100% · Processing…','loading');
+    await applySource(key,result.rows,{file:'BW InA · '+config.label,kind:'sap',sheet:config.query,fields:result.fields,pages:result.pages,from:result.from,to:result.to,savedAt:Date.now()});
+    await saveSourceCache(key,run);
+    if(result.cleanupError&&run===store.runs[key])sourceMessage(key,result.cleanupError,'error');
+  }catch(error){await sourceFailure(key,run,'BW load failed: '+error.message,Boolean(error.bwLogin))}
+  finally{if(run===store.runs[key]){sourceBusy(key,false);delete store.controllers[key]}}
 }
 function setNsrRange(range){nsrRange=range;id('fcNsrFrom').value=range.from;id('fcNsrTo').value=range.to;id('fcNsrTo').min=range.from;id('fcNsrFrom').max=id('fcNsrTo').max=nsrData.localDate(new Date())}
 async function loadSharedNsr(useCache=true){
@@ -3735,7 +3739,7 @@ async function loadSharedNsr(useCache=true){
       const meta=store.meta[key];
       if(meta){
         if(meta.from&&meta.to){range={from:meta.from,to:meta.to};setNsrRange(range)}
-        if(meta.kind==='file'||meta.to===today)return;
+        if(sourceCacheCurrent(key,today))return;
         range={from:meta.from,to:today};
       }else range=nsrData.sapRange();
     }
@@ -3755,15 +3759,23 @@ async function restoreSources(reset=false){
       keys.forEach(key=>{store.runs[key]=(store.runs[key]||0)+1;store.raw[key]=[];delete store.meta[key]; sourceMessage(key,'Not loaded','');sourceMeta(key);sourceBusy(key,true);id('fcFile-'+key).value='';}); setNsrRange(nsrData.sapRange());actionMessage('');
         await recalculate();
     }
-    // Retain hosted merged data and BOBJ fallback caches; discard other legacy source caches.
+    // Retain hosted merged data and existing FID/CTL fallback caches; discard other legacy source caches.
     try{await nsrData.deleteDatasets([...keys.filter(key=>!HOSTED_PREFIXES[key]).map(key=>CACHE_PREFIX+key),CACHE_PREFIX+'archive'])} catch(error){if(reset)actionMessage('Local source cache could not be reset. '+error.message)} finally{if(reset)keys.forEach(key=>sourceBusy(key,false))}
     if(store.meta.nsr?.from)setNsrRange({from:store.meta.nsr.from,to:store.meta.nsr.to});
     const loads=[];
-    for(const key of Object.keys(BOBJ_SOURCES))if(!store.busy.has(key))loads.push(loadBobj(false,key));
+    for(const key of Object.keys(BW_SOURCES))if(!store.busy.has(key))loads.push(loadBw(key,true));
     const hostedKeys=Object.keys(HOSTED_PREFIXES).filter(key=>!store.busy.has(key));if(hostedKeys.length)loads.push(loadHostedSources(hostedKeys,reset));
     if(!store.busy.has('nsr')&&(!store.meta.nsr||store.meta.nsr.kind==='sap'))loads.push(loadSharedNsr());
     // Keep per-source progress visible; rebuild the graph once the whole load settles.
     await Promise.all(loads);
+    const expired=Object.keys(BW_SOURCES).filter(key=>store.meta[key]&&!sourceCacheCurrent(key));
+    if(expired.length){
+      if(store.dirty&&await recalculate())reset=false;
+      // Show the cached dashboard before asking about the slower BW update.
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const dates=expired.map(key=>BW_SOURCES[key].label+' (cached '+nsrData.localDate(new Date(store.meta[key].savedAt))+')').join('\n');
+      if(unsafeWindow.confirm(dates+'\n\nThis data is from an earlier day. Update from BW now? This may take a few minutes.\nCancel keeps the cached data.'))await Promise.all(expired.map(key=>loadBw(key)));
+    }
   }finally{store.refreshing=false;refresh.disabled=store.busy.size>0;refresh.textContent='Refresh';if(store.dirty||reset)await recalculate()}
 }
 
@@ -3782,6 +3794,186 @@ const cycle=createNsrCycle(id('workspace'),{getRows:nsrs=>{
   return table(name,columns,rows,options,true);
 },renderFid:fidLink,copyRows,onNotify:message=>toast(message)});
 setNsrRange(nsrRange);recalculate();restoreSources();
+}
+
+// BW sessions, CSRF tokens and query instances stay in memory; cached data contains business rows only.
+function createBwDataService(){
+  const base='https://pcazbwpap04.fremont.lamrc.net:8443/sap/bw/ina/',suffix='?sap-client=010&sap-language=EN';
+  // Dashboard column, row dimension, exact BW attribute, optional date conversion.
+  const fields={fcid:[
+    ['FID','CRHOPPTID','CRHOPPTID.DISPLAY_KEY'],
+    ['Commit: Field','PHCOPPTID__PHCFCOMLV','PHCOPPTID__PHCFCOMLV.SHORT_TEXT'],
+    ['Business Unit','CRHBU','CRHBU.MEDIUM_TEXT'],
+    ['Fab Name','CRHOPPTID','CRHOPPTID.CRHFABID.MEDIUM_TEXT'],
+    ['Fab Segment','CRHFABSGT','CRHFABSGT.SHORT_TEXT'],
+    ['Customer','0CUST_GRP2','0CUST_GRP2.SHORT_TEXT'],
+    ['FID Description','PHCFIDTXT','PHCFIDTXT.DISPLAY_KEY'],
+    ['System Description','PHCOPPTID__CRHSYSDES','PHCOPPTID__CRHSYSDES.DISPLAY_KEY'],
+    ['Date: Customer Request','PHTFCRDAT__0DATE','PHTFCRDAT__0DATE.KEY',true],
+    ['Date: Target Ship','PHTPSPDAT__0DATE','PHTPSPDAT__0DATE.KEY',true],
+    ['Date: Mfg Commit Ship','PHCOPPTID__CRHSCHSDT','PHCOPPTID__CRHSCHSDT.KEY',true],
+    ['Date: Sales Ops Request Date (RD)','PHTBDCRD__0DATE','PHTBDCRD__0DATE.KEY',true],
+    ['Mfg Upgrade Type','PHCOPPTID__CRHPROJIN','PHCOPPTID__CRHPROJIN.MEDIUM_TEXT'],
+    ['Slot Actual','CRHOPPTID','CRHOPPTID.CRMT2ACT.DISPLAY_KEY',true],
+    ['Time: Calendar Quarter','PHTCALQTR','PHTCALQTR.SHORT_TEXT'],
+    ['Date: Initial MCSD at Slot','PHCMCSDSL__0DATE','PHCMCSDSL__0DATE.KEY',true],
+    ['Initial SRD at Slot','PHCSARSOP','PHCSARSOP.KEY',true]
+  ],ctl:[
+    ['Opportunity ID','CRHOPPTID','CRHOPPTID.DISPLAY_KEY'],
+    ['CTL ID','CRHCFGCID','CRHCFGCID.DISPLAY_KEY'],
+    ['Change Cat','CRCCHCAT','CRCCHCAT.SHORT_TEXT'],
+    ['MCSD @ Current','CRHSCHSDT','CRHSCHSDT.KEY',true],
+    ['MCSD@Create','CRCMCSDCU','CRCMCSDCU.KEY',true],
+    ['RD At Create','CRCBRDCRE','CRCBRDCRE.KEY',true],
+    ['MCSD At SOps Approval','CRCMCSDSO','CRCMCSDSO.KEY',true],
+    ['TSD @ SOPs Approval','CRCTSDSOA','CRCTSDSOA.KEY',true],
+    ['SRD @ Current','CRCBRDCUR','CRCBRDCUR.KEY',true],
+    ['SRD @ SOPs Approval','CRCBRDSOA','CRCBRDSOA.KEY',true],
+    ['1st SOps Appr Dt','CRCSOPD','CRCSOPD.KEY',true],
+    ['Create Date','0CRM_CRD_AT','0CRM_CRD_AT.KEY',true],
+    ['Initiator','0CRM_CTD_BY','0CRM_CTD_BY.DISPLAY_KEY'],
+    ['Business Unit','CRHBU','CRHBU.MEDIUM_TEXT'],
+    ['Change Summary','CRCSUMTX','CRCSUMTX.LONG_TEXT'],
+    ['Stage','CRCSTAGE','CRCSTAGE.LONG_TEXT'],
+    ['Quote ID','CRHQUONUM','CRHQUONUM.DISPLAY_KEY'],
+    ['Customer group 2','CRHOPPTID','CRHOPPTID.0CUST_GRP2.SHORT_TEXT'],
+    ['Config Frz@Current','CRHCFGFRZ','CRHCFGFRZ.KEY',true],
+    ['Root Cause','CRCROOTTX','CRCROOTTX.LONG_TEXT'],
+    ['Sub Reason','CRHSRCCHG','CRHSRCCHG.SHORT_TEXT'],
+    ['Field CRD','CRFDIRCDT','CRFDIRCDT.KEY',true],
+    ['Reason for Chg','CRHRNFCHG','CRHRNFCHG.SHORT_TEXT'],
+    ['Sales OPs Approver','CRCSOP','CRCSOP.SHORT_TEXT']
+  ]};
+  const wanted=['ClientCapabilities','DatasourceAtService','StatefulServer','ServerStructureNames','SupportsSetOperand','SupportsEncodedResultSet','ResultSetAxisType','PagingTupleCountTotal','Obtainability','ReadMode','ReadModesV2','Supplements','SAPDate','SubmitReturnsVariableValues','DefinitionReturnsVariableValues'];
+  const operands=selection=>selection?.SetOperand?[selection.SetOperand]:(selection?.Operator?.SubSelections||[]).flatMap(operands);
+  const values=value=>{if(Array.isArray(value))return value;if(value&&(!value.Encoding||value.Encoding==='None')&&Array.isArray(value.Values))return value.Values;throw new Error('Unsupported BW result encoding.')};
+  function date(value,column){
+    const text=String(value??'').trim();if(!text||/^(?:#|Not assigned|00000000|0000-00-00)$/i.test(text))return '';
+    let parts=text.match(/^(\d{4})-?(\d{2})-?(\d{2})$/);
+    if(!parts){const us=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(us)parts=['',us[3],us[1].padStart(2,'0'),us[2].padStart(2,'0')]}
+    if(!parts)throw new Error('Unrecognized BW date: '+column);
+    const result=`${parts[1]}-${parts[2]}-${parts[3]}`,parsed=new Date(result+'T00:00:00Z');
+    if(isNaN(parsed)||parsed.toISOString().slice(0,10)!==result)throw new Error('Invalid BW date: '+column);return result;
+  }
+  async function read(key,query,signal,onProgress){
+    const columns=fields[key],now=new Date(),startYear=now.getFullYear()-3,from=key==='fcid'?`${startYear}1`:`${startYear}0101`,to=key==='fcid'?'20994':`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const source={ObjectName:query,Type:'Query',InstanceId:crypto.randomUUID()};let csrf='',context='',created=false,result;
+    const fail=(message,bwLogin=false)=>Object.assign(new Error(message),{bwLogin});
+    function request(endpoint,body,stage,timeout=60000,closing=false){
+      if(!closing&&signal?.aborted)return Promise.reject(new DOMException('BW load cancelled.','AbortError'));
+      const headers={Accept:'application/json','sap-contextid-accept':'header'};
+      if(context)headers['sap-contextid']=context;
+      if(body){headers['Content-Type']='application/json';if(csrf)headers['x-csrf-token']=csrf}else headers['x-csrf-token']='Fetch';
+      return new Promise((resolve,reject)=>{
+        let handle;const abort=()=>{handle?.abort();finish(reject,new DOMException('BW load cancelled.','AbortError'))};
+        const finish=(done,value)=>{signal?.removeEventListener('abort',abort);done(value)};
+        try{
+          handle=GM_xmlhttpRequest({method:body?'POST':'GET',url:base+endpoint+suffix,headers,data:body?JSON.stringify(body):undefined,anonymous:false,timeout,
+            onload:response=>{
+              try{
+                if([401,403].includes(response.status))throw fail(stage+': BW HTTP '+response.status+'. Open BW, sign in, then click Update.',true);
+                if(response.finalUrl&&new URL(response.finalUrl).origin!==new URL(base).origin)throw fail(stage+': BW sign-in is required.',true);
+                if(response.status<200||response.status>=300)throw fail(stage+': BW HTTP '+response.status+'.');
+                const responseHeaders=response.responseHeaders||'',token=responseHeaders.match(/^x-csrf-token:\s*(.+)$/im)?.[1]?.trim();
+                if(token&&!/^(fetch|required)$/i.test(token))csrf=token;
+                context=responseHeaders.match(/^sap-contextid:\s*(.+)$/im)?.[1]?.trim()||context;
+                let data;try{data=JSON.parse(response.responseText)}catch{throw fail(stage+': Expected BW JSON. Open BW, sign in, then click Update.',true)}
+                const errors=[...(data.Messages||[]),...(data.Cube?.Messages||[]),...(data.Grids||[]).flatMap(grid=>grid.Messages||[])].filter(message=>[2,3].includes(Number(message.Type))||/^(error|fatal)$/i.test(message.Type));
+                if(errors.length)throw fail(stage+': '+errors.map(message=>message.Text||'BW query error').join('\n'));
+                finish(resolve,data);
+              }catch(error){finish(reject,error)}
+            },
+            onerror:()=>finish(reject,fail(stage+': Cannot reach BW. Check the company network / VPN and Tampermonkey site access.',true)),
+            ontimeout:()=>finish(reject,fail(stage+': BW request timed out.')),
+            onabort:()=>finish(reject,new DOMException('BW load cancelled.','AbortError'))
+          });
+          if(!closing){signal?.addEventListener('abort',abort,{once:true});if(signal?.aborted)abort()}
+        }catch(error){finish(reject,error)}
+      });
+    }
+    try{
+      const info=await request('GetServerInfo',null,'Connection'),advertised=new Set((info.Services?.find(service=>service.Service==='Analytics')?.Capabilities||[]).map(item=>typeof item==='string'?item:item.Capability)),caps=wanted.filter(name=>advertised.has(name));
+      if(!caps.includes('DatasourceAtService'))throw new Error('BW Analytics service is unavailable.');
+      const analytics=definition=>({DataSource:{...source},Capabilities:caps,Language:'EN',Definition:definition});
+      created=true;
+      let cube=(await request('GetResponse',{Metadata:{Context:'Analytics',DataSource:{...source},Capabilities:caps,Language:'EN',Expand:['Cube']},Options:['StatefulServer']},'Metadata')).Cube;
+      if(!cube)throw new Error('BW returned no query metadata.');source.InstanceId=cube.DataSource?.InstanceId||source.InstanceId;
+      const fidVariable=key==='fcid'?'ZPH_C_U_SS_OP_CRHOPPTID':'ZVARMOPPTID',bound=key==='fcid'?'ZPH_C_U_SO_OP_QTR':'ZBW_CREATE_DATE';
+      const selections=key==='fcid'?{ZPH_C_C_SS_OP_I_CURR_VER:{from:'LIVE'},ZPH_MILESTONE:{from:'SHIP'},[bound]:{from,to}}:{[bound]:{from,to}};
+      const inputs=(cube.Variables||[]).filter(variable=>variable.InputEnabled),expected=[];
+      if(!inputs.some(variable=>variable.Name===fidVariable&&variable.InputType==='Optional'))throw new Error('BW no longer supports querying without a FID list.');
+      for(const name of Object.keys(selections))if(!inputs.some(variable=>variable.Name===name))throw new Error('Missing BW variable: '+name);
+      const variables=inputs.map(variable=>{
+        if(variable.VariableType!=='DimensionMemberVariable')throw new Error('Unsupported BW variable: '+variable.Name);
+        // Keep the query defaults; the optional FID list is deliberately left empty.
+        let selected=variable.Name===fidVariable?{}:structuredClone(variable.Values||{});
+        const selection=selections[variable.Name];
+        if(selection){
+          const dimension=cube.Dimensions.find(item=>item.Name===variable.DimensionReference?.Name),field=variable.Values?.Selection?.SetOperand?.FieldName||dimension?.KeyAttribute||dimension?.DefaultKeyAttribute;
+          if(!dimension?.Attributes.some(attribute=>attribute.Name===field))throw new Error('Missing BW variable key: '+variable.Name);
+          const element={Comparison:selection.to&&selection.to!==selection.from?'BETWEEN':'=',Low:selection.from};if(element.Comparison==='BETWEEN')element.High=selection.to;
+          selected={Selection:{SetOperand:{FieldName:field,Elements:[element]}}};expected.push({field,element});
+        }
+        if(variable.InputType!=='Optional'&&!selected.Selection?.SetOperand?.Elements?.length)throw new Error('Missing mandatory BW variable: '+variable.Name);
+        // This BW interprets an explicit false as exclusion; omission means inclusion.
+        for(const operand of operands(selected.Selection))for(const element of operand.Elements||[])if(element.IsExcluding===false)delete element.IsExcluding;
+        return {Name:variable.Name,Values:selected};
+      });
+      for(const step of ['VariableDefinition','VariableSubmit']){
+        const response=await request('GetResponse',{Analytics:{...analytics({Variables:variables}),ProcessingDirectives:{ProcessingStep:step},Expand:['Cube']},Options:['StatefulServer']},step);
+        if(step==='VariableSubmit'){cube=response.Cube;if(!cube)throw new Error('BW returned no submitted query.');source.InstanceId=cube.DataSource?.InstanceId||source.InstanceId}
+      }
+      const applied=[cube.FixedFilter,cube.DynamicFilter].flatMap(filter=>operands(filter?.Selection));
+      for(const {field,element}of expected){
+        const elements=applied.filter(operand=>operand.FieldName===field).flatMap(operand=>operand.Elements||[]);
+        if(!elements.length||elements.some(value=>value.IsExcluding||value.LowIs==='Variable'||value.HighIs==='Variable'||(value.Comparison||'=')!==element.Comparison||String(value.Low).replaceAll('-','')!==element.Low||element.High!==undefined&&String(value.High).replaceAll('-','')!==element.High))throw new Error('BW did not confirm the requested range / selections.');
+      }
+      const rowNames=[...new Set(columns.map(column=>column[1]))];
+      for(const [,name,attribute]of columns)if(!cube.Dimensions.some(dimension=>dimension.Name===name&&dimension.Attributes.some(field=>field.Name===attribute)))throw new Error('Missing required BW field: '+attribute);
+      const dimensions=cube.Dimensions.filter(dimension=>['Rows','Columns','Free'].includes(dimension.AxisDefault)).map(dimension=>{
+        const Axis=rowNames.includes(dimension.Name)?'Rows':dimension.AxisDefault==='Columns'?'Columns':'Free',item={Name:dimension.Name,Axis};
+        if(Axis==='Free')return item;
+        const attributes=Axis==='Rows'?columns.filter(column=>column[1]===dimension.Name).map(column=>column[2]):[dimension.KeyAttribute||dimension.DefaultKeyAttribute];
+        item.Attributes=[...new Set(attributes)].map(Name=>({Name,Obtainability:'Always'}));item.FieldLayoutType='FieldBased';
+        if(Axis==='Rows')item.ResultStructure=[{Result:'Members',Visibility:'Visible'},{Result:'Total',Visibility:'Hidden'}];
+        const readMode=dimension.DefaultResultSetReadMode||dimension.ResultSetReadMode;if(readMode&&readMode!=='Undefined')item.ReadMode=item.ResultSetReadMode=readMode;
+        return item;
+      });
+      const definition={Dimensions:dimensions,Query:{Axes:[{Axis:'Rows',Type:1},{Axis:'Columns',Type:2}].map(axis=>({...axis,ZeroSuppressionType:0,Layout:dimensions.filter(dimension=>dimension.Axis===axis.Axis).map(dimension=>dimension.Name)}))},ResultSetFeatureRequest:{ResultFormat:'Version2',ResultEncoding:'None',ResultKeepOriginalTexts:true,IgnoreAutoSubmit:true,UseDefaultAttributeKey:false,SubSetDescription:{RowFrom:0,RowTo:1000,ColumnFrom:0,ColumnTo:1}}};
+      if(key==='ctl'){
+        const selections=[{SetOperand:{FieldName:'CRCCHCAT.KEY',Elements:['015','016','017','018','014'].map(Low=>({Comparison:'=',Low}))}}];
+        if(cube.DynamicFilter?.Selection)selections.unshift(cube.DynamicFilter.Selection);
+        definition.Filter={Selection:selections.length===1?selections[0]:{Operator:{Code:'And',SubSelections:selections}}};
+      }
+      const rows=[];let total=null,pages=0;
+      for(let offset=0;;){
+        onProgress?.('Loading BW InA · '+(total===null?0:Math.min(99,Math.floor(offset*100/total)))+'% · '+offset+(total===null?'':' / '+total)+' rows');
+        Object.assign(definition.ResultSetFeatureRequest.SubSetDescription,{RowFrom:offset,RowTo:offset+1000});
+        const response=await request('GetResponse',{Analytics:analytics(definition),Options:['StatefulServer']},'ResultSet',120000),axis=response.Grids?.[0]?.Axes?.find(axis=>String(axis.Type||axis.Name).toUpperCase()==='ROWS');
+        if(!axis||!Number.isInteger(axis.TupleCount)||axis.TupleCount<0||axis.TupleCount>1000||!Number.isInteger(axis.TupleCountTotal)||axis.TupleCountTotal<offset+axis.TupleCount)throw new Error('Incomplete BW result page.');
+        if(total!==null&&total!==axis.TupleCountTotal)throw new Error('BW result count changed while paging.');total=axis.TupleCountTotal;pages++;if(!total)break;
+        const vectors=columns.map(([column,name,attribute,isDate])=>{
+          const index=axis.Dimensions.findIndex(dimension=>dimension.Name===name),dimension=axis.Dimensions[index],field=dimension?.Attributes.find(item=>item.Name===attribute);
+          if(!field||!axis.Tuples[index])throw new Error('BW omitted required field: '+column);
+          return {column,isDate,indexes:values(axis.Tuples[index].MemberIndexes),types:values(dimension.MemberTypes),data:values(field.Values)};
+        });
+        for(let index=0;index<axis.TupleCount;index++){
+          const row={};
+          for(const vector of vectors){
+            const member=vector.indexes[index];if(!Number.isInteger(member)||member<0||member>=vector.data.length||vector.types[member]!==0)throw new Error('Invalid BW detail row / member index.');
+            row[vector.column]=vector.isDate?date(vector.data[member],vector.column):vector.data[member];
+          }
+          if(key==='ctl'&&(!row['Create Date']||row['Create Date'].replaceAll('-','')<from||row['Create Date'].replaceAll('-','')>to||!['Push','Config','Slot','Pull','Drop Slot'].includes(row['Change Cat'])))throw new Error('BW returned CTLs outside the requested scope.');
+          rows.push(row);
+        }
+        offset+=axis.TupleCount;if(offset===total)break;if(!axis.TupleCount)throw new Error('BW paging stopped before the full result.');
+      }
+      result={rows,fields:columns.map(column=>column[0]),pages,from,to};return result;
+    }finally{
+      if(created)try{await request('GetResponse',{Analytics:{Actions:[{Type:'Close',DataSources:[source.InstanceId]}]},Options:['StatefulServer']},'Close',10000,true)}catch{if(result)result.cleanupError='Data loaded; BW query close was not confirmed. The server may need to reclaim the session.'}
+    }
+  }
+  return {loginUrl:base+'GetServerInfo'+suffix,read};
 }
 
 // Source parsing is independent of dashboard state and does not change source records.
