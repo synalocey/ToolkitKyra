@@ -1,5 +1,5 @@
 SAPGUIcontrol/
-tests/
 examples/
-/AGENTS.md
-/.agent-notes/
+AGENTS.md
+.agent-notes/
+script/

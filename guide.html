@@ -95,6 +95,9 @@
     article section p + p{margin-top:12px}
     article section p + p.hint{margin-top:2px}
     article section strong{color:#263e32; font-weight:600}
+    .guide-tip{margin-top:12px}
+    .guide-tip > strong, .guide-tip > p{font-size:13px}
+    .guide-tip > strong{display:block; margin-bottom:2px; color:var(--muted)}
     .guide-tab, .guide-label, .guide-button{display:inline-block; padding:0 .4em; border:1px solid var(--label-line, #d7e1e8); border-radius:5px; background:var(--label-bg, #fff); color:var(--label-ink, #0f4c67); font-size:.94em; line-height:1.5; white-space:nowrap}
     .tab-fid, .label-metric{--label-ink:#2458a6; --label-bg:#eaf1ff; --label-line:#bed0ef}
     .tab-ctl{--label-ink:#7950a1; --label-bg:#f3edfa; --label-line:#d2bee8}
@@ -227,10 +230,15 @@
 </div>
 <div class="topic" id="a1-3" data-subsection aria-labelledby="a1-3-title"><h3 id="a1-3-title" data-en="Filters">Filters 筛选与搜索</h3>
 <figure class="media" style="margin-bottom:20px"><a data-zoom href="./images/guide-dashboard.svg#active-filters"><img src="./images/guide-dashboard.svg#active-filters" width="820" height="47" loading="lazy" alt="Filtered By bar showing the active Account, Assessment Quarters and CTL Type filters" style="aspect-ratio: 820 / 47"></a></figure>
-<div class="sources"><figure class="media" style="max-width:260px"><a data-zoom href="./images/guide-dashboard.svg#filters"><img src="./images/guide-dashboard.svg#filters" width="370" height="786" loading="lazy" alt="Filters with Reset All, single-FID lookup, Assessment Quarters, Current Quarter, MFG Upgrade Type and CTL reset/date controls" style="aspect-ratio: 370 / 786"></a></figure>
+<div class="sources"><figure class="media" style="max-width:260px"><a data-zoom href="./images/guide-dashboard.svg#filters"><img src="./images/guide-dashboard.svg#filters" width="370" height="786" loading="lazy" alt="Filters with preset buttons D, 1, 2 and 3 beside Reset All, single-FID lookup, and FID and CTL filters" style="aspect-ratio: 370 / 786"></a></figure>
 <div><p data-en="Use &lt;strong&gt;Search FIDs, CTLs, or NSRs&lt;/strong&gt; on the left for quick filtering. Enter one FID or CTL, then click 🔍 to open FID 360°.">在左侧 <strong>Search FIDs, CTLs, or NSRs</strong> 中快捷筛选，可一次输入多条编号；仅输入一个 FID 或 CTL 时，点击右侧 🔍 可打开 FID 360°。</p>
 <p data-en="Combine &lt;strong&gt;Account&lt;/strong&gt;, &lt;strong&gt;Assessment Quarters&lt;/strong&gt;, &lt;strong&gt;Current Quarter&lt;/strong&gt;, &lt;strong&gt;Customer&lt;/strong&gt; and other filters as needed. Values within one filter combine with OR; different filters combine with AND."><strong>Account</strong>、<strong>Assessment Quarters</strong>、<strong>Current Quarter</strong>、<strong>Customer</strong> 等可按需筛选。同一筛选内取并集，不同筛选取交集。</p>
-<p data-en="&lt;strong&gt;Filtered By&lt;/strong&gt; at the top shows active filters. Click to quickly locate or remove a filter. The current fiscal quarter and the next four are selected by default; CTL Type defaults to Slot / Config / Drop Slot.">页面上方的 <strong>Filtered By</strong> 显示已有筛选条件，可以点击进行快速定位或者删除筛选条件。默认筛选当前及后续 4 个财务季度，CTL Type 默认筛选 Slot / Config / Drop Slot。</p></div>
+<p data-en="&lt;strong&gt;Filtered By&lt;/strong&gt; shows the active filters at the top of the page. Click a tag to locate its filter.">页面上方的 <strong>Filtered By</strong> 显示当前筛选条件。点击标签可定位对应筛选框。</p>
+<p data-en="Click an empty preset button (&lt;strong&gt;D, 1, 2, or 3&lt;/strong&gt;) to save the current filters. Click a saved button to apply its filters or right-click it to clear the preset. A saved &lt;strong&gt;D&lt;/strong&gt; preset applies automatically when you open the dashboard.">点击空的 <strong>D、1、2、3</strong> 按钮可保存当前筛选条件，点击已保存的按钮可使用该筛选，右键清除筛选预设。打开仪表板时会自动应用已保存的 <strong>D</strong>。</p>
+<div class="guide-tip" role="note">
+  <strong data-en="Tip">小贴士</strong>
+  <p data-en="Use the default filters to analyze Commit tools in the current fiscal quarter and the next four. To use the dashboard as a personal work log, select yourself and [Unknown] under &lt;strong&gt;FID Owner&lt;/strong&gt;, choose the customers you cover under &lt;strong&gt;FID Customer&lt;/strong&gt;, and select Commit plus Gone or Upside under &lt;strong&gt;FID Commit&lt;/strong&gt;. In &lt;strong&gt;FID Details&lt;/strong&gt;, mark FIDs that need no follow-up as Ignore. These entries are hidden from that table by default.">默认筛选适合分析当前及后续 4 个财务季度的 Commit 机台。用作个人工作记录时，可在 <strong>FID Owner</strong> 选自己和 [Unknown]，在 <strong>FID Customer</strong> 选自己负责的客户，并在 <strong>FID Commit</strong> 选 Commit + Gone / Upside。在 <strong>FID Details</strong> 中可将无需跟进的 FID 标为 Ignore。这些条目默认在该表中隐藏。</p>
+</div></div>
 </div>
 </div>
 </section>
