@@ -262,12 +262,12 @@
 <path d="M422.5 586.6666666666666l7 0-3.5 4.666666666666667z" fill="#3a4c5c"/>
 <rect x="48" y="624" width="188" height="49" fill="#4a4a4a" stroke="#4a4a4a" rx="1"/><text x="142" y="648.5" font-size="20" fill="#fff" text-anchor="middle" dominant-baseline="central">Apply Filters</text>
 <text x="294" y="655" font-size="20" fill="#222">Clear Filters</text>
-<rect x="452" y="624" width="438" height="49" fill="#5b6f7a" stroke="#5b6f7a" rx="1"/>
+<rect x="452" y="624" width="259" height="49" fill="#5b6f7a" stroke="#5b6f7a" rx="1"/>
 <text x="485" y="655" font-size="20" font-family="Segoe UI Emoji, Apple Color Emoji, sans-serif">🔩</text>
-<text x="514" y="655" font-size="20" fill="#fff">Find Part Changes Related to TM/PCN</text>
+<text x="514" y="655" font-size="20" fill="#fff">Find Part Changes</text>
 <rect x="1401" y="379" width="377" height="46" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
 <rect x="43" y="619" width="198" height="59" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
-<rect x="447" y="618" width="448" height="60" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
+<rect x="447" y="618" width="269" height="60" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
 <circle cx="423" cy="648" r="19" fill="#fff" stroke="#d83c32" stroke-width="3" vector-effect="non-scaling-stroke"/><text x="423" y="648" font-size="24.7" fill="#d83c32" font-weight="700" text-anchor="middle" dominant-baseline="central">1</text>
   </g>
 <!-- upload --><g transform="translate(0 752)" clip-path="url(#frame-part-upload)">
@@ -288,16 +288,21 @@
 <rect x="22" y="168" width="1396" height="34" fill="#f8fafc"/>
 <path d="M33 181.33333333333334l8 0-4 5.333333333333333z" fill="#334155"/>
 <text x="46" y="190" font-size="13" fill="#334155" font-weight="600">Tech Articles</text>
-<text x="31" y="223" font-size="13" fill="#222">4/4 documents · 7 unique Part Numbers · 0 failed</text>
+<text x="31" y="223" font-size="13" fill="#222">4/4 documents · 7 unique part numbers · 0 failed</text>
 <rect x="22" y="239" width="1396" height="31" fill="#eef5f7"/>
 <text x="31" y="259" font-size="13" fill="#222" font-weight="700">Part Number</text>
-<text x="374" y="259" font-size="13" fill="#222" font-weight="700">Document No.</text>
-<text x="646" y="259" font-size="13" fill="#222" font-weight="700">Title</text>
-<text x="1310" y="259" font-size="13" fill="#222" font-weight="700">Release Date</text>
-<text x="31" y="291" font-size="13" fill="#222">100-000100-001</text>
-<text x="374" y="291" font-size="13" fill="#222">PCN-DEMO-01</text>
-<text x="646" y="291" font-size="13" fill="#007a95" text-decoration="underline">Sample PCN: pump material change</text>
-<text x="1310" y="291" font-size="13" fill="#222">10/19/2026</text>
+<text x="201" y="259" font-size="13" fill="#222" font-weight="700">Document No.</text>
+<text x="362" y="259" font-size="13" fill="#222" font-weight="700">Title</text>
+<text x="748" y="259" font-size="13" fill="#222" font-weight="700">Release Date</text>
+<text x="897" y="259" font-size="13" fill="#222" font-weight="700">Cut In/BOM Key Date</text>
+<text x="1120" y="259" font-size="13" fill="#222" font-weight="700">Type</text>
+<text x="1248" y="259" font-size="13" fill="#222" font-weight="700">Action Required</text>
+<text x="31" y="291" font-size="13" fill="#007a95" text-decoration="underline">100-000101-001</text>
+<text x="201" y="291" font-size="13" fill="#222">PCN-DEMO-01</text>
+<text x="362" y="291" font-size="13" fill="#007a95" text-decoration="underline">Sample PCN: pump material change</text>
+<text x="748" y="291" font-size="13" fill="#222">10/19/2026</text>
+<text x="897" y="291" font-size="13" fill="#222">11/30/2026</text>
+<text x="1120" y="291" font-size="13" fill="#222">PCN</text>
 <path d="M22 302L1418 302" stroke="#dce3e8" stroke-width="1"/>
 <rect x="28" y="99" width="1383" height="49" fill="none" stroke="#d83c32" rx="6" stroke-width="3" vector-effect="non-scaling-stroke"/>
 <circle cx="18" cy="114" r="13" fill="#fff" stroke="#d83c32" stroke-width="3" vector-effect="non-scaling-stroke"/><text x="18" y="114" font-size="16.900000000000002" fill="#d83c32" font-weight="700" text-anchor="middle" dominant-baseline="central">2</text>
@@ -318,36 +323,46 @@
 <text x="337" y="176" font-size="11" fill="#334155">Matching Part Numbers: 6</text>
 <rect x="31" y="190" width="1378" height="206" fill="#fff" stroke="#dce3e8" rx="6"/>
 <rect x="32" y="191" width="1376" height="32" fill="#eef5f7"/>
-<rect x="956" y="223" width="226" height="128" fill="#eff6ff"/>
-<rect x="1182" y="223" width="226" height="128" fill="#ecfdf5"/>
+<rect x="890" y="223" width="259" height="128" fill="#eff6ff"/>
+<rect x="1149" y="223" width="259" height="128" fill="#ecfdf5"/>
 <text x="39" y="212" font-size="13" fill="#222" font-weight="700">Title</text>
-<text x="707" y="212" font-size="13" fill="#222" font-weight="700">Document No.</text>
-<text x="828" y="212" font-size="13" fill="#222" font-weight="700">Release Date</text>
-<text x="964" y="212" font-size="13" fill="#222" font-weight="700">SO BOM</text>
-<text x="1190" y="212" font-size="13" fill="#222" font-weight="700">Quote BOM</text>
+<text x="307" y="212" font-size="13" fill="#222" font-weight="700">Document No.</text>
+<text x="428" y="212" font-size="13" fill="#222" font-weight="700">Release Date</text>
+<text x="538" y="212" font-size="13" fill="#222" font-weight="700">Cut In/BOM Key Date</text>
+<text x="688" y="212" font-size="13" fill="#222" font-weight="700">Type</text>
+<text x="771" y="212" font-size="13" fill="#222" font-weight="700">Action Required</text>
+<text x="897" y="212" font-size="13" fill="#222" font-weight="700">SO BOM</text>
+<text x="1156" y="212" font-size="13" fill="#222" font-weight="700">Quote BOM</text>
 <text x="39" y="244" font-size="13" fill="#007a95" text-decoration="underline">Sample PCN: pump material change</text>
-<text x="707" y="244" font-size="13" fill="#222">PCN-DEMO-01</text>
-<text x="828" y="244" font-size="13" fill="#222">10/19/2026</text>
-<text x="964" y="244" font-size="13" fill="#222">100-000101-001</text>
-<text x="1190" y="244" font-size="13" fill="#222">100-000201-001</text>
+<text x="307" y="244" font-size="13" fill="#222">PCN-DEMO-01</text>
+<text x="428" y="244" font-size="13" fill="#222">10/19/2026</text>
+<text x="538" y="244" font-size="13" fill="#222">11/30/2026</text>
+<text x="688" y="244" font-size="13" fill="#222">PCN</text>
+<text x="897" y="244" font-size="13" fill="#007a95" text-decoration="underline">100-000101-001</text>
+<text x="1156" y="244" font-size="13" fill="#007a95" text-decoration="underline">100-000201-001</text>
 <path d="M32 254L1408 254" stroke="#dce3e8" stroke-width="1"/>
 <text x="39" y="276" font-size="13" fill="#007a95" text-decoration="underline">Sample Tech Memo: valve replacement</text>
-<text x="707" y="276" font-size="13" fill="#222">TM-DEMO-02</text>
-<text x="828" y="276" font-size="13" fill="#222">10/16/2026</text>
-<text x="964" y="276" font-size="13" fill="#222">100-000102-001</text>
-<text x="1190" y="276" font-size="13" fill="#222">100-000202-001</text>
+<text x="307" y="276" font-size="13" fill="#222">TM-DEMO-02</text>
+<text x="428" y="276" font-size="13" fill="#222">10/16/2026</text>
+<text x="538" y="276" font-size="13" fill="#222">11/02/2026</text>
+<text x="688" y="276" font-size="13" fill="#222">Tech Memo</text>
+<text x="771" y="276" font-size="13" fill="#222">Mandatory</text>
+<text x="897" y="276" font-size="13" fill="#007a95" text-decoration="underline">100-000102-001</text>
+<text x="1156" y="276" font-size="13" fill="#007a95" text-decoration="underline">100-000202-001</text>
 <path d="M32 286L1408 286" stroke="#dce3e8" stroke-width="1"/>
 <text x="39" y="308" font-size="13" fill="#007a95" text-decoration="underline">Sample Tech Memo: sensor compatibility</text>
-<text x="707" y="308" font-size="13" fill="#222">TM-DEMO-03</text>
-<text x="828" y="308" font-size="13" fill="#222">10/12/2026</text>
-<text x="964" y="308" font-size="13" fill="#222">100-000103-001</text>
-<text x="1190" y="308" font-size="13" fill="#222"/>
+<text x="307" y="308" font-size="13" fill="#222">TM-DEMO-03</text>
+<text x="428" y="308" font-size="13" fill="#222">10/12/2026</text>
+<text x="688" y="308" font-size="13" fill="#222">Tech Memo</text>
+<text x="771" y="308" font-size="13" fill="#222">As Required</text>
+<text x="897" y="308" font-size="13" fill="#007a95" text-decoration="underline">100-000103-001</text>
 <path d="M32 318L1408 318" stroke="#dce3e8" stroke-width="1"/>
 <text x="39" y="340" font-size="13" fill="#007a95" text-decoration="underline">Sample PCN: seal kit revision</text>
-<text x="707" y="340" font-size="13" fill="#222">PCN-DEMO-04</text>
-<text x="828" y="340" font-size="13" fill="#222">10/08/2026</text>
-<text x="964" y="340" font-size="13" fill="#222"/>
-<text x="1190" y="340" font-size="13" fill="#222">100-000203-001</text>
+<text x="307" y="340" font-size="13" fill="#222">PCN-DEMO-04</text>
+<text x="428" y="340" font-size="13" fill="#222">10/08/2026</text>
+<text x="538" y="340" font-size="13" fill="#222">01/15/2027</text>
+<text x="688" y="340" font-size="13" fill="#222">PCN</text>
+<text x="1156" y="340" font-size="13" fill="#007a95" text-decoration="underline">100-000203-001</text>
 <path d="M32 350L1408 350" stroke="#dce3e8" stroke-width="1"/>
 <rect x="21" y="418" width="1398" height="36" fill="#f8fafc" stroke="#dce3e8" rx="6"/>
 <path d="M33 432v9l7-4.5z" fill="#334155"/>

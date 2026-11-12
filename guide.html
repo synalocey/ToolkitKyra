@@ -138,8 +138,19 @@
     #viewer button:disabled{opacity:.4; cursor:default}
     #preview{min-height:0; padding:24px; overflow:auto; overscroll-behavior:contain}
     #preview img{display:block; width:var(--preview-width); max-width:none; height:auto; margin:auto}
-    .hint{color:var(--muted); font-size:13px}
+    .hint, .muted-note{color:var(--muted)}
+    .hint{font-size:13px}
     article section .hint{font-size:13px}
+    article :not(pre) > code{display:inline-block; padding:0 5px; border:1px solid #cbd8d3; border-radius:4px; background:#eef3f1; color:#184d43; font:400 .9em/1.5 Consolas, "SFMono-Regular", Menlo, monospace; vertical-align:baseline; overflow-wrap:anywhere}
+    .code-box{min-width:0; max-width:100%; margin:14px 0 0; border:1px solid var(--line); border-radius:8px; background:#f8faf9; overflow:hidden}
+    .code-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 12px; border-bottom:1px solid var(--line); background:#f1f6f4; color:#42574d; font-size:12.5px; font-weight:600}
+    .copy-btn{min-height:28px; padding:2px 10px; border:1px solid #c5d6cf; border-radius:6px; background:#fff; color:var(--teal); font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap}
+    .copy-btn:hover{background:#eff7f4}
+    .code-box pre{margin:0; padding:13px 15px; max-width:100%; overflow-x:auto; font:13px/1.6 Consolas, "SFMono-Regular", Menlo, monospace; color:#1f312b; white-space:pre}
+    .code-box code{font:inherit}
+    .code-box pre.wrap{white-space:pre-wrap; overflow-wrap:anywhere}
+    .tool-list{margin:12px 0 0; padding-left:20px; font-size:15px}
+    .tool-list li + li{margin-top:8px}
     .notice{width:calc(100% - 64px); max-width:1216px; margin:24px auto 36px; padding:24px 28px; border:1px solid #a9caee; border-left:5px solid #2874bb; border-radius:12px; background:#eaf3ff}
     .notice h1{color:#184f80; font-size:27px; line-height:1.4}
     .notice p{margin-top:6px; color:#42658a; font-size:14px}
@@ -424,7 +435,7 @@
           <section id="c1" data-section aria-labelledby="c1-title">
             <h2 id="c1-title" data-en="Filter technical documents by tool type" data-nav-en="Filter by tool type">筛选对应机型的技术文档</h2>
             <p data-en="Prepare the BOMs to compare, identify the tool type, then filter by <strong>System</strong> to get all its Tech Articles.">准备待比较的 BOM，确认机型后按照 <strong>System</strong> 筛选，获取该机型的全部 Tech Articles。</p>
-            <p data-en="Click <strong class='guide-button'>Apply Filters</strong> → <strong class='guide-button'>🔩 Find Part Changes Related to TM/PCN</strong>, then wait for all Part Number data to load.">点 <strong class='guide-button'>Apply Filters</strong> → <strong class='guide-button'>🔩 Find Part Changes Related to TM/PCN</strong>，等待全部 Part Number 读取完成。</p>
+            <p data-en="Click <strong class='guide-button'>Apply Filters</strong> → <strong class='guide-button'>🔩 Find Part Changes</strong>, then wait for all Part Number data to load.">点 <strong class='guide-button'>Apply Filters</strong> → <strong class='guide-button'>🔩 Find Part Changes</strong>，等待全部 Part Number 读取完成。</p>
             <figure class="media">
               <a data-zoom href="./images/guide-launch.svg#part-entry">
                 <img src="./images/guide-launch.svg#part-entry" width="1890" height="720" loading="lazy" alt="Filter Tech Articles by System for the tool type identified from the BOMs" style="aspect-ratio: 1890 / 720">
@@ -449,6 +460,65 @@
                 <img src="./images/guide-launch.svg#part-results" width="1440" height="475" loading="lazy" alt="Sample Tech Memo and PCN references matching Part Number differences from SO BOM and Quote BOM, with Download Excel highlighted" style="aspect-ratio: 1440 / 475">
               </a>
             </figure>
+          </section>
+        </article>
+
+        <article id="d" data-feature data-icon="🔌" aria-labelledby="d-title" hidden>
+          <div>
+            <h1 id="d-title" data-en="MCP Setup Guide">MCP 接入指南</h1>
+            <div class="intro">
+              <strong data-en="Overview">功能简介</strong>
+              <ul>
+                <li data-en="While SAPGUIcontrol is running, provide local MCP to VS Code Copilot and other AI tools.">SAPGUIcontrol 运行时，为 VS Code Copilot 等 AI 工具提供本地 MCP 服务。</li>
+                <li data-en="Empower AI to operate SAP in a dedicated window for automated data reading and workflows.">赋予 AI 智能操作 SAP 的能力，在独立窗口自动完成数据读取与业务流程执行。</li>
+                <li data-en="Empower AI to control a browser for web interaction, data capture, API calls and more.">赋予 AI 自主操控浏览器的能力，实现网页交互、信息采集与接口调用等。</li>
+              </ul>
+            </div>
+          </div>
+          <div class="actions" id="d-actions" hidden>
+            <a class="action" id="mcp-download" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer" data-en="Download SAPGUIcontrol.zip ↗">下载 SAPGUIcontrol.zip ↗</a>
+          </div>
+          <p id="mcp-download-error" class="muted-note" role="status" hidden data-en="Download link unavailable. Refresh to try again.">暂时无法获取下载地址，请刷新页面重试。</p>
+          <section id="d1" data-section aria-labelledby="d1-title">
+            <h2 id="d1-title" data-en="Before running">运行前准备</h2>
+            <p data-en="Double-click <code>SAPGUIcontrol.exe</code> and confirm its icon appears in the Windows system tray:">双击运行 <code>SAPGUIcontrol.exe</code>，并确认 Windows 右下角托盘出现图标：</p>
+            <ul class="tool-list">
+              <li data-en="To let AI operate SAP screens, also open and sign in to <strong>SAP GUI for Windows</strong>.">如需让 AI 操作 SAP 界面，请再打开并登录 <strong>SAP GUI for Windows</strong>。</li>
+              <li data-en="To let AI operate the browser, AI launches it on demand—no manual start is needed.">如需让 AI 操作浏览器，AI 会按需启动，无需手动打开。</li>
+            </ul>
+          </section>
+          <section id="d2" data-section aria-labelledby="d2-title">
+            <h2 id="d2-title" data-en="Connect AI tools">接入 AI 工具</h2>
+            <p data-en="Send the setup prompt below to an MCP-capable AI tool (such as VS Code GitHub Copilot); AI will configure it automatically and use the tools provided by SAPGUIcontrol. <span class='muted-note'>(Note: Microsoft Copilot does not support MCP yet.)</span>">将下方接入说明发送给支持 MCP 的 AI 工具（如 VS Code GitHub Copilot），AI 即可自动完成配置并使用 SAPGUIcontrol 提供的工具。<span class="muted-note">（注：Microsoft Copilot 暂不支持 MCP）</span></p>
+            <div class="code-box">
+              <div class="code-head">
+                <span data-en="AI Setup Prompt">发给 AI 的安装指令</span>
+                <button class="copy-btn" type="button" data-copy="mcp-prompt" data-done-zh="已复制 ✓" data-done-en="Copied ✓" data-en="Copy prompt">复制指令</button>
+              </div>
+              <pre class="wrap"><code id="mcp-prompt">Please install and verify my local SAPGUIcontrol MCP server. Avoid web searches, broad file searches, and unrelated diagnostics. Respond in <span data-en="English">Simplified Chinese</span>.
+
+1. Configuration
+Name: SAPGUIcontrol
+Transport: Streamable HTTP (no authentication required)
+For VS Code GitHub Copilot: Prefer the current Copilot harness and its user-level global configuration (~/.copilot/mcp-config.json, or $COPILOT_HOME/mcp-config.json if set).
+Under mcpServers, add: "SAPGUIcontrol": { "type": "http", "url": "http://127.0.0.1:25972/mcp", "tools": ["*"] }
+If using the legacy Local harness, configure the appropriate user-level mcp.json under servers. For other AI clients, use their appropriate user-level MCP configuration.
+Preserve all existing configurations. Skip changes if already configured correctly.
+
+2. Verification &amp; Required Output
+Check GET http://127.0.0.1:25972/health and verify MCP tool discovery.
+- If successful: Confirm MCP is ready (SAP GUI connectivity is optional). In the completion summary, please include a Markdown bullet list of the main capability modules and what each can do based on the discovered tools.
+- If unsuccessful: Remind the user to manually launch SAPGUIcontrol.exe and retry verification.</code></pre>
+            </div>
+          </section>
+          <section id="d3" data-section aria-labelledby="d3-title">
+            <h2 id="d3-title" data-en="Getting started">开始使用</h2>
+            <p data-en="Once configured, simply state your request in the AI chat and AI will invoke the tools automatically. The capability list below is for reference only (no need to read):">配置成功后，直接在 AI 对话中提出需求，AI 会自动调用工具。以下功能列表仅供参考（不用看）：</p>
+            <ul class="tool-list">
+              <li data-en="<strong>SAP GUI Automation</strong> (<code>sap_status</code>, <code>sap_open_window</code>, <code>sap_snapshot</code>, <code>sap_read_table</code>, <code>sap_act</code>, <code>sap_screenshot</code>, <code>sap_call</code>, <code>sap_close_window</code>): Inspect screen fields, read ALV/table rows and run SAP transactions in an isolated MCP window without disturbing your active SAP window."><strong>SAP GUI 自动化</strong>（<code>sap_status</code>、<code>sap_open_window</code>、<code>sap_snapshot</code>、<code>sap_read_table</code>、<code>sap_act</code>、<code>sap_screenshot</code>、<code>sap_call</code>、<code>sap_close_window</code>）：在独立专属 SAP 窗口读取屏幕字段与 ALV 表格、执行事务步骤，不干扰你正在使用的 SAP 窗口。</li>
+              <li data-en="<strong>Edge Browser Automation</strong> (<code>browser_links</code>, <code>browser_open</code>, <code>browser_eval</code>, <code>browser_screenshot</code>, <code>browser_close</code>): Control a dedicated Edge browser instance for page interaction, DOM reading, screenshots and web API calls."><strong>Edge 浏览器自动化</strong>（<code>browser_links</code>、<code>browser_open</code>、<code>browser_eval</code>、<code>browser_screenshot</code>、<code>browser_close</code>）：操控专用 Edge 浏览器实例，完成页面交互、DOM 读取、截图与网页接口调用。</li>
+              <li data-en="<strong>BW Refresh &amp; Host Tools</strong> (<code>bobj_status</code>, <code>bobj_refresh</code>, <code>files</code>, <code>run_powershell</code>): Refresh FID/CTL BW data via native RFC/BICS, manage local files and run PowerShell scripts."><strong>BW 刷新与本机工具</strong>（<code>bobj_status</code>、<code>bobj_refresh</code>、<code>files</code>、<code>run_powershell</code>）：原生 RFC/BICS 刷新 FID/CTL 数据、读写管理本机文件及运行 PowerShell 脚本。</li>
+            </ul>
           </section>
         </article>
     </main>
@@ -646,6 +716,31 @@
         if (event.target === imageViewer || event.target === imagePreview) imageViewer.close();
       });
 
+      document.querySelectorAll('[data-copy]').forEach(button => {
+        let timer = 0;
+        const baseZh = button.textContent;
+        const baseEn = button.dataset.en || baseZh;
+        button.addEventListener('click', async () => {
+          const target = byId(button.dataset.copy);
+          if (!target) return;
+          const text = target.textContent;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            const area = Object.assign(document.createElement('textarea'), {value: text});
+            area.style.position = 'fixed';
+            area.style.opacity = '0';
+            document.body.append(area);
+            area.select();
+            document.execCommand('copy');
+            area.remove();
+          }
+          clearTimeout(timer);
+          button.textContent = language === 'zh' ? (button.dataset.doneZh || '已复制') : (button.dataset.doneEn || 'Copied');
+          timer = setTimeout(() => { button.textContent = language === 'zh' ? baseZh : baseEn; }, 1600);
+        });
+      });
+
       function compareVersions(left, right) {
         if (!/^\d+(?:\.\d+)*$/.test(left) || !/^\d+(?:\.\d+)*$/.test(right)) throw new Error('Invalid version');
         const a = left.split('.').map(Number), b = right.split('.').map(Number);
@@ -697,6 +792,24 @@
       }
       retryVersion.addEventListener('click', checkLatestVersion);
 
+      async function loadSapGuiControlDownload() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+          const response = await fetch('./SAPGUIcontrol.version.json', {cache: 'no-store', signal: controller.signal});
+          if (!response.ok) throw new Error('SAPGUIcontrol download manifest returned HTTP ' + response.status + '.');
+          const release = await response.json();
+          if (typeof release?.downloadUrl !== 'string' || !/^https?:\/\//i.test(release.downloadUrl)) throw new Error('SAPGUIcontrol version manifest is missing downloadUrl.');
+          byId('mcp-download').href = release.downloadUrl;
+          byId('d-actions').hidden = false;
+        } catch (error) {
+          const notice = byId('mcp-download-error');
+          notice.hidden = false;
+          notice.title = error.message || String(error);
+          console.error('[SAPGUIcontrol download]', error);
+        } finally { clearTimeout(timeout); }
+      }
+
       function showInstalled(version, automatic = null) {
         currentVersion = version;
         autoUpdate = typeof automatic === 'boolean' ? automatic : null;
@@ -720,6 +833,7 @@
         showInstalled(event.data.version, event.data.autoUpdate);
       });
       renderLanguage();
+      loadSapGuiControlDownload();
       if (location.protocol !== 'file:') window.postMessage({type: 'toolkit:check'}, location.origin);
     })();
   </script>
