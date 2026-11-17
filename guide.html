@@ -12,7 +12,7 @@
     [hidden]{display:none !important}
     a{color:var(--teal)}
     button{font:inherit}
-    h1, h2, h3, p{margin:0}
+    h1, h2, h3, p, dl, dd{margin:0}
     :focus-visible{outline:3px solid #eab355; outline-offset:4px}
     header{border-bottom:1px solid var(--line); background:#fff}
     .top{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px 24px; max-width:1280px; margin:auto; padding:20px 32px 16px}
@@ -47,9 +47,13 @@
     .nav-link:hover{background:#f6f8f6; color:#243e31}
     .nav-link[aria-current="page"]{background:#eaf4ee; color:#096549; font-weight:600}
     .subnav{display:grid; gap:1px; margin:6px 0 12px 20px; padding-left:15px; border-left:1px solid #dce6df}
-    .sub-link{padding:3px 0; color:#6a7b70; font-size:13px; line-height:1.6; text-decoration:none}
-    .sub-link:hover, .sub-link[aria-current="location"]{color:#096549}
+    .sub-link{position:relative; padding:3px 0; color:#6a7b70; font-size:13px; line-height:1.6; text-decoration:none}
+    .sub-link.category{margin-top:8px; color:#405c4d; font-size:14px; font-weight:600}
+    .sub-link.category:first-child{margin-top:0}
+    .sub-link.subsection{padding-left:12px}
+    .sub-link:hover, .sub-link.is-active-group, .sub-link[aria-current="location"]{color:#096549}
     .sub-link[aria-current="location"]{font-weight:600}
+    .sub-link[aria-current="location"]::before{content:''; position:absolute; left:-17px; top:4px; bottom:4px; width:3px; border-radius:2px; background:#096549}
     #toggle{display:none}
     main{min-width:0; max-width:800px; padding-top:2px}
     #heading{display:flex; align-items:center; gap:10px; margin-bottom:24px; color:#8a9891; font-size:12px}
@@ -88,9 +92,6 @@
     .topic > h3::after{content:''; display:block; height:4px; margin-top:7px; border-radius:4px; background:linear-gradient(90deg, #2b8b76 0 22%, #69bca4 22% 100%)}
     .topic h4{margin:24px 0 10px; font-size:16px; line-height:1.5; font-weight:600}
     .source-list h4{margin:0 0 8px}
-    .sub-link.category{margin-top:8px; color:#405c4d; font-size:14px; font-weight:600}
-    .sub-link.category:first-child{margin-top:0}
-    .sub-link.subsection{padding-left:12px}
     article section p{font-size:15px}
     article section p + p{margin-top:12px}
     article section p + p.hint{margin-top:2px}
@@ -101,7 +102,7 @@
     .guide-tab, .guide-label, .guide-button{display:inline-block; padding:0 .4em; border:1px solid var(--label-line, #d7e1e8); border-radius:5px; background:var(--label-bg, #fff); color:var(--label-ink, #0f4c67); font-size:.94em; line-height:1.5; white-space:nowrap}
     .tab-fid{--label-ink:#2458a6; --label-bg:#eaf1ff; --label-line:#bed0ef}
     .tab-ctl{--label-ink:#7950a1; --label-bg:#f3edfa; --label-line:#d2bee8}
-    .tab-nsr, .label-pending-nsr{--label-ink:#b13d53; --label-bg:#fceef1; --label-line:#e6b6c1}
+    .tab-nsr{--label-ink:#b13d53; --label-bg:#fceef1; --label-line:#e6b6c1}
     .tab-cycle{--label-ink:#a85c07; --label-bg:#fff4e4; --label-line:#e6c79e}
     .tab-summary{--label-ink:#3d805d; --label-bg:#edf7ef; --label-line:#c1dcc7}
     .tab-settings{--label-ink:#1e52ad; --label-bg:#e4edff; --label-line:#c7d8f5}
@@ -122,7 +123,13 @@
     .label-filter{--label-ink:#2f5590; --label-bg:#e8effd; --label-line:#bacdee}
     .button-preset{--label-ink:#526b8d; --label-bg:#fff; --label-line:#cdd8e8; min-width:1.65em; text-align:center}
     .button-query{--label-ink:#365c97; --label-bg:#edf1f6; --label-line:#ccd6e3; min-width:1.65em; text-align:center}
-    .label-pending-nsr{padding:2px 10px; border:0; border-radius:0; clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+    .label-action{padding:2px 10px; border:0; border-radius:0; clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+    .label-action-danger{--label-ink:#b4163a; --label-bg:#ffe4e8}
+    .label-action-potential{--label-ink:#5b21b6; --label-bg:#ede9fe}
+    .label-action-warning{--label-ink:#b44309; --label-bg:#ffedd5}
+    .label-action-notice{--label-ink:#3b6cb7; --label-bg:#edf4ff}
+    .guide-action-list{display:grid; grid-template-columns:max-content minmax(0, 1fr); align-items:baseline; gap:8px 16px; margin-top:12px; padding:14px 16px; border:1px solid var(--line); border-radius:8px; background:#f8faf9; font-size:14px; line-height:1.55}
+    .guide-action-list dt{display:flex; flex-wrap:wrap; align-items:center; gap:6px}
     .status-risk{--label-ink:#a93049; --label-bg:#fff5f6; --label-line:#dc9eac}
     .status-clear{--label-ink:#17683e; --label-bg:#eff9f3; --label-line:#bddfcb}
     .status-completed{--label-ink:#16843f; --label-bg:#f1fbf5; --label-line:#bfddca}
@@ -169,7 +176,7 @@
     .warn h1{color:#81550f}
     .warn p, .warn a{color:#8b652c}
     @media (max-width:960px){#content{grid-template-columns:292px minmax(0, 1fr); gap:28px} #sidebar{padding-right:18px}}
-    @media (max-width:720px){.notice{width:calc(100% - 40px); margin-top:20px; margin-bottom:28px; padding:20px} .top{padding:18px 20px 14px} .brand{font-size:20px; gap:12px} .brand span{padding-left:12px; font-size:13px} #version{gap:6px 12px} #auto{flex-basis:100%} #content{display:block; padding:0 20px 40px} #sidebar{position:static; min-height:0; max-height:none; padding:0; border-right:0; border-bottom:1px solid var(--line)} .nav-head{display:none} #toggle{display:flex; align-items:center; justify-content:space-between; width:100%; min-height:52px; padding:12px 0; border:0; background:#fff; color:#51695a; font-size:13px; cursor:pointer} #toggle svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6} #sidebar:not(.is-open) #nav{display:none} #sidebar.is-open #nav{margin-bottom:16px} main{padding-top:26px} #heading{margin-bottom:18px} article h1{font-size:28px}}
+    @media (max-width:720px){.notice{width:calc(100% - 40px); margin-top:20px; margin-bottom:28px; padding:20px} .top{padding:18px 20px 14px} .brand{font-size:20px; gap:12px} .brand span{padding-left:12px; font-size:13px} #version{gap:6px 12px} #auto{flex-basis:100%} #content{display:block; padding:0 20px 40px} #sidebar{position:static; min-height:0; max-height:none; padding:0; border-right:0; border-bottom:1px solid var(--line)} .nav-head{display:none} #toggle{display:flex; align-items:center; justify-content:space-between; width:100%; min-height:52px; padding:12px 0; border:0; background:#fff; color:#51695a; font-size:13px; cursor:pointer} #toggle svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6} #sidebar:not(.is-open) #nav{display:none} #sidebar.is-open #nav{margin-bottom:16px} main{padding-top:26px} #heading{margin-bottom:18px} article h1{font-size:28px} .guide-action-list{grid-template-columns:minmax(0, 1fr); gap:3px; padding:12px 14px} .guide-action-list dd + dt{margin-top:7px}}
   </style>
 </head>
 <body>
@@ -269,12 +276,30 @@
 <div class="topic" id="a2-1" data-subsection aria-labelledby="a2-1-title"><h3 id="a2-1-title" data-en="Read FID Overview">查看 FID Overview</h3>
 <p data-en="After loading FID Database, open the &lt;strong class=&#x27;guide-tab tab-fid&#x27;&gt;FID Portfolio&lt;/strong&gt; tab.">加载 FID Database 后，可进入 <strong class='guide-tab tab-fid'>FID Portfolio</strong> 标签页。</p>
 <p data-en="&lt;strong class=&quot;guide-heading&quot;&gt;FID Overview&lt;/strong&gt; shows &lt;strong class=&quot;guide-label label-total&quot;&gt;Total FID&lt;/strong&gt; = &lt;strong class=&quot;guide-label label-no-slot&quot;&gt;Unslotted FID&lt;/strong&gt; + &lt;strong class=&quot;guide-label label-slotted&quot;&gt;Slotted FID&lt;/strong&gt;. Unslotted FIDs have no active Slot; click the &lt;strong class=&quot;guide-label label-unslotted-part&quot;&gt;pending approval&lt;/strong&gt; or &lt;strong class=&quot;guide-label label-unslotted-part&quot;&gt;drop slot&lt;/strong&gt; counts below to filter them."><strong class="guide-heading">FID Overview</strong> 顶部展示 <strong class="guide-label label-total">Total FID</strong> = <strong class="guide-label label-no-slot">Unslotted FID</strong> + <strong class="guide-label label-slotted">Slotted FID</strong>。<strong class="guide-label label-no-slot">Unslotted FID</strong> 表示当前无有效 Slot 的机台，下方可点击 <strong class="guide-label label-unslotted-part">pending approval</strong> 或 <strong class="guide-label label-unslotted-part">drop slot</strong> 数量进一步筛选。</p>
-<figure class="media" style="margin-bottom:16px"><a data-zoom href="./images/guide-dashboard.svg#fid-overview"><img src="./images/guide-dashboard.svg#fid-overview" width="1188" height="582" loading="lazy" alt="FID Portfolio with Total, Unslotted and Slotted FID cards, stability rates, grouped distribution bars and Risk Drivers" style="aspect-ratio: 1188 / 582"></a></figure>
 <p data-en="&lt;strong class=&quot;guide-label label-slotted&quot;&gt;Slotted FID&lt;/strong&gt; shows &lt;strong class=&quot;guide-label label-stability&quot;&gt;Pre-slot Stability&lt;/strong&gt; with &lt;strong class=&quot;guide-label label-late-slot&quot;&gt;Late Slot&lt;/strong&gt;, and &lt;strong class=&quot;guide-label label-stability&quot;&gt;Post-slot Stability&lt;/strong&gt; with &lt;strong class=&quot;guide-label label-late-change&quot;&gt;Late Change&lt;/strong&gt;. The distribution bars below show counts and shares by status."><strong class="guide-label label-slotted">Slotted FID</strong> 分别展示 <strong class="guide-label label-stability">Pre-slot Stability</strong>（含 <strong class="guide-label label-late-slot">Late Slot</strong>）与 <strong class="guide-label label-stability">Post-slot Stability</strong>（含 <strong class="guide-label label-late-change">Late Change</strong>），下方条形分布图显示各状态的数量与占比。</p>
 <p data-en="Use &lt;strong class=&quot;guide-label label-group&quot;&gt;Group by&lt;/strong&gt; for multilevel grouping by quarter, Account and other categories. &lt;strong class=&quot;guide-label label-potential&quot;&gt;(+ Potential Risk)&lt;/strong&gt; adjusts the window for potential risks. Click a card, bar segment or group count to filter tools and view them in &lt;strong class=&quot;guide-heading&quot;&gt;FID Details&lt;/strong&gt; below.">用 <strong class="guide-label label-group">Group by</strong> 按季度、Account 等多级分组查看；<strong class="guide-label label-potential">(+ Potential Risk)</strong> 可调整潜在风险的观察窗口。点击卡片、条形图色块或分组数字，即可筛选对应机台，并在下方 <strong class="guide-heading">FID Details</strong> 查看列表。</p>
-<p id="fid-risk-drivers" data-en="The &lt;strong&gt;Risk Drivers&lt;/strong&gt; section also lists other exceptions or FIDs requiring follow-up. Click an item to filter them. For example, &lt;strong class=&#x27;guide-label label-pending-nsr&#x27;&gt;Pending NSR&lt;/strong&gt; means an unfinished request at any lead time and does not change Slot / CTL stability."><strong>Risk Drivers</strong> 板块还列出其他异常或待跟进的 FID，可点击相应项目筛选。例如 <strong class='guide-label label-pending-nsr'>Pending NSR</strong> 表示尚未完成的请求，不区分提前周数，也不影响 Slot / CTL 稳定性。</p>
+<figure class="media"><a data-zoom href="./images/guide-dashboard.svg#fid-overview"><img src="./images/guide-dashboard.svg#fid-overview" width="1188" height="582" loading="lazy" alt="FID Portfolio with Total, Unslotted and Slotted FID cards, stability rates, grouped distribution bars and Action Required" style="aspect-ratio: 1188 / 582"></a></figure>
 </div>
-<div class="topic" id="a2-2" data-subsection aria-labelledby="a2-2-title"><h3 id="a2-2-title" data-en="FID list and FID 360° information">FID 列表和 FID 360° 全方位信息</h3>
+<div class="topic" id="a2-2" data-subsection aria-labelledby="a2-2-title"><h3 id="a2-2-title" data-en="Action Required">Action Required 待办事项</h3>
+<p id="fid-risk-drivers" data-en="The &lt;strong class=&quot;guide-heading&quot;&gt;Action Required&lt;/strong&gt; section lists current exceptions and follow-up items by priority. Hover over a label for the reason and suggested action, or click it to filter its FIDs:"><strong class="guide-heading">Action Required</strong> 板块按优先级列出当前需跟进的异常与待办事项。鼠标悬停标签可查看原因与处理建议，点击标签可筛选对应 FID：</p>
+<dl class="guide-action-list">
+<dt><strong class="guide-label label-action label-action-danger">Completed NSR · No CTL</strong></dt>
+<dd data-en="Completed NSR (including one referenced in an FID Note) not yet implemented on the FID through a CTL.">已完成的 NSR（含 FID Note 引用的 NSR）尚未通过 CTL 落实到对应 FID。</dd>
+<dt><strong class="guide-label label-action label-action-danger">Draft CTL</strong><strong class="guide-label label-action label-action-danger">Draft NSR</strong></dt>
+<dd data-en="CTL or NSR not yet submitted, or returned to the originator for revision.">CTL 或 NSR 尚未提交，或已退回发起人等待修改。</dd>
+<dt><strong class="guide-label label-action label-action-potential">Potential Late Slot</strong></dt>
+<dd data-en="SRD has entered the risk window (e.g., 24 weeks), but the FID is not yet slotted.">SRD 已进入风险窗口（如 24 周），但尚未 Slot。</dd>
+<dt><strong class="guide-label label-action label-action-potential">Potential Late Change</strong></dt>
+<dd data-en="Has entered the risk window (e.g., 24 weeks), with a Pending NSR or an unapproved CC CTL.">已进入风险窗口（如 24 周），但仍有 Pending NSR 或尚未批准的 CC CTL。</dd>
+<dt><strong class="guide-label label-action label-action-warning">Stalled CTL</strong></dt>
+<dd data-en="CTL awaiting Sales Ops approval for at least 30 days.">CTL 已等待 Sales Ops 批准至少 30 天。</dd>
+<dt><strong class="guide-label label-action label-action-warning">Stalled NSR</strong></dt>
+<dd data-en="NSR elapsed days have reached its Level limit, or projected total cycle time based on ECD exceeds that limit.">NSR 已用天数达到所属 Level 时限，或按 ECD 预计的总周期超出该时限。</dd>
+<dt><strong class="guide-label label-action label-action-notice">Unread Date Changes</strong></dt>
+<dd data-en="MCSD or SRD changed across quarters and has not been marked as read.">MCSD 或 SRD 跨季度发生变更，尚未阅读确认。</dd>
+</dl>
+</div>
+<div class="topic" id="a2-3" data-subsection aria-labelledby="a2-3-title"><h3 id="a2-3-title" data-en="FID list and FID 360° information">FID 列表和 FID 360° 全方位信息</h3>
 <p data-en="After filtering with &lt;strong&gt;FID Overview&lt;/strong&gt; cards or the sidebar &lt;strong&gt;Filters&lt;/strong&gt;, view grouped results in &lt;strong&gt;Interactive Pivot&lt;/strong&gt; and the FID list in &lt;strong&gt;FID Details&lt;/strong&gt;.">通过 <strong>FID Overview</strong> 卡片或侧边栏 <strong>Filters</strong> 筛选后，可在 <strong>Interactive Pivot</strong> 查看透视结果，在 <strong>FID Details</strong> 查看 FID 列表。</p>
 <p data-en="In &lt;strong&gt;Interactive Pivot&lt;/strong&gt;, view grouped counts by customer, Business Unit or system, and click a count to filter the corresponding results.">在 <strong>Interactive Pivot</strong> 中，可按客户、Business Unit 或机型查看分组统计；点击数量可筛选相应结果。</p>
 <figure class="media"><a data-zoom href="./images/guide-dashboard.svg#fid-details"><img src="./images/guide-dashboard.svg#fid-details" width="1188" height="622" loading="lazy" alt="Interactive Pivot above FID Details, showing Active CTL and Quote, CTL and NSR History, MFG Upgrade Type, personal marks and Note" style="aspect-ratio: 1188 / 622"></a></figure>
@@ -492,7 +517,7 @@
             </div>
           </div>
           <div class="actions" id="d-actions" hidden>
-            <a class="action" id="mcp-download" download="SAPGUIcontrol.zip" target="_blank" rel="noopener noreferrer" data-en="Download SAPGUIcontrol.zip ↗">下载 SAPGUIcontrol.zip ↗</a>
+            <a class="action" id="mcp-download" target="_blank" rel="noopener noreferrer"><span data-en="Download">下载</span> <span id="mcp-package-name">SAPGUIcontrol</span> ↗</a>
           </div>
           <p id="mcp-download-error" class="muted-note" role="status" hidden data-en="Download link unavailable. Refresh to try again.">暂时无法获取下载地址，请刷新页面重试。</p>
           <section id="d1" data-section aria-labelledby="d1-title">
@@ -623,9 +648,12 @@ Check GET http://127.0.0.1:25972/health and verify MCP tool discovery.
         scheduleSectionSync();
       }
       function markSection(id) {
+        const activeGroup = byId(id)?.closest('[data-section]')?.id;
         navigation.querySelectorAll('.sub-link').forEach(link => {
-          if (link.getAttribute('href') === '#' + id) link.setAttribute('aria-current', 'location');
+          const href = link.getAttribute('href');
+          if (href === '#' + id) link.setAttribute('aria-current', 'location');
           else link.removeAttribute('aria-current');
+          link.classList.toggle('is-active-group', Boolean(activeGroup) && href === '#' + activeGroup && id !== activeGroup);
         });
       }
       function syncSectionFromScroll() {
@@ -820,7 +848,11 @@ Check GET http://127.0.0.1:25972/health and verify MCP tool discovery.
           if (!response.ok) throw new Error('SAPGUIcontrol download manifest returned HTTP ' + response.status + '.');
           const release = await response.json();
           if (typeof release?.downloadUrl !== 'string' || !/^https?:\/\//i.test(release.downloadUrl)) throw new Error('SAPGUIcontrol version manifest is missing downloadUrl.');
-          byId('mcp-download').href = release.downloadUrl;
+          if (typeof release.version !== 'string' || !/^\d+(?:\.\d+)*$/.test(release.version.trim())) throw new Error('SAPGUIcontrol version manifest is missing a valid version.');
+          const download = byId('mcp-download');
+          download.href = release.downloadUrl;
+          download.download = 'SAPGUIcontrol_' + release.version.trim() + '.zip';
+          byId('mcp-package-name').textContent = download.download;
           byId('d-actions').hidden = false;
         } catch (error) {
           const notice = byId('mcp-download-error');
